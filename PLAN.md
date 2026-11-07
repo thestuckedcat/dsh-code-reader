@@ -1,6 +1,12 @@
 # Code Learning Implementation Plan
 
-状态：planned，2026-11-03。本轮不生成skill实现、不运行Atlas/doctor、不索引驱动仓库。
+> **2026-11-07 交付状态更新**：本文件是早期实施计划历史，保留用于追踪任务拆分与门禁。
+> 首版已实现为可安装 `dsh-code-reader` plugin（Python 引擎 + DSH Host bundle + learn-code-workspace skill），
+> 当前实现合同与验证入口见 [README](README.md)、[实施路线](docs/implementation-route.md)、
+> [实施契约](docs/implementation-contract.md) 与 [机制说明](docs/mechanisms.md)。
+> 真实 Linux/Kbuild/Atlas 执行、隔离 runner、native CFG 仍按本计划保留为未通过门禁。
+
+状态（历史）：planned，2026-11-03。本轮不生成skill实现、不运行Atlas/doctor、不索引驱动仓库。
 
 2026-11-06设计交接：[CL-DESIGN-1编码级软件设计](docs/software-design.md)补齐固定Atlas0.8.0/schema0.1来源摘要、真实Kbuild/compdb输入、受限执行、不可变查询view、学习记录与续读失效。首版skill＋本地证据导航/报告已确认，专用Harness交互学习面板后置。下方为早期任务拆分；实施前按新设计同步CLI/ref/schema和任务边界，不能把旧签名当作另一套并行合同。所有实施项仍未执行。
 

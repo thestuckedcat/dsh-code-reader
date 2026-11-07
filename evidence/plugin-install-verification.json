@@ -180,7 +180,16 @@
       "result": "tests 11, pass 11, fail 0",
       "evidence": "evidence/node-tests.txt"
     },
-    "syntax": "node --check index.js lib/{config,bridge,tools,skills}.mjs passed"
+    "syntax": "node --check index.js lib/{config,bridge,tools,skills}.mjs passed",
+    "packaging": {
+      "command": "npm pack --dry-run --json",
+      "result": "45 files, 566470 bytes unpacked, 141854 bytes tarball; no __pycache__/.pyc included",
+      "note": "verified after fixing the files whitelist; docs/, skills/ and engine/schemas are included"
+    },
+    "markdown_links": {
+      "command": "internal link check over repository *.md",
+      "result": "checked=40 problems=0"
+    }
   },
   "not_verified": [
     "real Linux Kbuild/compdb Atlas indexing (requires target Linux toolchain + fixed Atlas runtime)",
