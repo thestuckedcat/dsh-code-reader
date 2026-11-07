@@ -26,9 +26,9 @@ whenToUse: 用户要快速理清或学习某个 Linux 驱动或用户态仓库�
 | `code_workspace` | import / validate / status | manifest、expected_revision、operation_id；workspace | 登记或校验 workspace；首次登记 expected_revision=0 |
 | `code_overview` | — | workspace、variant、可选 snapshot | 组件、仓库边界、接口候选和 unknown 边界的小地图 |
 | `code_source` | find / read / evidence | workspace、repo、relative_glob、literal 或 filename；path_ref、expected_sha256、byte_start/byte_end；evidence_ref | 有界查找/读取源码，取得 source_text 证据 |
-| `code_snapshot` | import / status | workspace、variant、repo、snapshot 名称、operation_id；snapshot | 导入已核验的 Atlas 0.1 快照，查看覆盖与 freshness |
-| `code_path` | path / relation | workspace、variant、from、to、budget、max_depth、direction；snapshot、mode、selector | 取有界路径或关系查询（flow/locks/aliases） |
-| `code_learn` | save / get / resume / export | workspace、draft、expected_generation、operation_id；record；format=markdown 或 json | 保存/读取/续读/导出学习记录（导出仅在用户要求时） |
+| `code_snapshot` | import / status | workspace、variant、repo、snapshot（import 的 inbox 目录名）、operation_id；snapshot_ref（status） | 导入已核验的 Atlas 0.1 快照，查看覆盖与 freshness |
+| `code_path` | path / relation | workspace、variant、from、to、budget、max_depth、direction；snapshot_ref、mode、selector | 取有界路径或关系查询（flow/locks/aliases） |
+| `code_learn` | save / get / resume / export | workspace、input（inbox 内记录草稿文件名）、expected_generation、operation_id；record；format=markdown 或 json | 保存/读取/续读/导出学习记录（导出仅在用户要求时） |
 
 ## 标准工作流
 
