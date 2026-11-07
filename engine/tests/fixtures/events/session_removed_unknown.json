@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "event_id": "ev-session-removed-unknown-0001",
+  "kind": "session_removed",
+  "source_capability": "capability-03-facts",
+  "scope_ref": "local",
+  "session_ref": "sess-fixture-3",
+  "operation_id": "op-session-remove-0001",
+  "generation": 1,
+  "affected_refs": [],
+  "outcome": "unknown",
+  "before_snapshot": "snap-before-0003",
+  "after_snapshot": null,
+  "occurred_at": "2026-11-07T00:00:02Z"
+}

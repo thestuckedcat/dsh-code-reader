@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-07T00:00:00Z",
+  "producer": {
+    "name": "dsh-code-reader",
+    "version": "0.1.0",
+    "package": "@local/dsh-code-reader"
+  },
+  "runtime": {
+    "python": {
+      "requirement": ">=3.11,<4",
+      "observed_version": "3.11.4",
+      "vendored": false,
+      "note": "Provisional system interpreter. The design's fixed runtime/bin/python is not vendored yet; the CLI contract is independent of the interpreter location."
+    },
+    "node": {
+      "requirement": "Host-provided runtime only",
+      "observed_version": "v26.13.0 (shell); DSH Host runtime is Electron Node24",
+      "vendored": false,
+      "note": "The plugin has no npm dependencies and uses Node built-ins only."
+    }
+  },
+  "sources": [
+    {
+      "name": "SDK Code Atlas",
+      "version": "0.8.0",
+      "schema_version": "0.1",
+      "location": "H:/VSCODE_READER (read-only reference)",
+      "git_commit": "c33320a98face14c5f6e5e817beaccf52b9bbb93",
+      "git_commit_date": "2026-09-12",
+      "license": "MIT",
+      "license_sha256": "b89074f862239699b57c7618d3b3a82463cbc87df3f335189c8745485004dab1",
+      "redistributed": false,
+      "used_as": "Read-only evidence for version/schema vocabulary, envelope semantics, trace/coverage fields and Atlas CLI argv shape. No Atlas source, runtime package or database is copied into this repository.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "bytes": 4654,
+          "sha256": "eb4f8cae141dc8aa593c8ac10dc5e4c182a52131acabf66fd87e1028318e5b28",
+          "mechanism": "evidence explanation, exact/may/unknown vocabulary, native-CFG limitation"
+        },
+        {
+          "path": "scripts/atlas/domain/contracts.py",
+          "bytes": 2218,
+          "sha256": "a1c3ab3792a1e8d3a94e2a57c0332373c041b3b9818aea1dbbda2b769e705846",
+          "mechanism": "TOOL_VERSION=0.8.0 / SCHEMA_VERSION=0.1 and pipeline stage vocabulary"
+        },
+        {
+          "path": "scripts/atlas/interfaces/cli.py",
+          "bytes": 6049,
+          "sha256": "7de8dfc91e6b593a8503cf96c485ae99da4bd91a5c4839e5dc7e7379850b8052",
+          "mechanism": "run --repo/--root/--compdb, trace/flow/locks/aliases, --interface vs --select-function semantics"
+        },
+        {
+          "path": "scripts/atlas/build.py",
+          "bytes": 11093,
+          "sha256": "5885cad2d022fc19a1d15c21c6bcbf5aca9a2cd96f449fac2ced6f563330ad00",
+          "mechanism": "compdb normalization, compiler probe behavior that must not be executed unisolated"
+        },
+        {
+          "path": "scripts/atlas/pipeline.py",
+          "bytes": 13433,
+          "sha256": "5f0d4cf8ec3b6aca21b41a31a96344f386137a8bc51127b7ae042f8fdcc0c7ee",
+          "mechanism": "immutable snapshot publication, coverage.failed array / pending_units paths, whole_program_complete=false"
+        },
+        {
+          "path": "scripts/atlas/graph.py",
+          "bytes": 7447,
+          "sha256": "260d2d8ee25564b7912327079302a5abb188c6c3bc5f74f94e782173bb6db8c2",
+          "mechanism": "trace BFS shape and per-edge certainty living on call_targets"
+        },
+        {
+          "path": "scripts/atlas/infrastructure/store.py",
+          "bytes": 5778,
+          "sha256": "335fe178f925b1956d6c99790d6df57e923e50f7d96630b57c9446de79ddf455",
+          "mechanism": "envelope {schema_version,record_kind,record_id,payload,provenance} and atomic writes"
+        },
+        {
+          "path": "scripts/atlas/review.py",
+          "bytes": 3794,
+          "sha256": "88987f2b8ae5c8266343887ec90c2b4e77a826f68def8bff5eff888be197a482",
+          "mechanism": "review-import snapshot/input verification and agent candidates capped at may"
+        },
+        {
+          "path": "schemas/graph.schema.json",
+          "bytes": 1623,
+          "sha256": "e0611f026a78ef733ab9ecc29aff0ba9ca88a6882fd8be7c02746cc277910c7b",
+          "mechanism": "graph payload entity/call_targets/evidence field vocabulary"
+        },
+        {
+          "path": "schemas/analysis_manifest.schema.json",
+          "bytes": 971,
+          "sha256": "1f0235446ebfa8247290f67e89a844744273db2ce503ce99d4a9d1b55b2ffd10",
+          "mechanism": "snapshot_id/analysis_id/input_files/roots/coverage/graph_hash manifest fields"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 1084,
+          "sha256": "b89074f862239699b57c7618d3b3a82463cbc87df3f335189c8745485004dab1",
+          "mechanism": "redistribution license fact (not redistributed here)"
+        },
+        {
+          "path": "THIRD_PARTY_NOTICES.md",
+          "bytes": 1489,
+          "sha256": "e35af078735a306063c4f2ba35f3fa9fb048183d595a61ee4376fc5e7eb4a9d6",
+          "mechanism": "upstream runtime/license facts; not redistributed here"
+        }
+      ]
+    },
+    {
+      "name": "superpowers-dsh",
+      "version": "0.4.0",
+      "location": "DSH profile node_modules (installed bundle)",
+      "license": "MIT",
+      "redistributed": false,
+      "used_as": "Pattern reference only for packaging a skill provider inside a DSH bundle; this repository implements its own provider and skill content. No superpowers source file is copied.",
+      "files": []
+    },
+    {
+      "name": "DSH Harness Host API",
+      "version": "0.2.1-rc.5 (build d4db512a969fccf0c5cc7ec8fe38e9c1d27af916)",
+      "location": "E:/dsh/resources/app.asar/dsh (implementation checkout) and the running desktop profile",
+      "license": "Host-provided",
+      "redistributed": false,
+      "used_as": "ctx.tools.register(ToolDefinition), ctx.skills.registerProvider, ctx.effect lifecycle; exact signatures read through cordis_inspect_query/Service on 2026-11-07.",
+      "files": []
+    }
+  ],
+  "boundaries": {
+    "atlas_executed": false,
+    "atlas_full_package_vendored": false,
+    "linux_kbuild_compdb_verified": false,
+    "forced_isolation_runner_provisioned": false,
+    "native_cfg_extractor_present": false,
+    "network_used_by_runtime": false,
+    "note": "This source lock records read-only provenance only. It is not a redistribution manifest and does not claim the Atlas runtime or Linux analysis gates passed."
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thestuckedcat/dsh-code-reader/schemas/learning-record.schema.json",
+  "title": "LearningRecordV1",
+  "description": "Versioned learning record. Agent explanations never become user claims: prediction/observation/difference stay pending until the user or real evidence provides them. Runtime validation lives in engine/code_learning/records.py and learning.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "record_id", "workspace_id", "workspace_revision", "variant_ids", "scope_ref", "goal", "snapshot_refs", "build_identities", "evidence_refs", "path_refs", "mental_model", "prediction", "experiment", "observation", "difference", "rules", "unknowns", "next_action", "cursor", "freshness", "invalidation_reasons", "decision", "created_at", "updated_at", "archived"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"},
+    "generation": {"type": "integer", "minimum": 1},
+    "workspace_id": {"type": "string"},
+    "workspace_revision": {"type": "integer", "minimum": 1},
+    "variant_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "scope_ref": {"type": "string"},
+    "goal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["question", "level", "nature"],
+      "properties": {
+        "question": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "level": {"enum": ["K0", "K1", "K2", "K3"]},
+        "nature": {"type": "array", "items": {"enum": ["F", "G", "E", "Q"]}}
+      }
+    },
+    "snapshot_refs": {"type": "array", "items": {"type": "string"}},
+    "build_identities": {"type": "array", "items": {"type": "object"}},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "path_refs": {"type": "array", "items": {"type": "string"}},
+    "mental_model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["pending", "user_provided", "agent_explanation"]},
+        "text": {"type": "string"},
+        "author": {"enum": ["user", "agent"]}
+      }
+    },
+    "prediction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["pending", "user_provided"]},
+        "text": {"type": "string"},
+        "provided_at": {"type": "string"}
+      }
+    },
+    "experiment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["pending", "planned", "executed"]},
+        "plan_ref": {"type": ["string", "null"]},
+        "run_ref": {"type": ["string", "null"]}
+      }
+    },
+    "observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "evidence_refs"],
+      "properties": {
+        "status": {"enum": ["pending", "observed"]},
+        "text": {"type": "string"},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "difference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status"],
+      "properties": {"status": {"enum": ["pending", "compared"]}, "text": {"type": "string"}}
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["text", "evidence_refs", "applicable_scope", "status"],
+        "properties": {
+          "text": {"type": "string"},
+          "evidence_refs": {"type": "array", "items": {"type": "string"}},
+          "applicable_scope": {"type": "string"},
+          "status": {"enum": ["candidate", "supported"]}
+        }
+      }
+    },
+    "unknowns": {"type": "array", "items": {"type": "string"}},
+    "next_action": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["text", "estimated_minutes", "completion_criterion"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "estimated_minutes": {"type": "integer", "minimum": 1, "maximum": 240},
+        "completion_criterion": {"type": "string", "minLength": 1, "maxLength": 1024}
+      }
+    },
+    "cursor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["current_question", "read_evidence_refs"],
+      "properties": {
+        "current_question": {"type": "string"},
+        "read_evidence_refs": {"type": "array", "items": {"type": "string"}},
+        "chosen_path_ref": {"type": ["string", "null"]},
+        "pending_choice": {"type": ["string", "null"]}
+      }
+    },
+    "freshness": {"enum": ["fresh", "stale", "unknown"]},
+    "invalidation_reasons": {"type": "array", "items": {"type": "string"}},
+    "decision": {"enum": ["DONE-KNOW", "DONE-APPLIED", "CONTINUE", "QUESTION", "STOP", null]},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"},
+    "archived": {"type": "boolean"}
+  }
+}

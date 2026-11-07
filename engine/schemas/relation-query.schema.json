@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thestuckedcat/dsh-code-reader/schemas/relation-query.schema.json",
+  "title": "RelationQueryV1",
+  "description": "Selector contract for flow/lock/alias relation queries. Modes are mutually exclusive; unavailable capabilities return status=unavailable instead of fabricated data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "mode", "budget", "max_items"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "mode": {"enum": ["flow_cfg", "flow_legacy", "locks", "aliases"]},
+    "function_ref": {"type": "string"},
+    "parameter_ref": {"type": "string"},
+    "value_ref": {"type": "string"},
+    "symbol_ref": {"type": "string"},
+    "object_ref": {"type": "string"},
+    "lock_ref": {"type": "string"},
+    "direction": {"enum": ["forward", "backward"]},
+    "budget": {"type": "integer", "minimum": 1, "maximum": 10000},
+    "max_items": {"type": "integer", "minimum": 1, "maximum": 2000}
+  }
+}

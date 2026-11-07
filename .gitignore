@@ -1,0 +1,17 @@
+# Runtime state and local fixtures are never committed.
+state/
+runtime/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+*.log
+.DS_Store
+Thumbs.db
+tmp/
+.tmp/
+# A local trusted bootstrap file references machine paths.
+bootstrap.json
+local/

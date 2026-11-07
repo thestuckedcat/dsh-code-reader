@@ -1,0 +1,47 @@
+{
+  "name": "@local/dsh-code-reader",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source-grounded Linux driver and user-space code reading/learning tools for DeepSeek Harness: workspace registration, bounded source evidence, Atlas snapshot queries, cross-repo ABI bridge candidates and versioned learning records.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "lib/",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "skills/",
+    "engine/code_learning/",
+    "engine/schemas/",
+    "USAGE.md",
+    "README.md",
+    "LICENSE",
+    "source.lock.json"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "linux-kernel",
+    "code-reading",
+    "code-learning",
+    "sdk-code-atlas"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "python -m unittest discover -s tests -v",
+    "test:node": "node --test tests/node/*.test.mjs"
+  }
+}

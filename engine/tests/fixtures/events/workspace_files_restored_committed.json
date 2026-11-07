@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "event_id": "ev-workspace-restored-0001",
+  "kind": "workspace_files_restored",
+  "source_capability": "capability-03-facts",
+  "scope_ref": "local",
+  "session_ref": "sess-fixture-1",
+  "operation_id": "op-workspace-restore-0001",
+  "generation": 1,
+  "affected_refs": ["workspace:synthetic-linux-ioctl"],
+  "outcome": "committed",
+  "before_snapshot": "snap-before-0001",
+  "after_snapshot": "snap-after-0001",
+  "occurred_at": "2026-11-07T00:00:00Z"
+}

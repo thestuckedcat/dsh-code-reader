@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thestuckedcat/dsh-code-reader/schemas/cross-repo-binding.schema.json",
+  "title": "CrossRepoBindingV1",
+  "description": "Explicit cross-repository ABI/interface bridge. A supported binding can only produce abi_bridge/certainty=may, never a compiler call fact. Runtime evaluation lives in engine/code_learning/bindings.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "binding_id", "revision", "kind", "from", "to", "applicable_variant_pairs", "abi", "selector", "shared_definition_evidence_refs", "origin", "status", "assumptions", "limitations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "binding_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"},
+    "revision": {"type": "integer", "minimum": 1},
+    "kind": {"enum": ["uapi_ioctl", "shared_abi", "protocol_message", "shared_header"]},
+    "from": {"$ref": "#/$defs/endpoint"},
+    "to": {"$ref": "#/$defs/endpoint"},
+    "applicable_variant_pairs": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["from_variant", "to_variant"],
+        "properties": {
+          "from_variant": {"type": "string"},
+          "to_variant": {"type": "string"}
+        }
+      }
+    },
+    "abi": {
+      "type": "object", "additionalProperties": false,
+      "required": ["architecture", "endianness", "pointer_bits", "compat_mode", "layout_evidence_refs"],
+      "properties": {
+        "architecture": {"type": ["string", "null"]},
+        "endianness": {"enum": ["little", "big", null]},
+        "pointer_bits": {"enum": [32, 64, null]},
+        "compat_mode": {"enum": ["native", "compat32", "unknown"]},
+        "layout_evidence_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "selector": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "declared_value", "value_evidence_refs"],
+      "properties": {
+        "kind": {"enum": ["ioctl_command", "message_id", "symbol_contract"]},
+        "declared_value": {"type": "string", "minLength": 1, "maxLength": 128},
+        "value_evidence_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "shared_definition_evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "origin": {"enum": ["source_derived", "agent", "user_note"]},
+    "status": {"enum": ["candidate", "supported", "incomplete", "conflicting", "stale"]},
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "endpoint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repo_id", "variant_id", "interface_ref", "source_evidence_refs", "interface_revision_ref", "snapshot_ref"],
+      "properties": {
+        "repo_id": {"type": "string"},
+        "variant_id": {"type": "string"},
+        "interface_ref": {"type": "string", "minLength": 1, "maxLength": 512},
+        "source_evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "interface_revision_ref": {"type": ["string", "null"]},
+        "snapshot_ref": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

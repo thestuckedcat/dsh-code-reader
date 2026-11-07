@@ -1,0 +1,9 @@
+# dsh-code-reader bundle patch.
+# Inserts one Host row: the code-learning tool + skill plugin. Config stays
+# empty so the plugin resolves the trusted bootstrap file from
+# CODE_READER_BOOTSTRAP or $DSH_HOME/code-reader/bootstrap.json; override the
+# row config only to point at a different local bootstrap file or Python.
+- insert:
+    - id: dsh-code-reader
+      name: '@local/dsh-code-reader'
+      config: {}

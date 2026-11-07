@@ -1,0 +1,353 @@
+python.exe : test_bad_argument_shapes (test_bindings.BindingEvaluationTests.test_bad_argument_shapes) ... ok
+所在位置 行:1 字符: 180
++ ... ngine"; $out = & python -m unittest discover -s tests -v 2>&1 | Out-S ...
++                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_bad_argume..._shapes) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_binding_digest_is_deterministic_and_order_independent (test_bindings.BindingEvaluationTests.test_binding_digest_is
+_deterministic_and_order_independent) ... ok
+test_bridge_candidate_exposes_interface_refs (test_bindings.BindingEvaluationTests.test_bridge_candidate_exposes_interf
+ace_refs) ... ok
+test_conflicting_when_duplicate_revisions_are_not_contiguous (test_bindings.BindingEvaluationTests.test_conflicting_whe
+n_duplicate_revisions_are_not_contiguous) ... ok
+test_conflicting_when_endpoint_interface_revisions_disagree (test_bindings.BindingEvaluationTests.test_conflicting_when
+_endpoint_interface_revisions_disagree) ... ok
+test_conflicting_when_same_selector_points_to_different_targets (test_bindings.BindingEvaluationTests.test_conflicting_
+when_same_selector_points_to_different_targets) ... ok
+test_different_selector_values_do_not_conflict (test_bindings.BindingEvaluationTests.test_different_selector_values_do_
+not_conflict) ... ok
+test_empty_binding_list (test_bindings.BindingEvaluationTests.test_empty_binding_list) ... ok
+test_incomplete_when_evidence_is_missing (test_bindings.BindingEvaluationTests.test_incomplete_when_evidence_is_missing
+) ... ok
+test_input_is_not_mutated (test_bindings.BindingEvaluationTests.test_input_is_not_mutated) ... ok
+test_input_status_is_ignored_and_recomputed (test_bindings.BindingEvaluationTests.test_input_status_is_ignored_and_reco
+mputed) ... ok
+test_stale_through_explicit_previous_bindings_handoff (test_bindings.BindingEvaluationTests.test_stale_through_explicit
+_previous_bindings_handoff) ... ok
+test_stale_when_evidence_summary_changes_after_previous_evaluation (test_bindings.BindingEvaluationTests.test_stale_whe
+n_evidence_summary_changes_after_previous_evaluation) ... ok
+test_stale_when_identity_changes_after_previous_evaluation (test_bindings.BindingEvaluationTests.test_stale_when_identi
+ty_changes_after_previous_evaluation) ... ok
+test_structural_validation_rejections (test_bindings.BindingEvaluationTests.test_structural_validation_rejections) ... 
+ok
+test_supported_origin_variants_never_upgrade_to_exact (test_bindings.BindingEvaluationTests.test_supported_origin_varia
+nts_never_upgrade_to_exact) ... ok
+test_supported_requires_all_evidence_and_stays_may (test_bindings.BindingEvaluationTests.test_supported_requires_all_ev
+idence_and_stays_may) ... ok
+test_unchanged_reevaluation_stays_supported (test_bindings.BindingEvaluationTests.test_unchanged_reevaluation_stays_sup
+ported) ... ok
+test_variant_pair_exact_match_is_required (test_bindings.BindingEvaluationTests.test_variant_pair_exact_match_is_requir
+ed) ... ok
+test_bootstrap_init_command (test_cli_journey.CliJourneyTest.test_bootstrap_init_command) ... ok
+test_cross_repo_incomplete_binding_yields_unresolved (test_cli_journey.CliJourneyTest.test_cross_repo_incomplete_bindin
+g_yields_unresolved) ... ok
+test_error_payloads_and_exit_codes (test_cli_journey.CliJourneyTest.test_error_payloads_and_exit_codes) ... ok
+test_full_learning_journey (test_cli_journey.CliJourneyTest.test_full_learning_journey) ... ok
+test_plan_is_reference_only_and_run_is_blocked (test_cli_journey.CliJourneyTest.test_plan_is_reference_only_and_run_is_
+blocked) ... ok
+test_archived_records_are_not_invalidated (test_invalidation.ConsumeEventTests.test_archived_records_are_not_invalidate
+d) ... ok
+test_committed_session_rewind_targets_only_named_record (test_invalidation.ConsumeEventTests.test_committed_session_rew
+ind_targets_only_named_record) ... ok
+test_consume_event_requires_registered_workspace (test_invalidation.ConsumeEventTests.test_consume_event_requires_regis
+tered_workspace) ... ok
+test_event_id_is_idempotent (test_invalidation.ConsumeEventTests.test_event_id_is_idempotent) ... ok
+test_generation_gap_detected_and_local_recheck_still_works (test_invalidation.ConsumeEventTests.test_generation_gap_det
+ected_and_local_recheck_still_works) ... ok
+test_in_order_events_advance_cursor_without_proving_freshness (test_invalidation.ConsumeEventTests.test_in_order_events
+_advance_cursor_without_proving_freshness) ... ok
+test_invalid_events_are_rejected (test_invalidation.ConsumeEventTests.test_invalid_events_are_rejected) ... ok
+test_out_of_order_event_is_audited_but_not_applied (test_invalidation.ConsumeEventTests.test_out_of_order_event_is_audi
+ted_but_not_applied) ... ok
+test_partial_outcome_marks_unknown_conservatively (test_invalidation.ConsumeEventTests.test_partial_outcome_marks_unkno
+wn_conservatively) ... ok
+test_unknown_outcome_marks_all_locatable_records_unknown (test_invalidation.ConsumeEventTests.test_unknown_outcome_mark
+s_all_locatable_records_unknown) ... ok
+test_unlocatable_session_removal_marks_scope_records_unknown (test_invalidation.ConsumeEventTests.test_unlocatable_sess
+ion_removal_marks_scope_records_unknown) ... ok
+test_workspace_restored_event_marks_records_stale (test_invalidation.ConsumeEventTests.test_workspace_restored_event_ma
+rks_records_stale) ... ok
+test_resume_detects_compdb_change (test_invalidation.ResumeRecordTests.test_resume_detects_compdb_change) ... ok
+test_resume_detects_config_change (test_invalidation.ResumeRecordTests.test_resume_detects_config_change) ... ok
+test_resume_detects_evidence_sha_mismatch (test_invalidation.ResumeRecordTests.test_resume_detects_evidence_sha_mismatc
+h) ... ok
+test_resume_detects_generated_header_change (test_invalidation.ResumeRecordTests.test_resume_detects_generated_header_c
+hange) ... ok
+test_resume_detects_toolchain_digest_change (test_invalidation.ResumeRecordTests.test_resume_detects_toolchain_digest_c
+hange) ... ok
+test_resume_detects_unreferenced_source_change (test_invalidation.ResumeRecordTests.test_resume_detects_unreferenced_so
+urce_change) ... ok
+test_resume_fresh_record_returns_safe_cursor (test_invalidation.ResumeRecordTests.test_resume_fresh_record_returns_safe
+_cursor) ... ok
+test_resume_missing_record_and_foreign_record (test_invalidation.ResumeRecordTests.test_resume_missing_record_and_forei
+gn_record) ... ok
+test_resume_never_rewrites_the_stored_revision (test_invalidation.ResumeRecordTests.test_resume_never_rewrites_the_stor
+ed_revision) ... ok
+test_resume_unknown_on_invalid_signed_evidence (test_invalidation.ResumeRecordTests.test_resume_unknown_on_invalid_sign
+ed_evidence) ... ok
+test_resume_unknown_when_evidence_file_is_missing (test_invalidation.ResumeRecordTests.test_resume_unknown_when_evidenc
+e_file_is_missing) ... ok
+test_resume_without_evidence_refs_is_fresh_when_inputs_match (test_invalidation.ResumeRecordTests.test_resume_without_e
+vidence_refs_is_fresh_when_inputs_match) ... ok
+test_resume_workspace_revision_change_is_conservative_unknown (test_invalidation.ResumeRecordTests.test_resume_workspac
+e_revision_change_is_conservative_unknown) ... ok
+test_bootstrap_accepts_utf8_bom (test_io_robustness.LocalJsonEncodingTest.test_bootstrap_accepts_utf8_bom) ... ok
+test_read_json_accepts_utf8_bom (test_io_robustness.LocalJsonEncodingTest.test_read_json_accepts_utf8_bom) ... ok
+test_read_json_still_rejects_invalid_json (test_io_robustness.LocalJsonEncodingTest.test_read_json_still_rejects_invali
+d_json) ... ok
+test_binding_for_other_variant_is_not_used (test_paths.CrossRepoPathTests.test_binding_for_other_variant_is_not_used) .
+.. ok
+test_binding_interface_missing_is_unresolved (test_paths.CrossRepoPathTests.test_binding_interface_missing_is_unresolve
+d) ... ok
+test_cross_repo_requires_both_snapshots (test_paths.CrossRepoPathTests.test_cross_repo_requires_both_snapshots) ... ok
+test_incomplete_conflicting_stale_bindings_block_the_path (test_paths.CrossRepoPathTests.test_incomplete_conflicting_st
+ale_bindings_block_the_path) ... ok
+test_opposite_direction_binding_is_not_used (test_paths.CrossRepoPathTests.test_opposite_direction_binding_is_not_used)
+ ... ok
+test_same_named_symbol_is_not_merged_across_repos (test_paths.CrossRepoPathTests.test_same_named_symbol_is_not_merged_a
+cross_repos) ... ok
+test_supported_binding_produces_may_abi_bridge (test_paths.CrossRepoPathTests.test_supported_binding_produces_may_abi_b
+ridge) ... ok
+test_ambiguous_symbol_returns_choices (test_paths.PathQueryTests.test_ambiguous_symbol_returns_choices) ... ok
+test_bare_refs_allowed_for_single_variant_snapshot (test_paths.PathQueryTests.test_bare_refs_allowed_for_single_variant
+_snapshot) ... ok
+test_budget_truncation_is_reported (test_paths.PathQueryTests.test_budget_truncation_is_reported) ... ok
+test_common_prefix_and_first_divergence_choices (test_paths.PathQueryTests.test_common_prefix_and_first_divergence_choi
+ces) ... ok
+test_depth_truncation_is_reported (test_paths.PathQueryTests.test_depth_truncation_is_reported) ... ok
+test_direction_up_walks_callers (test_paths.PathQueryTests.test_direction_up_walks_callers) ... ok
+test_exact_id_wins_over_name (test_paths.PathQueryTests.test_exact_id_wins_over_name) ... ok
+test_path_argument_validation (test_paths.PathQueryTests.test_path_argument_validation) ... ok
+test_path_edges_join_call_targets_and_keep_certainty (test_paths.PathQueryTests.test_path_edges_join_call_targets_and_k
+eep_certainty) ... ok
+test_reference_candidates_are_not_fabricated_as_calls (test_paths.PathQueryTests.test_reference_candidates_are_not_fabr
+icated_as_calls) ... ok
+test_valid_result_reports_stale_freshness (test_paths.PathQueryTests.test_valid_result_reports_stale_freshness) ... ok
+test_aliases_selector_validation (test_paths.RelationQueryTests.test_aliases_selector_validation) ... ok
+test_aliases_unavailable_without_alias_analysis (test_paths.RelationQueryTests.test_aliases_unavailable_without_alias_a
+nalysis) ... ok
+test_budget_limits_validation (test_paths.RelationQueryTests.test_budget_limits_validation) ... ok
+test_flow_cfg_selector_validation (test_paths.RelationQueryTests.test_flow_cfg_selector_validation) ... ok
+test_flow_cfg_without_cfg_capability_is_unavailable_not_legacy (test_paths.RelationQueryTests.test_flow_cfg_without_cfg
+_capability_is_unavailable_not_legacy) ... ok
+test_flow_legacy_budget_and_max_items_truncation (test_paths.RelationQueryTests.test_flow_legacy_budget_and_max_items_t
+runcation) ... ok
+test_flow_legacy_projects_flow_edges (test_paths.RelationQueryTests.test_flow_legacy_projects_flow_edges) ... ok
+test_flow_legacy_selector_validation (test_paths.RelationQueryTests.test_flow_legacy_selector_validation) ... ok
+test_flow_legacy_without_flow_edges_is_unavailable (test_paths.RelationQueryTests.test_flow_legacy_without_flow_edges_i
+s_unavailable) ... ok
+test_invalid_mode_and_unknown_selector (test_paths.RelationQueryTests.test_invalid_mode_and_unknown_selector) ... ok
+test_locks_project_existing_lock_evidence (test_paths.RelationQueryTests.test_locks_project_existing_lock_evidence) ...
+ ok
+test_locks_selector_validation (test_paths.RelationQueryTests.test_locks_selector_validation) ... ok
+test_locks_unavailable_without_lock_analysis (test_paths.RelationQueryTests.test_locks_unavailable_without_lock_analysi
+s) ... ok
+test_default_record_goal_is_validated (test_records.DefaultRecordTests.test_default_record_goal_is_validated) ... ok
+test_default_record_keeps_user_fields_pending (test_records.DefaultRecordTests.test_default_record_keeps_user_fields_pe
+nding) ... ok
+test_default_record_uses_workspace_identity_and_build_identity (test_records.DefaultRecordTests.test_default_record_use
+s_workspace_identity_and_build_identity) ... ok
+test_agent_explanation_can_never_be_a_user_claim (test_records.DraftValidationTests.test_agent_explanation_can_never_be
+_a_user_claim) ... ok
+test_done_applied_requires_real_evidence (test_records.DraftValidationTests.test_done_applied_requires_real_evidence) .
+.. ok
+test_experiment_status_requires_matching_evidence_refs (test_records.DraftValidationTests.test_experiment_status_requir
+es_matching_evidence_refs) ... ok
+test_next_action_is_at_most_one_with_full_criteria (test_records.DraftValidationTests.test_next_action_is_at_most_one_w
+ith_full_criteria) ... ok
+test_observation_observed_requires_evidence_refs (test_records.DraftValidationTests.test_observation_observed_requires_
+evidence_refs) ... ok
+test_observation_observed_requires_executed_experiment (test_records.DraftValidationTests.test_observation_observed_req
+uires_executed_experiment) ... ok
+test_prediction_requires_real_user_provided_fields (test_records.DraftValidationTests.test_prediction_requires_real_use
+r_provided_fields) ... ok
+test_supported_rules_need_evidence (test_records.DraftValidationTests.test_supported_rules_need_evidence) ... ok
+test_validate_accepts_default_record (test_records.DraftValidationTests.test_validate_accepts_default_record) ... ok
+test_validate_rejects_generation_and_unknown_fields (test_records.DraftValidationTests.test_validate_rejects_generation
+_and_unknown_fields) ... ok
+test_validate_rejects_unsupported_schema_version (test_records.DraftValidationTests.test_validate_rejects_unsupported_s
+chema_version) ... ok
+test_export_rejects_unknown_format (test_records.ExportRecordTests.test_export_rejects_unknown_format) ... ok
+test_json_export_is_exact_revision_copy (test_records.ExportRecordTests.test_json_export_is_exact_revision_copy) ... ok
+test_markdown_marks_pending_and_stale_fields_with_evidence (test_records.ExportRecordTests.test_markdown_marks_pending_
+and_stale_fields_with_evidence) ... ok
+test_markdown_of_fresh_record_says_fresh_but_still_pending_prediction (test_records.ExportRecordTests.test_markdown_of_
+fresh_record_says_fresh_but_still_pending_prediction) ... ok
+test_export_record_is_workspace_scoped (test_records.RecordScopeTests.test_export_record_is_workspace_scoped) ... ok
+test_get_record_is_workspace_scoped (test_records.RecordScopeTests.test_get_record_is_workspace_scoped) ... ok
+test_body_tamper_is_detected_on_read (test_records.SaveRecordTests.test_body_tamper_is_detected_on_read) ... ok
+test_custom_record_id_is_honoured (test_records.SaveRecordTests.test_custom_record_id_is_honoured) ... ok
+test_get_record_not_found (test_records.SaveRecordTests.test_get_record_not_found) ... ok
+test_operation_conflict_on_different_digest (test_records.SaveRecordTests.test_operation_conflict_on_different_digest) 
+... ok
+test_operation_idempotency_same_digest_replays_result (test_records.SaveRecordTests.test_operation_idempotency_same_dig
+est_replays_result) ... ok
+test_save_assigns_generation_storage_and_pending_prediction (test_records.SaveRecordTests.test_save_assigns_generation_
+storage_and_pending_prediction) ... ok
+test_save_cas_conflict_never_overwrites (test_records.SaveRecordTests.test_save_cas_conflict_never_overwrites) ... ok
+test_save_keeps_agent_explanation_separate_from_user_prediction (test_records.SaveRecordTests.test_save_keeps_agent_exp
+lanation_separate_from_user_prediction) ... ok
+test_save_persists_sqlite_metadata (test_records.SaveRecordTests.test_save_persists_sqlite_metadata) ... ok
+test_save_rejects_archived_record_growth (test_records.SaveRecordTests.test_save_rejects_archived_record_growth) ... ok
+test_save_rejects_bool_generation_and_bad_draft (test_records.SaveRecordTests.test_save_rejects_bool_generation_and_bad
+_draft) ... ok
+test_save_requires_registered_workspace_and_matching_identity (test_records.SaveRecordTests.test_save_requires_register
+ed_workspace_and_matching_identity) ... ok
+test_01_required_files_exist (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_01_required_files_exist) ...
+ ok
+test_02_frontmatter_matches_host_parser (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_02_frontmatter_ma
+tches_host_parser) ... ok
+test_03_body_is_chinese_and_substantive (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_03_body_is_chines
+e_and_substantive) ... ok
+test_04_six_tools_with_actions (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_04_six_tools_with_actions)
+ ... ok
+test_05_workspace_first_flow_order (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_05_workspace_first_flo
+w_order) ... ok
+test_06_ordinary_question_answered_directly (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_06_ordinary_q
+uestion_answered_directly) ... ok
+test_07_full_retrospective_only_on_explicit_trigger (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_07_fu
+ll_retrospective_only_on_explicit_trigger) ... ok
+test_08_pending_fields_and_no_fabrication (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_08_pending_fiel
+ds_and_no_fabrication) ... ok
+test_09_single_next_action_with_minutes_and_criterion (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_09_
+single_next_action_with_minutes_and_criterion) ... ok
+test_10_k2_k3_may_stop_without_g_q (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_10_k2_k3_may_stop_with
+out_g_q) ... ok
+test_11_evidence_grading_and_no_upgrade (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_11_evidence_gradi
+ng_and_no_upgrade) ... ok
+test_12_runtime_hardware_thread_layout_boundary (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_12_runtim
+e_hardware_thread_layout_boundary) ... ok
+test_13_secrets_and_ref_only (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_13_secrets_and_ref_only) ...
+ ok
+test_14_resume_after_source_change (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_14_resume_after_source
+_change) ... ok
+test_15_no_auto_run_build_or_auto_write_05 (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_15_no_auto_run
+_build_or_auto_write_05) ... ok
+test_16_export_only_on_request (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_16_export_only_on_request)
+ ... ok
+test_17_workflow_state_machine_and_stop_rules (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_17_workflow
+_state_machine_and_stop_rules) ... ok
+test_18_workflow_synthetic_ioctl_fixture (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_18_workflow_synt
+hetic_ioctl_fixture) ... ok
+test_19_limits_reference (test_skill_contract.LearnCodeWorkspaceSkillContractTest.test_19_limits_reference) ... ok
+test_coverage_failed_and_pending_are_preserved (test_snapshot.SnapshotTestCase.test_coverage_failed_and_pending_are_pre
+served) ... ok
+test_current_and_inbox_drift_do_not_change_loaded_snapshot (test_snapshot.SnapshotTestCase.test_current_and_inbox_drift
+_do_not_change_loaded_snapshot) ... ok
+test_envelope_schema_rejections (test_snapshot.SnapshotTestCase.test_envelope_schema_rejections) ... ok
+test_freshness_stale_after_workspace_revision_or_source_change (test_snapshot.SnapshotTestCase.test_freshness_stale_aft
+er_workspace_revision_or_source_change) ... ok
+test_graph_payload_schema_rejections (test_snapshot.SnapshotTestCase.test_graph_payload_schema_rejections) ... ok
+test_import_argument_validation (test_snapshot.SnapshotTestCase.test_import_argument_validation) ... ok
+test_import_verifies_and_copies_snapshot_pair (test_snapshot.SnapshotTestCase.test_import_verifies_and_copies_snapshot_
+pair) ... ok
+test_integer_failed_coverage_is_rejected_not_coerced (test_snapshot.SnapshotTestCase.test_integer_failed_coverage_is_re
+jected_not_coerced) ... ok
+test_integer_pending_units_coverage_is_rejected (test_snapshot.SnapshotTestCase.test_integer_pending_units_coverage_is_
+rejected) ... ok
+test_load_snapshot_unknown_reference (test_snapshot.SnapshotTestCase.test_load_snapshot_unknown_reference) ... ok
+test_manifest_payload_schema_rejections (test_snapshot.SnapshotTestCase.test_manifest_payload_schema_rejections) ... ok
+test_missing_snapshot_file_reports_unknown (test_snapshot.SnapshotTestCase.test_missing_snapshot_file_reports_unknown) 
+... ok
+test_non_json_snapshot_file_rejected (test_snapshot.SnapshotTestCase.test_non_json_snapshot_file_rejected) ... ok
+test_operation_id_reuse_with_different_request_conflicts (test_snapshot.SnapshotTestCase.test_operation_id_reuse_with_d
+ifferent_request_conflicts) ... ok
+test_reimport_is_idempotent_and_index_has_one_entry (test_snapshot.SnapshotTestCase.test_reimport_is_idempotent_and_ind
+ex_has_one_entry) ... ok
+test_reimport_repairs_a_missing_verified_copy (test_snapshot.SnapshotTestCase.test_reimport_repairs_a_missing_verified_
+copy) ... ok
+test_reimport_same_snapshot_id_with_different_graph_conflicts (test_snapshot.SnapshotTestCase.test_reimport_same_snapsh
+ot_id_with_different_graph_conflicts) ... ok
+test_snapshot_for_repo (test_snapshot.SnapshotTestCase.test_snapshot_for_repo) ... ok
+test_tampered_copy_is_rejected_on_load (test_snapshot.SnapshotTestCase.test_tampered_copy_is_rejected_on_load) ... ok
+test_tampered_graph_bytes_break_graph_hash (test_snapshot.SnapshotTestCase.test_tampered_graph_bytes_break_graph_hash) 
+... ok
+test_tampered_manifest_graph_hash_field_rejected (test_snapshot.SnapshotTestCase.test_tampered_manifest_graph_hash_fiel
+d_rejected) ... ok
+test_import_snapshot_for_real_registered_workspace (test_snapshot.SnapshotWorkspaceIntegrationTests.test_import_snapsho
+t_for_real_registered_workspace) ... ok
+test_binary_content_returns_ref_only (test_source.SourceTestCase.test_binary_content_returns_ref_only) ... ok
+test_cross_root_repository_escape_rejected (test_source.SourceTestCase.test_cross_root_repository_escape_rejected) ... 
+ok
+test_cross_workspace_path_and_evidence_refs_rejected (test_source.SourceTestCase.test_cross_workspace_path_and_evidence
+_refs_rejected) ... ok
+test_find_and_read_unknown_workspace_or_repo (test_source.SourceTestCase.test_find_and_read_unknown_workspace_or_repo) 
+... ok
+test_find_cursor_invalidated_by_file_changes (test_source.SourceTestCase.test_find_cursor_invalidated_by_file_changes) 
+... ok
+test_find_cursor_is_bound_to_query_workspace_and_integrity (test_source.SourceTestCase.test_find_cursor_is_bound_to_que
+ry_workspace_and_integrity) ... ok
+test_find_file_budget_returns_cursor_and_scrolls (test_source.SourceTestCase.test_find_file_budget_returns_cursor_and_s
+crolls) ... ok
+test_find_filename_selector (test_source.SourceTestCase.test_find_filename_selector) ... ok
+test_find_glob_semantics (test_source.SourceTestCase.test_find_glob_semantics) ... ok
+test_find_hit_budget_returns_cursor_and_scrolls (test_source.SourceTestCase.test_find_hit_budget_returns_cursor_and_scr
+olls) ... ok
+test_find_literal_returns_bounded_match_with_context (test_source.SourceTestCase.test_find_literal_returns_bounded_matc
+h_with_context) ... ok
+test_find_selector_and_glob_validation (test_source.SourceTestCase.test_find_selector_and_glob_validation) ... ok
+test_find_skips_ignored_directories_and_links (test_source.SourceTestCase.test_find_skips_ignored_directories_and_links
+) ... ok
+test_path_ref_tampering_and_forgery_rejected (test_source.SourceTestCase.test_path_ref_tampering_and_forgery_rejected) 
+... ok
+test_read_evidence_of_forged_range_rejected (test_source.SourceTestCase.test_read_evidence_of_forged_range_rejected) ..
+. ok
+test_read_evidence_roundtrip_limits_and_staleness (test_source.SourceTestCase.test_read_evidence_roundtrip_limits_and_s
+taleness) ... ok
+test_read_source_byte_range_validation_and_utf8_adjustment (test_source.SourceTestCase.test_read_source_byte_range_vali
+dation_and_utf8_adjustment) ... ok
+test_read_source_hash_mismatch_and_stale (test_source.SourceTestCase.test_read_source_hash_mismatch_and_stale) ... ok
+test_read_source_rejects_other_repo_file_ownership (test_source.SourceTestCase.test_read_source_rejects_other_repo_file
+_ownership) ... ok
+test_read_source_success_returns_source_evidence (test_source.SourceTestCase.test_read_source_success_returns_source_ev
+idence) ... ok
+test_suspected_secret_returns_ref_only (test_source.SourceTestCase.test_suspected_secret_returns_ref_only) ... ok
+test_build_identity_digests_change_with_config_compdb_and_source (test_workspace.WorkspaceTestCase.test_build_identity_
+digests_change_with_config_compdb_and_source) ... ok
+test_cross_root_escape_with_junction_rejected (test_workspace.WorkspaceTestCase.test_cross_root_escape_with_junction_re
+jected)
+A repo rooted under root A must not resolve into another candidate root. ... ok
+test_first_import_returns_public_projection (test_workspace.WorkspaceTestCase.test_first_import_returns_public_projecti
+on) ... ok
+test_import_missing_manifest_rejected (test_workspace.WorkspaceTestCase.test_import_missing_manifest_rejected) ... ok
+test_import_operation_idempotent_and_operation_conflict (test_workspace.WorkspaceTestCase.test_import_operation_idempot
+ent_and_operation_conflict) ... ok
+test_load_workspace_unknown_and_traversal (test_workspace.WorkspaceTestCase.test_load_workspace_unknown_and_traversal) 
+... ok
+test_manifest_scope_and_schema_errors (test_workspace.WorkspaceTestCase.test_manifest_scope_and_schema_errors) ... ok
+test_missing_and_file_repository_roots_rejected (test_workspace.WorkspaceTestCase.test_missing_and_file_repository_root
+s_rejected) ... ok
+test_nested_and_duplicate_repository_roots_rejected (test_workspace.WorkspaceTestCase.test_nested_and_duplicate_reposit
+ory_roots_rejected) ... ok
+test_overview_source_only_is_bounded_and_declares_unknowns (test_workspace.WorkspaceTestCase.test_overview_source_only_
+is_bounded_and_declares_unknowns) ... ok
+test_public_projection_and_build_identity_from_synthetic_workspace (test_workspace.WorkspaceTestCase.test_public_projec
+tion_and_build_identity_from_synthetic_workspace) ... ok
+test_registration_internal_fields_and_load_workspace (test_workspace.WorkspaceTestCase.test_registration_internal_field
+s_and_load_workspace) ... ok
+test_revision_cas_rejects_stale_expected_revision (test_workspace.WorkspaceTestCase.test_revision_cas_rejects_stale_exp
+ected_revision) ... ok
+test_semantic_variant_blocked_for_untrusted_compdb (test_workspace.WorkspaceTestCase.test_semantic_variant_blocked_for_
+untrusted_compdb) ... ok
+test_semantic_variant_ready_with_fixture_build_context (test_workspace.WorkspaceTestCase.test_semantic_variant_ready_wi
+th_fixture_build_context) ... ok
+test_semantic_variant_requires_all_build_inputs (test_workspace.WorkspaceTestCase.test_semantic_variant_requires_all_bu
+ild_inputs) ... ok
+test_source_manifest_digest_is_conservative (test_workspace.WorkspaceTestCase.test_source_manifest_digest_is_conservati
+ve) ... ok
+test_source_only_without_build_inputs_is_allowed (test_workspace.WorkspaceTestCase.test_source_only_without_build_input
+s_is_allowed) ... ok
+test_symlinked_repository_root_rejected (test_workspace.WorkspaceTestCase.test_symlinked_repository_root_rejected) ... 
+ok
+test_unknown_root_rejected (test_workspace.WorkspaceTestCase.test_unknown_root_rejected) ... ok
+test_validate_workspace_argument_rules (test_workspace.WorkspaceTestCase.test_validate_workspace_argument_rules) ... ok
+test_validate_workspace_detects_manifest_drift (test_workspace.WorkspaceTestCase.test_validate_workspace_detects_manife
+st_drift) ... ok
+test_workspace_status_freshness_after_source_and_config_changes (test_workspace.WorkspaceTestCase.test_workspace_status
+_freshness_after_source_and_config_changes) ... ok
+
+----------------------------------------------------------------------
+Ran 200 tests in 17.613s
+
+OK

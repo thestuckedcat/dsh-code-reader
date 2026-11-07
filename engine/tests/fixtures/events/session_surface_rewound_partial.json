@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "event_id": "ev-session-rewound-partial-0001",
+  "kind": "session_surface_rewound",
+  "source_capability": "capability-03-facts",
+  "scope_ref": "local",
+  "session_ref": "sess-fixture-2",
+  "operation_id": "op-session-rewind-0001",
+  "generation": 1,
+  "affected_refs": ["record:rec-fixture-rewound"],
+  "outcome": "partial",
+  "before_snapshot": "snap-before-0002",
+  "after_snapshot": null,
+  "occurred_at": "2026-11-07T00:00:01Z"
+}

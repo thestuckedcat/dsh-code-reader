@@ -1,0 +1,3 @@
+# Keep repository contents LF on every platform; this project has no binaries
+# except the optional plugin icon (SVG is text) and generated caches (ignored).
+* text=auto eol=lf

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thestuckedcat/dsh-code-reader/schemas/workspace.schema.json",
+  "title": "WorkspaceManifestV1",
+  "description": "Human/Host-authored workspace registration input. Refs are '<repo_id>:<relative/path>' strings; absolute paths appear only in the bootstrap configuration. Runtime validation is stricter than this overview schema (engine/code_learning/workspace.py).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workspace_id", "scope_ref", "repositories", "variants", "allowed_read_roots", "output_root_ref"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "workspace_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"},
+    "scope_ref": {"type": "string", "minLength": 1, "maxLength": 128},
+    "repositories": {
+      "type": "array", "minItems": 1, "maxItems": 64,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["repo_id", "root_ref", "relative_path", "role"],
+        "properties": {
+          "repo_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"},
+          "root_ref": {"type": "string", "minLength": 1},
+          "relative_path": {"type": "string", "minLength": 1},
+          "role": {"enum": ["umd", "uapi", "kmd", "library", "other"]},
+          "vcs": {
+            "type": "object", "additionalProperties": false,
+            "properties": {
+              "kind": {"enum": ["git", "none", "unknown"]},
+              "commit": {"type": ["string", "null"]},
+              "dirty_digest": {"type": ["string", "null"]},
+              "untracked_digest": {"type": ["string", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "variants": {
+      "type": "array", "minItems": 1, "maxItems": 32,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["variant_id", "analysis_mode"],
+        "properties": {
+          "variant_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"},
+          "analysis_mode": {"enum": ["source_only", "semantic"]},
+          "architecture": {"type": ["string", "null"]},
+          "target_triple": {"type": ["string", "null"]},
+          "config_refs": {"type": "array", "items": {"type": "string"}},
+          "compdb_refs": {"type": "array", "items": {"type": "string"}},
+          "generated_header_sets": {"type": "array", "items": {"type": "string"}},
+          "toolchain_ref": {"type": ["string", "null"]},
+          "sysroot_ref": {"type": ["string", "null"]},
+          "include_root_refs": {"type": "array", "items": {"type": "string"}},
+          "link_evidence_refs": {"type": "array", "items": {"type": "string"}},
+          "uapi_revision_refs": {"type": "array", "items": {"type": "string"}},
+          "execution_profile_ref": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "toolchains": {
+      "type": "array", "maxItems": 16,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["toolchain_ref", "compiler_path"],
+        "properties": {
+          "toolchain_ref": {"type": "string", "minLength": 1},
+          "compiler_path": {"type": "string", "pattern": "^(/|[A-Za-z]:[\\\\/])"},
+          "compiler_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+          "version_evidence_ref": {"type": ["string", "null"]},
+          "wrapper_policy": {"enum": ["none", "ccache", "sccache"]},
+          "resource_dir_ref": {"type": ["string", "null"]},
+          "builtin_roots": {"type": "array", "items": {"type": "string"}},
+          "allowed_probe_argv": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}},
+          "native_extractor_ref": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "allowed_read_roots": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "output_root_ref": {"type": "string", "minLength": 1},
+    "cross_repo_bindings": {"type": "array", "items": {"$ref": "./cross-repo-binding.schema.json"}}
+  }
+}

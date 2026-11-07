@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "artifact": "dsh-code-reader 0.1.0 (04-code-learning CL-IMPL-1)",
+  "verified_at": "2026-11-07T02:50:00+08:00",
+  "environment": {
+    "os": "Windows (win32)",
+    "python": "3.11.4",
+    "node_shell": "v26.13.0",
+    "dsh_profile": "desktop",
+    "host_gui": "http://127.0.0.1:14255",
+    "atlas_reference": "H:/VSCODE_READER (read-only, commit c33320a98face14c5f6e5e817beaccf52b9bbb93, tool 0.8.0 / schema 0.1); not executed"
+  },
+  "install": {
+    "action": "plugin_manager install_bundle",
+    "target": "E:/dsh/plugin/04-code-learning",
+    "result": {
+      "stage": "enable",
+      "target": "@local/dsh-code-reader",
+      "enabled": true,
+      "changed": true,
+      "application": "applied",
+      "version": "0.1.0",
+      "warnings": []
+    },
+    "profile_link": "C:/Users/admin/.dsh/profiles/desktop/node_modules/@local/dsh-code-reader -> E:/dsh/plugin/04-code-learning (junction)",
+    "profile_bundle_row": "@local/dsh-code-reader",
+    "config_entry": {
+      "id": "include:dsh-code-reader",
+      "patchId": "dsh-code-reader",
+      "name": "@local/dsh-code-reader",
+      "status": "absent",
+      "note": "row config is empty by design; the plugin resolves CODE_READER_BOOTSTRAP or $DSH_HOME/code-reader/bootstrap.json"
+    }
+  },
+  "tools_visible_to_agent_after_install": [
+    "code_workspace",
+    "code_overview",
+    "code_source",
+    "code_snapshot",
+    "code_path",
+    "code_learn"
+  ],
+  "skill_after_install": {
+    "name": "learn-code-workspace",
+    "provider": "dsh-code-reader",
+    "source": "custom",
+    "observed_in_session_skill_catalog": true,
+    "frontmatter": "name/description/whenToUse present; references workflow.md and evidence-and-limits.md",
+    "note": "the Host session skill catalog replaced and includes learn-code-workspace, which proves the packaged skill provider registered and discovered the file on disk"
+  },
+  "host_tool_journey": {
+    "purpose": "self-debug through the installed DSH Host plugin (fixed argv bridge to the Python engine), synthetic UMD/UAPI/KMD workspace; no Atlas/compiler/build executed",
+    "bootstrap": "C:/Users/admin/.dsh/code-reader/bootstrap.json (root synthetic-root -> C:/Users/admin/.dsh/code-reader/demo/synthetic)",
+    "workspace": "synthetic-plugin-journey",
+    "variant": "source-only-x86_64",
+    "steps": [
+      {
+        "tool": "code_workspace action=import",
+        "ok": true,
+        "exit_code": 0,
+        "observed": {
+          "workspace_revision": 1,
+          "repositories": ["umd", "uapi", "kmd"],
+          "semantic_status": "blocked",
+          "missing_inputs": ["compiler_build_context"],
+          "bindings": [{"binding_id": "job-ioctl-umd-kmd", "status": "supported"}]
+        }
+      },
+      {
+        "tool": "code_overview",
+        "ok": true,
+        "observed": {
+          "components_declared": 3,
+          "interface_candidates": ["umd:job_submit", "kmd:job_dispatch"],
+          "unknown_boundaries": ["semantic_status_blocked:compiler_build_context", "compiler_facts_unavailable"]
+        }
+      },
+      {
+        "tool": "code_source action=find",
+        "ok": true,
+        "observed": {
+          "matches": 1,
+          "safe_preview": "return ioctl(fd, JOB_IOCTL_SUBMIT, &local);",
+          "scanned_files": 2,
+          "scanned_bytes": 439,
+          "semantic_status": "blocked",
+          "limitations": ["text_only_not_compiler_fact"]
+        }
+      },
+      {
+        "tool": "code_source action=read",
+        "ok": true,
+        "observed": {
+          "origin": "source_text",
+          "semantic_status": "blocked",
+          "byte_range": [0, 160],
+          "sha256_verified": true
+        }
+      },
+      {
+        "tool": "code_snapshot action=import (umd then kmd)",
+        "ok": true,
+        "observed": {
+          "atlas_schema": "0.1",
+          "graph_hash_verified_against_raw_bytes": true,
+          "freshness": "fresh",
+          "coverage": {"failed": [], "pending_units": [], "whole_program_complete": false}
+        }
+      },
+      {
+        "tool": "code_path action=path kmd:job_dispatch -> kmd:job_complete",
+        "ok": true,
+        "observed": {
+          "edges": 1,
+          "edge_certainty": "may",
+          "edge_origin": "deterministic_analysis",
+          "unresolved": ["leaf_in_analyzed_graph"],
+          "truncated": false
+        }
+      },
+      {
+        "tool": "code_path action=path umd:job_submit -> kmd:job_dispatch",
+        "ok": true,
+        "observed": {
+          "cross_repo": true,
+          "abi_bridge": true,
+          "certainty": "may",
+          "origin": "derived",
+          "limitations": ["static_contract_not_runtime_call"],
+          "note": "no fabricated cross-repo call edge"
+        }
+      },
+      {
+        "tool": "code_path action=relation mode=locks",
+        "ok": true,
+        "observed": {"status": "unavailable", "capability_available": false, "note": "empty result not treated as proof"}
+      },
+      {
+        "tool": "code_learn action=save",
+        "ok": true,
+        "observed": {
+          "record_id": "rec_9aef17d7fbfa400d9376b853d9f5e39f",
+          "generation": 1,
+          "prediction": {"status": "pending"},
+          "observation": {"status": "pending", "evidence_refs": []},
+          "next_action_count": 1
+        }
+      },
+      {
+        "tool": "code_learn action=resume (before mutation)",
+        "ok": true,
+        "observed": {"freshness": "fresh", "changed_inputs": [], "safe_cursor_reason": "recheck_evidence_first"}
+      },
+      {
+        "tool": "code_learn action=resume (after mutating umd/src/job_submit.c)",
+        "ok": true,
+        "observed": {
+          "freshness": "stale",
+          "changed_inputs": ["source_manifest_digest", "evidence:umd:src/job_submit.c"],
+          "required_rechecks": ["source_manifest", "evidence"],
+          "prediction_still": "pending",
+          "safe_cursor_reason": "recheck_evidence_first"
+        }
+      },
+      {
+        "tool": "code_learn action=export format=markdown",
+        "ok": true,
+        "observed": {"export_ref": "rec_9aef17d7fbfa400d9376b853d9f5e39f.g1.md", "uploaded": false, "bytes": 1901}
+      }
+    ]
+  },
+  "automated_tests": {
+    "python": {
+      "command": "cd engine && python -m unittest discover -s tests -v",
+      "result": "Ran 200 tests, OK (17.6s)",
+      "evidence": "evidence/engine-tests.txt"
+    },
+    "node": {
+      "command": "node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs",
+      "result": "tests 11, pass 11, fail 0",
+      "evidence": "evidence/node-tests.txt"
+    },
+    "syntax": "node --check index.js lib/{config,bridge,tools,skills}.mjs passed"
+  },
+  "not_verified": [
+    "real Linux Kbuild/compdb Atlas indexing (requires target Linux toolchain + fixed Atlas runtime)",
+    "forced-isolation runner / compiler-probe negative tests (run returns EXECUTION_BLOCKED)",
+    "native CFG / dataflow / locks / aliases capability data (fixtures return status=unavailable)",
+    "real user repositories, hardware/runtime behavior, thread overlap, byte-layout proof",
+    "visual rendering of plugin locale/icon in the Web UI (registration/metadata verified from files and install result only)"
+  ]
+}
