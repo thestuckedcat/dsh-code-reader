@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
-from . import records
+from . import records, scope
 from .errors import CodeLearningError, fail
 from .util import check_id, digest, safe_relative_path, sha256_file
 from .validation import (
@@ -195,7 +195,6 @@ def _ref_file_digest(
 # ---------------------------------------------------------------------------
 # source manifest (BuildIdentity conservative change detector)
 # ---------------------------------------------------------------------------
-_SKIP_DIRS = frozenset({".git", "node_modules", "__pycache__"})
 
 
 def _source_manifest_digest_candidates(
@@ -222,15 +221,13 @@ def _source_manifest_digest_candidates(
             prefix = repo_id
         repo_entries: List[Tuple[str, int, int]] = []
         try:
-            for dirpath, dirnames, filenames in os.walk(root):
-                dirnames[:] = sorted(name for name in dirnames if name not in _SKIP_DIRS)
-                for name in filenames:
-                    path = Path(dirpath) / name
-                    if path.is_symlink() or not path.is_file():
-                        continue
-                    relative = path.relative_to(root).as_posix()
-                    stat = path.stat()
-                    repo_entries.append((relative, int(stat.st_size), int(stat.st_mtime_ns)))
+            # ``scope.iter_regular_files`` skips symlinks and Windows junctions
+            # (reparse points) instead of descending into them: a junction inside
+            # a registered repo must never pull an outside tree into the digest
+            # or cause an unbounded walk during ``resume``.
+            for full, info in scope.iter_regular_files(root):
+                relative = full.relative_to(root).as_posix()
+                repo_entries.append((relative, int(info.st_size), int(info.st_mtime_ns)))
         except OSError:
             return None
         for relative, size, mtime_ns in repo_entries:
@@ -384,6 +381,36 @@ def _recheck_evidence(
         detail["reason"] = "evidence_byte_range_invalid"
         return ("unknown", detail)
     return ("ok", detail)
+
+
+#: Upper bound on signed evidence references validated in one record save.
+MAX_RECORD_EVIDENCE_REFS = 64
+
+
+def check_record_evidence(
+    state: Any, workspace: Dict[str, Any], record: Dict[str, Any]
+) -> List[Tuple[str, str, Dict[str, Any]]]:
+    """Recheck every evidence ref a draft would publish.
+
+    Used by ``records.save_record`` so a record can never be stored with
+    fabricated/unsigned references (they would otherwise only be caught by a
+    later ``resume``).  Returns ``(ref, status, detail)`` for each problem;
+    ``status`` is ``stale`` or ``unknown`` exactly as in ``_recheck_evidence``.
+    """
+    refs = _collect_evidence_refs(record)
+    if len(refs) > MAX_RECORD_EVIDENCE_REFS:
+        fail(
+            "LIMIT_EXCEEDED",
+            "record cites too many evidence references for one save",
+            details={"limit": MAX_RECORD_EVIDENCE_REFS},
+        )
+    repositories = _repo_index(workspace)
+    problems: List[Tuple[str, str, Dict[str, Any]]] = []
+    for ref in refs:
+        status, detail = _recheck_evidence(state, workspace, repositories, ref)
+        if status != "ok":
+            problems.append((ref, status, detail))
+    return problems
 
 
 # ---------------------------------------------------------------------------

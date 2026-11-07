@@ -54,13 +54,25 @@ MAX_ISSUE_PROJECTIONS = 100
 
 
 def _bounded_text(value: Any, where: str, *, max_len: int = _MAX_TEXT) -> Optional[str]:
+    text, _cut = _bounded_text_with_flag(value, where, max_len=max_len)
+    return text
+
+
+def _bounded_text_with_flag(
+    value: Any, where: str, *, max_len: int = _MAX_TEXT
+) -> "tuple[Optional[str], bool]":
+    """Project bounded text and report whether it was cut.
+
+    Silent truncation of issue details/symbols would hide evidence limits, so
+    callers add an explicit limitation marker when ``cut`` is true.
+    """
     if value is None:
-        return None
+        return None, False
     if not isinstance(value, str):
         fail("UNSUPPORTED_SCHEMA", f"{where} must be a string")
     if len(value) > max_len:
-        return value[:max_len]
-    return value
+        return value[:max_len], True
+    return value, False
 
 
 def _expect_payload_array(payload: Dict[str, Any], key: str, label: str) -> List[Any]:
@@ -375,30 +387,57 @@ def manifest_limitations(payload: Dict[str, Any]) -> List[str]:
 
 
 def issue_summaries(payload: Dict[str, Any], kinds: Iterable[str] = UNRESOLVED_ISSUE_KINDS) -> List[Dict[str, Any]]:
-    """Bounded, model-safe projections of unresolved issue records."""
+    """Bounded, model-safe projections of unresolved issue records.
+
+    Truncation is visible: an over-long issue list appends one explicit marker
+    summary, and a cut string adds a ``limitations`` entry to that summary.
+    """
     wanted = set(kinds)
     summaries: List[Dict[str, Any]] = []
+    projectable = 0
     for issue in payload.get("issues", []):
-        if len(summaries) >= MAX_ISSUE_PROJECTIONS:
-            break
-        if not isinstance(issue, dict):
+        if not isinstance(issue, dict) or issue.get("kind") not in wanted:
             continue
-        kind = issue.get("kind")
-        if kind not in wanted:
+        projectable += 1
+        if len(summaries) >= MAX_ISSUE_PROJECTIONS:
             continue
         evidence_ids = issue.get("evidence_ids")
+        limitations: List[str] = []
+        issue_id, cut_id = _bounded_text_with_flag(issue.get("id"), "issue.id", max_len=_MAX_ID)
+        detail, cut_detail = _bounded_text_with_flag(
+            issue.get("detail") or issue.get("message") or issue.get("reason"), "issue.detail"
+        )
+        symbol, cut_symbol = _bounded_text_with_flag(
+            issue.get("symbol") or issue.get("target"), "issue.symbol"
+        )
+        if cut_id:
+            limitations.append("issue_id_truncated")
+        if cut_detail:
+            limitations.append("issue_detail_truncated")
+        if cut_symbol:
+            limitations.append("issue_symbol_truncated")
+        summary: Dict[str, Any] = {
+            "reason": issue.get("kind"),
+            "issue_id": issue_id,
+            "detail": detail,
+            "symbol": symbol,
+            "evidence_ids": [
+                item for item in (evidence_ids if isinstance(evidence_ids, list) else [])
+                if isinstance(item, str) and item
+            ],
+        }
+        if limitations:
+            summary["limitations"] = limitations
+        summaries.append(summary)
+    if projectable > MAX_ISSUE_PROJECTIONS:
         summaries.append(
             {
-                "reason": kind,
-                "issue_id": _bounded_text(issue.get("id"), "issue.id", max_len=_MAX_ID),
-                "detail": _bounded_text(
-                    issue.get("detail") or issue.get("message") or issue.get("reason"), "issue.detail"
+                "reason": "issue_projection_truncated",
+                "detail": (
+                    f"{projectable - MAX_ISSUE_PROJECTIONS} more unresolved issue(s) were not "
+                    "projected; the list is bounded for the model surface"
                 ),
-                "symbol": _bounded_text(issue.get("symbol") or issue.get("target"), "issue.symbol"),
-                "evidence_ids": [
-                    item for item in (evidence_ids if isinstance(evidence_ids, list) else [])
-                    if isinstance(item, str) and item
-                ],
+                "limitations": ["issue_projection_truncated"],
             }
         )
     return summaries

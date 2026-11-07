@@ -119,10 +119,10 @@ find 返回示例（节选）：
 
 | action | 参数 | 说明 |
 |---|---|---|
-| `import` | `workspace`、`variant`、`repo`、`snapshot`（inbox 内目录名）、`operation_id` | 校验 envelope schema、manifest 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`；复制只读副本到 state |
+| `import` | `workspace`、`variant`、`repo`、`snapshot`（inbox 内目录名）、`operation_id` | 校验 envelope schema、manifest 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`、`workspace_roots` 指回本 workspace 的 repo；复制只读副本到 state |
 | `status` | `workspace`、`snapshot_ref` | 返回 SnapshotEvidence：coverage（failed 数组、pending_units 路径数组原样保留）、capabilities、freshness、limitations |
 
-导入不会运行 Atlas/CMake/编译器；`freshness` 在 workspace revision 或源清单摘要变化后为 `stale`，文件缺失为 `unknown`。
+导入不会运行 Atlas/CMake/编译器；`freshness` 在 workspace revision 或源清单摘要变化后为 `stale`，文件缺失为 `unknown`。`workspace_roots` 不匹配本 workspace 时拒绝导入（独立验证 N1 修复），避免把别的仓库快照的 exact 边记到本仓。
 
 ### 3.5 `code_path` — 证据路径与关系
 
@@ -143,6 +143,13 @@ find 返回示例（节选）：
 
 硬规则：没有用户输入时 `prediction.status=pending`；`observation.status=observed` 必须同时有非空证据与 `experiment.status=executed`；Agent 解释不得写成用户已复述；`next_action` 至多一条；`DONE-APPLIED` 需实际证据。
 
+保存时的额外校验（2026-11-07 独立验证修复）：
+
+- 本版没有 execution backend，`experiment.status=executed` 必须指向本地 `runs` 账本中的真实运行，当前不存在 → 直接 `CAPABILITY_UNAVAILABLE`；因此 `observation.observed` 与 `DONE-APPLIED` 不可能靠伪造 `run_ref` 落盘。
+- `experiment.status=planned` 的 `plan_ref` 必须是本地签名 plan（`SCOPE_DENIED` 否则）。
+- 草稿引用的每条 source evidence 会在保存时重核签名/文件/byte 区间；伪造或已过期的引用不会以 `fresh` 保存，记录 freshness 会降为 `stale`/`unknown` 并写 `invalidation_reasons`。
+- **残余信任边界**：`prediction.status=user_provided` 与 `mental_model.author=user` 是“对话来源”声明，引擎只能校验结构与时间戳，无法密码学认证“确实由用户说出”。Agent 必须遵守 skill 的“不得代填”规则；不要把该字段当作已验证事实。
+
 ## 4. 一次典型对话
 
 1. 用户："帮我读懂 UMD 的 ioctl 提交到 KMD 队列完成通知。"
@@ -158,7 +165,8 @@ find 返回示例（节选）：
 ## 5. 安全与边界速查
 
 - **模型不可指定**：绝对读取路径、bootstrap/state 目录、Python 解释器、Atlas argv、shell 片段、记录 DB 路径。
-- 读取仅限 bootstrap 登记根内、workspace 登记 repo 内；不跟随 symlink、不跨根；含秘密/二进制 → `ref_only`。
+- 读取仅限 bootstrap 登记根内、workspace 登记 repo 内；不跟随 symlink/junction、不跨根；含秘密/二进制 → `ref_only`。
+- 快照必须通过 envelope/hash/schema/图引用校验，且 `workspace_roots` 至少一个条目指回本 workspace 的 repo；不满足直接拒绝。
 - 不默认运行构建/测试/Atlas/编译器；`run` 固定 `EXECUTION_BLOCKED`，`plan` 只产出计划。
 - 跨仓 ABI 只是静态契约候选（最多 may）；运行时行为、硬件完成、线程重叠、字节偏移需要另行证据。
 - 不自动写 05 长期记忆、不上传、不新增模型接收方。

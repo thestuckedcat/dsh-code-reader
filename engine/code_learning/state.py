@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import os
+import stat as stat_module
 import time
 from pathlib import Path
 from typing import Any, Dict, Iterator, Optional, Tuple
@@ -32,6 +33,18 @@ TOKEN_PREFIX = "v1"
 _MAX_JSON_BYTES = 16 * 1024 * 1024
 _LOCK_TIMEOUT_S = 10.0
 _LOCK_STALE_S = 120.0
+_FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+
+
+def _is_reparse_path(path: Path) -> bool:
+    """True for a symlink or Windows junction (reparse point) path itself."""
+    try:
+        info = os.lstat(str(path))
+    except OSError:
+        return False
+    if stat_module.S_ISLNK(info.st_mode):
+        return True
+    return bool(getattr(info, "st_file_attributes", 0) & _FILE_ATTRIBUTE_REPARSE_POINT)
 
 
 def default_dsh_home() -> Path:
@@ -368,6 +381,8 @@ class State:
 
     def require_in_root(self, path: Path, root: Optional[Path] = None) -> Path:
         path = Path(path)
+        if _is_reparse_path(path):
+            fail("SCOPE_DENIED", "path must not be a symlink or junction")
         roots = [root] if root is not None else list(self.candidate_roots().values())
         real = Path(os.path.realpath(str(path)))
         for base in roots:

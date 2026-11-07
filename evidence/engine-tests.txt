@@ -1,6 +1,6 @@
 python.exe : test_bad_argument_shapes (test_bindings.BindingEvaluationTests.test_bad_argument_shapes) ... ok
-所在位置 行:1 字符: 180
-+ ... ngine"; $out = & python -m unittest discover -s tests -v 2>&1 | Out-S ...
+所在位置 行:1 字符: 179
++ ... engine"; $py = & python -m unittest discover -s tests -v 2>&1 | Out-S ...
 +                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (test_bad_argume..._shapes) ... ok:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
@@ -303,6 +303,29 @@ _ownership) ... ok
 test_read_source_success_returns_source_evidence (test_source.SourceTestCase.test_read_source_success_returns_source_ev
 idence) ... ok
 test_suspected_secret_returns_ref_only (test_source.SourceTestCase.test_suspected_secret_returns_ref_only) ... ok
+test_find_reports_prefix_only_scan_as_truncated (test_verifier_regressions.BoundedProjectionTest.test_find_reports_pref
+ix_only_scan_as_truncated) ... ok
+test_issue_projection_reports_truncation_and_cut_text (test_verifier_regressions.BoundedProjectionTest.test_issue_proje
+ction_reports_truncation_and_cut_text) ... ok
+test_agent_explanation_cannot_be_a_user_claim (test_verifier_regressions.RecordClaimTest.test_agent_explanation_cannot_
+be_a_user_claim) ... ok
+test_executed_experiment_is_rejected_without_execution_backend (test_verifier_regressions.RecordClaimTest.test_executed
+_experiment_is_rejected_without_execution_backend) ... ok
+test_planned_experiment_requires_signed_plan_reference (test_verifier_regressions.RecordClaimTest.test_planned_experime
+nt_requires_signed_plan_reference) ... ok
+test_unsigned_evidence_is_not_stored_as_fresh (test_verifier_regressions.RecordClaimTest.test_unsigned_evidence_is_not_
+stored_as_fresh) ... ok
+test_valid_signed_evidence_stays_fresh (test_verifier_regressions.RecordClaimTest.test_valid_signed_evidence_stays_fres
+h) ... ok
+test_final_junction_is_rejected (test_verifier_regressions.RequireInRootTest.test_final_junction_is_rejected) ... ok
+test_plain_path_inside_root_is_accepted (test_verifier_regressions.RequireInRootTest.test_plain_path_inside_root_is_acc
+epted) ... ok
+test_matching_workspace_root_still_imports (test_verifier_regressions.SnapshotProvenanceTest.test_matching_workspace_ro
+ot_still_imports) ... ok
+test_snapshot_workspace_roots_must_match_registered_workspace (test_verifier_regressions.SnapshotProvenanceTest.test_sn
+apshot_workspace_roots_must_match_registered_workspace) ... ok
+test_resume_ignores_junction_inside_repository (test_verifier_regressions.SourceManifestJunctionTest.test_resume_ignore
+s_junction_inside_repository) ... ok
 test_build_identity_digests_change_with_config_compdb_and_source (test_workspace.WorkspaceTestCase.test_build_identity_
 digests_change_with_config_compdb_and_source) ... ok
 test_cross_root_escape_with_junction_rejected (test_workspace.WorkspaceTestCase.test_cross_root_escape_with_junction_re
@@ -348,6 +371,6 @@ test_workspace_status_freshness_after_source_and_config_changes (test_workspace.
 _freshness_after_source_and_config_changes) ... ok
 
 ----------------------------------------------------------------------
-Ran 200 tests in 17.613s
+Ran 212 tests in 18.064s
 
 OK

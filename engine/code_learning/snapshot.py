@@ -238,6 +238,58 @@ def _index_entry(
     }
 
 
+def _normalized_root(value: str) -> str:
+    return value.replace("\\", "/").rstrip("/").lower()
+
+
+def _workspace_root_tokens(workspace: Dict[str, Any]) -> "set[str]":
+    """Tokens a manifest ``workspace_roots`` entry may legitimately name.
+
+    Atlas writes absolute analyzed roots; the synthetic fixtures use the
+    bootstrap ``root_ref``/repo-relative naming.  All of the following identify
+    a registered repository for this purpose: absolute path (and its realpath),
+    ``root_ref``, ``repo_id`` and ``relative_path``.
+    """
+    tokens: "set[str]" = set()
+    for repo in workspace.get("repositories") or []:
+        if not isinstance(repo, dict):
+            continue
+        for key in ("repo_id", "relative_path", "root_ref", "absolute_path"):
+            value = repo.get(key)
+            if not isinstance(value, str) or not value:
+                continue
+            tokens.add(_normalized_root(value))
+            if key == "absolute_path":
+                tokens.add(_normalized_root(os.path.realpath(value)))
+    return tokens
+
+
+def _check_manifest_provenance(workspace: Dict[str, Any], manifest_payload: Dict[str, Any]) -> None:
+    """Tie a snapshot's ``workspace_roots`` to the registered workspace.
+
+    The inbox is trusted, but accepting a self-consistent snapshot under an
+    unrelated repo would let its ``exact`` edges be attributed to the wrong
+    repository.  At least one recorded root must identify a registered repo;
+    the whole list must be non-empty strings.
+    """
+    roots = manifest_payload.get("workspace_roots")
+    if not isinstance(roots, list) or not roots:
+        fail("UNSUPPORTED_SCHEMA", "analysis_manifest.workspace_roots must be a non-empty array")
+    tokens = _workspace_root_tokens(workspace)
+    matched = False
+    for index, root in enumerate(roots):
+        if not isinstance(root, str) or not root:
+            fail("UNSUPPORTED_SCHEMA", f"analysis_manifest.workspace_roots[{index}] must be a non-empty string")
+        candidates = {_normalized_root(root), _normalized_root(os.path.realpath(root))}
+        if candidates & tokens:
+            matched = True
+    if not matched:
+        fail(
+            "INVALID_ARGUMENT",
+            "analysis_manifest.workspace_roots does not identify this registered workspace",
+        )
+
+
 # ---------------------------------------------------------------------------
 # public API
 # ---------------------------------------------------------------------------
@@ -296,6 +348,7 @@ def import_snapshot(
             "analysis_manifest.graph_hash does not match the raw graph.json bytes",
         )
     atlas.project_coverage(manifest_payload["coverage"], "analysis_manifest.coverage")
+    _check_manifest_provenance(workspace, manifest_payload)
 
     snapshot_id = manifest_payload["snapshot_id"]
     _require_component(snapshot_id, "manifest snapshot_id")

@@ -40,6 +40,12 @@
     "code_path",
     "code_learn"
   ],
+  "current_runtime_recheck": {
+    "checked_at": "2026-11-07T09:08:00+08:00",
+    "how": "cordis_inspect_query platform=host provider=Tool method=listTools on the current DSH runtime",
+    "observed": "the six code_* tools are present with their documented parameter schemas (code_workspace/code_overview/code_source/code_snapshot/code_path/code_learn); descriptions match the packaged tool definitions",
+    "note": "re-checked after the session/runtime resume; the installed bundle remains active in the desktop profile"
+  },
   "skill_after_install": {
     "name": "learn-code-workspace",
     "provider": "dsh-code-reader",
@@ -172,12 +178,12 @@
   "automated_tests": {
     "python": {
       "command": "cd engine && python -m unittest discover -s tests -v",
-      "result": "Ran 200 tests, OK (17.6s)",
+      "result": "Ran 212 tests, OK (17.7s)",
       "evidence": "evidence/engine-tests.txt"
     },
     "node": {
       "command": "node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs",
-      "result": "tests 11, pass 11, fail 0",
+      "result": "tests 12, pass 12, fail 0",
       "evidence": "evidence/node-tests.txt"
     },
     "syntax": "node --check index.js lib/{config,bridge,tools,skills}.mjs passed",
@@ -190,6 +196,40 @@
       "command": "internal link check over repository *.md",
       "result": "checked=40 problems=0"
     }
+  },
+  "independent_verification": {
+    "verifier": "independent agent (did not write the implementation), own %TEMP% fixtures, read-only review",
+    "first_verdict": "FAIL",
+    "first_findings": {
+      "blocking": [
+        "B1: invalidation._source_manifest_digest_candidates used raw os.walk and followed a Windows junction out of a repo (unbounded walk / wrong digest)",
+        "B2: records.save_record accepted fabricated experiment.executed / observation.observed / DONE-APPLIED and unsigned evidence refs, stored as fresh"
+      ],
+      "non_blocking": [
+        "N1 snapshot workspace_roots not tied to the registered workspace",
+        "N2 Host bridge accepted any Python 3.x, not 3.11+",
+        "N3 silent truncation in issue/cross-repo unresolved projections",
+        "N4 State.require_in_root accepted a final symlink/junction",
+        "N5 source-find prefix-only read of a large file reported truncated=false"
+      ],
+      "clean_checks": [
+        "no shell interpolation / network / build execution; fixed-argv spawn",
+        "absolute tool paths, '..' manifest traversal and source-find junction traversal rejected",
+        "path preserved exact vs may; cross-repo abi_bridge stays may/derived",
+        "happy-path field shapes matched the documented contract"
+      ]
+    },
+    "fixes": {
+      "B1": "invalidation uses scope.iter_regular_files (skips reparse points); regression SourceManifestJunctionTest",
+      "B2": "records._verify_record_claims rejects executed without a local run-ledger row, verifies signed plan refs and rechecks evidence; unverifiable evidence downgrades stored freshness with invalidation_reasons; regression RecordClaimTest. prediction authorship remains conversational provenance (documented residual limitation)",
+      "N1": "snapshot workspace_roots must match a registered repo token; regression SnapshotProvenanceTest",
+      "N2": "bridge probe requires Python 3.11+; node regression",
+      "N3": "issue summaries add *_truncated limitations + explicit marker; cross-repo unresolved truncation sets truncated=true; regression BoundedProjectionTest",
+      "N4": "State.require_in_root rejects a final reparse point; regression RequireInRootTest",
+      "N5": "find marks large-file prefix scans truncated=true; regression BoundedProjectionTest"
+    },
+    "recheck_requested_at": "2026-11-07T09:20:00+08:00",
+    "recheck_verdict": "pending second verifier message; see repository commit and final report"
   },
   "not_verified": [
     "real Linux Kbuild/compdb Atlas indexing (requires target Linux toolchain + fixed Atlas runtime)",

@@ -392,7 +392,10 @@ def find_source(
         scanned_files += 1
         scanned_bytes += len(raw)
         if len(raw) < candidate["size"]:
+            # The per-file read window is bounded (8 MiB); searching only a
+            # prefix is an incomplete scan and must be reported, not hidden.
             limitations.append("large_file_prefix_only")
+            truncated = True
         if index == offset and pos and file_sha is not None:
             if sha256_bytes(raw) != file_sha:
                 fail("STALE_SOURCE", "source file changed since the cursor was issued")

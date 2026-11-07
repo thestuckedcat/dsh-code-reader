@@ -2,7 +2,7 @@
 
 版本：`MECH-04-1`，2026-11-07。对应实现 `CL-IMPL-1`（仓库 `dsh-code-reader` v0.1.0）。本文按[机制说明合同](../../docs/mechanism-document-contract.md)交付：以 **场景→触发→输入与前置条件→判断规则→工具动作→状态/输出→证据→失败与恢复** 为主线，说明为什么这样设计、代价与已知限制，并区分 **skill 可调策略** 与 **plugin/CLI/Host 必须执行的硬边界**。
 
-**证据边界**：本文只记录本轮实际运行过的合成 fixture 证据（200 Python 测试、11 Node 测试、安装后 Host 工具旅程）。真实 Linux/Kbuild 索引、编译器探针隔离、native CFG、真实驱动运行时行为 **未验证**，见 §9。设计文档中的“未来合同”不等于已实现。
+**证据边界**：本文只记录本轮实际运行过的合成 fixture 证据（212 Python 测试、12 Node 测试、安装后 Host 工具旅程）。真实 Linux/Kbuild 索引、编译器探针隔离、native CFG、真实驱动运行时行为 **未验证**，见 §9。设计文档中的“未来合同”不等于已实现。
 
 ---
 
@@ -98,10 +98,10 @@
 
 ### M-04-06 有界源码 find（预算可调、边界硬）
 
-- **规则**：`literal` 与 `filename` 恰一个；literal 是字面文本（非正则）、长度 1..256；`relative_glob` 受限（`*`/`**`/`?`）；跳过 `.git/node_modules/__pycache__` 与链接；预算默认 128 文件/32 MiB/200 命中；`next_cursor` 是签名令牌（query digest + workspace_revision + 文件清单摘要 + offset），任何相关文件变化 → `STALE_SOURCE`。
+- **规则**：`literal` 与 `filename` 恰一个；literal 是字面文本（非正则）、长度 1..256；`relative_glob` 受限（`*`/`**`/`?`）；跳过 `.git/node_modules/__pycache__` 与链接；预算默认 128 文件/32 MiB/200 命中；`next_cursor` 是签名令牌（query digest + workspace_revision + 文件清单摘要 + offset），任何相关文件变化 → `STALE_SOURCE`。单文件读取窗口为 8 MiB；只搜到前缀时结果显式 `truncated=true` + `large_file_prefix_only`，不静默。
 - **输出**：`matches[{path_ref,evidence_ref,source_sha256,byte_start,byte_end,line_start,line_end,safe_preview}]`、`next_cursor`、`scanned_files/bytes`、`truncated`、`semantic_status:'blocked'`、`limitations`。
 - **脱敏**：疑似秘密行（password/token/secret/api_key/private_key 等赋值）与二进制文件返回 `ref_only` 原因，不进入上下文；preview 限长。
-- **证据**：`test_source.py`（预算滚动、游标失效、bin/secret、glob 语义）。
+- **证据**：`test_source.py`（预算滚动、游标失效、bin/secret、glob 语义）、`test_verifier_regressions.py::BoundedProjectionTest::test_find_reports_prefix_only_scan_as_truncated`。
 - **失败与恢复**：预算用尽带 `next_cursor` 继续；源码变化重查。**可调**：skill 可选择更小 glob/更窄路径；**不可调**：单次预算上限、脱敏、不跟链接。
 
 ### M-04-07 有界源码 read/evidence（硬边界）
@@ -115,7 +115,7 @@
 
 - **场景**：复用 Atlas 的编译事实，但不能信任任意传入的快照目录。
 - **触发**：`snapshot-import --workspace --variant --repo --snapshot NAME --operation-id`（`code_snapshot action=import`）。
-- **规则**：NAME 只能是 inbox 内单层目录；读 `graph.json`/`analysis_manifest.json` 两个 envelope；校验 `schema_version='0.1'`、`record_kind∈{graph,analysis_manifest}`、payload 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`；严格图引用校验（call_targets 的 callsite/source/target/evidence id 必须存在）；同 snapshot_id 不同内容 → `STATE_CONFLICT`；operation_id 幂等。
+- **规则**：NAME 只能是 inbox 内单层目录；读 `graph.json`/`analysis_manifest.json` 两个 envelope；校验 `schema_version='0.1'`、`record_kind∈{graph,analysis_manifest}`、payload 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`；严格图引用校验（call_targets 的 callsite/source/target/evidence id 必须存在）；**`workspace_roots` 必须至少有一个条目指回本 workspace 的 repo（absolute path/realpath、root_ref、repo_id 或 relative_path）**，否则拒绝，避免把别的仓库快照的 exact 边记到本仓；同 snapshot_id 不同内容 → `STATE_CONFLICT`；operation_id 幂等。
 - **动作/状态**：原子复制到 `state/snapshots/<id>/`，写 `import.json`（workspace/variant/repo/两 hash/build_identity/imported_at）与 `current.json` 只读 view；更新 snapshot index（key=workspace+variant+repo）。
 - **输出**：`SnapshotEvidence`（coverage 原样保留，`failed` 数组/`pending_units` 路径数组不改成数字；另加 `failed_count`；`whole_program_complete` 不升级）。
 - **证据**：`test_snapshot.py`（21+ 测试：hash/schema 篡改、整数 coverage 拒绝、missing copy 修复、current/inbox 漂移不影响已导入副本）、`test_snapshot.py::test_import_snapshot_for_real_registered_workspace`。
@@ -165,16 +165,19 @@
   - `observation.status='observed'` 必须非空 `evidence_refs` 且 `experiment.status='executed'`（有 run_ref）。
   - `decision='DONE-APPLIED'` 需 observed+executed+记录证据；`supported` 规则需证据。
   - `next_action` 至多一条，且 `text/estimated_minutes(1..240)/completion_criterion` 完整。
-- **证据**：`test_records.py::DraftValidationTests`、`test_skill_contract.py` 条款；Host 旅程保存的记录 prediction/observation 保持 pending。
-- **意义**：Agent 不能代替用户声称“已理解/已验证”，也不能把索引成功当学习完成。
+  - **保存时二次校验（2026-11-07 验证修复）**：`records.save_record` 调用 `_verify_record_claims`；本版没有 execution backend，任何 `experiment.status='executed'` 都会因 `runs` 账本无对应 `run_id` 被 `CAPABILITY_UNAVAILABLE` 拒绝，因此 `observation.observed`/`DONE-APPLIED` 无法靠伪造 run 落盘；`planned` 的 `plan_ref` 必须是本地签名 plan；记录引用的每条证据都会按签名/文件/字节区间重核，unsigned/已过期证据不会以 `fresh` 落盘，而是把存储 freshness 降为 `stale`/`unknown` 并写 `invalidation_reasons`。
+- **证据**：`test_records.py::DraftValidationTests`、`test_verifier_regressions.py::RecordClaimTest`、`test_skill_contract.py` 条款；Host 旅程保存的记录 prediction/observation 保持 pending。
+- **意义**：Agent 不能通过 `record-save` 把“索引成功/自造 run/自造证据”变成已观察或已完成。
+- **残余限制（诚实披露）**：`prediction.status='user_provided'` 与 `mental_model.author='user'` 属于对话来源（作者身份），引擎只能校验结构与时间戳，**不能密码学认证“这确实是用户说的”**；该口径由 skill/对话层约束，不属于本版可验证事实。评审时可将其视为非阻塞的信任边界，而不是已解决的安全保证。
 
 ### M-04-15 resume 失效重核与事件消费（硬边界）
 
 - **触发**：`resume --record RID`（`code_learn action=resume`）；可选 `consume-event --event-file NAME`。
 - **顺序**：workspace revision → 记录 BuildIdentity 与当前登记身份逐项摘要 → 重新计算 `source_manifest_digest` → config/compdb/generated 文件内容 sha256 → 每条 evidence_ref 的 MAC/文件存在/内容 SHA256/byte 区间/变体。
 - **判断**：任一变化 → `stale` + `changed_inputs/required_rechecks`；文件丢失/不可读 → `unknown`；workspace revision 变但摘要全同 → `unknown`（`workspace_revision_changed`，保守不宣称 fresh）；否则 `fresh`。返回 `safe_cursor`（“先复核这条证据”，禁止直接用旧行号/旧结论）。
+- **junction 安全**：source-manifest 重算走 `scope.iter_regular_files`，显式跳过 symlink/junction（reparse point），不会把登记 repo 之外的树计入摘要或触发无界遍历（独立验证 B1 修复）。
 - **事件**：`CapabilityEventV1` 只接受 3 种 kind；按 event_id 幂等；旧/乱序 generation 只审计不置 fresh；`partial/unknown`/不可定位 → 相关记录 `unknown`；cursor 缺口 → `gap_detected=true, requires_local_recheck=true`；事件丢失仍靠本地 hash 重核。
-- **证据**：`test_invalidation.py`（25 测试）、Host 旅程改源码后 resume 返回 `stale` + `changed_inputs`。
+- **证据**：`test_invalidation.py`（25 测试）、`test_verifier_regressions.py::SourceManifestJunctionTest`、Host 旅程改源码后 resume 返回 `stale` + `changed_inputs`。
 
 ### M-04-16 计划 / 执行阻断（硬边界）
 
@@ -187,10 +190,10 @@
 - **触发**：插件 bundle `apply(ctx, config)` 激活时注册 6 个工具与 skill provider。
 - **规则**：
   - `inject=['tools','skills']`；`ctx.effect` 注册/清理；`ctx.tools.register` 6 个 `code_*`；`ctx.skills.registerProvider` 扫描 `skills/*/SKILL.md`（frontmatter/rank=550/source=custom）。
-  - 每次工具调用 → `lib/bridge.mjs` 解析 Python（配置 `pythonPath`/`DSH_CODE_READER_PYTHON`/`python3`/`python`，探测 `--version`）→ `spawn(python, ['-m','code_learning.cli','--bootstrap',bootstrapPath,...固定 argv])`，`cwd=engine/`，**无 shell**；环境变量白名单，剥离 API key 等凭据；stdout 必须是一个 JSON（>8 MiB 截断保护），域内错误以 `{schema_version,ok,exit_code,cli}` 返回，spawn/超时/取消抛 `BridgeError`（超时=`OUTCOME_UNKNOWN/4`）。
+  - 每次工具调用 → `lib/bridge.mjs` 解析 Python（配置 `pythonPath`/`DSH_CODE_READER_PYTHON`/`python3`/`python`，探测 `--version` 并**要求 3.11+**，旧 3.x 判为 `DEPENDENCY_UNAVAILABLE`）→ `spawn(python, ['-m','code_learning.cli','--bootstrap',bootstrapPath,...固定 argv])`，`cwd=engine/`，**无 shell**；环境变量白名单，剥离 API key 等凭据；stdout 必须是一个 JSON（>8 MiB 截断保护），域内错误以 `{schema_version,ok,exit_code,cli}` 返回，spawn/超时/取消抛 `BridgeError`（超时=`OUTCOME_UNKNOWN/4`）。
   - 工具层内 `code_*` 参数只填 typed slots，不能提供可执行文件、cwd、根表、bootstrap；插件内串行化 CLI 调用避免同一 sqlite writer 竞争。
 - **可调**：`bootstrapPath`、`pythonPath`、`timeoutMs(1000..600000)`、以及 skill 选择更小查询预算；**不可调**：argv 形状、环境白名单、JSON/退出码合同、写作用域。
-- **证据**：`tests/node/bridge.test.mjs`（11 含 argv/凭据剥离/错误映射）、`tests/node/plugin.test.mjs`（6 工具+provider+display 元数据）、安装后 Host 工具真实调用旅程（`evidence/plugin-install-verification.json`）。
+- **证据**：`tests/node/bridge.test.mjs`（12 含 argv/凭据剥离/Python 版本/错误映射）、`tests/node/plugin.test.mjs`（6 工具+provider+display 元数据）、安装后 Host 工具真实调用旅程（`evidence/plugin-install-verification.json`）。
 
 ### M-04-18 学习编排 skill（skill 可调）
 
@@ -242,8 +245,8 @@
 ## 6. 最小验证清单（改 skill/机制后至少重跑）
 
 ```bash
-cd engine && python -m unittest discover -s tests -v          # 200 tests
-cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 11 tests
+cd engine && python -m unittest discover -s tests -v          # 212 tests
+cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12 tests
 ```
 
 对应关系：CL-001（M-04-01/02/03/05/06/07）、CL-003（M-04-08/09）、CL-004（M-04-10/11/12）、CL-005（M-04-13/14）、CL-006（M-04-15）、CL-009（M-04-16/17 端到端）、CL-007（M-04-18 文档条款）。真实 Linux/Kbuild 门禁见 `docs/implementation-route.md`。
@@ -273,6 +276,7 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 11
 5. `overview` 增加 `missing_inputs`；BOM 容忍的 JSON 读取。
 6. `bindings` 导入时重建列表，未传旧评估结果 → `stale` 主要靠显式 `previous_bindings` 交接（模块已测，集成待后续）。
 7. `find` 无 variant 参数（固定签名），SourceEvidence 的 variant 取确定性首 variant。
+8. **独立验证修复（2026-11-07）**：`resume` 的 source-manifest 重算改为跳过 junction/symlink（B1）；`record-save` 增加 run 账本/签名 plan/证据重核并拒绝伪造 executed，unsigned/过期证据降级而非以 fresh 落盘（B2，`prediction` 作者身份仍属对话来源，见 M-04-14 残余限制）；快照 `workspace_roots` 必须指回本 workspace（N1）；Host 桥强制 Python 3.11+（N2）；issue/paths/find 截断显式化（N3/N5）；`require_in_root` 拒绝最终 reparse point（N4）。回归见 `test_verifier_regressions.py` 与 `tests/node/bridge.test.mjs`。
 
 **待验证改进假设**（需要真实环境，不得当已实现）：
 - 真实 Linux Kbuild + 固定 Atlas 0.8 runtime 上 graph/manifest 字段与 fixtures 一致；失败 TU 诊断可保留并解释。
@@ -287,7 +291,7 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 11
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 200+11 测试、安装后 Host 工具旅程、`evidence/*` |
+| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 212+12 测试、安装后 Host 工具旅程、`evidence/*` |
 | Atlas 0.1 快照格式消费 | **actual（合成）** | 未用真实 Atlas 产物验证；只按已读 schema/代码实现 |
 | plugin 安装/工具与 skill 注册 | **actual** | `application: applied`、6 工具可见、skill 进入目录 |
 | 真实 Linux/Kbuild 索引与失败 TU 覆盖 | **blocked** | 需目标 Linux 工具链 + 固定 Atlas runtime |
@@ -295,5 +299,20 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 11
 | native CFG / 数据流 / 锁 / 别名分析 | **blocked** | 合成快照不含这些数据；返回 `unavailable` |
 | 真实驱动运行时/硬件/线程重叠/字节布局 | **blocked** | 静态证据不证明；设计边界 |
 | 05 长期记忆联动、上传/云 | **not implemented（有意）** | 只本地导出 |
+
+## 10. 独立验证与修复记录（2026-11-07）
+
+独立 verifier（未参与编写的 agent，使用自建 `%TEMP%` fixture）复审了 v0.1.0 并给出 **FAIL**，推动如下修复（全部有回归测试）：
+
+| 发现 | 级别 | 修复 | 回归 |
+|---|---|---|---|
+| `resume` 经 Windows junction 走进 repo 外目录，可能无界遍历并把外部文件计入 source-manifest 摘要 | BLOCKING | `invalidation.py` 改用 `scope.iter_regular_files`（跳过 symlink/junction/reparse） | `test_verifier_regressions.py::SourceManifestJunctionTest` |
+| `record-save` 接受伪造 `experiment.executed`/`observation.observed`/`DONE-APPLIED`（任意 run_ref/evidence），并曾以 fresh 落盘 | BLOCKING | `records._verify_record_claims`：executed 必须有本地 runs 账本记录（本版无 → `CAPABILITY_UNAVAILABLE`）；planned 必须签名 plan；引用的证据保存时重核，unverifiable 证据把 freshness 降级并记 reasons | `RecordClaimTest` |
+| 快照 `workspace_roots` 未绑定登记 workspace | NON-BLOCKING | import 时要求至少一个 root 指回本 workspace 的 repo token | `SnapshotProvenanceTest` |
+| Host 桥接受旧 Python 3.x | NON-BLOCKING | `--version` 探测要求 3.11+ | `tests/node/bridge.test.mjs` |
+| issue/unresolved 截断静默；find 大文件前缀搜索 `truncated=false` | NON-BLOCKING | issues 增加 `*_truncated` limitations + 投影截断标记；cross-repo unresolved 截断置 `truncated=true`；find 前缀单文件 `truncated=true` | `BoundedProjectionTest` |
+| `State.require_in_root` 接受最终 symlink/junction（死接口） | NIT | 拒绝最终 reparse point | `RequireInRootTest` |
+
+verifier 同时确认：无 shell 插值/网络/构建执行；绝对路径、`..` 清单穿越、`source-find` junction 均被拒绝；path 保留 exact/may；跨仓桥接为 `may/derived`。复审后的最终结论以 verifier 二次复核消息为准（见 `evidence/plugin-install-verification.json` 的 `independent_verification`）。
 
 **结论**：本版可作为“合成 fixture 上可安装、可自测、边界清晰”的首版交付；不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/隔离/native CFG 门禁。

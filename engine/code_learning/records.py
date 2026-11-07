@@ -453,6 +453,73 @@ def _prepare_draft(state: Any, workspace: Dict[str, Any], draft: Dict[str, Any])
     return data
 
 
+def _verify_record_claims(
+    state: Any,
+    workspace: Dict[str, Any],
+    record: Dict[str, Any],
+    connection: sqlite3.Connection,
+) -> None:
+    """Reject claims this version cannot substantiate before publishing.
+
+    The engine *can* verify signed source evidence and, in a future version,
+    registered runs.  It cannot authenticate a human author.  Claims that
+    visibly require an execution backend are rejected here so a draft can never
+    publish ``experiment.executed`` / ``observation.observed`` /
+    ``DONE-APPLIED`` backed only by fabricated strings; unsigned evidence
+    references are rejected as well.
+
+    Residual, documented limitation: ``prediction.status='user_provided'`` and
+    ``mental_model`` with ``author='user'`` are conversational provenance, not
+    cryptographic identity.  The skill is responsible for only recording text
+    the user actually gave; the engine cannot prove authorship.
+    """
+    experiment = record.get("experiment") or {}
+    if experiment.get("status") == "planned":
+        plan_ref = experiment.get("plan_ref")
+        if not isinstance(plan_ref, str) or not plan_ref:
+            fail("INVALID_ARGUMENT", "a planned experiment requires plan_ref")
+        try:
+            state.verify(plan_ref, kind="plan")
+        except CodeLearningError as error:
+            raise CodeLearningError(
+                "SCOPE_DENIED",
+                "experiment.plan_ref is not a signed plan issued by this local engine",
+                details={"reason": error.code},
+            ) from error
+    if experiment.get("status") == "executed":
+        run_ref = experiment.get("run_ref")
+        row = None
+        if isinstance(run_ref, str) and run_ref:
+            row = connection.execute(
+                "SELECT run_id FROM runs WHERE run_id = ?", (run_ref,)
+            ).fetchone()
+        if row is None:
+            fail(
+                "CAPABILITY_UNAVAILABLE",
+                "experiment.executed requires a registered completed run; this version has no "
+                "execution backend, so experiment/observation must stay pending",
+            )
+    from . import invalidation as _invalidation
+
+    problems = _invalidation.check_record_evidence(state, workspace, record)
+    if problems:
+        # A draft may legitimately cite evidence that became stale between the
+        # read and the save (or an unsigned/foreign token).  The record is still
+        # usable history, but it must never be stored as ``fresh``: downgrade
+        # conservatively and keep the reasons for resume/export.
+        worst = "unknown" if any(status == "unknown" for _ref, status, _detail in problems) else "stale"
+        reasons: List[str] = list(record.get("invalidation_reasons") or [])
+        for ref, status, detail in problems:
+            reason = detail.get("reason") if isinstance(detail, dict) else None
+            path = detail.get("path") if isinstance(detail, dict) else None
+            label = f"evidence:{detail.get('repo_id')}:{path}" if isinstance(detail, dict) and path else "evidence"
+            entry = f"{label}:{reason or status}"
+            if entry not in reasons:
+                reasons.append(entry)
+        record["freshness"] = worst
+        record["invalidation_reasons"] = reasons[:64]
+
+
 def _new_record_result(record: Dict[str, Any], sha256: str, revision_ref: str) -> Dict[str, Any]:
     return {
         "schema_version": 1,
@@ -512,6 +579,7 @@ def save_record(
 
             prepared = _prepare_draft(state, workspace, draft_data)
             record = learning.validate_record_draft(prepared)
+            _verify_record_claims(state, workspace, record, connection)
             record_id = record["record_id"]
             row = fetch_record_row(connection, record_id)
             if row is not None:

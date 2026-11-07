@@ -128,6 +128,21 @@ test('tool argv mapping is fixed and does not shell-interpolate', async () => {
   await assert.rejects(() => tools.code_workspace.execute({ action: 'nope' }, {}), /action/)
 })
 
+test('bridge rejects Python versions older than 3.11', async () => {
+  const bridge = createBridge(settings, {
+    spawnImpl: async (command, args) => {
+      if (args[0] === '--version') return { exitCode: 0, stdout: 'Python 3.9.18', stderr: '' }
+      return { exitCode: 0, stdout: '{}', stderr: '' }
+    },
+  })
+  await assert.rejects(() => bridge.execute(['status', '--workspace', 'demo']), (error) => {
+    assert.ok(error instanceof BridgeError)
+    assert.equal(error.code, 'DEPENDENCY_UNAVAILABLE')
+    assert.match(error.message, /3\.11\+/)
+    return true
+  })
+})
+
 test('tool output renderer returns one text content block', () => {
   const tools = buildTools(fakeBridge([]))
   const value = { schema_version: 1, ok: true, exit_code: 0, cli: { x: 1 } }

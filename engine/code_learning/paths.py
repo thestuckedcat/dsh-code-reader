@@ -758,6 +758,9 @@ def _cross_repo_path(
     bundle_for = {from_bundle["snapshot_id"]: from_bundle, to_bundle["snapshot_id"]: to_bundle}
     common_prefix, choices = _common_prefix_and_choices(node_sequences, bundle_for)
     unresolved = _finalize_unresolved(shared.notes(), [from_bundle, to_bundle]) + unresolved_extra
+    # The cross-repo merge adds its own notes to whatever the two graph scans
+    # produced.  Report a bounded projection instead of silently slicing it.
+    truncated = bool(shared.truncated) or len(unresolved) > _MAX_UNRESOLVED
     return {
         "schema_version": 1,
         "snapshot_refs": [from_bundle["snapshot_id"], to_bundle["snapshot_id"]],
@@ -767,7 +770,7 @@ def _cross_repo_path(
         "choices": choices,
         "common_prefix": common_prefix,
         "coverage": _coverage_of([from_bundle, to_bundle]),
-        "truncated": bool(shared.truncated),
+        "truncated": truncated,
         "budget_used": int(shared.used),
         "direction": direction,
         "freshness": _freshness_of([from_bundle, to_bundle]),
