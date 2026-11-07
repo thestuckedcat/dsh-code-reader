@@ -1,15 +1,15 @@
-✔ config: default bootstrap path follows DSH_HOME and rejects unknown fields (0.7217ms)
-✔ bridgeEnv drops credential variables from the Python child environment (0.1164ms)
-✔ parseCliDocument only accepts one JSON document (0.4315ms)
-✔ bridge resolves a python probe then runs the fixed CLI argv (0.3828ms)
-✔ bridge reports missing interpreter and non-JSON failures as tool values (0.5525ms)
-✔ tool argv mapping is fixed and does not shell-interpolate (0.667ms)
-✔ bridge rejects Python versions older than 3.11 (0.3156ms)
-✔ tool output renderer returns one text content block (0.1717ms)
-✔ plugin exports the expected Cordis identity and services (0.6669ms)
-✔ apply registers exactly the six code tools plus one skill provider (3.3705ms)
-✔ apply rejects malformed row config and returns disposable effects (0.5665ms)
-✔ display metadata and icon satisfy bundle packaging facts (0.7776ms)
+✔ config: default bootstrap path follows DSH_HOME and rejects unknown fields (0.98ms)
+✔ bridgeEnv drops credential variables from the Python child environment (0.1257ms)
+✔ parseCliDocument only accepts one JSON document (0.4361ms)
+✔ bridge resolves a python probe then runs the fixed CLI argv (0.3607ms)
+✔ bridge reports missing interpreter and non-JSON failures as tool values (0.5476ms)
+✔ tool argv mapping is fixed and does not shell-interpolate (0.6911ms)
+✔ bridge rejects Python versions older than 3.11 (0.3051ms)
+✔ tool output renderer returns one text content block (0.1801ms)
+✔ plugin exports the expected Cordis identity and services (0.7119ms)
+✔ apply registers exactly the six code tools plus one skill provider (3.6314ms)
+✔ apply rejects malformed row config and returns disposable effects (0.556ms)
+✔ display metadata and icon satisfy bundle packaging facts (0.7743ms)
 ℹ tests 12
 ℹ suites 0
 ℹ pass 12
@@ -17,4 +17,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 168.9639
+ℹ duration_ms 182.0936

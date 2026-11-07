@@ -169,6 +169,25 @@ class SnapshotProvenanceTest(_RegressionBase):
             )
         self.assertEqual("INVALID_ARGUMENT", caught.exception.code)
 
+    def test_snapshot_roots_must_include_the_target_repo(self) -> None:
+        # A root that names another repo of the same workspace is not enough:
+        # importing it under ``kmd`` would mis-attribute the snapshot.
+        helpers.write_snapshot_dir(
+            self.env.inbox_dir / "snapshot-umd-only",
+            helpers.simple_graph_payload(),
+            {"workspace_roots": ["umd"]},
+        )
+        with self.assertRaises(CodeLearningError) as caught:
+            snapshot.import_snapshot(
+                self.env.state, WORKSPACE_ID, VARIANT_ID, "kmd", "snapshot-umd-only", _uuid()
+            )
+        self.assertEqual("INVALID_ARGUMENT", caught.exception.code)
+        # The same pair imported under its real repo is accepted.
+        evidence = snapshot.import_snapshot(
+            self.env.state, WORKSPACE_ID, VARIANT_ID, "umd", "snapshot-umd-only", _uuid()
+        )
+        self.assertEqual("umd", evidence["repo_id"])
+
     def test_matching_workspace_root_still_imports(self) -> None:
         fixtures = helpers.make_snapshot_fixture(self.env)
         evidence = snapshot.import_snapshot(

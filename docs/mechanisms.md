@@ -2,7 +2,7 @@
 
 版本：`MECH-04-1`，2026-11-07。对应实现 `CL-IMPL-1`（仓库 `dsh-code-reader` v0.1.0）。本文按[机制说明合同](../../docs/mechanism-document-contract.md)交付：以 **场景→触发→输入与前置条件→判断规则→工具动作→状态/输出→证据→失败与恢复** 为主线，说明为什么这样设计、代价与已知限制，并区分 **skill 可调策略** 与 **plugin/CLI/Host 必须执行的硬边界**。
 
-**证据边界**：本文只记录本轮实际运行过的合成 fixture 证据（212 Python 测试、12 Node 测试、安装后 Host 工具旅程）。真实 Linux/Kbuild 索引、编译器探针隔离、native CFG、真实驱动运行时行为 **未验证**，见 §9。设计文档中的“未来合同”不等于已实现。
+**证据边界**：本文只记录本轮实际运行过的合成 fixture 证据（213 Python 测试、12 Node 测试、安装后 Host 工具旅程）。真实 Linux/Kbuild 索引、编译器探针隔离、native CFG、真实驱动运行时行为 **未验证**，见 §9。设计文档中的“未来合同”不等于已实现。
 
 ---
 
@@ -115,7 +115,7 @@
 
 - **场景**：复用 Atlas 的编译事实，但不能信任任意传入的快照目录。
 - **触发**：`snapshot-import --workspace --variant --repo --snapshot NAME --operation-id`（`code_snapshot action=import`）。
-- **规则**：NAME 只能是 inbox 内单层目录；读 `graph.json`/`analysis_manifest.json` 两个 envelope；校验 `schema_version='0.1'`、`record_kind∈{graph,analysis_manifest}`、payload 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`；严格图引用校验（call_targets 的 callsite/source/target/evidence id 必须存在）；**`workspace_roots` 必须至少有一个条目指回本 workspace 的 repo（absolute path/realpath、root_ref、repo_id 或 relative_path）**，否则拒绝，避免把别的仓库快照的 exact 边记到本仓；同 snapshot_id 不同内容 → `STATE_CONFLICT`；operation_id 幂等。
+- **规则**：NAME 只能是 inbox 内单层目录；读 `graph.json`/`analysis_manifest.json` 两个 envelope；校验 `schema_version='0.1'`、`record_kind∈{graph,analysis_manifest}`、payload 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`；严格图引用校验（call_targets 的 callsite/source/target/evidence id 必须存在）；**`workspace_roots` 必须至少有一个条目指回“本次导入的目标 repo”（absolute path/realpath、root_ref、repo_id 或 relative_path；只命中同 workspace 其它 repo 不够）**，否则拒绝，避免把别的仓库快照的 exact 边记到本仓；同 snapshot_id 不同内容 → `STATE_CONFLICT`；operation_id 幂等。多根 Atlas 快照会列出全部被分析根，因此同一对已核验快照可在每个根对应 repo 下分别导入。
 - **动作/状态**：原子复制到 `state/snapshots/<id>/`，写 `import.json`（workspace/variant/repo/两 hash/build_identity/imported_at）与 `current.json` 只读 view；更新 snapshot index（key=workspace+variant+repo）。
 - **输出**：`SnapshotEvidence`（coverage 原样保留，`failed` 数组/`pending_units` 路径数组不改成数字；另加 `failed_count`；`whole_program_complete` 不升级）。
 - **证据**：`test_snapshot.py`（21+ 测试：hash/schema 篡改、整数 coverage 拒绝、missing copy 修复、current/inbox 漂移不影响已导入副本）、`test_snapshot.py::test_import_snapshot_for_real_registered_workspace`。
@@ -245,7 +245,7 @@
 ## 6. 最小验证清单（改 skill/机制后至少重跑）
 
 ```bash
-cd engine && python -m unittest discover -s tests -v          # 212 tests
+cd engine && python -m unittest discover -s tests -v          # 213 tests
 cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12 tests
 ```
 
@@ -276,7 +276,7 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12
 5. `overview` 增加 `missing_inputs`；BOM 容忍的 JSON 读取。
 6. `bindings` 导入时重建列表，未传旧评估结果 → `stale` 主要靠显式 `previous_bindings` 交接（模块已测，集成待后续）。
 7. `find` 无 variant 参数（固定签名），SourceEvidence 的 variant 取确定性首 variant。
-8. **独立验证修复（2026-11-07）**：`resume` 的 source-manifest 重算改为跳过 junction/symlink（B1）；`record-save` 增加 run 账本/签名 plan/证据重核并拒绝伪造 executed，unsigned/过期证据降级而非以 fresh 落盘（B2，`prediction` 作者身份仍属对话来源，见 M-04-14 残余限制）；快照 `workspace_roots` 必须指回本 workspace（N1）；Host 桥强制 Python 3.11+（N2）；issue/paths/find 截断显式化（N3/N5）；`require_in_root` 拒绝最终 reparse point（N4）。回归见 `test_verifier_regressions.py` 与 `tests/node/bridge.test.mjs`。
+8. **独立验证修复（2026-11-07）**：`resume` 的 source-manifest 重算改为跳过 junction/symlink（B1）；`record-save` 增加 run 账本/签名 plan/证据重核并拒绝伪造 executed，unsigned/过期证据降级而非以 fresh 落盘（B2，`prediction` 作者身份仍属对话来源，见 M-04-14 残余限制）；快照 `workspace_roots` 必须包含目标 repo（N1，二次复核发现的残余缺口也已修复）；Host 桥强制 Python 3.11+（N2）；issue/paths/find 截断显式化（N3/N5）；`require_in_root` 拒绝最终 reparse point（N4）。回归见 `test_verifier_regressions.py` 与 `tests/node/bridge.test.mjs`。独立 verifier 二次复核结论：**PASS WITH FINDINGS**（两项原始 blocking 已关闭；仅剩已记录的信任边界与 NIT）。
 
 **待验证改进假设**（需要真实环境，不得当已实现）：
 - 真实 Linux Kbuild + 固定 Atlas 0.8 runtime 上 graph/manifest 字段与 fixtures 一致；失败 TU 诊断可保留并解释。
@@ -291,7 +291,7 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 212+12 测试、安装后 Host 工具旅程、`evidence/*` |
+| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 213+12 测试、安装后 Host 工具旅程、`evidence/*` |
 | Atlas 0.1 快照格式消费 | **actual（合成）** | 未用真实 Atlas 产物验证；只按已读 schema/代码实现 |
 | plugin 安装/工具与 skill 注册 | **actual** | `application: applied`、6 工具可见、skill 进入目录 |
 | 真实 Linux/Kbuild 索引与失败 TU 覆盖 | **blocked** | 需目标 Linux 工具链 + 固定 Atlas runtime |
@@ -308,7 +308,7 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12
 |---|---|---|---|
 | `resume` 经 Windows junction 走进 repo 外目录，可能无界遍历并把外部文件计入 source-manifest 摘要 | BLOCKING | `invalidation.py` 改用 `scope.iter_regular_files`（跳过 symlink/junction/reparse） | `test_verifier_regressions.py::SourceManifestJunctionTest` |
 | `record-save` 接受伪造 `experiment.executed`/`observation.observed`/`DONE-APPLIED`（任意 run_ref/evidence），并曾以 fresh 落盘 | BLOCKING | `records._verify_record_claims`：executed 必须有本地 runs 账本记录（本版无 → `CAPABILITY_UNAVAILABLE`）；planned 必须签名 plan；引用的证据保存时重核，unverifiable 证据把 freshness 降级并记 reasons | `RecordClaimTest` |
-| 快照 `workspace_roots` 未绑定登记 workspace | NON-BLOCKING | import 时要求至少一个 root 指回本 workspace 的 repo token | `SnapshotProvenanceTest` |
+| 快照 `workspace_roots` 未绑定登记 workspace | NON-BLOCKING | import 时要求至少一个 root 指回**本次导入的目标 repo**（同 workspace 其它 repo 不够；多根快照仍可在各根下分别导入） | `SnapshotProvenanceTest` |
 | Host 桥接受旧 Python 3.x | NON-BLOCKING | `--version` 探测要求 3.11+ | `tests/node/bridge.test.mjs` |
 | issue/unresolved 截断静默；find 大文件前缀搜索 `truncated=false` | NON-BLOCKING | issues 增加 `*_truncated` limitations + 投影截断标记；cross-repo unresolved 截断置 `truncated=true`；find 前缀单文件 `truncated=true` | `BoundedProjectionTest` |
 | `State.require_in_root` 接受最终 symlink/junction（死接口） | NIT | 拒绝最终 reparse point | `RequireInRootTest` |

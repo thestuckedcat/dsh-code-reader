@@ -178,7 +178,7 @@
   "automated_tests": {
     "python": {
       "command": "cd engine && python -m unittest discover -s tests -v",
-      "result": "Ran 212 tests, OK (17.7s)",
+      "result": "Ran 213 tests, OK (17.8s)",
       "evidence": "evidence/engine-tests.txt"
     },
     "node": {
@@ -229,7 +229,24 @@
       "N5": "find marks large-file prefix scans truncated=true; regression BoundedProjectionTest"
     },
     "recheck_requested_at": "2026-11-07T09:20:00+08:00",
-    "recheck_verdict": "pending second verifier message; see repository commit and final report"
+    "recheck_verdict": "PASS WITH FINDINGS (2026-11-07T09:20:34+08:00)",
+    "recheck_details": {
+      "commands": {
+        "python": "Ran 212 tests, OK (17.986s) at recheck time; 213 after the final N1-residual regression",
+        "node": "tests 12, pass 12, fail 0",
+        "independent_fixture": "15/15 checks passed"
+      },
+      "blockers": {
+        "B1": "closed: junction repro now resume 0.11s, freshness=fresh, changed_inputs=[]",
+        "B2": "closed for execution/observation: fake executed/observed/DONE-APPLIED -> CAPABILITY_UNAVAILABLE; unsigned evidence stored as unknown with reasons; signed evidence stays fresh"
+      },
+      "remaining_at_recheck": [
+        "N1 residual: snapshot roots accepted another repo of the same workspace; fixed after recheck by requiring a token of the target repo (regression added)",
+        "prediction/mental_model user authorship is conversational provenance, documented residual limitation (verifier judged NON-BLOCKING)",
+        "minor NITs: function name clipping, cursor/invalidation_reason caps, no intra-file cursor for >8 MiB prefix scan"
+      ],
+      "final_state": "both original blockers and the N1 residual are fixed in the repository history; remaining items are documented trust boundaries/NITs, not blocking claims. The verifier verdict is PASS WITH FINDINGS."
+    }
   },
   "not_verified": [
     "real Linux Kbuild/compdb Atlas indexing (requires target Linux toolchain + fixed Atlas runtime)",

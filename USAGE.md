@@ -119,10 +119,10 @@ find 返回示例（节选）：
 
 | action | 参数 | 说明 |
 |---|---|---|
-| `import` | `workspace`、`variant`、`repo`、`snapshot`（inbox 内目录名）、`operation_id` | 校验 envelope schema、manifest 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`、`workspace_roots` 指回本 workspace 的 repo；复制只读副本到 state |
+| `import` | `workspace`、`variant`、`repo`、`snapshot`（inbox 内目录名）、`operation_id` | 校验 envelope schema、manifest 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`、`workspace_roots` 至少一个条目指回**本次导入的目标 repo**；复制只读副本到 state |
 | `status` | `workspace`、`snapshot_ref` | 返回 SnapshotEvidence：coverage（failed 数组、pending_units 路径数组原样保留）、capabilities、freshness、limitations |
 
-导入不会运行 Atlas/CMake/编译器；`freshness` 在 workspace revision 或源清单摘要变化后为 `stale`，文件缺失为 `unknown`。`workspace_roots` 不匹配本 workspace 时拒绝导入（独立验证 N1 修复），避免把别的仓库快照的 exact 边记到本仓。
+导入不会运行 Atlas/CMake/编译器；`freshness` 在 workspace revision 或源清单摘要变化后为 `stale`，文件缺失为 `unknown`。`workspace_roots` 必须包含本次导入的目标 repo（同 workspace 其它 repo 不算），否则拒绝导入（独立验证 N1 修复），避免把别的仓库快照的 exact 边记到本仓；多根 Atlas 快照可在每个根对应的 repo 下分别导入。
 
 ### 3.5 `code_path` — 证据路径与关系
 

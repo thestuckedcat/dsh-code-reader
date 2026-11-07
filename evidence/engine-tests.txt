@@ -322,6 +322,8 @@ test_plain_path_inside_root_is_accepted (test_verifier_regressions.RequireInRoot
 epted) ... ok
 test_matching_workspace_root_still_imports (test_verifier_regressions.SnapshotProvenanceTest.test_matching_workspace_ro
 ot_still_imports) ... ok
+test_snapshot_roots_must_include_the_target_repo (test_verifier_regressions.SnapshotProvenanceTest.test_snapshot_roots_
+must_include_the_target_repo) ... ok
 test_snapshot_workspace_roots_must_match_registered_workspace (test_verifier_regressions.SnapshotProvenanceTest.test_sn
 apshot_workspace_roots_must_match_registered_workspace) ... ok
 test_resume_ignores_junction_inside_repository (test_verifier_regressions.SourceManifestJunctionTest.test_resume_ignore
@@ -371,6 +373,6 @@ test_workspace_status_freshness_after_source_and_config_changes (test_workspace.
 _freshness_after_source_and_config_changes) ... ok
 
 ----------------------------------------------------------------------
-Ran 212 tests in 18.064s
+Ran 213 tests in 19.393s
 
 OK
