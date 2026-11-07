@@ -18,11 +18,15 @@
     "locale/*.json",
     "icon.svg",
     "skills/",
-    "engine/code_learning/",
-    "engine/schemas/",
+    "engine/code_learning/*.py",
+    "engine/schemas/*.json",
+    "docs/implementation-route.md",
+    "docs/mechanisms.md",
+    "docs/implementation-contract.md",
     "USAGE.md",
     "README.md",
     "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
     "source.lock.json"
   ],
   "license": "MIT",
@@ -41,7 +45,7 @@
     }
   },
   "scripts": {
-    "test": "python -m unittest discover -s tests -v",
-    "test:node": "node --test tests/node/*.test.mjs"
+    "test": "cd engine && python -m unittest discover -s tests -v",
+    "test:node": "node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs"
   }
 }
