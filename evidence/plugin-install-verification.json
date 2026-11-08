@@ -178,7 +178,7 @@
   "automated_tests": {
     "python": {
       "command": "cd engine && python -m unittest discover -s tests -v",
-      "result": "Ran 213 tests, OK (17.8s)",
+      "result": "Ran 218 tests, OK (17.4s)",
       "evidence": "evidence/engine-tests.txt"
     },
     "node": {
@@ -232,7 +232,7 @@
     "recheck_verdict": "PASS WITH FINDINGS (2026-11-07T09:20:34+08:00)",
     "recheck_details": {
       "commands": {
-        "python": "Ran 212 tests, OK (17.986s) at recheck time; 213 after the final N1-residual regression",
+        "python": "Ran 212 tests, OK (17.986s) at recheck time; 213 after the final N1-residual regression; 218 after the real-Atlas/NIT round",
         "node": "tests 12, pass 12, fail 0",
         "independent_fixture": "15/15 checks passed"
       },
@@ -247,6 +247,43 @@
       ],
       "final_state": "both original blockers and the N1 residual are fixed in the repository history; remaining items are documented trust boundaries/NITs, not blocking claims. The verifier verdict is PASS WITH FINDINGS."
     }
+  },
+  "real_atlas_product_crosscheck": {
+    "checked_at": "2026-11-08T15:00:00+08:00",
+    "atlas": {
+      "root": "H:/VSCODE_READER",
+      "git_commit": "c33320a98face14c5f6e5e817beaccf52b9bbb93",
+      "tool_version": "0.8.0",
+      "schema_version": "0.1",
+      "runtime": "H:/VSCODE_READER/runtime/windows-x86_64/venv/Scripts/python.exe",
+      "invoked": "scripts/sdk_atlas.py directly (no H launcher, read-only H drive)",
+      "compiler_for_compdb_probe": "C:/mingw64/bin/clang.exe (clang 16.0.4 mingw build)"
+    },
+    "snapshots": [
+      {
+        "name": "quickstart",
+        "snapshot_id": "00fb39c133fa4841a64ec014fc0b5c18",
+        "graph_sha256": "a0067ed6951e1693bb451c198a82f6f78c2abcb880f1e72134ebd9abbafa125d",
+        "manifest_sha256": "b6f1edda6ad34c9c89263ab504d904567ba9d86779c1108cbd1188dbfc93d299",
+        "graph_hash_equals_raw_bytes": true,
+        "path": {"nodes": 2, "edges": 1, "edge_certainty": "exact", "locations_from_evidence": true},
+        "flow_legacy": {"status": "ok", "items": 1}
+      },
+      {
+        "name": "mini-repo",
+        "snapshot_id": "22a7c4d18126447688ea05faf45a3e65",
+        "graph_sha256": "259319e4c4100c6c76a190657ee94b385951e94456291857369fc0916d3b892c",
+        "manifest_sha256": "d80f11abd9555c6c0a6f08a1d6157dd258c86e47e63ef08c5c3710433a544796",
+        "graph_hash_equals_raw_bytes": true,
+        "path": {"nodes": 3, "edges": 2, "edge_certainty": "exact", "locations_from_evidence": true},
+        "flow_legacy": {"status": "ok", "items": 1},
+        "source_only": {"matches": 2, "origin": "source_text", "semantic_status": "blocked"}
+      }
+    ],
+    "adapter_fix": "real Atlas 0.8 function entities carry evidence_ids instead of file/line; atlas.function_location() now resolves the location from the referenced evidence entities and path nodes/choices expose the real file and line",
+    "evidence": "evidence/real-atlas/README.md, evidence/real-atlas/verification.json",
+    "regression": "engine/tests/test_real_atlas_product.py",
+    "limits": "synthetic C repositories only (no Linux/Kbuild, no generated headers, no target ABI, no user repository); Windows Atlas runtime; never claims Linux gates passed"
   },
   "not_verified": [
     "real Linux Kbuild/compdb Atlas indexing (requires target Linux toolchain + fixed Atlas runtime)",

@@ -2,7 +2,7 @@
 
 版本：`MECH-04-1`，2026-11-07。对应实现 `CL-IMPL-1`（仓库 `dsh-code-reader` v0.1.0）。本文按[机制说明合同](../../docs/mechanism-document-contract.md)交付：以 **场景→触发→输入与前置条件→判断规则→工具动作→状态/输出→证据→失败与恢复** 为主线，说明为什么这样设计、代价与已知限制，并区分 **skill 可调策略** 与 **plugin/CLI/Host 必须执行的硬边界**。
 
-**证据边界**：本文只记录本轮实际运行过的合成 fixture 证据（213 Python 测试、12 Node 测试、安装后 Host 工具旅程）。真实 Linux/Kbuild 索引、编译器探针隔离、native CFG、真实驱动运行时行为 **未验证**，见 §9。设计文档中的“未来合同”不等于已实现。
+**证据边界**：本文只记录本轮实际运行过的合成 fixture 与**真实 Atlas 0.8 产物对照**证据（218 Python 测试、12 Node 测试、安装后 Host 工具旅程）。真实 Linux/Kbuild 索引、编译器探针隔离、native CFG、真实驱动运行时行为 **未验证**，见 §9。设计文档中的“未来合同”不等于已实现。
 
 ---
 
@@ -118,7 +118,7 @@
 - **规则**：NAME 只能是 inbox 内单层目录；读 `graph.json`/`analysis_manifest.json` 两个 envelope；校验 `schema_version='0.1'`、`record_kind∈{graph,analysis_manifest}`、payload 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`；严格图引用校验（call_targets 的 callsite/source/target/evidence id 必须存在）；**`workspace_roots` 必须至少有一个条目指回“本次导入的目标 repo”（absolute path/realpath、root_ref、repo_id 或 relative_path；只命中同 workspace 其它 repo 不够）**，否则拒绝，避免把别的仓库快照的 exact 边记到本仓；同 snapshot_id 不同内容 → `STATE_CONFLICT`；operation_id 幂等。多根 Atlas 快照会列出全部被分析根，因此同一对已核验快照可在每个根对应 repo 下分别导入。
 - **动作/状态**：原子复制到 `state/snapshots/<id>/`，写 `import.json`（workspace/variant/repo/两 hash/build_identity/imported_at）与 `current.json` 只读 view；更新 snapshot index（key=workspace+variant+repo）。
 - **输出**：`SnapshotEvidence`（coverage 原样保留，`failed` 数组/`pending_units` 路径数组不改成数字；另加 `failed_count`；`whole_program_complete` 不升级）。
-- **证据**：`test_snapshot.py`（21+ 测试：hash/schema 篡改、整数 coverage 拒绝、missing copy 修复、current/inbox 漂移不影响已导入副本）、`test_snapshot.py::test_import_snapshot_for_real_registered_workspace`。
+- **证据**：`test_snapshot.py`（21+ 测试：hash/schema 篡改、整数 coverage 拒绝、missing copy 修复、current/inbox 漂移不影响已导入副本）、`test_snapshot.py::test_import_snapshot_for_real_registered_workspace`、`test_real_atlas_product.py`（真实 Atlas 0.8 产物 envelope/hash/coverage/路径对照）。**真实产物对照（2026-11-08）**：用 `H:/VSCODE_READER` 自带 Windows runtime 直接调用 `scripts/sdk_atlas.py`，对 Atlas trusted quickstart 示例与自建三函数 C 仓库（真实 clang compdb）生成真实 0.1 快照；两份快照均被本适配器导入，`graph_hash` 逐字节等于 `graph.json` SHA256。证据与复现命令见 [evidence/real-atlas/README.md](../evidence/real-atlas/README.md)。
 - **失败与恢复**：`UNSUPPORTED_SCHEMA`/`STALE_SNAPSHOT` → 重新导出/导入；损坏副本可用同 hash 重新导入修复；**不**去改 Atlas DB/current。
 
 ### M-04-09 快照 freshness 与只读隔离（硬边界）
@@ -133,7 +133,8 @@
 - **触发**：`path --workspace --variant --from REF --to REF [--budget --max-depth --direction]`（`code_path action=path`）。
 - **规则**：REF=`repo:function` 或单快照裸 ref；先按 `id` 再按 `name/display_name` 解析，多义 → `AMBIGUOUS_SYMBOL`（给 choices，不批量跑）；同 repo 对 `graph.payload.call_targets` 做 BFS（down/up），预算默认 2000、深度 30；每条边从 `call_targets` 回连 `callsite` 取 origin/certainty/evidence_ids，**绝不把路径线条升级为 exact**；边界/递归/深度/预算停止进 `unresolved`；结果含 `common_prefix`、`choices`、`truncated`、`freshness`。
 - **输出**：`PathResultV1`（nodes/edges/unresolved/choices/coverage/truncated/budget_used/freshness）。
-- **证据**：`test_paths.py`（31 测试：certainty join、同名 static 不跨仓合并、歧义 choices、预算/深度截断、direction up、reference candidate 不伪造 call）、`test_cli_journey.py`。
+- **真实产物位置解析（2026-11-08）**：真实 Atlas 0.8 的 function 实体**不带** `file`/`line`，位置在 `payload.evidence[]`（`file/line/start/end`）并由 `function.evidence_ids` 引用；`atlas.function_location()` 按 evidence `start` 最小优先解析，路径 nodes 与歧义 choices 因此带回真实文件/行号。合成 fixture 仍可直接带 `file/line`，两种形状都接受。
+- **证据**：`test_paths.py`（31 测试：certainty join、同名 static 不跨仓合并、歧义 choices、预算/深度截断、direction up、reference candidate 不伪造 call）、`test_real_atlas_product.py`（真实 quickstart/mini 快照的节点位置、exact 边与 flow 边）、`test_cli_journey.py`。
 - **代价/恢复**：只覆盖“已分析图”内的关系，`completeness` 不声称全程序；stale 快照仍可查但结果标 stale。
 
 ### M-04-11 跨仓 Binding 评估与 abi_bridge（硬边界）
@@ -245,7 +246,7 @@
 ## 6. 最小验证清单（改 skill/机制后至少重跑）
 
 ```bash
-cd engine && python -m unittest discover -s tests -v          # 213 tests
+cd engine && python -m unittest discover -s tests -v          # 218 tests
 cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12 tests
 ```
 
@@ -277,6 +278,7 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12
 6. `bindings` 导入时重建列表，未传旧评估结果 → `stale` 主要靠显式 `previous_bindings` 交接（模块已测，集成待后续）。
 7. `find` 无 variant 参数（固定签名），SourceEvidence 的 variant 取确定性首 variant。
 8. **独立验证修复（2026-11-07）**：`resume` 的 source-manifest 重算改为跳过 junction/symlink（B1）；`record-save` 增加 run 账本/签名 plan/证据重核并拒绝伪造 executed，unsigned/过期证据降级而非以 fresh 落盘（B2，`prediction` 作者身份仍属对话来源，见 M-04-14 残余限制）；快照 `workspace_roots` 必须包含目标 repo（N1，二次复核发现的残余缺口也已修复）；Host 桥强制 Python 3.11+（N2）；issue/paths/find 截断显式化（N3/N5）；`require_in_root` 拒绝最终 reparse point（N4）。回归见 `test_verifier_regressions.py` 与 `tests/node/bridge.test.mjs`。独立 verifier 二次复核结论：**PASS WITH FINDINGS**（两项原始 blocking 已关闭；仅剩已记录的信任边界与 NIT）。
+9. **真实 Atlas 产物对照与 NIT 清理（2026-11-08）**：在 Atlas 自带 Windows runtime 上直接调用 `scripts/sdk_atlas.py`（未运行 H launcher、未联网、未分析用户仓库），生成并消费两份真实 0.1 快照；修复“真实 function 无 file/line、位置在 evidence”的适配缺口，并对函数名/显示名/文件名的截断、`safe_cursor` 证据列表截断增加显式 marker。Linux/Kbuild 门禁仍未改变。
 
 **待验证改进假设**（需要真实环境，不得当已实现）：
 - 真实 Linux Kbuild + 固定 Atlas 0.8 runtime 上 graph/manifest 字段与 fixtures 一致；失败 TU 诊断可保留并解释。
@@ -291,7 +293,8 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 213+12 测试、安装后 Host 工具旅程、`evidence/*` |
+| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 218+12 测试、安装后 Host 工具旅程、`evidence/*` |
+| **真实 Atlas 0.8 产物**（Windows runtime，合成 C 仓库 quickstart + mini-repo） | **actual（非 Linux 门禁）** | `evidence/real-atlas/`：真实 envelope/graph_hash/coverage 导入、真实 file/line 解析、exact 调用边、flow_legacy；不含内核/Kbuild |
 | Atlas 0.1 快照格式消费 | **actual（合成）** | 未用真实 Atlas 产物验证；只按已读 schema/代码实现 |
 | plugin 安装/工具与 skill 注册 | **actual** | `application: applied`、6 工具可见、skill 进入目录 |
 | 真实 Linux/Kbuild 索引与失败 TU 覆盖 | **blocked** | 需目标 Linux 工具链 + 固定 Atlas runtime |
@@ -313,6 +316,18 @@ cd .. && node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs  # 12
 | issue/unresolved 截断静默；find 大文件前缀搜索 `truncated=false` | NON-BLOCKING | issues 增加 `*_truncated` limitations + 投影截断标记；cross-repo unresolved 截断置 `truncated=true`；find 前缀单文件 `truncated=true` | `BoundedProjectionTest` |
 | `State.require_in_root` 接受最终 symlink/junction（死接口） | NIT | 拒绝最终 reparse point | `RequireInRootTest` |
 
-verifier 同时确认：无 shell 插值/网络/构建执行；绝对路径、`..` 清单穿越、`source-find` junction 均被拒绝；path 保留 exact/may；跨仓桥接为 `may/derived`。复审后的最终结论以 verifier 二次复核消息为准（见 `evidence/plugin-install-verification.json` 的 `independent_verification`）。
+verifier 同时确认：无 shell 插值/网络/构建执行；绝对路径、`..` 清单穿越、`source-find` junction 均被拒绝；path 保留 exact/may；跨仓桥接为 `may/derived`。二次复核结论：**PASS WITH FINDINGS**（两项原始 blocking 已关闭；快照目标 repo provenance 残余已在最终提交修复；`prediction` 作者身份与少量 NIT 保留为非阻塞项），详见 `evidence/plugin-install-verification.json` 的 `independent_verification`。
 
-**结论**：本版可作为“合成 fixture 上可安装、可自测、边界清晰”的首版交付；不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/隔离/native CFG 门禁。
+### 10.1 真实 Atlas 0.8 产物对照与 NIT 清理（2026-11-08）
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| 真实 Atlas 0.8 Windows runtime 直接调用（quickstart + 自建三函数 C 仓库真实 compdb） | 生成两份真实 0.1 快照；`graph_hash` 恰等于 `graph.json` 原始字节 SHA256；coverage 原样保留 | `evidence/real-atlas/README.md`、`evidence/real-atlas/verification.json` |
+| 真实 function 实体无 `file`/`line`（位置在 evidence） | 修复：`atlas.function_location()` 从 evidence 解析；路径 nodes/歧义 choices 带回真实文件与行号 | `engine/tests/test_real_atlas_product.py` |
+| 真实快照上的路径/关系 | `sdk_entry(7)→normalize(3)` exact；`submit(13)→clamp_value(8)→normalize(3)` 两条 exact；`flow_legacy status=ok` | 同上 + `verification.json` |
+| NIT：function name/display_name/file 截断静默 | `atlas.function_choice` 增加 `function_*_truncated` limitations | `test_real_atlas_product.py::test_function_choice_reports_text_truncation` |
+| NIT：`safe_cursor.evidence_refs` 32 条封顶无标记 | 增加 `evidence_refs_total` / `evidence_refs_truncated` 字段 | `test_invalidation.py`（resume 返回形状） |
+
+**边界**：真实产物来自 Atlas 自带 Windows runtime + 合成 C 仓库，**不是** Linux 内核/Kbuild，也非用户真实驱动；native CFG/隔离 runner/Linux 工具链门禁不变。
+
+**结论**：本版可作为“合成 fixture + 真实 Atlas 产物对照上可安装、可自测、边界清晰”的首版交付；不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/隔离/native CFG 门禁。

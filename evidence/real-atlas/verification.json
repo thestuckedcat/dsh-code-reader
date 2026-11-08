@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "artifact": "dsh-code-reader real Atlas 0.8 product cross-check",
+  "atlas": {
+    "root": "H:\\VSCODE_READER",
+    "tool_version": "0.8.0",
+    "schema_version": "0.1",
+    "runtime_python": "H:/VSCODE_READER/runtime/windows-x86_64/venv/Scripts/python.exe",
+    "compiler": "C:\\mingw64\\bin\\clang.exe (clang 16.0.4, mingw build)",
+    "note": "Atlas runtime is a bundled venv; the CLI was invoked directly (no H launcher). Only synthetic C repositories and the bundled trusted quickstart example were analyzed; no kernel/Kbuild, no user repository, no network."
+  },
+  "runs": [
+    {
+      "name": "quickstart",
+      "workspace_id": "real-atlas-quickstart",
+      "repo": {
+        "repo_id": "sdk",
+        "relative_path": "examples/quickstart-sdk",
+        "root_ref": "atlas-ref"
+      },
+      "snapshot": {
+        "snapshot_id": "00fb39c133fa4841a64ec014fc0b5c18",
+        "graph_sha256": "a0067ed6951e1693bb451c198a82f6f78c2abcb880f1e72134ebd9abbafa125d",
+        "manifest_sha256": "b6f1edda6ad34c9c89263ab504d904567ba9d86779c1108cbd1188dbfc93d299",
+        "graph_hash_matches_raw_bytes": true,
+        "tool_version": "0.8.0",
+        "workspace_roots": [
+          "H:\\VSCODE_READER\\examples\\quickstart-sdk"
+        ],
+        "coverage": {
+          "failed": 0,
+          "pending_units": 0,
+          "parsed": 1,
+          "total_available_units": 1,
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "whole_program_complete": false
+        }
+      },
+      "real_graph_shape": {
+        "function_count": 2,
+        "call_target_count": 1,
+        "flow_edge_count": 3,
+        "functions_have_direct_file_line": false,
+        "functions_have_evidence_ids": true
+      },
+      "commands": [
+        {
+          "args": [
+            "bootstrap-init"
+          ],
+          "exit": 0
+        },
+        {
+          "args": [
+            "workspace-import"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "snapshot-import"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "path"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "relation",
+            "--mode",
+            "flow_legacy"
+          ],
+          "exit": 0,
+          "error": null
+        }
+      ],
+      "path": {
+        "nodes": [
+          {
+            "name": "sdk_entry",
+            "file": "H:\\VSCODE_READER\\examples\\quickstart-sdk\\sdk.c",
+            "line": 7
+          },
+          {
+            "name": "normalize",
+            "file": "H:\\VSCODE_READER\\examples\\quickstart-sdk\\sdk.c",
+            "line": 3
+          }
+        ],
+        "edges": [
+          {
+            "certainty": "exact",
+            "relation": "call",
+            "evidence_ids": [
+              "e_d628f11f9452d8edd9d1eca6"
+            ]
+          }
+        ],
+        "unresolved": [],
+        "truncated": false,
+        "freshness": "fresh"
+      },
+      "relation": {
+        "symbol": "s_227a812c3198576022ae97cb",
+        "status": "ok",
+        "items": 1,
+        "truncated": false
+      },
+      "source_only": null
+    },
+    {
+      "name": "mini",
+      "workspace_id": "real-atlas-mini",
+      "repo": {
+        "repo_id": "mini",
+        "relative_path": "real-atlas/mini-repo",
+        "root_ref": "atlas-ref"
+      },
+      "snapshot": {
+        "snapshot_id": "22a7c4d18126447688ea05faf45a3e65",
+        "graph_sha256": "259319e4c4100c6c76a190657ee94b385951e94456291857369fc0916d3b892c",
+        "manifest_sha256": "d80f11abd9555c6c0a6f08a1d6157dd258c86e47e63ef08c5c3710433a544796",
+        "graph_hash_matches_raw_bytes": true,
+        "tool_version": "0.8.0",
+        "workspace_roots": [
+          "E:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo"
+        ],
+        "coverage": {
+          "failed": 0,
+          "pending_units": 0,
+          "parsed": 1,
+          "total_available_units": 1,
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "whole_program_complete": false
+        }
+      },
+      "real_graph_shape": {
+        "function_count": 3,
+        "call_target_count": 2,
+        "flow_edge_count": 5,
+        "functions_have_direct_file_line": false,
+        "functions_have_evidence_ids": true
+      },
+      "commands": [
+        {
+          "args": [
+            "bootstrap-init"
+          ],
+          "exit": 0
+        },
+        {
+          "args": [
+            "workspace-import"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "snapshot-import"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "path"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "relation",
+            "--mode",
+            "flow_legacy"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "source-find"
+          ],
+          "exit": 0,
+          "error": null
+        },
+        {
+          "args": [
+            "source-read"
+          ],
+          "exit": 0,
+          "error": null
+        }
+      ],
+      "path": {
+        "nodes": [
+          {
+            "name": "submit",
+            "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo\\mini.c",
+            "line": 13
+          },
+          {
+            "name": "clamp_value",
+            "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo\\mini.c",
+            "line": 8
+          },
+          {
+            "name": "normalize",
+            "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo\\mini.c",
+            "line": 3
+          }
+        ],
+        "edges": [
+          {
+            "certainty": "exact",
+            "relation": "call",
+            "evidence_ids": [
+              "e_587fb2e455eb3ab568e98308"
+            ]
+          },
+          {
+            "certainty": "exact",
+            "relation": "call",
+            "evidence_ids": [
+              "e_f5a670d4f52196335d7502d2"
+            ]
+          }
+        ],
+        "unresolved": [],
+        "truncated": false,
+        "freshness": "fresh"
+      },
+      "relation": {
+        "symbol": "s_958a550014bb0fc0948d891e",
+        "status": "ok",
+        "items": 1,
+        "truncated": false
+      },
+      "source_only": {
+        "matches": 2,
+        "origin": "source_text",
+        "semantic_status": "blocked",
+        "safe_text_len": 11
+      }
+    }
+  ],
+  "findings": [
+    "manifest.payload.graph_hash exactly equals sha256(raw graph.json bytes) for both real snapshots",
+    "real graph functions carry evidence_ids instead of direct file/line fields; the adapter now resolves node locations from the referenced evidence entities",
+    "real coverage.selected_scope is an object and capabilities use Atlas-specific status strings; they are preserved verbatim",
+    "real call_targets join cleanly through callsite ids and keep exact/may certainty (sdk_entry -> normalize exact; mini submit -> clamp_value / normalize)",
+    "flow_legacy projects real flow_edges (status=ok) with certainty may and original limitations",
+    "source-only find/read still works on a real local source repository (mini.c) independent of any snapshot"
+  ],
+  "limits": [
+    "synthetic C repositories only (bundled quickstart + our mini-repo); no Linux kernel/Kbuild, no generated headers, no target ABI",
+    "Windows Atlas runtime with a mingw clang 16 compiler for the compdb probe; Atlas libclang 18.1.1 parses the C source",
+    "Atlas quickstart analyzes its bundled trusted example; the mini run is our own 3-function C repo, still far from a real driver",
+    "no network, no user repository, no Atlas launcher; H:/VSCODE_READER remains read-only"
+  ]
+}

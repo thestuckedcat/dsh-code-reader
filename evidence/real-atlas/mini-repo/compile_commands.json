@@ -1,0 +1,13 @@
+[
+  {
+    "directory": "E:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo",
+    "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo\\mini.c",
+    "arguments": [
+      "C:\\mingw64\\bin\\clang.exe",
+      "-std=c11",
+      "-IE:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo",
+      "-c",
+      "E:\\dsh\\plugin\\04-code-learning\\evidence\\real-atlas\\mini-repo\\mini.c"
+    ]
+  }
+]

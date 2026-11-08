@@ -419,7 +419,8 @@ def check_record_evidence(
 def _safe_cursor(
     record: Dict[str, Any], loaded: Dict[str, Any], workspace: Dict[str, Any], evidence_refs: List[str]
 ) -> Dict[str, Any]:
-    return {
+    bounded_refs = evidence_refs[:32]
+    cursor: Dict[str, Any] = {
         "schema_version": 1,
         "record_id": record.get("record_id"),
         "generation": loaded["generation"],
@@ -428,13 +429,16 @@ def _safe_cursor(
         "record_workspace_revision": record.get("workspace_revision"),
         "reason": "recheck_evidence_first",
         "evidence_ref": evidence_refs[0] if evidence_refs else None,
-        "evidence_refs": evidence_refs[:32],
+        "evidence_refs": bounded_refs,
+        "evidence_refs_total": len(evidence_refs),
+        "evidence_refs_truncated": len(evidence_refs) > len(bounded_refs),
         "message": (
             "Recheck each cited evidence reference against the current source first; "
             "do not treat this cursor as proof of freshness, and do not reuse prior "
             "line numbers or conclusions before the recheck."
         ),
     }
+    return cursor
 
 
 def resume_record(state: Any, workspace_ref: str, record_ref: str) -> Dict[str, Any]:

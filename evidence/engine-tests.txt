@@ -143,6 +143,16 @@ test_locks_project_existing_lock_evidence (test_paths.RelationQueryTests.test_lo
 test_locks_selector_validation (test_paths.RelationQueryTests.test_locks_selector_validation) ... ok
 test_locks_unavailable_without_lock_analysis (test_paths.RelationQueryTests.test_locks_unavailable_without_lock_analysi
 s) ... ok
+test_envelopes_and_graph_hash_match_raw_bytes (test_real_atlas_product.RealAtlasProductTest.test_envelopes_and_graph_ha
+sh_match_raw_bytes) ... ok
+test_function_choice_reports_text_truncation (test_real_atlas_product.RealAtlasProductTest.test_function_choice_reports
+_text_truncation) ... ok
+test_path_node_projection_uses_real_location_and_edges (test_real_atlas_product.RealAtlasProductTest.test_path_node_pro
+jection_uses_real_location_and_edges) ... ok
+test_real_functions_resolve_location_from_evidence (test_real_atlas_product.RealAtlasProductTest.test_real_functions_re
+solve_location_from_evidence) ... ok
+test_real_payloads_pass_the_adapter_validators (test_real_atlas_product.RealAtlasProductTest.test_real_payloads_pass_th
+e_adapter_validators) ... ok
 test_default_record_goal_is_validated (test_records.DefaultRecordTests.test_default_record_goal_is_validated) ... ok
 test_default_record_keeps_user_fields_pending (test_records.DefaultRecordTests.test_default_record_keeps_user_fields_pe
 nding) ... ok
@@ -373,6 +383,6 @@ test_workspace_status_freshness_after_source_and_config_changes (test_workspace.
 _freshness_after_source_and_config_changes) ... ok
 
 ----------------------------------------------------------------------
-Ran 213 tests in 19.393s
+Ran 218 tests in 18.355s
 
 OK

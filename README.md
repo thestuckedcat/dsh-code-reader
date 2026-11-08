@@ -11,10 +11,12 @@ DeepSeek Harness（DSH）插件 + `learn-code-workspace` skill + 本地 Python �
 - [机制说明](docs/mechanisms.md)（交付时补全）
 - [使用说明](USAGE.md)
 
-## 状态（2026-11-07）
+## 状态（2026-11-08）
 
 - **已实现并自测**：workspace 登记/校验、源码只读查找与引用、Atlas 0.1 快照导入与完整性校验、路径/关系查询（含跨仓 `abi_bridge` 候选）、学习记录 CAS/导出/resume 失效、`learn-code-workspace` skill、6 个 DSH Host 工具、安装后注册验证。
-- **未声明通过**（需要目标 Linux/Kbuild/固定 Atlas runtime/强制隔离 runner/native CFG）：真实内核索引与编译、编译探针隔离、真实驱动运行时行为。静态证据不证明运行时必达；本版只声称“合成 fixture 上适配与学习流程自测通过”。
+- **真实 Atlas 0.8 产物对照（已做，非 Linux 门禁）**：用 Atlas 自带 Windows runtime 直接分析 Atlas trusted quickstart 示例与自建三函数 C 仓库（真实 clang compdb），真实 0.1 快照被本适配器导入；真实 function 的 file/line 从 evidence 解析，exact 调用边与 `flow_legacy` 在真实产物上验证。见 [evidence/real-atlas/README.md](evidence/real-atlas/README.md)。
+- **未声明通过**（需要目标 Linux/Kbuild/固定 Atlas runtime/强制隔离 runner/native CFG）：真实内核索引与编译、编译探针隔离、真实驱动运行时行为。静态证据不证明运行时必达；本版只声称“合成 fixture + Windows 合成 C 的真实 Atlas 产物对照上适配与学习流程自测通过”。
+- 当前测试：218 Python unittest + 12 Node tests；独立 verifier 首轮 FAIL 的阻塞问题已修复，二次复核 PASS WITH FINDINGS。
 
 ## 组成
 
@@ -24,7 +26,7 @@ DeepSeek Harness（DSH）插件 + `learn-code-workspace` skill + 本地 Python �
 | 打包 skill | `skills/learn-code-workspace/` | 阅读顺序、讲解、预测/观察、停止规则；普通问答不强制复盘 |
 | Python 引擎 | `engine/code_learning/` | workspace/source/snapshot/paths/bindings/records/invalidation，只用标准库 |
 | 合同与 schema | `engine/schemas/`、`docs/implementation-contract.md` | 自有对象 `schema_version=1`；Atlas 对象保持 `0.1` |
-| 证据 | `engine/tests/`、`tests/node/`、`evidence/` | 合成 UMD/UAPI/KMD fixture 与负例 |
+| 证据 | `engine/tests/`、`tests/node/`、`evidence/` | 合成 UMD/UAPI/KMD fixture、真实 Atlas 产物对照与负例 |
 
 ## 快速开始
 

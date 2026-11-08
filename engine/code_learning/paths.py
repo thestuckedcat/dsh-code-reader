@@ -63,6 +63,19 @@ def _node_ref(bundle: Dict[str, Any], function_id: str) -> str:
     )
 
 
+def _bundle_evidence_index(bundle: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """Memoized evidence index for one loaded snapshot bundle."""
+    cached = bundle.get("_evidence_index")
+    if isinstance(cached, dict):
+        return cached
+    index = atlas.evidence_by_id(bundle.get("graph") or {})
+    try:
+        bundle["_evidence_index"] = index
+    except TypeError:  # frozen mapping: fall back to a per-call index
+        pass
+    return index
+
+
 def _node_projection(bundle: Dict[str, Any], function_id: str) -> Dict[str, Any]:
     graph = bundle.get("graph") or {}
     function = atlas.functions_by_id(graph).get(function_id)
@@ -85,15 +98,17 @@ def _node_projection(bundle: Dict[str, Any], function_id: str) -> Dict[str, Any]
             }
         )
         return projection
-    line = function.get("line")
+    file_value, line_value = atlas.function_location(
+        graph, function, _bundle_evidence_index(bundle)
+    )
     projection.update(
         {
             "name": function.get("name") if isinstance(function.get("name"), str) else None,
             "display_name": function.get("display_name")
             if isinstance(function.get("display_name"), str)
             else None,
-            "file": function.get("file") if isinstance(function.get("file"), str) else None,
-            "line": line if isinstance(line, int) and not isinstance(line, bool) else None,
+            "file": file_value,
+            "line": line_value,
             "kind": function.get("kind") if isinstance(function.get("kind"), str) else "function",
         }
     )
@@ -637,7 +652,16 @@ def _cross_repo_path(
                     "reason": "ambiguous_binding_interface",
                     "binding_id": binding_id,
                     "choices": [
-                        atlas.function_choice(entry) for entry in (left_matches + right_matches)
+                        atlas.function_choice(
+                            entry, from_graph, _bundle_evidence_index(from_bundle)
+                        )
+                        for entry in left_matches
+                    ]
+                    + [
+                        atlas.function_choice(
+                            entry, to_graph, _bundle_evidence_index(to_bundle)
+                        )
+                        for entry in right_matches
                     ],
                 }
             )

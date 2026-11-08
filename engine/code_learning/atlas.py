@@ -455,14 +455,90 @@ def functions_by_id(payload: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     return {entry["id"]: entry for entry in functions_of(payload)}
 
 
-def function_choice(function: Dict[str, Any]) -> Dict[str, Any]:
+def evidence_by_id(payload: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """Index a graph payload's evidence entities by id (read-only)."""
+    entries = payload.get("evidence", [])
     return {
-        "id": function.get("id"),
-        "name": _bounded_text(function.get("name"), "function.name"),
-        "display_name": _bounded_text(function.get("display_name"), "function.display_name"),
-        "file": _bounded_text(function.get("file"), "function.file"),
-        "line": function.get("line") if isinstance(function.get("line"), int) else None,
+        entry["id"]: entry
+        for entry in entries
+        if isinstance(entry, dict) and isinstance(entry.get("id"), str)
     }
+
+
+def function_location(
+    payload: Dict[str, Any],
+    function: Dict[str, Any],
+    evidence_index: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> "tuple[Optional[str], Optional[int]]":
+    """Resolve a function's source location.
+
+    Real Atlas 0.8 graph payloads do not put ``file``/``line`` on function
+    entities; the location lives on the evidence entities referenced by the
+    function's ``evidence_ids`` (definition evidence first by byte offset).
+    Synthetic fixtures may still carry direct ``file``/``line`` fields.
+    Returns ``(file, line)``; either value may be ``None`` when unknown.
+    """
+    file_value = function.get("file")
+    line_value = function.get("line")
+    if isinstance(file_value, str) and file_value:
+        return file_value, line_value if isinstance(line_value, int) and not isinstance(line_value, bool) else None
+    if evidence_index is None:
+        evidence_index = evidence_by_id(payload)
+    candidates: List[tuple] = []
+    for evidence_id in function.get("evidence_ids") or []:
+        if not isinstance(evidence_id, str):
+            continue
+        entry = evidence_index.get(evidence_id)
+        if not isinstance(entry, dict):
+            continue
+        entry_file = entry.get("file")
+        entry_line = entry.get("line")
+        if not isinstance(entry_file, str) or not entry_file:
+            continue
+        if not isinstance(entry_line, int) or isinstance(entry_line, bool):
+            continue
+        start = entry.get("start")
+        order = start if isinstance(start, int) and not isinstance(start, bool) else 1 << 60
+        candidates.append((order, entry_line, entry_file))
+    if not candidates:
+        return None, None
+    candidates.sort(key=lambda item: (item[0], item[1], item[2]))
+    return candidates[0][2], candidates[0][1]
+
+
+def function_choice(
+    function: Dict[str, Any],
+    payload: Optional[Dict[str, Any]] = None,
+    evidence_index: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    name, cut_name = _bounded_text_with_flag(function.get("name"), "function.name")
+    display_name, cut_display = _bounded_text_with_flag(
+        function.get("display_name"), "function.display_name"
+    )
+    file_value = _bounded_text(function.get("file"), "function.file")
+    line_value = function.get("line") if isinstance(function.get("line"), int) else None
+    if file_value is None and payload is not None:
+        file_value, line_value = function_location(payload, function, evidence_index)
+        file_value, cut_file = _bounded_text_with_flag(file_value, "function.file")
+    else:
+        cut_file = False
+    limitations: List[str] = []
+    if cut_name:
+        limitations.append("function_name_truncated")
+    if cut_display:
+        limitations.append("function_display_name_truncated")
+    if cut_file:
+        limitations.append("function_file_truncated")
+    choice: Dict[str, Any] = {
+        "id": function.get("id"),
+        "name": name,
+        "display_name": display_name,
+        "file": file_value,
+        "line": line_value,
+    }
+    if limitations:
+        choice["limitations"] = limitations
+    return choice
 
 
 def match_functions(payload: Dict[str, Any], ref: str) -> List[Dict[str, Any]]:

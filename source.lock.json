@@ -126,13 +126,40 @@
       "files": []
     }
   ],
+  "validation_runs": [
+    {
+      "date": "2026-11-08",
+      "kind": "real Atlas 0.8.0 product cross-check (Windows runtime, synthetic C only)",
+      "atlas_root": "H:/VSCODE_READER",
+      "atlas_git_commit": "c33320a98face14c5f6e5e817beaccf52b9bbb93",
+      "invocation": "H:/VSCODE_READER/runtime/windows-x86_64/venv/Scripts/python.exe H:/VSCODE_READER/scripts/sdk_atlas.py <quickstart|run>",
+      "compiler_for_compdb_probe": "C:/mingw64/bin/clang.exe (clang 16.0.4 mingw build)",
+      "snapshots": [
+        {
+          "name": "quickstart",
+          "snapshot_id": "00fb39c133fa4841a64ec014fc0b5c18",
+          "graph_sha256": "a0067ed6951e1693bb451c198a82f6f78c2abcb880f1e72134ebd9abbafa125d",
+          "manifest_sha256": "b6f1edda6ad34c9c89263ab504d904567ba9d86779c1108cbd1188dbfc93d299"
+        },
+        {
+          "name": "mini-repo (three-function C repository authored in this repo)",
+          "snapshot_id": "22a7c4d18126447688ea05faf45a3e65",
+          "graph_sha256": "259319e4c4100c6c76a190657ee94b385951e94456291857369fc0916d3b892c",
+          "manifest_sha256": "d80f11abd9555c6c0a6f08a1d6157dd258c86e47e63ef08c5c3710433a544796"
+        }
+      ],
+      "evidence": "evidence/real-atlas/README.md, evidence/real-atlas/verification.json",
+      "limits": "No Linux kernel/Kbuild, no generated headers, no target ABI, no user repository; H drive read-only; no launcher, no network."
+    }
+  ],
   "boundaries": {
-    "atlas_executed": false,
+    "atlas_executed": true,
+    "atlas_executed_scope": "Atlas 0.8.0 CLI was executed with its bundled Windows runtime against the bundled trusted quickstart example and a synthetic three-function C repository only; no kernel/Kbuild analysis and no user repository.",
     "atlas_full_package_vendored": false,
     "linux_kbuild_compdb_verified": false,
     "forced_isolation_runner_provisioned": false,
     "native_cfg_extractor_present": false,
     "network_used_by_runtime": false,
-    "note": "This source lock records read-only provenance only. It is not a redistribution manifest and does not claim the Atlas runtime or Linux analysis gates passed."
+    "note": "This source lock records read-only provenance only. It is not a redistribution manifest and does not claim the Linux analysis gates passed."
   }
 }

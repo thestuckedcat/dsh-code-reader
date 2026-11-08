@@ -37,7 +37,7 @@ Serena/clangd、codegraph MCP、ops-codegraph 只作调查对照；本版未集�
 
 1. **语言与载体**：设计主形态是 skill + Python CLI 薄适配，DSH Viewer plugin 后置；本轮按用户指示先交付可安装 Host plugin：Python 引擎保持设计模块划分与 CLI JSON 合同，插件层是薄 Node 桥（固定 argv、无 shell 插值）并分发 skill。插件不是第二套解析器。
 2. **runtime**：暂用系统 Python 3.11+（本机 3.11.4）。不 vendor 固定解释器/Atlas 包；`source.lock.json` 记录依赖与来源，后续补固定 runtime 时 CLI 合同不变。
-3. **Atlas 执行**：`plan` 只做数据/argv 计划；`run` 无强制隔离 profile 时返回 `EXECUTION_BLOCKED`，不裸跑 compiler probe。真实索引/编译留作运行门禁。
+3. **Atlas 执行**：`plan` 只做数据/argv 计划；`run` 无强制隔离 profile 时返回 `EXECUTION_BLOCKED`，不裸跑 compiler probe。**2026-11-08 增强**：为验证真实产物适配，用 Atlas 自带 Windows runtime 直接调用 `scripts/sdk_atlas.py`，只分析合成 C 仓库（Atlas trusted quickstart + 自建三函数 C 仓库）并消费其真实 0.1 快照；不执行用户仓库、不分析 Linux/Kbuild、不联网、不运行 H 盘 launcher。真实 Linux/Kbuild 索引门禁保持不变。
 4. **关系查询**：flow_legacy 用快照内 flow_edges 投影；flow_cfg/locks/aliases 在快照 capability 不足时一律 `status=unavailable` 并列出 unknowns，不以空数组伪装完整。
 5. **记录存储**：按设计使用 SQLite（Python 标准库）+ 不可变 revision JSON；未引入 FTS/外部依赖。
 6. **测试**：设计列出的 `test_runner.py`/`test_egress.py` 等在上表偏离下改为等价边界测试（无执行后端 → blocked；无外发路径断言），未运行项在 mechanisms.md 明确标注 actual/blocked。
@@ -49,7 +49,9 @@ Serena/clangd、codegraph MCP、ops-codegraph 只作调查对照；本版未集�
 - native CFG（需固定 Clang18 extractor，缺失时 capability=false）。
 - 真实用户仓库/硬件行为证明：静态证据不证明运行时必达。
 
-这些门禁未通过前，本版只声称“合成 fixture 上适配与学习流程自测通过”，不声称读懂用户真实驱动。
+**已完成的真实产物对照（不等于上述门禁通过）**：2026-11-08 用 Atlas 自带 Windows runtime 在合成 C 仓库上生成真实 0.1 快照，验证 envelope/graph_hash/coverage/真实 file/line/路径与 flow_legacy；证据与复现见 [evidence/real-atlas/README.md](../evidence/real-atlas/README.md)。
+
+这些门禁未通过前，本版只声称“合成 fixture + Windows 合成 C 的真实 Atlas 产物对照上适配与学习流程自测通过”，不声称读懂用户真实驱动或通过 Linux/Kbuild 门禁。
 
 ## 证据与完成标准
 
