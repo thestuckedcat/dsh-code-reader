@@ -33,6 +33,7 @@ const url = process.env.RV_URL;
 const out = process.env.RV_OUT;
 const shotDir = process.env.RV_SHOT_DIR;
 const profileId = process.env.RV_PROFILE_ID || 'bus-demo-wasm';
+const scenarioChannel = Number(process.env.RV_SCENARIO_CHANNEL || 1);
 const expectSnapshotId = process.env.RV_SNAPSHOT_ID || null;
 const overallTimeoutMs = Number(process.env.RV_TIMEOUT_MS || 540000);
 const consoleLines = [];
@@ -529,8 +530,8 @@ async function checkStubRun(win, result) {
   // Scenario A: reset, bus_register(1), bus_send(1,48) -> 3 records 0/0/0.
   const scenarioA = [
     {interface: 'reset', args: []},
-    {interface: 'bus_register', args: [1]},
-    {interface: 'bus_send', args: [1, 48]},
+    {interface: 'bus_register', args: [scenarioChannel]},
+    {interface: 'bus_send', args: [scenarioChannel, 48]},
   ];
   detail.buildA = await buildScenario(win, scenarioA);
   detail.stateStepsA = await readStubState(win);
@@ -582,9 +583,9 @@ async function checkStubRun(win, result) {
   // -> stub step data-stubbed=true, bus_send -5, no WRITE, LOCK 1->0.
   const scenarioB = [
     {interface: 'reset', args: []},
-    {interface: 'bus_register', args: [1]},
+    {interface: 'bus_register', args: [scenarioChannel]},
     {interface: 'set_platform_stub', args: [-5]},
-    {interface: 'bus_send', args: [1, 48]},
+    {interface: 'bus_send', args: [scenarioChannel, 48]},
   ];
   detail.buildB = await buildScenario(win, scenarioB);
   detail.runB = await clickRun(win);
@@ -594,7 +595,7 @@ async function checkStubRun(win, result) {
   const stubRecord = recordsB.find((record) => record.stubbed === 'true');
   detail.stubRecord = stubRecord ?? null;
   detail.steps.stubStepMarked = stubRecord !== undefined;
-  const sendRecordB = recordsB.find((record) => /bus_send\(1,\s*48\)/.test(record.text));
+  const sendRecordB = recordsB.find((record) => new RegExp(`bus_send\\(${scenarioChannel},\\s*48\\)`).test(record.text));
   detail.sendRecordB = sendRecordB ?? null;
   detail.steps.sendResultMinus5 = sendRecordB !== undefined && /(^|\D)-5(\D|$)/.test(String(sendRecordB.result ?? sendRecordB.text));
   detail.steps.noWriteInB = sendRecordB !== undefined && !(sendRecordB.events ?? []).some((event) => event.kind === 'WRITE');
@@ -604,7 +605,7 @@ async function checkStubRun(win, result) {
   detail.steps.lockOneToZero = lockEvents.length >= 2
     && lockEvents[0].a === 1
     && lockEvents[lockEvents.length - 1].a === 0;
-  const nonSendB = recordsB.filter((record) => !/bus_send\(1,\s*48\)/.test(record.text));
+  const nonSendB = recordsB.filter((record) => !new RegExp(`bus_send\\(${scenarioChannel},\\s*48\\)`).test(record.text));
   detail.steps.statusOkB = nonSendB.every((record) => record.status === 'ok')
     && (sendRecordB?.status === 'error' || sendRecordB?.status === 'ok');
   detail.steps.sendStatusErrorB = sendRecordB?.status === 'error';
@@ -613,12 +614,12 @@ async function checkStubRun(win, result) {
   // Scenario C: reset, bus_send(0,48) -> -2 (unregistered channel).
   const scenarioC = [
     {interface: 'reset', args: []},
-    {interface: 'bus_send', args: [0, 48]},
+    {interface: 'bus_send', args: [0, 48 + scenarioChannel - 1]},
   ];
   await buildScenario(win, scenarioC);
   await clickRun(win);
   detail.recordsC = await waitForRun(win, 2);
-  const recordsC = (detail.recordsC?.records ?? []).filter((record) => /bus_send\(0,\s*48\)/.test(record.text));
+  const recordsC = (detail.recordsC?.records ?? []).filter((record) => new RegExp(`bus_send\\(0,\\s*${48 + scenarioChannel - 1}\\)`).test(record.text));
   detail.sendRecordC = recordsC[0] ?? null;
   detail.steps.sendResultMinus2 = detail.sendRecordC !== null && /(^|\D)-2(\D|$)/.test(String(detail.sendRecordC.result ?? detail.sendRecordC.text));
 
@@ -685,7 +686,7 @@ async function captureObservedSequence(win, result) {
   })))()`).catch(() => []);
   const text = (detail.messages ?? []).map((message) => message.text).join('\n');
   detail.messageKinds = [...new Set((detail.messages ?? []).map((message) => message.kind))];
-  detail.steps.callMessage = /bus_send\(1,\s*48\)/.test(text);
+  detail.steps.callMessage = new RegExp(`bus_send\\(${scenarioChannel},\\s*48\\)`).test(text);
   detail.steps.eventMessages = /DOORBELL/.test(text) && /WRITE/.test(text);
   detail.steps.platformBoundary = /平台|platform|设备\/库边界|boundary/.test(text);
   detail.steps.returnMessage = /返回|return/.test(text);

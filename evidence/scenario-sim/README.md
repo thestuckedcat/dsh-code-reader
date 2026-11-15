@@ -20,6 +20,7 @@
 |---|---|
 | `bus.wasm`（=`inbox/bus.wasm`） | 隔离模拟模块；sha256 见上 |
 | `inbox/sim-profile.json` | 可信 SimProfileV1：绑定、接口（entry/util/stub_control）、trace 事件表、事件→资源映射、局限 |
+| `inbox/trace-bus-send.json` | S3b 轨迹导入夹具：外部采集的 reset/bus_register(1)/bus_send(1,48) 记录（3418 B，sha256 `8860df515c39ae26cf62edfc8da74f454bcc3e65677092a7559aaf6d05d47e06`），导入时插件不执行代码 |
 | `README.md` | 本文件 |
 
 ## 用途与边界
@@ -27,6 +28,8 @@
 - Host 通过引擎 `sim-profile-import --profile sim-profile.json` 把 profile 与模块登记到**隔离 state**；
   运行由用户在工作台「打桩模拟」点击触发，在 Host `worker_threads` 内实例化 Wasm（`env.trace` 回调收集事件），
   执行有序接口调用并落不可变台账。
+- `trace-bus-send.json` 用于 S3b `trace-import`：外部轨迹只做校验与只读台账登记，**不执行** Wasm；观测时序显示
+  imported 标记与来源 label，不提供 undo/重放。
 - worker 不读文件系统、不联网、无其他 import；总超时 10–15 s、内存 ≤64 MB。
 - **不是**真实设备/内核执行证据；真实下发需单独授权与运行验证（S3b/S4 外）。插件不在运行期编译任何 C。
 - `event_resources` 只把**实际资源变更**映射到快照对象（STORE_ROUTE→routes、WRITE→simulated_doorbell 等 10 类）；

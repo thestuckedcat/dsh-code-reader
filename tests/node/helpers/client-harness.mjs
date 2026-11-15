@@ -1637,6 +1637,120 @@ export function makeFileTreePayload(overrides = {}) {
   return {...base, ...overrides};
 }
 
+export function makeImportedScenarioSummary(overrides = {}) {
+  return makeScenarioSummary({
+    scenario_id: 'scn_1a2b3c4d5e6f',
+    generation: 1,
+    step_count: 2,
+    imported: true,
+    source: 'imported_trace',
+    label: '外部采集 bus_send 轨迹（示例）',
+    limitations: ['imported_trace_not_executed_by_host', 'resource_effects_unknown_for_imported_trace'],
+    ...overrides,
+  });
+}
+
+export function makeUndoTailPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    scenario_id: 'scn_prefix000001',
+    generation: 2,
+    profile_id: 'bus-demo-wasm',
+    workspace_id: 'code-view-bus-demo',
+    snapshot_id: SNAPSHOT_ID,
+    variant_id: 'semantic-x86_64',
+    repo_id: 'bus',
+    records_digest: 'e'.repeat(64),
+    observed: true,
+    created_at: '2026-11-15T09:00:00Z',
+    undo: {of_scenario_id: 'scn_0123456789ab', of_generation: 3, count: 1, state_digest_verified: true},
+    records: [
+      makeStubRecord({call_id: 'call_2_1', step_index: 0, interface: 'reset', args: [], status: 'ok', result: null}),
+      makeStubRecord({call_id: 'call_2_2', step_index: 1, interface: 'bus_register', args: [1], status: 'ok', result: 0, execution_events: [{event_id: 'ev_2_1_0', event: 'DEFAULT_ROUTE', code: 1, a: 1, b: 0, c: 0, line: 60}]}),
+    ],
+    limitations: ['replay_verified_by_memory_digest', 'wasm_simulation_not_real_device'],
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeTraceImportPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    scenario_id: 'scn_1a2b3c4d5e6f',
+    generation: 1,
+    imported: true,
+    source: 'imported_trace',
+    label: '外部采集 bus_send 轨迹（示例）',
+    profile_id: 'bus-demo-wasm',
+    workspace_id: 'code-view-bus-demo',
+    snapshot_id: SNAPSHOT_ID,
+    variant_id: 'semantic-x86_64',
+    repo_id: 'bus',
+    records_digest: 'f'.repeat(64),
+    observed: true,
+    created_at: '2026-11-15T09:10:00Z',
+    records: [
+      makeStubRecord({call_id: 'call_1_1', step_index: 0, interface: 'reset', args: [], status: 'ok', result: null}),
+      makeStubRecord({
+        call_id: 'call_1_2',
+        step_index: 1,
+        interface: 'bus_send',
+        args: [1, 48],
+        status: 'ok',
+        result: 0,
+        execution_events: [
+          {event_id: 'ev_1_1_0', event: 'REQUEST', code: 4, a: 1, b: 48, c: 0, line: 158},
+          {event_id: 'ev_1_1_1', event: 'DOORBELL', code: 19, a: 4160, b: 131120, c: 0, line: 113},
+          {event_id: 'ev_1_1_2', event: 'WRITE', code: 7, a: 4160, b: 131120, c: 0, line: 113},
+        ],
+        affected_resources: [],
+      }),
+    ],
+    limitations: ['imported_trace_not_executed_by_host', 'resource_effects_unknown_for_imported_trace'],
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeImportedObservedSequencePayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    mode: 'observed',
+    observed: true,
+    scenario: {
+      scenario_id: 'scn_1a2b3c4d5e6f',
+      generation: 1,
+      profile_id: 'bus-demo-wasm',
+      workspace_id: 'code-view-bus-demo',
+      snapshot_id: SNAPSHOT_ID,
+      records_digest: 'f'.repeat(64),
+      created_at: '2026-11-15T09:10:00Z',
+      imported: true,
+      label: '外部采集 bus_send 轨迹（示例）',
+    },
+    participants: [
+      {participant_id: 'caller', label: '调用方'},
+      {participant_id: 'driver', label: '驱动'},
+      {participant_id: 'resource', label: '驱动资源'},
+      {participant_id: 'platform', label: '平台/设备边界'},
+    ],
+    messages: [
+      {message_id: 'mi_1', index: 1, kind: 'call', from: 'caller', to: 'driver', label: 'bus_send(1, 48)', call_id: 'call_1_2', step_index: 1, status: 'ok', result: 0, observed: true, imported: true, source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 152}, limitations: []},
+      {message_id: 'mi_2', index: 2, kind: 'event', from: 'driver', to: 'platform', label: 'WRITE', call_id: 'call_1_2', step_index: 1, status: 'ok', result: 0, observed: true, imported: true, event: 'WRITE', code: 7, affected_resources: [], source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 113}, limitations: []},
+      {message_id: 'mi_3', index: 3, kind: 'event', from: 'driver', to: 'platform', label: 'DOORBELL', call_id: 'call_1_2', step_index: 1, status: 'ok', result: 0, observed: true, imported: true, event: 'DOORBELL', code: 19, source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 113}, limitations: []},
+      {message_id: 'mi_4', index: 4, kind: 'return', from: 'driver', to: 'caller', label: '返回 0', call_id: 'call_1_2', step_index: 1, status: 'ok', result: 0, observed: true, imported: true, source_ref: null, limitations: []},
+    ],
+    warning: null,
+    gaps: [],
+    truncated: false,
+    limitations: ['imported_trace_not_executed_by_host', 'resource_effects_unknown_for_imported_trace'],
+  };
+  return {...base, ...overrides};
+}
+
 export function makeBusFileLines(start, end) {
   const lines = [];
   for (let number = start; number <= end; number += 1) {

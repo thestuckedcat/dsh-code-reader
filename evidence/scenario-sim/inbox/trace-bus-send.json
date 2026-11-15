@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "kind": "imported_trace",
+  "label": "外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）",
+  "profile_id": "bus-demo-wasm",
+  "snapshot_id": "ed326d554334432b907de21297207eb8",
+  "metadata": {
+    "collected_by": "evidence/scenario-sim fixture generator (external to the plugin)",
+    "clock": "event-order",
+    "note": "由 Demo 构建产物在夹具生成阶段执行一次导出；导入时插件不执行任何代码，只校验并登记台账"
+  },
+  "steps": [
+    {
+      "interface": "reset",
+      "args": [],
+      "status": "ok",
+      "result": null,
+      "memory_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b",
+      "elapsed_ms": null,
+      "events": []
+    },
+    {
+      "interface": "bus_register",
+      "args": [
+        1
+      ],
+      "status": "ok",
+      "result": 0,
+      "memory_digest": "19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1",
+      "elapsed_ms": null,
+      "events": [
+        {
+          "event": "DEFAULT_ROUTE",
+          "code": 1,
+          "a": 1,
+          "b": 2,
+          "c": 64,
+          "line": 57
+        },
+        {
+          "event": "STORE_ROUTE",
+          "code": 3,
+          "a": 1,
+          "b": 2,
+          "c": 64,
+          "line": 47
+        }
+      ]
+    },
+    {
+      "interface": "bus_send",
+      "args": [
+        1,
+        48
+      ],
+      "status": "ok",
+      "result": 0,
+      "memory_digest": "2b34d0d64694207443ed6cb6d9e8b0c42ebad1e6c4e4833651a4e24bf44d60ea",
+      "elapsed_ms": null,
+      "events": [
+        {
+          "event": "REQUEST",
+          "code": 4,
+          "a": 1,
+          "b": 48,
+          "c": 0,
+          "line": 154
+        },
+        {
+          "event": "LOOKUP",
+          "code": 5,
+          "a": 1,
+          "b": 2,
+          "c": 64,
+          "line": 92
+        },
+        {
+          "event": "CHECK_LENGTH",
+          "code": 6,
+          "a": 48,
+          "b": 64,
+          "c": 1,
+          "line": 99
+        },
+        {
+          "event": "LOCK",
+          "code": 15,
+          "a": 1,
+          "b": 0,
+          "c": 0,
+          "line": 169
+        },
+        {
+          "event": "TRANSFER",
+          "code": 9,
+          "a": 48,
+          "b": 0,
+          "c": 48,
+          "line": 146
+        },
+        {
+          "event": "DIRECT",
+          "code": 13,
+          "a": 2,
+          "b": 48,
+          "c": 0,
+          "line": 132
+        },
+        {
+          "event": "COMMIT",
+          "code": 12,
+          "a": 2,
+          "b": 48,
+          "c": 0,
+          "line": 118
+        },
+        {
+          "event": "ENCODE",
+          "code": 11,
+          "a": 2,
+          "b": 48,
+          "c": 131120,
+          "line": 106
+        },
+        {
+          "event": "DOORBELL",
+          "code": 19,
+          "a": 4160,
+          "b": 131120,
+          "c": 0,
+          "line": 112
+        },
+        {
+          "event": "LIBRARY",
+          "code": 16,
+          "a": 4160,
+          "b": 131120,
+          "c": 0,
+          "line": 21
+        },
+        {
+          "event": "WRITE",
+          "code": 7,
+          "a": 4160,
+          "b": 131120,
+          "c": 0,
+          "line": 26
+        },
+        {
+          "event": "LOCK",
+          "code": 15,
+          "a": 0,
+          "b": 0,
+          "c": 0,
+          "line": 172
+        }
+      ]
+    }
+  ]
+}

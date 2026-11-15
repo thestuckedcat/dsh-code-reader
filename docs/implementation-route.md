@@ -184,7 +184,7 @@ OS 出口认证。机制说明按合同在 CW-T2/T3 完整交付时补。
 |---|---|---|
 | **S2a 五视图只读**（2026-11-15 完成） | 资源关系图、可折叠文字树、单入口端到端图（竖排正交、菱形判断、红色异常）、时序（S2a 仅静态预测并标注）、文件视图；左栏「全局资源/打桩占位」、图例、详情面板、跨视图选中 | `node tools/verify-five-views.mjs --with-repo-tests` → `ok=true, verified=true`，37/37，三层全 true，in-scope `not_verified=[]`；证据 `evidence/five-views/`（五视图截图 + verification.json）；[五视图契约](five-view-contract.md) §9 |
 | **S2b 组/接口库/细节**（2026-11-15 完成） | 组折叠展开（CW-06）、基础接口库（CW-07）、子流程/面包屑、组名修订、AI 归纳占位 | `node tools/verify-s2b.mjs --with-repo-tests` → `ok=true, verified=true`，41/41，三层全 true，in-scope `not_verified=[]`；证据 `evidence/s2b/`（组/接口/子流程截图 + verification.json）；契约 §11 |
-| **S3 场景/打桩/时序运行**（2026-11-15 S3a 完成） | **S3a 完成**：可信 Wasm 模拟 profile 导入、Host worker 隔离执行、场景 plan/run/record 台账、边界打桩、失败传播、时序 observed；**S3b 待做**：回退末尾 N 次/前缀重放、轨迹导入、异步/IRQ 细化、observed 多场景选择 | S3a：`node tools/verify-s3.mjs --with-repo-tests` → `ok=true, verified=true`，43/43，三层全 true，in-scope `not_verified=[]`；证据 `evidence/s3/`；契约 [scenario-contract](scenario-contract.md) §10 |
+| **S3 场景/打桩/时序运行**（2026-11-15 S3a/S3b 完成） | **S3a 完成**：可信 Wasm 模拟 profile 导入、Host worker 隔离执行、场景 plan/run/record 台账、边界打桩、失败传播、时序 observed；**S3b 完成**：回退末尾 N 次/前缀重放（memory digest 核验）、轨迹导入、observed 多场景选择 | S3a：`node tools/verify-s3.mjs --with-repo-tests` → 43/43；S3b：`node tools/verify-s3b.mjs --with-repo-tests` → `ok=true, verified=true`，58/58，三层全 true，in-scope `not_verified=[]`；证据 `evidence/s3/`、`evidence/s3b/`；契约 [scenario](scenario-contract.md)、[scenario-s3b](scenario-s3b-contract.md) |
 | **S4 目标验证** | Linux/Kbuild 生成头、CFG/locks/aliases、复核差分、性能预算（CW-T4/CW-11） | 目标环境证据；A05/A07/A11 |
 
 S2a 的读模型 DTO、派生规则、DOM 钩子与预算固定在[五视图契约](five-view-contract.md)；实现顺序仍为

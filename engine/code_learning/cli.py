@@ -268,6 +268,41 @@ def build_parser() -> argparse.ArgumentParser:
         "--scenario", dest="scenario_ref", required=True, metavar="SCN"
     )
 
+    scenario_undo_plan = subparsers.add_parser(
+        "scenario-undo-plan",
+        help="Validate an undo-tail replay and sign a prefix undo plan (never executes).",
+    )
+    scenario_undo_plan.add_argument("--workspace", required=True, metavar="WID")
+    scenario_undo_plan.add_argument("--scenario", dest="scenario_ref", required=True, metavar="SCN")
+    scenario_undo_plan.add_argument("--count", dest="count", type=int, required=True, metavar="N")
+    scenario_undo_plan.add_argument(
+        "--expected-generation", dest="expected_generation", type=int, required=True, metavar="G"
+    )
+
+    scenario_undo_record = subparsers.add_parser(
+        "scenario-undo-record",
+        help="Verify a replayed prefix state digest and publish the prefix generation.",
+    )
+    scenario_undo_record.add_argument(
+        "--plan", dest="plan_id", required=True, metavar="UNDO_PLAN"
+    )
+    scenario_undo_record.add_argument(
+        "--records-json", dest="records_json", required=True, metavar="B64"
+    )
+    scenario_undo_record.add_argument(
+        "--operation-id", dest="operation_id", required=True, metavar="ID"
+    )
+
+    trace_import_parser = subparsers.add_parser(
+        "trace-import", help="Validate a trusted inbox trace file as a read-only imported ledger."
+    )
+    trace_import_parser.add_argument("--workspace", required=True, metavar="WID")
+    trace_import_parser.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    trace_import_parser.add_argument("--input", dest="input_name", required=True, metavar="NAME")
+    trace_import_parser.add_argument(
+        "--operation-id", dest="operation_id", required=True, metavar="ID"
+    )
+
     # -- paths and relations -------------------------------------------------
     query_path = subparsers.add_parser("path", help="Bounded call-path query inside one variant.")
     query_path.add_argument("--workspace", required=True, metavar="WID")
@@ -474,6 +509,9 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
         "scenario-list",
         "scenario-get",
         "view-sequence-observed",
+        "scenario-undo-plan",
+        "scenario-undo-record",
+        "trace-import",
     ):
         from . import scenario
 
@@ -507,6 +545,26 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
             return scenario.scenario_list(state, args.workspace)
         if command == "scenario-get":
             return scenario.scenario_get(state, args.workspace, args.scenario_ref)
+        if command == "scenario-undo-plan":
+            return scenario.scenario_undo_plan(
+                state,
+                args.workspace,
+                args.scenario_ref,
+                args.count,
+                args.expected_generation,
+            )
+        if command == "scenario-undo-record":
+            return scenario.scenario_undo_record(
+                state, args.plan_id, args.records_json, args.operation_id
+            )
+        if command == "trace-import":
+            return scenario.trace_import(
+                state,
+                args.workspace,
+                args.snapshot_ref,
+                args.input_name,
+                args.operation_id,
+            )
         return scenario.view_sequence_observed(
             state, args.workspace, args.scenario_ref
         )

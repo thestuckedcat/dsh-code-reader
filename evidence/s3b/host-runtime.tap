@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: S3b undo/trace endpoints run real isolated Wasm/ledger on the pinned rc.5 Cordis runtime
+ok 1 - S3b undo/trace endpoints run real isolated Wasm/ledger on the pinned rc.5 Cordis runtime
+  ---
+  duration_ms: 4406.6307
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4496.9661

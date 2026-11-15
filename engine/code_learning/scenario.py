@@ -68,6 +68,13 @@ PLAN_TTL_SECONDS = 600
 PLAN_TIMEOUT_MS = 10_000
 MAX_OBSERVED_MESSAGES = 1200
 
+#: S3b (scenario-s3b-contract sections 1/2) limits.
+MAX_UNDO_PLAN_STEPS = MAX_STEPS
+MAX_IMPORTED_TRACE_BYTES = 64 * 1024
+MAX_IMPORTED_TRACE_STEPS = 200
+MAX_TRACE_METADATA_KEYS = 16
+MAX_TRACE_METADATA_STRING = 256
+
 INT32_MIN = -(1 << 31)
 INT32_MAX = (1 << 31) - 1
 UINT32_MAX = (1 << 32) - 1
@@ -76,8 +83,10 @@ PROFILE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 INTERFACE_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
 EVENT_RE = re.compile(r"^[A-Z][A-Z0-9_]{0,63}$")
 SCENARIO_ID_RE = re.compile(r"^scn_[0-9a-f]{12}$")
-PLAN_ID_RE = re.compile(r"^plan_[0-9a-f]{32}$")
+PLAN_REF_RE = re.compile(r"^(?:plan|undo)_([0-9a-f]{32})$")
 MEMORY_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
+METADATA_KEY_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]{0,63}$")
+ABSOLUTE_PATH_RE = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\|//|/[A-Za-z0-9._~])")
 
 ACCESS_VALUES = readmodel.ACCESS_VALUES
 TRACE_SIGNATURE_TYPES = frozenset({"i32", "u32", "i64", "f32", "f64"})
@@ -114,12 +123,18 @@ _PLAN_KEYS = frozenset(
         "scenario_id",
         "scenario_digest",
         "generation",
+        "kind",
         "steps",
         "trace",
         "limits",
         "created_at",
         "expires_at",
         "signature",
+        "source",
+        "count",
+        "prefix",
+        "expected_prefix",
+        "undo_plan_id",
         "workspace_id",
         "snapshot_id",
         "variant_id",
@@ -142,6 +157,12 @@ _RECORD_KEYS = frozenset(
     }
 )
 _EVENT_KEYS = frozenset({"event", "code", "a", "b", "c", "line"})
+_IMPORTED_TRACE_KEYS = frozenset(
+    {"schema_version", "kind", "label", "profile_id", "snapshot_id", "metadata", "steps"}
+)
+_TRACE_STEP_KEYS = frozenset(
+    {"interface", "args", "status", "result", "events", "memory_digest", "elapsed_ms"}
+)
 _LEDGER_KEYS = frozenset(
     {
         "schema_version",
@@ -161,6 +182,11 @@ _LEDGER_KEYS = frozenset(
         "records",
         "limitations",
         "signature",
+        "undo",
+        "imported",
+        "source",
+        "label",
+        "metadata",
     }
 )
 
@@ -1154,13 +1180,20 @@ def _iso(timestamp: float) -> str:
 
 def _load_plan(state: Any, plan_id: Any) -> Tuple[str, Dict[str, Any]]:
     plan_ref = expect_str(plan_id, "plan", max_len=128)
-    if not PLAN_ID_RE.match(plan_ref):
+    if not PLAN_REF_RE.match(plan_ref):
         fail("INVALID_ARGUMENT", "plan has an unsupported format")
     path = _plan_root(state) / f"{plan_ref}.json"
     plan = _read_json_file(path, "scenario plan")
     reject_unknown(plan, _PLAN_KEYS, "scenario plan")
     if plan.get("schema_version") != SCHEMA_VERSION:
         fail("UNSUPPORTED_SCHEMA", "scenario plan schema is not supported")
+    plan_kind = plan.get("kind", "scenario")
+    if plan_kind not in ("scenario", "undo"):
+        fail("UNSUPPORTED_SCHEMA", "scenario plan kind is not supported")
+    expected_prefix = "undo_" if plan_kind == "undo" else "plan_"
+    if not plan_ref.startswith(expected_prefix):
+        fail("STALE_PLAN", "scenario plan id does not match its kind")
+    plan["kind"] = plan_kind
     signature = plan.get("signature")
     if not isinstance(signature, str) or not signature:
         fail("STALE_PLAN", "scenario plan is not signed")
@@ -1183,6 +1216,8 @@ def _load_plan(state: Any, plan_id: Any) -> Tuple[str, Dict[str, Any]]:
         fail("STALE_PLAN", "scenario plan scenario id mismatch")
     if payload.get("p") != plan.get("profile_id"):
         fail("STALE_PLAN", "scenario plan profile id mismatch")
+    if payload.get("k", "scenario") != plan_kind:
+        fail("STALE_PLAN", "scenario plan kind does not match its signature")
     expires_at = plan.get("expires_at")
     if not isinstance(expires_at, str):
         fail("UNSUPPORTED_SCHEMA", "scenario plan expiry is not supported")
@@ -1223,8 +1258,24 @@ def scenario_module(state: Any, plan_ref: Any) -> Dict[str, Any]:
             for name, entries in projection["event_resources"].items()
         },
         "limits": dict(plan["limits"]),
+        "kind": plan.get("kind", "scenario"),
         "scenario_id": plan["scenario_id"],
         "generation": plan["generation"],
+        "prefix": {
+            "scenario_id": plan["prefix"]["scenario_id"],
+            "generation": plan["prefix"]["generation"],
+            "step_count": plan["prefix"]["step_count"],
+            "steps": [
+                {
+                    "index": step["index"],
+                    "interface": step["interface"],
+                    "args": list(step["args"]),
+                }
+                for step in plan["prefix"]["steps"]
+            ],
+        }
+        if plan.get("kind") == "undo"
+        else None,
         "expires_at": plan["expires_at"],
         "limitations": list(plan["limitations"]),
     }
@@ -1354,35 +1405,6 @@ def _validate_records(
     return normalized
 
 
-def _ledger_records(
-    plan: Dict[str, Any], records: Sequence[Dict[str, Any]], generation: int
-) -> List[Dict[str, Any]]:
-    ledger_records: List[Dict[str, Any]] = []
-    for record in records:
-        step_index = record["step_index"]
-        ledger_records.append(
-            {
-                "call_id": f"call_{generation}_{step_index + 1}",
-                "step_index": step_index,
-                "interface": record["interface"],
-                "args": list(record["args"]),
-                "status": record["status"],
-                "result": record["result"],
-                "memory_digest": record["memory_digest"],
-                "affected_resources": record["affected_resources"],
-                "stubbed": record["role"] == "stub_control",
-                "execution_events": [
-                    {
-                        "event_id": f"ev_{generation}_{step_index}_{event_index}",
-                        **dict(event),
-                    }
-                    for event_index, event in enumerate(record["events"])
-                ],
-            }
-        )
-    return ledger_records
-
-
 def _scenario_ledger_payload(
     ledger: Dict[str, Any],
     generation: int,
@@ -1454,11 +1476,129 @@ def _read_ledger(state: Any, scenario_ref: str) -> Dict[str, Any]:
     return ledger
 
 
+def _ledger_records(
+    records: Sequence[Dict[str, Any]], generation: int
+) -> List[Dict[str, Any]]:
+    ledger_records: List[Dict[str, Any]] = []
+    for record in records:
+        step_index = record["step_index"]
+        ledger_records.append(
+            {
+                "call_id": f"call_{generation}_{step_index + 1}",
+                "step_index": step_index,
+                "interface": record["interface"],
+                "args": list(record["args"]),
+                "status": record["status"],
+                "result": record["result"],
+                "memory_digest": record["memory_digest"],
+                "affected_resources": list(record.get("affected_resources") or []),
+                "stubbed": record.get("role") == "stub_control",
+                "execution_events": [
+                    {
+                        "event_id": f"ev_{generation}_{step_index}_{event_index}",
+                        **dict(event),
+                    }
+                    for event_index, event in enumerate(record.get("events") or [])
+                ],
+            }
+        )
+    return ledger_records
+
+
+def _publish_generation(
+    state: Any,
+    *,
+    scenario_id: str,
+    generation: int,
+    profile_id: Optional[str],
+    workspace_id: str,
+    snapshot_id: str,
+    variant_id: Optional[str],
+    repo_id: Optional[str],
+    scenario_digest: str,
+    plan_id: Optional[str],
+    module_sha256: Optional[str],
+    records: Sequence[Dict[str, Any]],
+    limitations: Sequence[str],
+    extra_ledger: Optional[Dict[str, Any]] = None,
+    current_extra: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Append one immutable, signed ledger generation with a CAS precondition."""
+    with state.workspace_lock(workspace_id):
+        current_generation = _current_generation(state, scenario_id)
+        if current_generation != generation - 1:
+            fail(
+                "STATE_CONFLICT",
+                "scenario generation is no longer current for this plan",
+                retryable=True,
+                details={
+                    "current_generation": current_generation,
+                    "plan_generation": generation,
+                },
+            )
+        scenario_dir = util.ensure_dir(_scenario_dir(state, scenario_id))
+        generation_path = scenario_dir / f"generation-{generation}.json"
+        if generation_path.exists():
+            fail(
+                "STATE_CONFLICT",
+                "scenario generation is already recorded and immutable",
+                details={"generation": generation},
+            )
+        created_at = util.utc_now_iso()
+        ledger_records = _ledger_records(records, generation)
+        try:
+            records_digest = util.digest(ledger_records)
+        except (TypeError, ValueError):
+            fail("INTERNAL_ERROR", "scenario records are not canonicalizable")
+        ledger: Dict[str, Any] = {
+            "schema_version": SCHEMA_VERSION,
+            "scenario_id": scenario_id,
+            "generation": generation,
+            "profile_id": profile_id,
+            "workspace_id": workspace_id,
+            "snapshot_id": snapshot_id,
+            "variant_id": variant_id,
+            "repo_id": repo_id,
+            "scenario_digest": scenario_digest,
+            "records_digest": records_digest,
+            "plan_id": plan_id,
+            "module_sha256": module_sha256,
+            "observed": True,
+            "created_at": created_at,
+            "records": ledger_records,
+            "limitations": list(limitations),
+        }
+        if extra_ledger:
+            ledger.update(extra_ledger)
+        ledger["signature"] = _sign_ledger(state, ledger)
+        _atomic_write_json(generation_path, ledger)
+        current: Dict[str, Any] = {
+            "schema_version": SCHEMA_VERSION,
+            "scenario_id": scenario_id,
+            "generation": generation,
+            "profile_id": profile_id,
+            "workspace_id": workspace_id,
+            "snapshot_id": snapshot_id,
+            "variant_id": variant_id,
+            "repo_id": repo_id,
+            "records_digest": records_digest,
+            "step_count": len(ledger_records),
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+        if current_extra:
+            current.update(current_extra)
+        _atomic_write_json(scenario_dir / "current.json", current)
+        return ledger
+
+
 def scenario_record(
     state: Any, plan_ref: Any, records_json: str, operation_id: str
 ) -> Dict[str, Any]:
     """Validate worker records and append one immutable ledger generation."""
     token, plan = _load_plan(state, plan_ref)
+    if plan.get("kind", "scenario") != "scenario":
+        fail("INVALID_ARGUMENT", "scenario-record requires a scenario plan, not an undo plan")
     operation = expect_str(operation_id, "operation_id", max_len=128)
     raw_records = _decode_base64(records_json, "records-json", MAX_RECORDS_JSON_BYTES)
     request_digest = util.digest(
@@ -1486,73 +1626,549 @@ def scenario_record(
     normalized = _validate_records(raw_records, plan, profile)
     for item in normalized:
         item["affected_resources"] = _derive_affected_resources(profile, item["events"])
-    generation = plan["generation"]
-    workspace_id = plan["workspace_id"]
-    with state.workspace_lock(workspace_id):
-        current_generation = _current_generation(state, plan["scenario_id"])
-        if current_generation != generation - 1:
-            fail(
-                "STATE_CONFLICT",
-                "scenario generation is no longer current for this plan",
-                retryable=True,
-                details={
-                    "current_generation": current_generation,
-                    "plan_generation": generation,
-                },
-            )
-        scenario_dir = util.ensure_dir(_scenario_dir(state, plan["scenario_id"]))
-        generation_path = scenario_dir / f"generation-{generation}.json"
-        if generation_path.exists():
-            fail(
-                "STATE_CONFLICT",
-                "scenario generation is already recorded and immutable",
-                details={"generation": generation},
-            )
-        created_at = util.utc_now_iso()
-        ledger_records = _ledger_records(plan, normalized, generation)
-        try:
-            records_digest = util.digest(ledger_records)
-        except (TypeError, ValueError):
-            fail("INTERNAL_ERROR", "scenario records are not canonicalizable")
-        ledger: Dict[str, Any] = {
-            "schema_version": SCHEMA_VERSION,
-            "scenario_id": plan["scenario_id"],
-            "generation": generation,
-            "profile_id": plan["profile_id"],
-            "workspace_id": workspace_id,
-            "snapshot_id": plan["snapshot_id"],
-            "variant_id": plan["variant_id"],
-            "repo_id": plan["repo_id"],
-            "scenario_digest": plan["scenario_digest"],
-            "records_digest": records_digest,
-            "plan_id": token,
-            "module_sha256": plan["module_sha256"],
-            "observed": True,
-            "created_at": created_at,
-            "records": ledger_records,
-            "limitations": ["wasm_simulation_not_real_device"],
-        }
-        ledger["signature"] = _sign_ledger(state, ledger)
-        _atomic_write_json(generation_path, ledger)
-        _atomic_write_json(
-            scenario_dir / "current.json",
+    ledger = _publish_generation(
+        state,
+        scenario_id=plan["scenario_id"],
+        generation=plan["generation"],
+        profile_id=plan["profile_id"],
+        workspace_id=plan["workspace_id"],
+        snapshot_id=plan["snapshot_id"],
+        variant_id=plan.get("variant_id"),
+        repo_id=plan.get("repo_id"),
+        scenario_digest=plan["scenario_digest"],
+        plan_id=token,
+        module_sha256=plan["module_sha256"],
+        records=normalized,
+        limitations=["wasm_simulation_not_real_device"],
+    )
+    state.operation_put(operation, request_digest, ledger)
+    return ledger
+
+
+# ---------------------------------------------------------------------------
+# 3b) undo tail / prefix replay (scenario-s3b-contract section 1)
+# ---------------------------------------------------------------------------
+def _profile_interface_roles(profile: Dict[str, Any]) -> Dict[str, str]:
+    return {interface["name"]: interface["role"] for interface in profile["interfaces"]}
+
+
+def _ledger_step_entries(
+    ledger: Dict[str, Any], role_map: Dict[str, str]
+) -> List[Dict[str, Any]]:
+    entries: List[Dict[str, Any]] = []
+    for index, record in enumerate(ledger["records"]):
+        interface = record["interface"]
+        entries.append(
             {
-                "schema_version": SCHEMA_VERSION,
-                "scenario_id": plan["scenario_id"],
-                "generation": generation,
-                "profile_id": plan["profile_id"],
-                "workspace_id": workspace_id,
-                "snapshot_id": plan["snapshot_id"],
-                "variant_id": plan["variant_id"],
-                "repo_id": plan["repo_id"],
-                "records_digest": records_digest,
-                "step_count": len(ledger_records),
-                "created_at": created_at,
-                "updated_at": created_at,
+                "index": index,
+                "interface": interface,
+                "args": list(record.get("args") or []),
+                "role": role_map.get(interface, "util"),
+            }
+        )
+    return entries
+
+
+def _prefix_scenario_digest(
+    profile: Dict[str, Any], prefix_steps: Sequence[Dict[str, Any]]
+) -> str:
+    return _scenario_digest(
+        profile,
+        {
+            "stop_on_error": True,
+            "steps": [
+                {"interface": step["interface"], "args": list(step["args"])}
+                for step in prefix_steps
+            ],
+        },
+    )
+
+
+def _undo_limitations() -> List[str]:
+    return ["replay_verified_by_memory_digest", "wasm_simulation_not_real_device"]
+
+
+def scenario_undo_plan(
+    state: Any,
+    workspace_ref: str,
+    scenario_ref: str,
+    count: int,
+    expected_generation: int,
+) -> Dict[str, Any]:
+    """Create a signed undo plan for the last ``count`` steps of one ledger."""
+    workspace = readmodel._workspace_or_fail(state, workspace_ref)
+    workspace_id = workspace["workspace_id"]
+    ledger = _read_ledger(state, scenario_ref)
+    if ledger.get("workspace_id") != workspace_id:
+        fail("SCOPE_DENIED", "scenario belongs to another workspace")
+    if ledger.get("imported") is True:
+        fail(
+            "CAPABILITY_UNAVAILABLE",
+            "imported trace ledgers cannot be undone: there is no replayable simulation prefix",
+        )
+    expected_generation = expect_int(
+        expected_generation, "expected_generation", low=1, high=1 << 31
+    )
+    if ledger["generation"] != expected_generation:
+        fail(
+            "STATE_CONFLICT",
+            "scenario generation does not match --expected-generation",
+            retryable=True,
+            details={
+                "current_generation": ledger["generation"],
+                "expected_generation": expected_generation,
             },
         )
+    source_records = ledger["records"]
+    step_count = len(source_records)
+    if step_count == 0:
+        fail("CAPABILITY_UNAVAILABLE", "scenario ledger has no recorded steps to undo")
+    count = expect_int(count, "count", low=1, high=step_count)
+    record = _load_profile_record(
+        state, ledger["profile_id"], workspace_id=workspace_id
+    )
+    profile = record["profile"]
+    role_map = _profile_interface_roles(profile)
+    all_steps = _ledger_step_entries(ledger, role_map)
+    prefix_steps = all_steps[: step_count - count]
+    for step in prefix_steps:
+        if step["interface"] not in role_map:
+            fail(
+                "CAPABILITY_UNAVAILABLE",
+                "the selected simulation profile does not declare a prefix interface",
+            )
+    prefix_digest = _prefix_scenario_digest(profile, prefix_steps)
+    prefix_scenario_id = "scn_" + prefix_digest[:12]
+    prefix_current = _current_generation(state, prefix_scenario_id)
+    prefix_generation = prefix_current + 1
+    expected_prefix = [
+        {
+            "step_index": index,
+            "memory_digest": source_records[index].get("memory_digest"),
+            "result": source_records[index].get("result"),
+            "status": source_records[index].get("status"),
+        }
+        for index in range(len(prefix_steps))
+    ]
+    source = {
+        "scenario_id": ledger["scenario_id"],
+        "generation": ledger["generation"],
+        "step_count": step_count,
+    }
+    now = util.utc_now()
+    expires_at = _iso(now.timestamp() + PLAN_TTL_SECONDS)
+    plan_sha = util.digest(
+        {
+            "kind": "undo_plan_body",
+            "source": source,
+            "count": count,
+            "prefix_scenario_id": prefix_scenario_id,
+            "prefix_generation": prefix_generation,
+            "profile_id": profile["profile_id"],
+            "module_sha256": record["module_sha256"],
+            "plan_nonce": util.new_id("undo"),
+            "completed_at": util.utc_now_iso(),
+        }
+    )
+    undo_plan_id = "undo_" + plan_sha[:32]
+    plan_document: Dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "kind": "undo",
+        "plan_sha256": plan_sha,
+        "undo_plan_id": undo_plan_id,
+        "source": source,
+        "count": count,
+        "prefix": {
+            "scenario_id": prefix_scenario_id,
+            "generation": prefix_generation,
+            "step_count": len(prefix_steps),
+            "steps": [
+                {
+                    "index": step["index"],
+                    "interface": step["interface"],
+                    "args": list(step["args"]),
+                }
+                for step in prefix_steps
+            ],
+            "scenario_digest": prefix_digest,
+            "expected_records_digest": util.digest(expected_prefix),
+        },
+        "expected_prefix": expected_prefix,
+        "profile_id": profile["profile_id"],
+        "module_sha256": record["module_sha256"],
+        "scenario_id": prefix_scenario_id,
+        "generation": prefix_generation,
+        "workspace_id": workspace_id,
+        "snapshot_id": ledger["snapshot_id"],
+        "variant_id": ledger.get("variant_id"),
+        "repo_id": ledger.get("repo_id"),
+        "limits": _plan_limits(),
+        "created_at": util.utc_now_iso(),
+        "expires_at": expires_at,
+        "limitations": _undo_limitations(),
+    }
+    plan_document["signature"] = state.sign(
+        {
+            "kind": "scenario_plan",
+            "k": "undo",
+            "sha": plan_sha,
+            "id": undo_plan_id,
+            "w": workspace_id,
+            "p": profile["profile_id"],
+            "s": prefix_scenario_id,
+            "g": state.scope_generation,
+            "iat": int(now.timestamp()),
+            "exp": int(time.time() + PLAN_TTL_SECONDS),
+        }
+    )
+    _atomic_write_json(_plan_root(state) / f"{undo_plan_id}.json", plan_document)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "undo_plan_id": undo_plan_id,
+        "kind": "undo",
+        "source": dict(source),
+        "count": count,
+        "prefix": {
+            "scenario_id": prefix_scenario_id,
+            "generation": prefix_generation,
+            "step_count": len(prefix_steps),
+            "steps": [
+                {
+                    "index": step["index"],
+                    "interface": step["interface"],
+                    "args": list(step["args"]),
+                }
+                for step in prefix_steps
+            ],
+            "scenario_digest": prefix_digest,
+            "expected_records_digest": util.digest(expected_prefix),
+        },
+        "expected_prefix": expected_prefix,
+        "profile_id": profile["profile_id"],
+        "module_sha256": record["module_sha256"],
+        "limits": _plan_limits(),
+        "expires_at": expires_at,
+        "limitations": _undo_limitations(),
+    }
+
+
+def scenario_undo_record(
+    state: Any, plan_ref: Any, records_json: str, operation_id: str
+) -> Dict[str, Any]:
+    """Verify the replayed prefix state digests and publish the prefix generation."""
+    token, plan = _load_plan(state, plan_ref)
+    if plan.get("kind") != "undo":
+        fail("INVALID_ARGUMENT", "scenario-undo-record requires an undo plan")
+    operation = expect_str(operation_id, "operation_id", max_len=128)
+    raw_records = _decode_base64(records_json, "records-json", MAX_RECORDS_JSON_BYTES)
+    request_digest = util.digest(
+        {
+            "operation": "scenario-undo-record",
+            "plan_sha256": plan["plan_sha256"],
+            "records_sha256": util.sha256_bytes(raw_records),
+            "generation": plan["prefix"]["generation"],
+        }
+    )
+    existing_operation = state.operation_get(operation)
+    if existing_operation is not None:
+        if existing_operation.get("request_digest") != request_digest:
+            fail("OPERATION_CONFLICT", "operation_id was already used for different records")
+        stored = existing_operation.get("result")
+        if not isinstance(stored, dict):
+            fail("OPERATION_CONFLICT", "stored operation result is not a scenario ledger")
+        return stored
+    record = _load_profile_record(
+        state, plan["profile_id"], workspace_id=plan["workspace_id"]
+    )
+    profile = record["profile"]
+    if record["module_sha256"] != plan["module_sha256"]:
+        fail("STALE_PLAN", "undo plan module hash no longer matches the profile")
+    prefix = plan["prefix"]
+    role_map = _profile_interface_roles(profile)
+    plan_like = {
+        "steps": [
+            {
+                "index": step["index"],
+                "interface": step["interface"],
+                "args": list(step["args"]),
+                "role": role_map.get(step["interface"], "util"),
+            }
+            for step in prefix["steps"]
+        ]
+    }
+    normalized = _validate_records(raw_records, plan_like, profile)
+    expected_prefix = plan["expected_prefix"]
+    for index, item in enumerate(normalized):
+        expected_digest = expected_prefix[index]["memory_digest"]
+        if item["memory_digest"] != expected_digest:
+            expected_chain = [
+                entry["memory_digest"] for entry in expected_prefix[: index + 1]
+            ]
+            actual_chain = [
+                normalized[prefix_index]["memory_digest"]
+                for prefix_index in range(index + 1)
+            ]
+            fail(
+                "STATE_CONFLICT",
+                "replayed prefix memory digest mismatch; no ledger generation was published",
+                retryable=True,
+                details={
+                    "code": "state_digest_mismatch",
+                    "reason_code": "state_digest_mismatch",
+                    "step_index": index,
+                    "expected": expected_digest,
+                    "actual": item["memory_digest"],
+                    "expected_prefix": expected_chain,
+                    "actual_prefix": actual_chain,
+                },
+            )
+    for item in normalized:
+        item["affected_resources"] = _derive_affected_resources(profile, item["events"])
+    undo_meta = {
+        "of_scenario_id": plan["source"]["scenario_id"],
+        "of_generation": plan["source"]["generation"],
+        "count": plan["count"],
+        "state_digest_verified": True,
+    }
+    ledger = _publish_generation(
+        state,
+        scenario_id=prefix["scenario_id"],
+        generation=prefix["generation"],
+        profile_id=plan["profile_id"],
+        workspace_id=plan["workspace_id"],
+        snapshot_id=plan["snapshot_id"],
+        variant_id=plan.get("variant_id"),
+        repo_id=plan.get("repo_id"),
+        scenario_digest=prefix["scenario_digest"],
+        plan_id=token,
+        module_sha256=plan["module_sha256"],
+        records=normalized,
+        limitations=_undo_limitations(),
+        extra_ledger={"undo": undo_meta},
+        current_extra={"undo": undo_meta},
+    )
+    state.operation_put(operation, request_digest, ledger)
+    return ledger
+
+
+# ---------------------------------------------------------------------------
+# 3c) trace import (scenario-s3b-contract section 2)
+# ---------------------------------------------------------------------------
+def _reject_absolute_path_text(value: str, label: str) -> str:
+    if ABSOLUTE_PATH_RE.match(value.strip()):
+        fail("INVALID_ARGUMENT", f"{label} must not contain absolute paths")
+    return value
+
+
+def _validate_trace_metadata(metadata: Any) -> Dict[str, Any]:
+    if metadata is None:
+        return {}
+    expect_object(metadata, "metadata")
+    if len(metadata) > MAX_TRACE_METADATA_KEYS:
+        fail("LIMIT_EXCEEDED", f"metadata is limited to {MAX_TRACE_METADATA_KEYS} keys")
+    normalized: Dict[str, Any] = {}
+    for key, value in metadata.items():
+        if not isinstance(key, str) or not METADATA_KEY_RE.match(key):
+            fail("INVALID_ARGUMENT", "metadata keys have an unsupported format")
+        if value is None or isinstance(value, bool):
+            normalized[key] = value
+        elif isinstance(value, int):
+            normalized[key] = value
+        elif isinstance(value, str):
+            normalized[key] = _reject_absolute_path_text(
+                expect_str(value, f"metadata.{key}", max_len=MAX_TRACE_METADATA_STRING),
+                f"metadata.{key}",
+            )
+        else:
+            fail("INVALID_ARGUMENT", f"metadata.{key} must be a scalar value")
+    if len(util.canonical_json(normalized).encode("utf-8")) > 2048:
+        fail("LIMIT_EXCEEDED", "metadata is limited to 2048 canonical JSON bytes")
+    return normalized
+
+
+def _validate_imported_trace_step(step: Any, index: int) -> Dict[str, Any]:
+    where = f"steps[{index}]"
+    expect_object(step, where)
+    reject_unknown(step, _TRACE_STEP_KEYS, where)
+    interface = expect_str(step.get("interface"), f"{where}.interface", max_len=64)
+    if not INTERFACE_NAME_RE.match(interface):
+        fail("INVALID_ARGUMENT", f"{where}.interface has an unsupported format")
+    args = expect_array(step.get("args", []), f"{where}.args", max_items=MAX_PARAMS)
+    normalized_args: List[int] = []
+    for arg_index, arg in enumerate(args):
+        if isinstance(arg, bool) or not isinstance(arg, int):
+            fail("INVALID_ARGUMENT", f"{where}.args[{arg_index}] must be an integer")
+        normalized_args.append(_int32(arg, f"{where}.args[{arg_index}]"))
+    status = one_of(step.get("status"), ("ok", "error"), f"{where}.status")
+    result = step.get("result")
+    if result is not None:
+        result = _int32(result, f"{where}.result")
+    memory_digest = step.get("memory_digest")
+    if memory_digest is not None:
+        memory_digest = expect_str(
+            memory_digest, f"{where}.memory_digest", max_len=64
+        )
+        if not MEMORY_DIGEST_RE.match(memory_digest):
+            fail("INVALID_ARGUMENT", f"{where}.memory_digest must be a lowercase SHA256")
+    elapsed_ms = step.get("elapsed_ms")
+    if elapsed_ms is not None:
+        elapsed_ms = expect_int(
+            elapsed_ms, f"{where}.elapsed_ms", low=0, high=3_600_000
+        )
+    raw_events = expect_array(
+        step.get("events", []), f"{where}.events", max_items=MAX_EVENTS_PER_STEP
+    )
+    events: List[Dict[str, Any]] = []
+    for event_index, event in enumerate(raw_events):
+        event_where = f"{where}.events[{event_index}]"
+        expect_object(event, event_where)
+        reject_unknown(event, _EVENT_KEYS, event_where)
+        name = expect_str(event.get("event"), f"{event_where}.event", max_len=64)
+        if not EVENT_RE.match(name):
+            fail("INVALID_ARGUMENT", f"{event_where}.event has an unsupported format")
+        events.append(
+            {
+                "event": name,
+                "code": _int32(event.get("code"), f"{event_where}.code"),
+                "a": _int32(event.get("a"), f"{event_where}.a"),
+                "b": _int32(event.get("b"), f"{event_where}.b"),
+                "c": _int32(event.get("c"), f"{event_where}.c"),
+                "line": _int32(event.get("line"), f"{event_where}.line"),
+            }
+        )
+    return {
+        "step_index": index,
+        "interface": interface,
+        "args": normalized_args,
+        "status": status,
+        "result": result,
+        "memory_digest": memory_digest,
+        "elapsed_ms": elapsed_ms,
+        "events": events,
+    }
+
+
+def trace_import(
+    state: Any,
+    workspace_ref: str,
+    snapshot_ref: str,
+    input_name: str,
+    operation_id: str,
+) -> Dict[str, Any]:
+    """Validate an inbox trace file and register it as a read-only imported ledger."""
+    workspace = readmodel._workspace_or_fail(state, workspace_ref)
+    workspace_id = workspace["workspace_id"]
+    snapshot_id = expect_str(snapshot_ref, "snapshot", max_len=128)
+    bundle = snapshot.load_snapshot_bundle(state, workspace_id, snapshot_id)
+    if bundle.get("freshness") == "unknown" or not isinstance(bundle.get("graph"), dict):
+        fail("STALE_SNAPSHOT", "imported trace snapshot is missing or unreadable")
+    name = _single_file_name(input_name, "input")
+    operation = expect_str(operation_id, "operation_id", max_len=128)
+    path = state.inbox_file(name, max_bytes=MAX_IMPORTED_TRACE_BYTES)
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        fail("DEPENDENCY_UNAVAILABLE", "imported trace file is not readable")
+    document = _json_bytes(raw, "imported trace")
+    reject_unknown(document, _IMPORTED_TRACE_KEYS, "imported trace")
+    if document.get("schema_version") != 1:
+        fail("UNSUPPORTED_SCHEMA", "imported trace schema_version must be 1")
+    if document.get("kind") != "imported_trace":
+        fail("INVALID_ARGUMENT", "imported trace kind must be 'imported_trace'")
+    label = _reject_absolute_path_text(
+        expect_str(document.get("label"), "label", max_len=256), "label"
+    )
+    trace_snapshot = expect_str(document.get("snapshot_id"), "snapshot_id", max_len=128)
+    if trace_snapshot != snapshot_id:
+        fail("INVALID_ARGUMENT", "imported trace snapshot_id does not match --snapshot")
+    metadata = _validate_trace_metadata(document.get("metadata"))
+    profile_id = document.get("profile_id")
+    profile_record: Optional[Dict[str, Any]] = None
+    if profile_id is not None:
+        profile_id = expect_str(profile_id, "profile_id", max_len=64)
+        if not PROFILE_ID_RE.match(profile_id):
+            fail("INVALID_ARGUMENT", "profile_id has an unsupported format")
+        profile_record = _load_profile_record(
+            state, profile_id, workspace_id=workspace_id
+        )
+        if profile_record["profile"]["binding"]["snapshot_id"] != snapshot_id:
+            fail(
+                "INVALID_ARGUMENT",
+                "imported trace profile is not bound to the requested snapshot",
+            )
+    raw_steps = expect_array(
+        document.get("steps"), "steps", min_items=1, max_items=MAX_IMPORTED_TRACE_STEPS
+    )
+    steps = [
+        _validate_imported_trace_step(step, index)
+        for index, step in enumerate(raw_steps)
+    ]
+    scenario_digest = util.digest(
+        {
+            "kind": "imported_trace",
+            "snapshot_id": snapshot_id,
+            "steps": steps,
+        }
+    )
+    scenario_id = "scn_" + scenario_digest[:12]
+    request_digest = util.digest(
+        {
+            "operation": "trace-import",
+            "workspace_id": workspace_id,
+            "snapshot_id": snapshot_id,
+            "input": name,
+            "scenario_id": scenario_id,
+        }
+    )
+    existing_operation = state.operation_get(operation)
+    if existing_operation is not None:
+        if existing_operation.get("request_digest") != request_digest:
+            fail("OPERATION_CONFLICT", "operation_id was already used for another trace import")
+        stored = existing_operation.get("result")
+        if not isinstance(stored, dict):
+            fail("OPERATION_CONFLICT", "stored operation result is not a scenario ledger")
+        return stored
+    existing_generation = _current_generation(state, scenario_id)
+    if existing_generation >= 1:
+        ledger = _read_ledger(state, scenario_id)
         state.operation_put(operation, request_digest, ledger)
         return ledger
+    for step in steps:
+        step["role"] = "util"
+        step["affected_resources"] = []
+    ledger = _publish_generation(
+        state,
+        scenario_id=scenario_id,
+        generation=1,
+        profile_id=profile_id,
+        workspace_id=workspace_id,
+        snapshot_id=snapshot_id,
+        variant_id=bundle.get("variant_id"),
+        repo_id=bundle.get("repo_id"),
+        scenario_digest=scenario_digest,
+        plan_id=None,
+        module_sha256=(
+            profile_record["module_sha256"] if profile_record is not None else None
+        ),
+        records=steps,
+        limitations=[
+            "imported_trace_not_executed_by_host",
+            "resource_effects_unknown_for_imported_trace",
+        ],
+        extra_ledger={
+            "imported": True,
+            "source": "imported_trace",
+            "label": label,
+            "metadata": metadata,
+        },
+        current_extra={
+            "imported": True,
+            "source": "imported_trace",
+            "label": label,
+        },
+    )
+    state.operation_put(operation, request_digest, ledger)
+    return ledger
 
 
 def scenario_list(state: Any, workspace_ref: str) -> Dict[str, Any]:
@@ -1588,6 +2204,10 @@ def scenario_list(state: Any, workspace_ref: str) -> Dict[str, Any]:
                         "created_at": current.get("created_at"),
                         "updated_at": current.get("updated_at"),
                         "observed": True,
+                        "imported": current.get("imported") is True,
+                        "label": current.get("label"),
+                        "source": current.get("source"),
+                        "undo": current.get("undo"),
                     }
                 )
             except CodeLearningError as error:
@@ -1695,12 +2315,27 @@ def view_sequence_observed(
     ledger = _read_ledger(state, scenario_ref)
     if ledger.get("workspace_id") != workspace["workspace_id"]:
         fail("SCOPE_DENIED", "scenario belongs to another workspace")
-    record = _load_profile_record(
-        state, ledger["profile_id"], workspace_id=ledger["workspace_id"]
-    )
-    profile = record["profile"]
-    source_refs, driver_files, object_files = _observed_source_refs(state, ledger, profile)
-    interface_roles = {item["name"]: item["role"] for item in profile["interfaces"]}
+    imported = ledger.get("imported") is True
+    profile: Optional[Dict[str, Any]] = None
+    profile_id = ledger.get("profile_id")
+    if isinstance(profile_id, str) and profile_id:
+        try:
+            record = _load_profile_record(
+                state, profile_id, workspace_id=ledger["workspace_id"]
+            )
+            profile = record["profile"]
+        except CodeLearningError:
+            profile = None
+    if profile is not None:
+        source_refs, driver_files, object_files = _observed_source_refs(
+            state, ledger, profile
+        )
+        interface_roles = {
+            item["name"]: item["role"] for item in profile["interfaces"]
+        }
+    else:
+        source_refs, driver_files, object_files = {}, set(), {}
+        interface_roles = {}
     messages: List[Dict[str, Any]] = []
     truncated = False
 
@@ -1727,6 +2362,7 @@ def view_sequence_observed(
             "affected_resources": fields.pop("affected_resources", []),
             "source_ref": fields.pop("source_ref", None),
             "limitations": fields.pop("limitations", []),
+            "imported": fields.pop("imported", imported),
         }
         message.update(fields)
         messages.append(message)
@@ -1756,10 +2392,13 @@ def view_sequence_observed(
             },
         )
         for event in record_item.get("execution_events") or []:
-            resources = [
-                dict(entry)
-                for entry in _derive_affected_resources(profile, [event])
-            ]
+            if imported or profile is None:
+                resources: List[Dict[str, Any]] = []
+            else:
+                resources = [
+                    dict(entry)
+                    for entry in _derive_affected_resources(profile, [event])
+                ]
             target = _observed_participant(resources, driver_files, object_files)
             if resources:
                 access_label = ", ".join(
@@ -1815,19 +2454,26 @@ def view_sequence_observed(
                 "reason": f"observed sequence messages were capped at {MAX_OBSERVED_MESSAGES}",
             }
         )
+    scenario_block: Dict[str, Any] = {
+        "scenario_id": ledger["scenario_id"],
+        "generation": ledger["generation"],
+        "profile_id": ledger["profile_id"],
+        "workspace_id": ledger["workspace_id"],
+        "snapshot_id": ledger["snapshot_id"],
+        "records_digest": ledger["records_digest"],
+        "created_at": ledger["created_at"],
+        "imported": imported,
+    }
+    if imported:
+        scenario_block["label"] = ledger.get("label")
+        scenario_block["source"] = ledger.get("source")
     return {
         "schema_version": SCHEMA_VERSION,
         "mode": "observed",
         "observed": True,
-        "scenario": {
-            "scenario_id": ledger["scenario_id"],
-            "generation": ledger["generation"],
-            "profile_id": ledger["profile_id"],
-            "workspace_id": ledger["workspace_id"],
-            "snapshot_id": ledger["snapshot_id"],
-            "records_digest": ledger["records_digest"],
-            "created_at": ledger["created_at"],
-        },
+        "imported": imported,
+        "label": ledger.get("label") if imported else None,
+        "scenario": scenario_block,
         "participants": [
             {"participant_id": "caller", "label": "调用方"},
             {"participant_id": "driver", "label": "驱动"},
@@ -1838,5 +2484,9 @@ def view_sequence_observed(
         "warning": None,
         "gaps": gaps,
         "truncated": truncated,
-        "limitations": ["observed_wasm_simulation_not_real_device"],
+        "limitations": (
+            list(ledger.get("limitations") or [])
+            if imported
+            else ["observed_wasm_simulation_not_real_device"]
+        ),
     }

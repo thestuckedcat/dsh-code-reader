@@ -266,12 +266,19 @@ python -m code_learning.cli --bootstrap <bootstrap.json> sim-profile-import \
 5. 失败/打桩示例：先 `set_platform_stub(-5)` 再 `bus_send(1,48)` → bus_send 结果 `-5`、状态 error、无 WRITE、
    LOCK 1→0；未登记通道 `bus_send(0,48)` → `-2`；非法参数被 UI/引擎拒绝且不产生台账。
 6. 时序图切「运行观测」（`observed=true`）读取台账消息（call/return/access/event，含 DOORBELL/WRITE、平台边界）；
-   切回「静态预测」仍是 `observed=false` 的静态推断。S3a observed 默认最近台账（多场景选择器在 S3b）。
+   切回「静态预测」仍是 `observed=false` 的静态推断。观测模式有台账场景选择器（默认最近更新，可切换前缀/导入等台账）。
+7. 回退：输入「回退步数 N」（1..当前步数）→ 点「回退」→ 重放前缀并逐条核对 memory digest，成功切到前缀台账
+   （`undo.state_digest_verified`、步骤编辑器同步前缀步骤、时序选择器刷新）；不一致显示
+   `STATE_CONFLICT/state_digest_mismatch` 且不改台账。导入轨迹台账不可回退（按钮禁用并显示原因）。
+8. 轨迹导入：在「导入轨迹」输入 inbox 内文件名（如 `trace-bus-send.json`，仅文件名、不接受路径）→ 导入为
+   **只读 imported 台账**（不从插件执行代码）；时序观测选中该台账显示 imported 标记与 label/限制。
 
 ### 8.3 边界与失败
 
 - 运行只发生在 `worker_threads`：仅 `env.trace` 回调、无 fs/网络/其他 import；总超时 15s、内存 ≤64MB；
   超时/取消/崩溃返回 `OUTCOME_UNKNOWN` 且**不落台账**。
 - 台账只追加、带签名/plan_id/module_sha256/records_digest/代次；同一场景重复运行代次 +1；不同场景各自从 0 开始。
-- 未提供：回退末尾 N 次与前缀重放、轨迹导入、真实设备下发、图内源码写回（gap 显示；S3b/后续验收）。
+  回退发布的是**前缀场景**的新 generation（带 `undo.of_scenario_id/of_generation/count/state_digest_verified`）；
+  前缀不可重放（如导入轨迹）时不提供回退，只保留只读历史。
+- 未提供：异步/IRQ 因果细化、真实设备下发、图内源码写回、AI 归纳正文（gap 显示；S4/后续验收）。
   Wasm 模拟不证明真实设备/内核行为。

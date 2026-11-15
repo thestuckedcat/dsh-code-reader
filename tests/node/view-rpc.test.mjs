@@ -336,16 +336,13 @@ test('view.status reports host/engine facts and slice gaps without starting the 
     subflow_breadcrumb: true,
     scenario_execution: true,
     run_observation: true,
-    scenario_undo: false,
-    trace_import: false,
+    scenario_undo: true,
+    trace_import: true,
     real_device_dispatch: false,
     ai_summary: false,
   })
-  assert.deepEqual(
-    value.gaps.map((gap) => gap.code),
-    ['ai_summary', 'scenario_undo', 'trace_import', 'real_device_dispatch'],
-  )
-  // S1/S2a/S2b/S3a implemented capabilities must not remain gaps.
+  assert.deepEqual(value.gaps.map((gap) => gap.code), ['ai_summary', 'real_device_dispatch'])
+  // S1/S2a/S2b/S3a/S3b implemented capabilities must not remain gaps.
   const implementedCapabilities = [
     'five_views',
     'resource_graph',
@@ -354,6 +351,8 @@ test('view.status reports host/engine facts and slice gaps without starting the 
     'subflow_breadcrumb',
     'scenario_execution',
     'run_observation',
+    'scenario_undo',
+    'trace_import',
   ]
   assert.equal(
     value.gaps.some((gap) => implementedCapabilities.includes(gap.code)),
@@ -393,12 +392,9 @@ test('view.status stays ok:true with explicit gaps when Python and bootstrap are
   const value = result.json.result.value
   assert.deepEqual(value.engine, { python: 'missing', bootstrap: { configured: true, exists: false } })
   // Availability is carried by `engine`; `gaps` stays the fixed capability list
-  // (S1/S2a/S2b/S3a capabilities are implemented) so the UI does not render
+  // (S1/S2a/S2b/S3a/S3b capabilities are implemented) so the UI does not render
   // duplicate rows.
-  assert.deepEqual(
-    value.gaps.map((gap) => gap.code),
-    ['ai_summary', 'scenario_undo', 'trace_import', 'real_device_dispatch'],
-  )
+  assert.deepEqual(value.gaps.map((gap) => gap.code), ['ai_summary', 'real_device_dispatch'])
   // The degraded status must not leak the interpreter/bootstrap paths.
   assert.equal(result.response.body.includes('python.exe'), false)
   assert.equal(result.response.body.includes('Users'), false)

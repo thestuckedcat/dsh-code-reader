@@ -86,6 +86,54 @@ const LEDGER_DOC = {
   limitations: ['wasm_simulation_not_real_device'],
 }
 
+// --- S3b fixtures ----------------------------------------------------------
+const UNDO_PLAN_ID = 'undo_0123456789abcdef0123456789abcdef'
+const PREFIX_STEPS = [
+  { index: 0, interface: 'reset', args: [] },
+  { index: 1, interface: 'bus_register', args: [1] },
+]
+const UNDO_PLAN_DOC = {
+  schema_version: 1,
+  undo_plan_id: UNDO_PLAN_ID,
+  kind: 'undo',
+  source: { scenario_id: SCENARIO_REF, generation: 2, step_count: 3 },
+  count: 1,
+  prefix: {
+    scenario_id: 'scn_abcdef123456',
+    generation: 1,
+    step_count: 2,
+    steps: PREFIX_STEPS,
+    scenario_digest: 'f'.repeat(64),
+    expected_records_digest: '9'.repeat(64),
+  },
+  expected_prefix: [
+    { step_index: 0, memory_digest: '1'.repeat(64), result: null, status: 'ok' },
+    { step_index: 1, memory_digest: '2'.repeat(64), result: 0, status: 'ok' },
+  ],
+  profile_id: PROFILE_ID,
+  module_sha256: MODULE_SHA256,
+  limits: { timeout_ms: 10_000, steps: 20, events_per_step: 256 },
+  expires_at: '2026-11-15T18:00:00Z',
+  limitations: ['replay_verified_by_memory_digest', 'wasm_simulation_not_real_device'],
+}
+const UNDO_LEDGER_DOC = {
+  ...LEDGER_DOC,
+  scenario_id: 'scn_abcdef123456',
+  generation: 1,
+  undo: { of_scenario_id: SCENARIO_REF, of_generation: 2, count: 1, state_digest_verified: true },
+}
+const IMPORTED_LEDGER_DOC = {
+  schema_version: 1,
+  scenario_id: 'scn_feedface1234',
+  generation: 1,
+  imported: true,
+  source: 'imported_trace',
+  label: '外部采集 bus_send 轨迹（示例）',
+  observed: true,
+  records: [],
+  limitations: ['imported_trace_not_executed_by_host', 'resource_effects_unknown_for_imported_trace'],
+}
+
 const cliOk = (cli) => ({ schema_version: 1, ok: true, exit_code: 0, cli })
 const cliEngineError = (code, message) => ({
   schema_version: 1,
@@ -113,6 +161,19 @@ function happyScript({ recordResult } = {}) {
     if (argv[0] === 'scenario-record') return recordResult ?? cliOk(LEDGER_DOC)
     return cliEngineError('INVALID_ARGUMENT', `unexpected command ${argv[0]}`)
   }
+}
+
+function undoScript({ recordResult } = {}) {
+  return (argv) => {
+    if (argv[0] === 'scenario-undo-plan') return cliOk(UNDO_PLAN_DOC)
+    if (argv[0] === 'scenario-module') return cliOk(MODULE_DOC)
+    if (argv[0] === 'scenario-undo-record') return recordResult ?? cliOk(UNDO_LEDGER_DOC)
+    return cliEngineError('INVALID_ARGUMENT', `unexpected command ${argv[0]}`)
+  }
+}
+
+function undoPayload(overrides = {}) {
+  return { workspace: WORKSPACE, scenario: SCENARIO_REF, count: 1, expected_generation: 2, ...overrides }
 }
 
 function scriptedBridge(handler) {
@@ -481,6 +542,206 @@ test('pre-aborted scenario.run returns OUTCOME_UNKNOWN without a ledger write', 
   assert.equal(bridge.operationIds.length, 0)
 })
 
+// ---------------------------------------------------------------------------
+// S3b: undo tail + prefix replay
+// ---------------------------------------------------------------------------
+test('scenario.undoTail rejects malformed input before any engine call', async () => {
+  const bridge = scriptedBridge(undoScript())
+  const { route } = mountWorkbench({ bridge })
+  const cases = [
+    [{}, /workspace is required/],
+    [{ ...undoPayload(), workspace: 'Bad' }, /workspace must match/],
+    [{ workspace: WORKSPACE, count: 1, expected_generation: 2 }, /scenario is required/],
+    [{ ...undoPayload(), scenario: '../etc/passwd' }, /scenario must match/],
+    [{ workspace: WORKSPACE, scenario: SCENARIO_REF, expected_generation: 2 }, /count is required/],
+    [{ ...undoPayload(), count: 0 }, /count must be an integer in 1\.\.200/],
+    [{ ...undoPayload(), count: 201 }, /count must be an integer in 1\.\.200/],
+    [{ ...undoPayload(), count: 1.5 }, /count must be an integer in 1\.\.200/],
+    [{ ...undoPayload(), count: '1' }, /count must be an integer in 1\.\.200/],
+    [{ workspace: WORKSPACE, scenario: SCENARIO_REF, count: 1 }, /expected_generation is required/],
+    [{ ...undoPayload(), expected_generation: -1 }, /expected_generation must be an integer/],
+    [{ ...undoPayload(), path: 'trace.json' }, /unknown payload field: path/],
+  ]
+  for (const [payload, message] of cases) {
+    const result = await invoke(route, 'scenario.undoTail', payload)
+    assert.equal(result.response.statusCode, 200)
+    assert.equal(result.json.result.ok, false)
+    assert.equal(result.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(result.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, 0, 'invalid payloads must never reach the engine')
+})
+
+test('scenario.undoTail orchestrates undo-plan→module→prefix replay→undo-record', async () => {
+  const bridge = scriptedBridge(undoScript())
+  const { route } = mountWorkbench({ bridge })
+  const result = await invoke(route, 'scenario.undoTail', undoPayload())
+  assert.equal(result.json.result.ok, true, JSON.stringify(result.json).slice(0, 600))
+  assert.deepEqual(result.json.result.value, UNDO_LEDGER_DOC)
+  assert.equal(bridge.calls.length, 3)
+  assert.deepEqual(bridge.calls[0].argv, [
+    'scenario-undo-plan',
+    '--workspace', WORKSPACE,
+    '--scenario', SCENARIO_REF,
+    '--count', '1',
+    '--expected-generation', '2',
+  ])
+  assert.deepEqual(bridge.calls[1].argv, ['scenario-module', '--plan', UNDO_PLAN_ID])
+  const recordArgv = bridge.calls[2].argv
+  assert.equal(recordArgv[0], 'scenario-undo-record')
+  assert.deepEqual(recordArgv.slice(1, 3), ['--plan', UNDO_PLAN_ID])
+  assert.equal(recordArgv[3], '--records-json')
+  assert.equal(recordArgv[5], '--operation-id')
+  assert.equal(bridge.operationIds.length, 1)
+  assert.equal(recordArgv[6], bridge.operationIds[0])
+
+  const recordsPayload = JSON.parse(Buffer.from(recordArgv[4], 'base64').toString('utf8'))
+  assert.equal(recordsPayload.records.length, 2, 'the replay must cover exactly the prefix steps')
+  assert.deepEqual(recordsPayload.records.map((record) => record.interface), ['reset', 'bus_register'])
+  assert.deepEqual(recordsPayload.records.map((record) => record.result), [null, 0])
+  assert.deepEqual(recordsPayload.records.map((record) => record.status), ['ok', 'ok'])
+  for (const record of recordsPayload.records) assert.match(record.memory_digest, /^[0-9a-f]{64}$/)
+  assert.deepEqual(recordsPayload.records[1].events.map((event) => event.event), ['DEFAULT_ROUTE', 'STORE_ROUTE'])
+})
+
+test('scenario.undoTail returns the digest-mismatch engine document verbatim', async () => {
+  const mismatchDoc = {
+    schema_version: 1,
+    error: {
+      code: 'STATE_CONFLICT',
+      message: 'replayed state digest does not match the source ledger',
+      details: { reason_code: 'state_digest_mismatch', step_index: 1, expected: '2'.repeat(64), actual: '0'.repeat(64) },
+      details_ref: null,
+      retryable: true,
+    },
+    operation_id: null,
+  }
+  const bridge = scriptedBridge(
+    undoScript({ recordResult: { schema_version: 1, ok: false, exit_code: 2, cli: mismatchDoc } }),
+  )
+  const { route } = mountWorkbench({ bridge })
+  const result = await invoke(route, 'scenario.undoTail', undoPayload())
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, mismatchDoc)
+  assert.equal(
+    bridge.calls.filter((call) => call.argv[0] === 'scenario-undo-record').length,
+    1,
+    'no retry may publish a mismatching replay',
+  )
+  assert.equal(bridge.operationIds.length, 1)
+})
+
+test('scenario.undoTail worker OUTCOME_UNKNOWN leaves the ledger untouched', async () => {
+  const bridge = scriptedBridge(undoScript())
+  const { route } = mountWorkbench({
+    bridge,
+    runner: async () => ({ ok: false, error: { code: 'OUTCOME_UNKNOWN', message: 'simulation exceeded timeoutMs=1' } }),
+  })
+  const result = await invoke(route, 'scenario.undoTail', undoPayload())
+  assert.equal(result.json.result.ok, false)
+  assert.equal(result.json.result.error.code, 'OUTCOME_UNKNOWN')
+  assert.deepEqual(result.json.result.error.details, {})
+  assert.deepEqual(bridge.calls.map((call) => call.argv[0]), ['scenario-undo-plan', 'scenario-module'])
+  assert.equal(bridge.operationIds.length, 0, 'no undo-record may be attempted')
+})
+
+test('scenario.undoTail rejects an engine plan that is not an undo plan', async () => {
+  const bridge = scriptedBridge((argv) =>
+    argv[0] === 'scenario-undo-plan'
+      ? cliOk({ schema_version: 1, plan_id: PLAN_ID, steps: PLAN_STEPS })
+      : cliEngineError('INVALID_ARGUMENT', 'unexpected'),
+  )
+  const { route } = mountWorkbench({ bridge })
+  const result = await invoke(route, 'scenario.undoTail', undoPayload())
+  assert.equal(result.json.result.ok, false)
+  assert.equal(result.json.result.error.code, 'ENGINE_FAILED')
+  assert.match(result.json.result.error.message, /undo plan/)
+  assert.equal(bridge.calls.length, 1)
+  assert.equal(bridge.operationIds.length, 0)
+})
+
+// ---------------------------------------------------------------------------
+// S3b: trusted-inbox trace import
+// ---------------------------------------------------------------------------
+test('trace.import maps to trace-import and passes the ledger through', async () => {
+  const traceHandler = (argv) =>
+    argv[0] === 'trace-import' ? cliOk(IMPORTED_LEDGER_DOC) : cliEngineError('INVALID_ARGUMENT', `unexpected command ${argv[0]}`)
+  const bridge = scriptedBridge(traceHandler)
+  const { route } = mountWorkbench({ bridge })
+  const result = await invoke(route, 'trace.import', {
+    workspace: WORKSPACE,
+    snapshot: SNAPSHOT_ID,
+    input: 'trace-bus-send.json',
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, IMPORTED_LEDGER_DOC)
+  assert.equal(bridge.operationIds.length, 1)
+  assert.deepEqual(bridge.calls[0].argv, [
+    'trace-import',
+    '--workspace', WORKSPACE,
+    '--snapshot', SNAPSHOT_ID,
+    '--input', 'trace-bus-send.json',
+    '--operation-id', bridge.operationIds[0],
+  ])
+
+  // Engine error documents (missing/invalid trace file) are returned verbatim.
+  const notFoundDoc = {
+    schema_version: 1,
+    error: { code: 'NOT_FOUND', message: 'trace input file is missing from the import inbox', details_ref: null, retryable: false },
+    operation_id: null,
+  }
+  const errorBridge = scriptedBridge(() => ({ schema_version: 1, ok: false, exit_code: 2, cli: notFoundDoc }))
+  const errorMount = mountWorkbench({ bridge: errorBridge })
+  const errorResult = await invoke(errorMount.route, 'trace.import', {
+    workspace: WORKSPACE,
+    snapshot: SNAPSHOT_ID,
+    input: 'trace-missing.json',
+  })
+  assert.equal(errorResult.json.result.ok, true)
+  assert.deepEqual(errorResult.json.result.value, notFoundDoc)
+})
+
+test('trace.import rejects path-like or malformed input names before any engine call', async () => {
+  const bridge = scriptedBridge(() => cliOk({}))
+  const { route } = mountWorkbench({ bridge })
+  const cases = [
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID }, /input is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: '' }, /non-empty file name/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: 'a/b.json' }, /no path separators/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: 'a\\b.json' }, /no path separators/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: 'C:\\traces\\x.json' }, /no path separators/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: '../x.json' }, /no "." or ".." path segments/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: '..' }, /no "." or ".." path segments/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: '.' }, /no "." or ".." path segments/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: 'trace file.json' }, /input must match/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: 42 }, /input must be a string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: 'x'.repeat(257) }, /at most 256 characters/],
+    [{ workspace: WORKSPACE, input: 'trace.json' }, /snapshot is required/],
+    [{ snapshot: SNAPSHOT_ID, input: 'trace.json' }, /workspace is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, input: 'trace.json', path: 'x' }, /unknown payload field: path/],
+  ]
+  for (const [payload, message] of cases) {
+    const result = await invoke(route, 'trace.import', payload)
+    assert.equal(result.response.statusCode, 200)
+    assert.equal(result.json.result.ok, false)
+    assert.equal(result.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(result.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, 0, 'invalid payloads must never reach the engine')
+})
+
+test('SCENARIO_ENDPOINTS lists the S3b endpoints in contract order', () => {
+  assert.deepEqual(SCENARIO_ENDPOINTS, [
+    'scenario.listProfiles',
+    'scenario.list',
+    'scenario.get',
+    'scenario.preview',
+    'scenario.run',
+    'scenario.undoTail',
+    'trace.import',
+  ])
+})
+
 test('the workbench dispatch routes view.* and scenario.* and fails closed otherwise', async () => {
   const bridge = scriptedBridge(happyScript())
   const viewService = createViewService({ bridge, settings })
@@ -494,6 +755,19 @@ test('the workbench dispatch routes view.* and scenario.* and fails closed other
     ok: false,
     error: { code: 'INVALID_ARGUMENT', message: 'unknown scenario endpoint' },
   })
+  assert.deepEqual(await dispatch('trace.unknown', {}), {
+    ok: false,
+    error: { code: 'INVALID_ARGUMENT', message: 'unknown trace endpoint' },
+  })
+  // S3b endpoints are routed into the scenario service (validation runs first).
+  const undoRouted = await dispatch('scenario.undoTail', {})
+  assert.equal(undoRouted.ok, false)
+  assert.equal(undoRouted.error.code, 'INVALID_ARGUMENT')
+  assert.match(undoRouted.error.message, /workspace is required/)
+  const traceRouted = await dispatch('trace.import', {})
+  assert.equal(traceRouted.ok, false)
+  assert.equal(traceRouted.error.code, 'INVALID_ARGUMENT')
+  assert.match(traceRouted.error.message, /workspace is required/)
   assert.deepEqual(await dispatch('other.endpoint', {}), {
     ok: false,
     error: { code: 'INVALID_ARGUMENT', message: 'unknown workbench endpoint' },

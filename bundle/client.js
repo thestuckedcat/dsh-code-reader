@@ -306,6 +306,26 @@ sequenceGeneration:'代次',
 sequenceObservedTrue:'observed=true（运行台账）',
 legendObserved:'运行观测',
 legendObservedRow:'运行观测记录（observed）：来自隔离 Wasm 模拟台账，不代表真实设备行为',
+stubUndoTitle:'回退末尾 N 步（前缀重放）',
+stubUndoCount:'回退步数 N',
+stubUndo:'回退末尾 N 步',
+stubUndoBusy:'正在重放前缀…',
+stubUndoNoLedger:'暂无可回退台账：先运行一次场景。',
+stubUndoImported:'当前台账来自导入轨迹，无法重放，因此不可回退。',
+stubUndoFailed:'回退失败：',
+stubUndoSuccess:'回退',
+stubUndoHint:'回退会重放前缀并逐条核验 memory digest；导入台账不可回退。',
+traceTitle:'导入轨迹（inbox 只读台账）',
+traceHint:'输入可信 inbox 内的轨迹文件名（仅 A-Za-z0-9._-，不做路径选择/文件上传）。',
+traceInputPlaceholder:'trace-bus-send.json',
+traceImport:'导入轨迹',
+traceImportBusy:'正在导入…',
+traceImportFailed:'轨迹导入失败：',
+traceImportSuccess:'已导入轨迹台账：',
+traceImportInvalid:'文件名只能是 inbox 内的普通文件名（A-Za-z0-9._-，≤256）。',
+sequenceScenarioLabel:'台账场景',
+sequenceImportedBadge:'imported · ',
+sequenceScenarioNoLedger:'暂无运行台账可切换。',
 };
 function isRecord(value){
 return typeof value==='object'&&value!==null&&!Array.isArray(value);
@@ -1282,6 +1302,7 @@ certainty:normalizeCertainty(message.certainty),
 evidence_ids:copyStringArray(message.evidence_ids,32),
 limitations:copyStringArray(message.limitations,32),
 observed:message.observed===true,
+imported:message.imported===true,
 call_id:copyNullableString(message.call_id),
 step_index:toInteger(message.step_index),
 stubbed:message.stubbed===true,
@@ -1302,6 +1323,7 @@ participants:participants,
 messages:messages,
 gaps:Array.isArray(source.gaps)?source.gaps:[],
 truncated:source.truncated===true,
+limitations:copyStringArray(source.limitations,32),
 };
 }
 function normalizeAffectedResources(value){
@@ -1324,6 +1346,8 @@ workspace_id:copyNullableString(value.workspace_id),
 snapshot_id:copyNullableString(value.snapshot_id),
 records_digest:copyNullableString(value.records_digest),
 created_at:copyNullableString(value.created_at),
+imported:value.imported===true,
+label:copyNullableString(value.label),
 };
 }
 function normalizeStubParam(value){
@@ -1411,6 +1435,9 @@ updated_at:copyNullableString(item.updated_at),
 records_digest:copyNullableString(item.records_digest),
 workspace_id:copyNullableString(item.workspace_id),
 snapshot_id:copyNullableString(item.snapshot_id),
+imported:item.imported===true,
+label:copyNullableString(item.label),
+source:copyNullableString(item.source),
 limitations:copyStringArray(item.limitations,32),
 });
 }
@@ -1516,10 +1543,23 @@ workspace_id:copyNullableString(scenario.workspace_id)||copyNullableString(sourc
 snapshot_id:copyNullableString(scenario.snapshot_id)||copyNullableString(source.snapshot_id),
 records_digest:copyNullableString(scenario.records_digest)||copyNullableString(source.records_digest),
 created_at:copyNullableString(scenario.created_at)||copyNullableString(source.created_at),
+imported:scenario.imported===true||source.imported===true,
+label:copyNullableString(scenario.label)||copyNullableString(source.label),
+source:copyNullableString(scenario.source)||copyNullableString(source.source),
+undo:normalizeUndoMeta(source.undo),
 records:records,
 limitations:copyStringArray(source.limitations,32),
 gaps:Array.isArray(source.gaps)?source.gaps:[],
 truncated:source.truncated===true,
+};
+}
+function normalizeUndoMeta(value){
+if(!isRecord(value))return null;
+return{
+of_scenario_id:copyNullableString(value.of_scenario_id),
+of_generation:toSignedInteger(value.of_generation),
+count:toInteger(value.count),
+state_digest_verified:value.state_digest_verified===true,
 };
 }
 function viewPayloadState(name,payload){
@@ -2348,12 +2388,14 @@ if(isRecord(serverGap)&&typeof serverGap.code==='string'&&typeof serverGap.reaso
 if(stub.profiles.state==='error')gaps.push({code:'sim_profile_read_failed',status:'unavailable',reason:TEXT.stubProfilesFailed});
 if((stub.profiles.state==='ready'||stub.profiles.state==='empty')&&(stub.profiles.payload===null||stub.profiles.payload.profiles.length===0))gaps.push({code:'sim_profile_missing',status:'unavailable',reason:TEXT.stubProfilesEmpty});
 if(profile!==null&&profile!==undefined&&profile.interfaces.length===0)gaps.push({code:'stub_profile_interfaces_unavailable',status:'unavailable',reason:'模拟 profile 未返回接口定义（仅 interface_count，无法生成 role/参数下拉）；需 Host/引擎在 listProfiles 返回 interfaces，不伪造接口。'});
+var statusCapabilities=isRecord(statusData)&&isRecord(statusData.capabilities)?statusData.capabilities:{};
 var deferredGaps=[
-{code:'scenario_undo',fallback:'回退末尾 N 次/前缀重放在 S3b 提供；当前只保留只读历史。'},
-{code:'trace_import',fallback:'轨迹导入在 S3b 提供；当前只支持面板内场景运行。'},
-{code:'real_device_dispatch',fallback:'真实设备/内核下发需单独授权与运行验证；编译器/构建未启用（不在插件内编译）；S3a 只在隔离 Wasm worker 中模拟。'}
+{code:'scenario_undo',capability:'scenario_undo',fallback:'回退末尾 N 次/前缀重放未开启。'},
+{code:'trace_import',capability:'trace_import',fallback:'轨迹导入未开启。'},
+{code:'real_device_dispatch',capability:'real_device_dispatch',fallback:'真实设备/内核下发需单独授权与运行验证；编译器/构建未启用（不在插件内编译）；S3a 只在隔离 Wasm worker 中模拟。'}
 ];
 for(var dgi=0;dgi<deferredGaps.length;dgi+=1){
+if(statusCapabilities[deferredGaps[dgi].capability]===true)continue;
 var reason=serverReasons[deferredGaps[dgi].code]||deferredGaps[dgi].fallback;
 if(deferredGaps[dgi].code==='real_device_dispatch'&&!/编译器|构建/.test(reason))reason=reason+'；编译器/构建未启用（不在插件内编译）';
 gaps.push({code:deferredGaps[dgi].code,status:'unavailable',reason:reason});
@@ -2437,11 +2479,61 @@ el('span',{className:'dcr-meta'},TEXT.stubRecordSkipped)
 ));
 }
 }
+var latestImported=latest!==null&&latest!==undefined&&latest.imported===true;
+var undoMax=latestImported||latest===null||latest===undefined?0:latest.records.length;
+var canUndo=latest!==null&&latest!==undefined&&!latestImported&&undoMax>=1&&stub.busy!==true&&stub.undoBusy!==true;
+var undoStatusText='';
+var undoStatusAttrs={className:'dcr-muted','data-stub-undo-status':''};
+var undoStatus=stub.undoStatus===undefined?null:stub.undoStatus;
+if(undoStatus!==null&&undoStatus!==undefined){
+if(undoStatus.kind==='pending')undoStatusText=TEXT.stubUndoBusy;
+else if(undoStatus.kind==='error'){
+undoStatusText=TEXT.stubUndoFailed+' '+String(undoStatus.code||'UNKNOWN_ERROR')+'：'+String(undoStatus.message||'');
+undoStatusAttrs.className='dcr-error';
+undoStatusAttrs['data-error-code']=undoStatus.code||'UNKNOWN_ERROR';
+}else if(undoStatus.kind==='success'){
+undoStatusText=TEXT.stubUndoSuccess+' '+String(undoStatus.count)+' 步：前缀重放状态摘要一致（scenario '+String(undoStatus.scenarioId||'—')+' generation '+String(undoStatus.generation===null||undoStatus.generation===undefined?'—':undoStatus.generation)+'）';
+}
+}else if(latestImported)undoStatusText=TEXT.stubUndoImported;
+else if(latest===null||latest===undefined)undoStatusText=TEXT.stubUndoNoLedger;
+else undoStatusText='可回退 1..'+String(undoMax)+' 步（前缀重放并核验 memory digest）。';
+var undoSection=el('div',{className:'dcr-stub-section'},
+el('h3',{className:'dcr-subheading'},TEXT.stubUndoTitle),
+el('div',{className:'dcr-stub-undobar'},
+el('label',{className:'dcr-stub-check'},TEXT.stubUndoCount+' ',
+el('input',{type:'number',className:'dcr-stub-arg-input','data-stub-undo-count':'',min:'1',max:undoMax>=1?String(undoMax):'1',step:'1',value:String(stub.undoCount===null||stub.undoCount===undefined?1:stub.undoCount),disabled:!canUndo||stub.undoBusy===true,onChange:function(event){props.onUndoCount(event&&event.target?event.target.value:'');}})),
+el('button',{type:'button',className:'dcr-btn','data-stub-undo':'',disabled:!canUndo,onClick:props.onUndo},stub.undoBusy===true?TEXT.stubUndoBusy:TEXT.stubUndo)
+),
+el('p',undoStatusAttrs,undoStatusText),
+el('p',{className:'dcr-muted'},TEXT.stubUndoHint)
+);
+var traceStatus=stub.traceStatus===undefined?null:stub.traceStatus;
+var traceStatusText='';
+var traceStatusAttrs={className:'dcr-muted','data-trace-import-status':''};
+if(traceStatus!==null&&traceStatus!==undefined){
+if(traceStatus.kind==='pending')traceStatusText=TEXT.traceImportBusy;
+else if(traceStatus.kind==='error'){
+traceStatusText=TEXT.traceImportFailed+' '+String(traceStatus.code||'UNKNOWN_ERROR')+'：'+String(traceStatus.message||'');
+traceStatusAttrs.className='dcr-error';
+traceStatusAttrs['data-error-code']=traceStatus.code||'UNKNOWN_ERROR';
+}else if(traceStatus.kind==='success'){
+traceStatusText=TEXT.traceImportSuccess+'scenario '+String(traceStatus.scenarioId||'—')+' generation '+String(traceStatus.generation===null||traceStatus.generation===undefined?'—':traceStatus.generation)+(traceStatus.label?'（'+String(traceStatus.label)+'）':'');
+}
+}
+var traceSection=el('div',{className:'dcr-stub-section dcr-stub-trace'},
+el('h3',{className:'dcr-subheading'},TEXT.traceTitle),
+el('p',{className:'dcr-muted'},TEXT.traceHint),
+el('div',{className:'dcr-stub-runbar'},
+el('input',{type:'text',className:'dcr-graph-search','data-trace-import-input':'',placeholder:TEXT.traceInputPlaceholder,'aria-label':TEXT.traceTitle,value:stub.traceInput===undefined||stub.traceInput===null?'':stub.traceInput,disabled:stub.traceBusy===true,onChange:function(event){props.onTraceInput(event&&event.target?event.target.value:'');}}),
+el('button',{type:'button',className:'dcr-btn','data-trace-import':'',disabled:stub.traceBusy===true||props.workspaceReady!==true||String(stub.traceInput===undefined||stub.traceInput===null?'':stub.traceInput).trim()==='',onClick:props.onTraceImport},stub.traceBusy===true?TEXT.traceImportBusy:TEXT.traceImport)
+),
+el('p',traceStatusAttrs,traceStatusText)
+);
 var profileOptions=[el('option',{key:'none',value:''},'（未选择）')];
 for(var poi=0;poi<profiles.length;poi+=1){
 profileOptions.push(el('option',{key:profiles[poi].profile_id,value:profiles[poi].profile_id},profiles[poi].label+' · '+profiles[poi].profile_id));
 }
-return el('div',{className:'dcr-stub dcr-stub-panel','data-code-view':'stub-panel','data-busy':stub.busy===true?'true':'false'},
+return el('div',{className:'dcr-stub dcr-stub-panel','data-code-view':'stub-panel','data-stub-panel':'','data-busy':stub.busy===true?'true':'false'},
 el('h3',{className:'dcr-subheading'},TEXT.stubPanelTitle),
 el('p',{className:'dcr-muted'},TEXT.stubHint),
 props.workspaceReady!==true?el('p',{className:'dcr-warning'},'请先在「快照与入口」选择已核验快照；打桩模拟按快照绑定执行。'):null,
@@ -2484,14 +2576,15 @@ el('div',{className:'dcr-stub-generation','data-stub-generation':''},
 el('span',{className:'dcr-chip'},TEXT.stubScenarioId+' '+String(stub.latest.scenario_id||'—')),
 el('span',{className:'dcr-chip'},TEXT.stubGeneration+' '+String(stub.latest.generation===null?'—':stub.latest.generation)),
 el('span',{className:'dcr-meta'},'records_digest '+shortDigest(stub.latest.records_digest)),
-el('span',{className:'dcr-meta'},'profile '+String(stub.latest.profile_id||'—'))
+el('span',{className:'dcr-meta'},'profile '+String(stub.latest.profile_id||'—')),
+latest.imported===true?el('span',{className:'dcr-chip'},'imported · '+String(latest.label||'导入轨迹')):null,
+latest.imported===true?el('p',{className:'dcr-muted','data-stub-imported-limitations':''},'导入台账局限：'+latest.limitations.join('、')):null,
+stub.latest.undo!==null&&stub.latest.undo!==undefined?el('span',{className:'dcr-chip'},'undo · count '+String(stub.latest.undo.count===null?'—':stub.latest.undo.count)+' · digest verified '+(stub.latest.undo.state_digest_verified?'true':'false')):null
 ),
 recordRows.length===0?el('p',{className:'dcr-muted'},TEXT.stubRecordsEmpty):recordRows
 ):el('p',{className:'dcr-muted'},TEXT.stubRecordsEmpty),
-el('div',{className:'dcr-stub-section'},
-el('button',{type:'button',className:'dcr-btn','data-stub-undo':'',disabled:true},TEXT.stubUndo),
-el('p',{className:'dcr-muted','data-stub-undo-gap':''},TEXT.stubUndoGap)
-),
+undoSection,
+traceSection,
 gaps.length>0?el('div',{className:'dcr-stub-gaps'},gaps.map(function(gap){
 return el('p',{key:gap.code,className:'dcr-muted dcr-stub-gap','data-stub-gap':gap.code},el('code',null,gap.code),' '+String(gap.reason||''));
 })):null
@@ -3930,6 +4023,7 @@ observedFlag===true&&message.call_id!==null?el('span',{className:'dcr-meta'},'ca
 observedFlag===true&&message.status!==null?el('span',{className:'dcr-chip dcr-stub-status-'+message.status},'status '+message.status):null,
 observedFlag===true&&message.result!==null?el('span',{className:'dcr-meta'},'结果 '+String(message.result)):null,
 observedFlag===true&&message.stubbed===true?el('span',{className:'dcr-chip dcr-stub-boundary-chip','data-stubbed':'true'},'stubbed'):null,
+observedFlag===true&&message.imported===true?el('span',{className:'dcr-chip'},'imported'):null,
 observedFlag===true&&message.event!==null?el('span',{className:'dcr-chip'},'event '+message.event+(message.code===null?'':' #'+String(message.code))):null,
 observedFlag===true?message.affected_resources.map(function(resource){
 return el('span',{key:resource.resource_id,className:'dcr-chip dcr-stub-affect','data-stub-affect':resource.resource_id,'data-resource-id':resource.resource_id},resource.name+' · '+accessLabel(resource.access));
@@ -3968,16 +4062,40 @@ mode==='observed'&&observed.state==='ready'&&isRecord(observed.payload)&&isRecor
 mode==='observed'&&observed.state==='ready'&&isRecord(observed.payload)&&isRecord(observed.payload.scenario)?el('span',{className:'dcr-chip'},TEXT.sequenceGeneration+' '+String(observed.payload.scenario.generation===null?'—':observed.payload.scenario.generation)):null,
 staticSequence.truncated&&mode==='static'?el('span',{className:'dcr-chip'},'已截断'):null
 );
+var scenarioOptions=Array.isArray(props.scenarios)?props.scenarios:[];
+var scenarioPicker=el('div',{className:'dcr-seq-mode','aria-label':TEXT.sequenceScenarioLabel},
+el('span',{className:'dcr-meta'},TEXT.sequenceScenarioLabel),
+el('select',{className:'dcr-select','data-code-view':'sequence-scenario','data-sequence-scenario-select':'','aria-label':TEXT.sequenceScenarioLabel,disabled:scenarioOptions.length===0,value:props.selectedScenarioId===null||props.selectedScenarioId===undefined?'':props.selectedScenarioId,onChange:function(event){props.onSelectScenario(event&&event.target?event.target.value:'');}},scenarioOptions.map(function(item){
+var suffix=' · gen '+(item.generation===null||item.generation===undefined?'—':String(item.generation))+' · '+(item.steps===null||item.steps===undefined?'—':String(item.steps))+' 步 · '+String(item.updated_at||item.created_at||'—');
+if(item.imported===true)suffix+=' · imported'+(item.label?' '+item.label:'');
+return el('option',{key:item.scenario_id,value:item.scenario_id},item.scenario_id+suffix);
+})),
+scenarioOptions.length===0?el('span',{className:'dcr-muted','data-sequence-gap':''},TEXT.sequenceScenarioNoLedger):null
+);
+function findScenarioSummary(id){
+for(var index=0;index<scenarioOptions.length;index+=1){
+if(scenarioOptions[index].scenario_id===id)return scenarioOptions[index];
+}
+return null;
+}
 var body;
 if(mode==='observed'){
-if(observed.state==='loading')body=el('p',{className:'dcr-muted',role:'status','data-sequence-observed':'true'},TEXT.sequenceObservedLoading);
-else if(observed.state==='error')body=el('p',{className:'dcr-error','data-error-code':observed.error?observed.error.code:'UNKNOWN_ERROR'},TEXT.sequenceObservedFailed);
-else if(observed.state!=='ready')body=el('p',{className:'dcr-muted','data-sequence-gap':''},TEXT.sequenceObservedEmpty);
+if(observed.state==='loading')body=el('div',null,scenarioPicker,el('p',{className:'dcr-muted',role:'status','data-sequence-observed':'true'},TEXT.sequenceObservedLoading));
+else if(observed.state==='error')body=el('div',null,scenarioPicker,el('p',{className:'dcr-error','data-error-code':observed.error?observed.error.code:'UNKNOWN_ERROR'},TEXT.sequenceObservedFailed));
+else if(observed.state!=='ready')body=el('div',null,scenarioPicker,el('p',{className:'dcr-muted','data-sequence-gap':''},TEXT.sequenceObservedEmpty));
 else{
 var observedSequence=normalizeSequence(observed.payload);
 var scenario=observedSequence.scenario;
+var selectedSummary=scenario!==null&&scenario.scenario_id!==null?findScenarioSummary(scenario.scenario_id):(props.selectedScenarioId?findScenarioSummary(props.selectedScenarioId):null);
+var observedPayloadRecord=isRecord(observed.payload)?observed.payload:{};
+var importedScenario=observedPayloadRecord.imported===true||(scenario!==null&&scenario.imported===true)||(selectedSummary!==null&&selectedSummary.imported===true);
+var scenarioLabel=scenario!==null&&scenario.label!==null?scenario.label:(selectedSummary!==null?selectedSummary.label:null);
+if(scenarioLabel===null&&copyNullableString(observedPayloadRecord.label)!==null)scenarioLabel=observedPayloadRecord.label;
 body=el('div',null,
+scenarioPicker,
 el('p',{className:'dcr-warning dcr-warning-observed','data-sequence-observed':'true'},TEXT.sequenceObservedTitle+' · '+TEXT.sequenceObservedTrue),
+importedScenario?el('p',{className:'dcr-chip dcr-seq-imported','data-sequence-imported':'true'},TEXT.sequenceImportedBadge+String(scenarioLabel!==null?scenarioLabel:'imported trace')):null,
+observedSequence.limitations.length>0?el('p',{className:'dcr-muted','data-sequence-limitations':''},observedSequence.limitations.join('、')):null,
 el('div',{className:'dcr-seq-scenario','data-scenario-id':scenario!==null&&scenario.scenario_id!==null?scenario.scenario_id:undefined,'data-scenario-generation':scenario!==null&&scenario.generation!==null?String(scenario.generation):undefined},
 scenario!==null?el('span',{className:'dcr-chip'},'scenario_id '+String(scenario.scenario_id||'—')):null,
 scenario!==null?el('span',{className:'dcr-chip'},'generation '+String(scenario.generation===null?'—':scenario.generation)):null,
@@ -4449,6 +4567,9 @@ var EXTRA_CSS=[
 '.dcr-seq-mode{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:4px 0;}',
 '.dcr-seq-scenario{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:2px 0;}',
 '.dcr-warning-observed{border-color:var(--dsh-accent-color,currentColor);border-style:double;}',
+'.dcr-stub-undobar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}',
+'.dcr-stub-trace{display:flex;flex-direction:column;gap:5px;}',
+'.dcr-seq-imported{display:inline-block;margin:2px 0;}',
 ].join('\n');
 CSS=CSS+'\n'+EXTRA_CSS;
 function createInitialFileState(){
@@ -4479,6 +4600,12 @@ plan:null,
 latest:null,
 latestScenarioId:null,
 latestGeneration:null,
+undoCount:1,
+undoBusy:false,
+undoStatus:null,
+traceInput:'',
+traceBusy:false,
+traceStatus:null,
 notice:'',
 };
 }
@@ -5016,7 +5143,12 @@ var normalized=normalizeScenarioLedger(result.value);
 var latest=normalized.scenarios.length>0?normalized.scenarios[0]:null;
 var current=getViewState().stub;
 patchStub({ledger:{key:key,state:normalized.scenarios.length>0?'ready':'empty',payload:normalized,error:null},latestScenarioId:latest!==null?latest.scenario_id:current.latestScenarioId});
-if(latest!==null)setScenarioFocus(latest.scenario_id,latest.generation,getUiState().focus_call_id);
+var focusId=getUiState().focus_scenario_id;
+var focusExists=false;
+for(var fi=0;fi<normalized.scenarios.length;fi+=1){
+if(normalized.scenarios[fi].scenario_id===focusId)focusExists=true;
+}
+if(latest!==null&&!focusExists)setScenarioFocus(latest.scenario_id,latest.generation,getUiState().focus_call_id);
 if(typeof callback==='function')callback();
 });
 }
@@ -5092,6 +5224,109 @@ return assign(stubEditResetPatch(),{steps:steps});
 function toggleStubStopOnError(){
 patchStub(function(stub){return assign(stubEditResetPatch(),{stopOnError:stub.stopOnError!==true});});
 }
+function stubUndoMax(){
+var latest=getViewState().stub.latest;
+if(latest===null||latest===undefined||latest.imported===true)return 0;
+return latest.records.length;
+}
+function setUndoCount(raw){
+var text=typeof raw==='string'?raw.trim():String(raw===undefined||raw===null?'':raw);
+var value=parseInt(text,10);
+if(!Number.isInteger(value))value=1;
+patchStub({undoCount:value});
+}
+function setTraceInput(raw){
+patchStub({traceInput:String(raw===undefined||raw===null?'':raw).slice(0,256)});
+}
+function invalidateObservedSequence(){
+patchView(function(previous){
+var data=assign({},previous.data);
+delete data.sequence_observed;
+return{data:data};
+});
+}
+function runUndoTail(){
+var stub=getViewState().stub;
+var latest=stub.latest;
+if(stub.undoBusy===true||stub.busy===true)return;
+var snapshot=currentSnapshot();
+if(snapshot===null||latest===null||latest===undefined)return;
+if(latest.imported===true){
+patchStub({undoStatus:{kind:'error',code:'UNDO_UNAVAILABLE',message:TEXT.stubUndoImported}});
+return;
+}
+var max=latest.records.length;
+if(max<1)return;
+var count=parseInt(String(stub.undoCount),10);
+if(!Number.isInteger(count)||count<1||count>max){
+patchStub({undoStatus:{kind:'error',code:'INVALID_ARGUMENT',message:'回退步数必须在 1..'+String(max)+' 之间（当前 '+String(stub.undoCount)+'）。'}});
+return;
+}
+var generation=toSignedInteger(latest.generation)!==null?latest.generation:0;
+var payload={workspace:snapshot.workspace_id,scenario:latest.scenario_id,count:count,expected_generation:generation};
+patchStub({undoBusy:true,undoStatus:{kind:'pending',count:count}});
+request('stubUndo','scenario.undoTail',payload).then(function(result){
+if(!result)return;
+if(result.kind==='error'){
+patchStub({undoBusy:false,undoStatus:{kind:'error',code:result.code,message:result.message}});
+return;
+}
+var ledger=normalizeScenarioRun(result.value);
+var prefixSteps=[];
+for(var index=0;index<ledger.records.length;index+=1){
+prefixSteps.push({interface:ledger.records[index].interface,args:ledger.records[index].args.slice()});
+}
+if(prefixSteps.length===0)prefixSteps=defaultStubSteps();
+var nextCount=count;
+if(nextCount<1)nextCount=1;
+if(nextCount>prefixSteps.length)nextCount=prefixSteps.length;
+patchStub({undoBusy:false,undoStatus:{kind:'success',count:count,scenarioId:ledger.scenario_id,generation:ledger.generation,verified:ledger.undo!==null&&ledger.undo.state_digest_verified===true},latest:ledger,latestScenarioId:ledger.scenario_id!==null?ledger.scenario_id:latest.scenario_id,latestGeneration:ledger.generation,steps:prefixSteps,undoCount:nextCount<1?1:nextCount,runError:null,notice:'回退已写入前缀台账（scenario '+String(ledger.scenario_id||'—')+' generation '+String(ledger.generation===null?'—':ledger.generation)+'）。'});
+if(ledger.scenario_id!==null)setScenarioFocus(ledger.scenario_id,ledger.generation,null);
+invalidateObservedSequence();
+loadScenarioLedger(true);
+if(getUiState().sequenceMode==='observed')loadObservedSequence();
+});
+}
+function selectObservedScenario(scenarioId){
+var id=copyNullableString(scenarioId);
+if(id===null)return;
+var ledger=getViewState().stub.ledger.payload;
+var summary=null;
+if(ledger!==null&&ledger!==undefined&&Array.isArray(ledger.scenarios)){
+for(var index=0;index<ledger.scenarios.length;index+=1){
+if(ledger.scenarios[index].scenario_id===id)summary=ledger.scenarios[index];
+}
+}
+var generation=summary!==null?summary.generation:getUiState().focus_run_generation;
+setScenarioFocus(id,generation,null);
+invalidateObservedSequence();
+if(getUiState().sequenceMode==='observed')loadObservedSequence();
+}
+function runTraceImport(){
+var stub=getViewState().stub;
+if(stub.traceBusy===true)return;
+var snapshot=currentSnapshot();
+if(snapshot===null)return;
+var input=String(stub.traceInput||'').trim();
+if(input===''||!/^[A-Za-z0-9._-]{1,256}$/.test(input)||input==='.'||input==='..'){
+patchStub({traceStatus:{kind:'error',code:'INVALID_ARGUMENT',message:TEXT.traceImportInvalid}});
+return;
+}
+patchStub({traceBusy:true,traceStatus:{kind:'pending',input:input}});
+request('traceImport','trace.import',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,input:input}).then(function(result){
+if(!result)return;
+if(result.kind==='error'){
+patchStub({traceBusy:false,traceStatus:{kind:'error',code:result.code,message:result.message}});
+return;
+}
+var ledger=normalizeScenarioRun(result.value);
+patchStub({traceBusy:false,traceStatus:{kind:'success',scenarioId:ledger.scenario_id,generation:ledger.generation,label:ledger.label,imported:ledger.imported},latest:ledger,latestScenarioId:ledger.scenario_id!==null?ledger.scenario_id:getViewState().stub.latestScenarioId,latestGeneration:ledger.generation,undoCount:1,undoStatus:null,notice:'已导入轨迹台账（scenario '+String(ledger.scenario_id||'—')+' generation '+String(ledger.generation===null?'—':ledger.generation)+'）。'});
+if(ledger.scenario_id!==null)setScenarioFocus(ledger.scenario_id,ledger.generation,null);
+invalidateObservedSequence();
+loadScenarioLedger(true);
+if(getUiState().sequenceMode==='observed')loadObservedSequence();
+});
+}
 function buildStubScenario(stub,steps,generation){
 return{generation:generation,stop_on_error:stub.stopOnError===true,steps:steps.map(function(step){return{interface:step.interface,args:step.args.slice()};})};
 }
@@ -5106,7 +5341,7 @@ if(check.errors.length>0){
 patchStub({runError:{code:check.errors[0].code,message:check.errors[0].message},plan:null});
 return;
 }
-var expected=toSignedInteger(stub.latestGeneration)!==null?stub.latestGeneration:0;
+var expected=stub.latest!==null&&stub.latest!==undefined&&stub.latest.imported===true?0:(toSignedInteger(stub.latestGeneration)!==null?stub.latestGeneration:0);
 var payload={workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,profile:profile.profile_id};
 var scenario=buildStubScenario(stub,check.steps,expected);
 patchStub({busy:true,runError:null,plan:null});
@@ -5129,7 +5364,7 @@ return;
 }
 var latest=normalizeScenarioRun(runResult.value);
 var currentStub=getViewState().stub;
-patchStub({busy:false,runError:null,latest:latest,latestScenarioId:latest.scenario_id!==null?latest.scenario_id:currentStub.latestScenarioId,latestGeneration:latest.generation!==null?latest.generation:currentStub.latestGeneration,notice:'已写入运行台账（generation '+String(latest.generation===null?'—':latest.generation)+'）。'});
+patchStub({busy:false,runError:null,latest:latest,latestScenarioId:latest.scenario_id!==null?latest.scenario_id:currentStub.latestScenarioId,latestGeneration:latest.generation!==null?latest.generation:currentStub.latestGeneration,undoStatus:null,undoCount:1,notice:'已写入运行台账（generation '+String(latest.generation===null?'—':latest.generation)+'）。'});
 if(latest.scenario_id!==null)setScenarioFocus(latest.scenario_id,latest.generation,null);
 patchView(function(previous){
 var data=assign({},previous.data);
@@ -5661,7 +5896,8 @@ errors=errors.slice(0,4);
 var overallState=computeState(view);
 var activeState=viewDataState(ui.view);
 var stubLedger=view.stub.ledger.payload;
-var stubScenarioAvailable=view.stub.latestScenarioId!==null||(stubLedger!==null&&stubLedger!==undefined&&Array.isArray(stubLedger.scenarios)&&stubLedger.scenarios.length>0);
+var sequenceScenarios=stubLedger!==null&&stubLedger!==undefined&&Array.isArray(stubLedger.scenarios)?stubLedger.scenarios:[];
+var stubScenarioAvailable=view.stub.latestScenarioId!==null||sequenceScenarios.length>0;
 var couplingViewModel=view.data.coupling&&isRecord(view.data.coupling.payload)?view.data.coupling.payload:null;
 var railCoupling=couplingViewModel===null?null:normalizeCoupling(couplingViewModel);
 var railResources=railCoupling===null?[]:railCoupling.resources;
@@ -5723,9 +5959,12 @@ payload:activeData.payload,
 observed:view.data.sequence_observed||{key:null,state:'idle',payload:null,error:null},
 mode:ui.sequenceMode,
 scenarioAvailable:stubScenarioAvailable,
+scenarios:sequenceScenarios,
+selectedScenarioId:ui.focus_scenario_id,
 focusCallsiteId:ui.focus_callsite_id,
 onSelectMode:switchSequenceMode,
 onSelectMessage:onSelectMessage,
+onSelectScenario:selectObservedScenario,
 });
 }
 if(ui.view==='file'){
@@ -5831,6 +6070,10 @@ onStepArg:setStubStepArg,
 onToggleStopOnError:toggleStubStopOnError,
 onRun:runStub,
 onJumpRecord:onJumpStubRecord,
+onUndoCount:setUndoCount,
+onUndo:runUndoTail,
+onTraceInput:setTraceInput,
+onTraceImport:runTraceImport,
 },
 onToggleLibrary:function(){
 patchUi({libraryOpen:!getUiState().libraryOpen});

@@ -31,6 +31,8 @@ import {
   makeEntryPayload,
   makeFileReadPayload,
   makeFileTreePayload,
+  makeImportedObservedSequencePayload,
+  makeImportedScenarioSummary,
   makeInterfacesPayload,
   makeSelection,
   makeSequencePayload,
@@ -43,6 +45,8 @@ import {
   makeScenarioPlanPayload,
   makeScenarioRunPayload,
   makeStubRecord,
+  makeTraceImportPayload,
+  makeUndoTailPayload,
   makeObservedSequencePayload,
   makeScenarioSummary,
   makeTreePayload,
@@ -87,6 +91,8 @@ function bootHarness(overrides = {}) {
     'scenario.list': () => makeScenarioLedgerPayload(),
     'scenario.preview': () => makeScenarioPlanPayload(),
     'scenario.run': () => makeScenarioRunPayload(),
+    'scenario.undoTail': () => makeUndoTailPayload(),
+    'trace.import': () => makeTraceImportPayload(),
     'view.fileTree': () => makeFileTreePayload(),
     'view.fileRead': (payload) => makeFileReadPayload({path: payload.path, repo_id: payload.repo}),
     'view.interfaces': () => makeInterfacesPayload(),
@@ -168,7 +174,7 @@ function assertNoAbsolutePaths(text) {
 
 test('rc.5 loader wrapper: id, first executable statement, only react, plugin shape', async (t) => {
   const source = readBundleSource();
-  assert.ok(source.length < 260 * 1024, `bundle source must stay below 260KB, got ${source.length}`);
+  assert.ok(source.length < 300 * 1024, `bundle source must stay below 300KB, got ${source.length}`);
   const withoutLeadingComment = source.replace(/^\s*\/\*[\s\S]*?\*\//, '').trimStart();
   assert.ok(
     withoutLeadingComment.startsWith('window.__ModuleLoader__.load({'),
@@ -1490,8 +1496,13 @@ test('stub panel loads real-shaped profiles with binding/module/limits and defau
   assert.ok(stop);
   assert.equal(stop.props.checked, true, 'stop_on_error defaults to true');
   assert.ok(h.findByData('data-stub-undo', '').length === 1);
-  assert.equal(h.findByData('data-stub-undo', '')[0].props.disabled, true);
-  assert.ok(text.includes('回退末尾 N 次在 S3b 提供'));
+  assert.equal(h.findByData('data-stub-undo', '')[0].props.disabled, true, 'undo is disabled without a run ledger');
+  assert.ok(text.includes('暂无可回退台账'));
+  assert.ok(h.findByData('data-stub-undo-count', '').length === 1);
+  assert.ok(h.findByData('data-stub-undo-status', '').length === 1);
+  assert.ok(h.findByData('data-trace-import-input', '').length === 1);
+  assert.ok(h.findByData('data-trace-import', '').length === 1);
+  assert.ok(h.findByData('data-trace-import-status', '').length === 1);
   assert.ok(h.findByData('data-stub-gap', 'real_device_dispatch').length === 1);
   assert.ok(h.findByData('data-stub-gap', 'scenario_undo').length === 1);
   assert.ok(h.text().includes('运行观测记录（observed）'));
@@ -1942,4 +1953,314 @@ test('run_observation is not duplicated when the host declares run_observation c
   assert.equal(h.findByData('data-gap-code', 'run_observation').length, 0);
   const capabilities = h.nodeByData('data-code-view', 'status');
   assert.ok(capabilities);
+});
+
+// ---------------------------------------------------------------------------
+// 12. S3b: undo tail, trace import, observed scenario selection
+// ---------------------------------------------------------------------------
+
+function undoCountInput(h) {
+  return h.findAll((node) => node.props && node.props['data-stub-undo-count'] !== undefined)[0];
+}
+
+function undoButton(h) {
+  return h.findAll((node) => node.props && node.props['data-stub-undo'] !== undefined)[0];
+}
+
+function undoStatus(h) {
+  return h.findAll((node) => node.props && node.props['data-stub-undo-status'] !== undefined)[0];
+}
+
+function traceInput(h) {
+  return h.findAll((node) => node.props && node.props['data-trace-import-input'] !== undefined)[0];
+}
+
+function traceButton(h) {
+  return h.findAll((node) => node.props && node.props['data-trace-import'] !== undefined)[0];
+}
+
+function traceStatus(h) {
+  return h.findAll((node) => node.props && node.props['data-trace-import-status'] !== undefined)[0];
+}
+
+async function runHappyScenario(h) {
+  await composeSteps(h, [
+    {interface: 'reset', args: []},
+    {interface: 'bus_register', args: [1]},
+    {interface: 'bus_send', args: [1, 48]},
+  ]);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+}
+
+function visibleRecords(h) {
+  return h.findAll((node) => node.props && node.props['data-stub-record'] !== undefined && node.props['data-call-id'] !== '');
+}
+
+test('undo controls default to 1/disabled without a ledger and capability-aware gaps hide S3b features', async (t) => {
+  const capabilities = {readonly_workbench: true, five_views: true, resource_graph: true, group_collapse: true, interface_library: true, subflow_breadcrumb: true, scenario_execution: true, run_observation: true, scenario_undo: true, trace_import: true, real_device_dispatch: false, ai_summary: false};
+  const h = bootHarness({
+    'view.status': () => makeStatusPayload({
+      capabilities,
+      gaps: [
+        {code: 'ai_summary', status: 'unavailable', reason: '无模型出口，仅占位；AI 归纳正文未实现'},
+        {code: 'real_device_dispatch', status: 'unavailable', reason: '真实设备下发需单独授权与运行验证'},
+      ],
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  assert.equal(undoCountInput(h).props.value, '1');
+  assert.equal(undoCountInput(h).props.disabled, true);
+  assert.equal(undoButton(h).props.disabled, true);
+  const statusText = h.textOf(undoStatus(h));
+  assert.ok(statusText.includes('暂无可回退台账'), statusText);
+  assert.ok(h.textOf(stubPanel(h)).includes('暂无可回退台账'));
+  assert.equal(h.findByData('data-stub-gap', 'scenario_undo').length, 0, 'scenario_undo capability true => no gap row');
+  assert.equal(h.findByData('data-stub-gap', 'trace_import').length, 0, 'trace_import capability true => no gap row');
+  assert.equal(h.findByData('data-stub-gap', 'real_device_dispatch').length, 1);
+});
+
+test('undo tail sends count/expected_generation, then syncs prefix steps and observed selection', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await runHappyScenario(h);
+  assert.equal(visibleRecords(h).length, 3);
+  assert.equal(undoButton(h).props.disabled, false, 'undo is enabled after a run');
+  assert.equal(undoCountInput(h).props.max, '3');
+  undoCountInput(h).props.onChange({target: {value: '1'}});
+  await h.settle();
+  h.clickNode(undoButton(h));
+  await h.settle();
+  await h.settle();
+  const payload = h.rpc.lastPayload('scenario.undoTail');
+  assert.deepEqual(payload, {workspace: 'code-view-bus-demo', scenario: 'scn_0123456789ab', count: 1, expected_generation: 1});
+  const status = h.textOf(undoStatus(h));
+  assert.ok(status.includes('回退 1 步：前缀重放状态摘要一致'), status);
+  assert.ok(status.includes('scn_prefix000001'));
+  assert.ok(status.includes('generation 2'));
+  const steps = h.findAll((node) => node.props && node.props['data-stub-step'] !== undefined);
+  assert.equal(steps.length, 2, 'step editor syncs to the prefix steps');
+  assert.equal(h.findAll((node) => node.props && node.props['data-step-interface'] === '0')[0].props.value, 'reset');
+  assert.equal(h.findAll((node) => node.props && node.props['data-step-interface'] === '1')[0].props.value, 'bus_register');
+  const records = visibleRecords(h);
+  assert.deepEqual(records.map((record) => record.props['data-call-id']), ['call_2_1', 'call_2_2']);
+  assert.ok(h.textOf(h.findByData('data-stub-generation', '')[0]).includes('scn_prefix000001'));
+  const selection = selectionJson(h);
+  assert.equal(selection.scenario_id, 'scn_prefix000001');
+  assert.equal(selection.run_generation, 2);
+  assert.equal(selection.call_id, null);
+  assert.ok(h.rpc.callsFor('scenario.list').length >= 2, 'ledger is refreshed after undo');
+});
+
+test('undo failure keeps the original ledger and shows the engine error code/message', async (t) => {
+  const h = bootHarness({
+    'scenario.undoTail': () => ({schema_version: 1, error: {code: 'STATE_CONFLICT', message: 'state_digest_mismatch at step_index 1'}}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await runHappyScenario(h);
+  const beforeRecords = visibleRecords(h).map((record) => record.props['data-call-id']);
+  h.clickNode(undoButton(h));
+  await h.settle();
+  const errorStatus = undoStatus(h);
+  assert.equal(errorStatus.props['data-error-code'], 'STATE_CONFLICT');
+  assert.ok(h.textOf(errorStatus).includes('state_digest_mismatch'));
+  assert.ok(h.textOf(errorStatus).includes('回退失败'));
+  assert.deepEqual(visibleRecords(h).map((record) => record.props['data-call-id']), beforeRecords, 'records stay unchanged');
+  assert.equal(h.findAll((node) => node.props && node.props['data-stub-step'] !== undefined).length, 3, 'steps stay unchanged');
+  const selection = selectionJson(h);
+  assert.equal(selection.scenario_id, 'scn_0123456789ab');
+  assert.equal(selection.run_generation, 1);
+});
+
+test('out-of-range undo counts are rejected without touching the ledger', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await runHappyScenario(h);
+  const recordsBefore = visibleRecords(h).map((record) => record.props['data-call-id']);
+  const undoCallsBefore = h.rpc.callsFor('scenario.undoTail').length;
+  undoCountInput(h).props.onChange({target: {value: '99'}});
+  await h.settle();
+  assert.equal(undoCountInput(h).props.value, '99');
+  h.clickNode(undoButton(h));
+  await h.settle();
+  assert.equal(undoStatus(h).props['data-error-code'], 'INVALID_ARGUMENT');
+  assert.ok(h.textOf(undoStatus(h)).includes('回退步数必须在 1..3'));
+  assert.equal(h.rpc.callsFor('scenario.undoTail').length, undoCallsBefore, 'invalid count never reaches the host');
+  assert.deepEqual(visibleRecords(h).map((record) => record.props['data-call-id']), recordsBefore);
+  undoCountInput(h).props.onChange({target: {value: '0'}});
+  await h.settle();
+  assert.equal(undoCountInput(h).props.value, '0');
+  h.clickNode(undoButton(h));
+  await h.settle();
+  assert.equal(h.rpc.callsFor('scenario.undoTail').length, undoCallsBefore);
+  undoCountInput(h).props.onChange({target: {value: '2'}});
+  await h.settle();
+  assert.equal(undoCountInput(h).props.value, '2');
+  h.clickNode(undoButton(h));
+  await h.settle();
+  const payload = h.rpc.lastPayload('scenario.undoTail');
+  assert.equal(payload.count, 2);
+});
+
+test('undo then rerun uses the prefix generation as expected_generation', async (t) => {
+  const h = bootHarness({
+    'scenario.run': (payload) => makeScenarioRunPayload({
+      scenario: {...makeScenarioRunPayload().scenario, generation: payload.expected_generation + 1},
+      records: makeScenarioRunPayload().records.map((record) => ({...record, call_id: 'call_' + String(payload.expected_generation + 1) + '_' + String(record.step_index + 1)})),
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await runHappyScenario(h);
+  h.clickNode(undoButton(h));
+  await h.settle();
+  await h.settle();
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const runCalls = h.rpc.callsFor('scenario.run');
+  assert.equal(runCalls.length, 2);
+  assert.equal(runCalls[1].payload.expected_generation, 2, 'prefix ledger generation is the next expected generation');
+  assert.equal(runCalls[1].payload.scenario.steps.length, 2);
+});
+
+test('trace import sends workspace/snapshot/input and selects the imported ledger in the observed picker', async (t) => {
+  let imported = false;
+  const h = bootHarness({
+    'trace.import': () => {
+      imported = true;
+      return makeTraceImportPayload();
+    },
+    'scenario.list': () => (imported
+      ? makeScenarioLedgerPayload({scenarios: [makeImportedScenarioSummary()]})
+      : makeScenarioLedgerPayload()),
+    'view.sequence': (payload) => (payload.mode === 'observed' && payload.scenario === 'scn_1a2b3c4d5e6f'
+      ? makeImportedObservedSequencePayload()
+      : makeObservedSequencePayload()),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  traceInput(h).props.onChange({target: {value: 'trace-bus-send.json'}});
+  await h.settle();
+  assert.equal(traceButton(h).props.disabled, false);
+  h.clickNode(traceButton(h));
+  await h.settle();
+  await h.settle();
+  assert.deepEqual(h.rpc.lastPayload('trace.import'), {workspace: 'code-view-bus-demo', snapshot: SNAPSHOT_ID, input: 'trace-bus-send.json'});
+  const statusText = h.textOf(traceStatus(h));
+  assert.ok(statusText.includes('已导入轨迹台账'), statusText);
+  assert.ok(statusText.includes('scn_1a2b3c4d5e6f'));
+  assert.ok(statusText.includes('外部采集 bus_send 轨迹（示例）'));
+  const selection = selectionJson(h);
+  assert.equal(selection.scenario_id, 'scn_1a2b3c4d5e6f');
+  assert.equal(selection.run_generation, 1);
+  assert.ok(h.rpc.callsFor('scenario.list').length >= 2);
+  const importedRecords = visibleRecords(h);
+  assert.equal(importedRecords.length, 2);
+  assert.ok(h.textOf(h.findByData('data-stub-generation', '')[0]).includes('imported'));
+  assert.equal(undoButton(h).props.disabled, true, 'imported ledger cannot be undone');
+  assert.ok(h.textOf(undoStatus(h)).includes('导入轨迹'));
+
+  const sequenceTab = h.findAll((node) => node.tag === 'button' && node.props && node.props['data-view'] === 'sequence')[0];
+  h.clickNode(sequenceTab);
+  await h.settle();
+  await h.settle();
+  const observed = h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0];
+  assert.equal(observed.props.disabled, false, 'ledger exists so observed is enabled');
+  h.clickNode(observed);
+  await h.settle();
+  await h.settle();
+  assert.ok(h.findAll((node) => node.props && node.props['data-sequence-imported'] === 'true').length >= 1);
+  assert.ok(h.text().includes('外部采集 bus_send 轨迹（示例）'));
+  assert.ok(h.text().includes('imported_trace_not_executed_by_host'));
+  const scenarioSelector = h.nodeByData('data-code-view', 'sequence-scenario');
+  assert.ok(scenarioSelector);
+  const select = h.findAll((node) => node.props && node.props['data-sequence-scenario-select'] !== undefined)[0];
+  assert.equal(select.props.value, 'scn_1a2b3c4d5e6f');
+});
+
+test('trace import failure shows data-error-code and invalid file names are rejected locally', async (t) => {
+  const h = bootHarness({'trace.import': () => failResult('NOT_FOUND', '轨迹文件不存在')});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  traceInput(h).props.onChange({target: {value: 'trace-missing.json'}});
+  await h.settle();
+  h.clickNode(traceButton(h));
+  await h.settle();
+  assert.equal(traceStatus(h).props['data-error-code'], 'NOT_FOUND');
+  assert.ok(h.textOf(traceStatus(h)).includes('轨迹文件不存在'));
+
+  const callsBefore = h.rpc.callsFor('trace.import').length;
+  traceInput(h).props.onChange({target: {value: '../etc/passwd'}});
+  await h.settle();
+  h.clickNode(traceButton(h));
+  await h.settle();
+  assert.equal(traceStatus(h).props['data-error-code'], 'INVALID_ARGUMENT');
+  assert.equal(h.rpc.callsFor('trace.import').length, callsBefore, 'invalid names never reach the host');
+});
+
+test('observed mode exposes a scenario selector from the ledger, switches request and imported marker', async (t) => {
+  const scenarios = [
+    makeScenarioSummary({scenario_id: 'scn_0123456789ab', generation: 2, updated_at: '2026-11-15T09:00:00Z'}),
+    makeImportedScenarioSummary({updated_at: '2026-11-15T08:00:00Z'}),
+  ];
+  const h = bootHarness({
+    'scenario.list': () => makeScenarioLedgerPayload({scenarios}),
+    'view.sequence': (payload) => {
+      if (payload.mode !== 'observed') return makeSequencePayload();
+      return payload.scenario === 'scn_1a2b3c4d5e6f' ? makeImportedObservedSequencePayload() : makeObservedSequencePayload();
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await switchView(h, 'sequence');
+  await h.settle();
+  assert.equal(h.nodeByData('data-code-view', 'sequence-scenario'), null, 'static mode does not render the scenario picker');
+  h.clickNode(h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0]);
+  await h.settle();
+  await h.settle();
+  const picker = h.nodeByData('data-code-view', 'sequence-scenario');
+  assert.ok(picker, 'observed mode renders the scenario picker');
+  const select = h.findAll((node) => node.props && node.props['data-sequence-scenario-select'] !== undefined)[0];
+  const optionValues = select.children.map((child) => (child.props && child.props.value !== undefined ? child.props.value : (child.children || []).map((option) => option.props && option.props.value))).flat().filter(Boolean);
+  assert.ok(optionValues.includes('scn_0123456789ab'));
+  assert.ok(optionValues.includes('scn_1a2b3c4d5e6f'));
+  assert.equal(select.props.value, 'scn_0123456789ab', 'most recently updated scenario is selected by default');
+  assert.equal(h.findAll((node) => node.props && node.props['data-sequence-imported'] === 'true').length, 0);
+  select.props.onChange({target: {value: 'scn_1a2b3c4d5e6f'}});
+  await h.settle();
+  await h.settle();
+  const observedCalls = h.rpc.callsFor('view.sequence').filter((call) => call.payload.mode === 'observed');
+  assert.equal(observedCalls[observedCalls.length - 1].payload.scenario, 'scn_1a2b3c4d5e6f');
+  assert.ok(h.findAll((node) => node.props && node.props['data-sequence-imported'] === 'true').length >= 1, 'imported marker appears for imported ledger');
+  assert.ok(h.text().includes('外部采集 bus_send 轨迹（示例）'));
+  const selection = selectionJson(h);
+  assert.equal(selection.scenario_id, 'scn_1a2b3c4d5e6f');
+  assert.equal(selection.run_generation, 1);
+  const selectAgain = h.findAll((node) => node.props && node.props['data-sequence-scenario-select'] !== undefined)[0];
+  selectAgain.props.onChange({target: {value: 'scn_0123456789ab'}});
+  await h.settle();
+  await h.settle();
+  assert.equal(h.findAll((node) => node.props && node.props['data-sequence-imported'] === 'true').length, 0);
+  assert.equal(selectionJson(h).scenario_id, 'scn_0123456789ab');
 });
