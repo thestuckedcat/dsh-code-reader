@@ -12,12 +12,17 @@
 // Cordis plugin that declares those dependencies itself. When the services are
 // missing that nested plugin stays pending and the tools/skills above keep
 // working (docs/readonly-workbench-contract.md §1 "Host 侧注册边界").
+//
+// Since S3a the same carrier also serves the user-triggered controlled scenario
+// endpoints (`scenario.*`): plan/module/ledger stay in the local engine and the
+// Wasm module only ever runs inside the isolated worker (docs/scenario-contract.md).
 import { resolveSettings } from './lib/config.mjs'
 import { createBridge } from './lib/bridge.mjs'
 import { buildTools } from './lib/tools.mjs'
 import { registerSkillProvider } from './lib/skills.mjs'
 import { HTTP_RPC_CHANNEL, registerWorkbenchHttpRoute } from './lib/http-rpc.mjs'
-import { createViewDispatch, createViewService, VIEW_ENDPOINTS } from './lib/view-service.mjs'
+import { createViewService, VIEW_ENDPOINTS } from './lib/view-service.mjs'
+import { createScenarioService, createWorkbenchDispatch, SCENARIO_ENDPOINTS } from './lib/scenario-service.mjs'
 
 export const name = 'dsh-code-reader'
 export const inject = ['tools', 'skills']
@@ -33,18 +38,19 @@ export function apply(ctx, config = {}) {
   registerSkillProvider(ctx)
 
   // The nested plugin owns the UI-only dependencies; a host without them keeps
-  // this fiber pending instead of failing the whole plugin. The route and the
-  // read-model service are disposed with that fiber, so remounting re-registers
-  // both (rc.5 load → unload → load).
+  // this fiber pending instead of failing the whole plugin. The route and both
+  // UI services are disposed with that fiber, so remounting re-registers them
+  // (rc.5 load → unload → load).
   ctx.plugin({
     name: VIEW_PLUGIN_NAME,
     inject: ['connection', 'webServer'],
     apply(viewCtx) {
-      const service = createViewService({ bridge, settings })
+      const viewService = createViewService({ bridge, settings })
+      const scenarioService = createScenarioService({ bridge, settings })
       registerWorkbenchHttpRoute(viewCtx, {
         channel: HTTP_RPC_CHANNEL,
-        methods: VIEW_ENDPOINTS,
-        handler: createViewDispatch(service),
+        methods: [...VIEW_ENDPOINTS, ...SCENARIO_ENDPOINTS],
+        handler: createWorkbenchDispatch({ viewService, scenarioService }),
       })
     },
   })

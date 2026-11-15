@@ -647,12 +647,24 @@ export function makeStatusPayload(overrides = {}) {
     engine: {python: 'available', bootstrap: {configured: true, exists: true}},
     capabilities: {
       readonly_workbench: true,
-      five_views: false,
-      resource_graph: false,
-      scenario_execution: false,
-      run_observation: false,
+      five_views: true,
+      resource_graph: true,
+      group_collapse: true,
+      interface_library: true,
+      subflow_breadcrumb: true,
+      scenario_execution: true,
+      run_observation: true,
+      scenario_undo: false,
+      trace_import: false,
+      real_device_dispatch: false,
+      ai_summary: false,
     },
-    gaps: [{code: 'scenario_execution', status: 'unavailable', reason: '本轮只读切片；场景执行/打桩/回退未实现'}],
+    gaps: [
+      {code: 'ai_summary', status: 'unavailable', reason: '无模型出口，仅占位；AI 归纳正文未实现'},
+      {code: 'scenario_undo', status: 'unavailable', reason: '回退末尾 N 次/前缀重放 S3b 提供'},
+      {code: 'trace_import', status: 'unavailable', reason: '轨迹导入 S3b 提供'},
+      {code: 'real_device_dispatch', status: 'unavailable', reason: '真实设备/内核下发需单独授权与运行验证'},
+    ],
   };
   return {...base, ...overrides};
 }
@@ -1431,6 +1443,178 @@ export function makeSubflowPayload(overrides = {}) {
   };
   return {...base, ...overrides};
 }
+
+export function makeStubProfilesPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    workspace_id: 'code-view-bus-demo',
+    profiles: [
+      {
+        profile_id: 'bus-demo-wasm',
+        label: 'Demo bus/platform Wasm 隔离模拟',
+        kind: 'wasm32',
+        binding: {
+          workspace_id: 'code-view-bus-demo',
+          variant_id: 'semantic-x86_64',
+          repo_id: 'bus',
+          snapshot_id: SNAPSHOT_ID,
+        },
+        module: {file: 'bus.wasm', sha256: 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90', bytes: 8741},
+        interfaces: [
+          {name: 'reset', params: [], returns: 'void', role: 'util'},
+          {name: 'bus_register', params: [{name: 'channel', type: 'u32', min: 0, max: 3}], returns: 'i32', role: 'entry', entry_id: BUS_SEND_ID},
+          {name: 'bus_send', params: [{name: 'channel', type: 'u32', min: 0, max: 3}, {name: 'length', type: 'u32', min: 1, max: 65535}], returns: 'i32', role: 'entry', entry_id: BUS_SEND_ID},
+          {name: 'set_platform_stub', params: [{name: 'return_code', type: 'i32', min: -4095, max: 0}], returns: 'void', role: 'stub_control'},
+          {name: 'lookup_route', params: [{name: 'channel', type: 'u32', min: 0, max: 3}], returns: 'i32', role: 'util'},
+        ],
+        limits: {timeout_ms: 10000, steps: 20, events_per_step: 256},
+        limitations: ['wasm_simulation_not_real_device', 'not_a_real_device_or_kernel'],
+      },
+    ],
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeScenarioSummary(overrides = {}) {
+  return {
+    scenario_id: 'scn_0123456789ab',
+    profile_id: 'bus-demo-wasm',
+    generation: 1,
+    step_count: 3,
+    created_at: '2026-11-15T07:30:00Z',
+    updated_at: '2026-11-15T07:30:00Z',
+    records_digest: 'b'.repeat(64),
+    workspace_id: 'code-view-bus-demo',
+    snapshot_id: SNAPSHOT_ID,
+    observed: true,
+    limitations: ['wasm_simulation_not_real_device'],
+    ...overrides,
+  };
+}
+
+export function makeScenarioLedgerPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    workspace_id: 'code-view-bus-demo',
+    scenarios: [],
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeScenarioPlanPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    plan_id: 'plan_0123456789abcdef0123456789abcdef',
+    profile_id: 'bus-demo-wasm',
+    module_sha256: 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90',
+    scenario_id: 'scn_0123456789ab',
+    scenario_digest: 'c'.repeat(64),
+    generation: 1,
+    steps: [
+      {index: 0, interface: 'reset', role: 'util', args: []},
+      {index: 1, interface: 'bus_register', role: 'entry', args: [1]},
+      {index: 2, interface: 'bus_send', role: 'entry', args: [1, 48]},
+    ],
+    trace: {import: {module: 'env', field: 'trace'}, signature: ['i32', 'i32', 'i32', 'i32', 'i32']},
+    limits: {timeout_ms: 10000, steps: 20, events_per_step: 256},
+    expires_at: '2026-11-15T07:40:00Z',
+    limitations: ['wasm_simulation_not_real_device'],
+  };
+  return {...base, ...overrides};
+}
+
+export function makeStubRecord(overrides = {}) {
+  const base = {
+    call_id: 'call_1_1',
+    step_index: 0,
+    interface: 'reset',
+    args: [],
+    status: 'ok',
+    result: 0,
+    memory_digest: 'd'.repeat(64),
+    affected_resources: [],
+    stubbed: false,
+    execution_events: [],
+  };
+  return {...base, ...overrides};
+}
+
+export function makeScenarioRunPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    scenario: {
+      scenario_id: 'scn_0123456789ab',
+      generation: 1,
+      profile_id: 'bus-demo-wasm',
+      workspace_id: 'code-view-bus-demo',
+      snapshot_id: SNAPSHOT_ID,
+      records_digest: 'b'.repeat(64),
+      created_at: '2026-11-15T07:30:00Z',
+    },
+    records: [
+      makeStubRecord({call_id: 'call_1_1', step_index: 0, interface: 'reset', args: [], status: 'ok', result: 0}),
+      makeStubRecord({call_id: 'call_1_2', step_index: 1, interface: 'bus_register', args: [1], status: 'ok', result: 0, execution_events: [{event_id: 'ev_1_1_0', event: 'DEFAULT_ROUTE', code: 1, a: 1, b: 0, c: 0, line: 60}]}),
+      makeStubRecord({
+        call_id: 'call_1_3',
+        step_index: 2,
+        interface: 'bus_send',
+        args: [1, 48],
+        status: 'ok',
+        result: 0,
+        execution_events: [
+          {event_id: 'ev_1_2_0', event: 'REQUEST', code: 3, a: 1, b: 48, c: 0, line: 158},
+          {event_id: 'ev_1_2_1', event: 'WRITE', code: 19, a: 4160, b: 131120, c: 0, line: 113},
+        ],
+        affected_resources: [{resource_id: 's_0860e6738eaa8c95f37d0d03', name: 'simulated_doorbell', access: 'write'}],
+      }),
+    ],
+    limitations: ['wasm_simulation_not_real_device'],
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeObservedSequencePayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    mode: 'observed',
+    observed: true,
+    scenario: {
+      scenario_id: 'scn_0123456789ab',
+      generation: 1,
+      profile_id: 'bus-demo-wasm',
+      workspace_id: 'code-view-bus-demo',
+      snapshot_id: SNAPSHOT_ID,
+      records_digest: 'b'.repeat(64),
+      created_at: '2026-11-15T07:30:00Z',
+    },
+    participants: [
+      {participant_id: 'caller', label: '调用方'},
+      {participant_id: 'driver', label: '驱动'},
+      {participant_id: 'resource', label: '驱动资源'},
+      {participant_id: 'platform', label: '平台/设备边界'},
+    ],
+    messages: [
+      {message_id: 'm_1', index: 1, kind: 'call', from: 'caller', to: 'driver', label: 'bus_send(1, 48)', call_id: 'call_1_3', step_index: 2, status: 'ok', result: 0, observed: true, source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 152}, limitations: []},
+      {message_id: 'm_2', index: 2, kind: 'event', from: 'driver', to: 'resource', label: 'WRITE simulated_doorbell', call_id: 'call_1_3', step_index: 2, status: 'ok', result: 0, observed: true, event: 'WRITE', code: 19, affected_resources: [{resource_id: 's_0860e6738eaa8c95f37d0d03', name: 'simulated_doorbell', access: 'write'}], source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 113}, limitations: []},
+      {message_id: 'm_3', index: 3, kind: 'event', from: 'driver', to: 'platform', label: 'DOORBELL', call_id: 'call_1_3', step_index: 2, status: 'ok', result: 0, observed: true, event: 'DOORBELL', code: 21, source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 113}, limitations: []},
+      {message_id: 'm_4', index: 4, kind: 'return', from: 'driver', to: 'caller', label: '返回 0', call_id: 'call_1_3', step_index: 2, status: 'ok', result: 0, observed: true, source_ref: null, limitations: []},
+      {message_id: 'm_5', index: 5, kind: 'error', from: 'driver', to: 'caller', label: '返回 -2（未登记 channel）', call_id: 'call_1_4', step_index: 3, status: 'error', result: -2, observed: true, source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 152}, limitations: []},
+      {message_id: 'm_6', index: 6, kind: 'call', from: 'caller', to: 'driver', label: 'set_platform_stub(-5)', call_id: 'call_1_5', step_index: 4, status: 'ok', result: null, observed: true, stubbed: true, source_ref: null, limitations: []},
+    ],
+    warning: null,
+    gaps: [],
+    truncated: false,
+    limitations: ['observed_wasm_simulation_not_real_device'],
+  };
+  return {...base, ...overrides};
+}
+
 
 export function makeFileTreePayload(overrides = {}) {
   const base = {

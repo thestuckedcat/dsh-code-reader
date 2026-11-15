@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "profile_id": "bus-demo-wasm",
+  "label": "Demo bus/platform Wasm 隔离模拟",
+  "kind": "wasm32",
+  "binding": {
+    "workspace_id": "code-view-bus-demo",
+    "variant_id": "semantic-x86_64",
+    "repo_id": "bus",
+    "snapshot_id": "ed326d554334432b907de21297207eb8"
+  },
+  "module": {
+    "file": "bus.wasm",
+    "sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c"
+  },
+  "interfaces": [
+    {
+      "name": "reset",
+      "params": [],
+      "returns": "void",
+      "role": "util"
+    },
+    {
+      "name": "bus_register",
+      "params": [
+        {
+          "name": "channel",
+          "type": "u32",
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "returns": "i32",
+      "role": "entry",
+      "entry_id": "f_5aad5c091d5772eb2dada479"
+    },
+    {
+      "name": "stub_route",
+      "params": [
+        {
+          "name": "channel",
+          "type": "u32",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "name": "lane",
+          "type": "u32",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "name": "max_len",
+          "type": "u32",
+          "min": 1,
+          "max": 65535
+        }
+      ],
+      "returns": "i32",
+      "role": "entry",
+      "entry_id": "f_4962656fc82c513cdd5a744c"
+    },
+    {
+      "name": "bus_unregister",
+      "params": [
+        {
+          "name": "channel",
+          "type": "u32",
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "returns": "i32",
+      "role": "entry",
+      "entry_id": "f_a691fe380ba8d75efac40379"
+    },
+    {
+      "name": "bus_send",
+      "params": [
+        {
+          "name": "channel",
+          "type": "u32",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "name": "length",
+          "type": "u32",
+          "min": 0,
+          "max": 65535
+        }
+      ],
+      "returns": "i32",
+      "role": "entry",
+      "entry_id": "f_afa8298f2d197e5fd110e49a"
+    },
+    {
+      "name": "bus_irq",
+      "params": [],
+      "returns": "i32",
+      "role": "entry",
+      "entry_id": "f_ff22940e08661e4950585599"
+    },
+    {
+      "name": "set_platform_stub",
+      "params": [
+        {
+          "name": "return_code",
+          "type": "i32",
+          "min": -4095,
+          "max": 0
+        }
+      ],
+      "returns": "void",
+      "role": "stub_control"
+    }
+  ],
+  "trace": {
+    "import": {
+      "module": "env",
+      "field": "trace"
+    },
+    "signature": [
+      "i32",
+      "i32",
+      "i32",
+      "i32",
+      "i32"
+    ],
+    "events": {
+      "DEFAULT_ROUTE": 1,
+      "STUB_ROUTE": 2,
+      "STORE_ROUTE": 3,
+      "REQUEST": 4,
+      "LOOKUP": 5,
+      "CHECK_LENGTH": 6,
+      "WRITE": 7,
+      "INVALID": 8,
+      "TRANSFER": 9,
+      "STAGE": 10,
+      "ENCODE": 11,
+      "COMMIT": 12,
+      "DIRECT": 13,
+      "BUFFERED": 14,
+      "LOCK": 15,
+      "LIBRARY": 16,
+      "IRQ": 17,
+      "UNREGISTER": 18,
+      "DOORBELL": 19
+    }
+  },
+  "event_resources": {
+    "DEFAULT_ROUTE": [
+      {
+        "resource_id": "s_df7e9ea6246145b01953fcaa",
+        "name": "route_defaults",
+        "access": "read"
+      }
+    ],
+    "STORE_ROUTE": [
+      {
+        "resource_id": "s_0860e6738eaa8c95f37d0d03",
+        "name": "routes",
+        "access": "write",
+        "field": "lane/max_len"
+      }
+    ],
+    "UNREGISTER": [
+      {
+        "resource_id": "s_0860e6738eaa8c95f37d0d03",
+        "name": "routes",
+        "access": "write"
+      }
+    ],
+    "LOOKUP": [
+      {
+        "resource_id": "s_0860e6738eaa8c95f37d0d03",
+        "name": "routes",
+        "access": "read"
+      }
+    ],
+    "CHECK_LENGTH": [
+      {
+        "resource_id": "s_0860e6738eaa8c95f37d0d03",
+        "name": "routes",
+        "access": "read",
+        "field": "max_len"
+      }
+    ],
+    "STAGE": [
+      {
+        "resource_id": "s_22ca7a2bb235ed9490d9ba8c",
+        "name": "staged_lengths",
+        "access": "write"
+      }
+    ],
+    "LOCK": [
+      {
+        "resource_id": "s_8cd93ce6e6fb42be71433996",
+        "name": "transfer_lock",
+        "access": "write"
+      }
+    ],
+    "LIBRARY": [
+      {
+        "resource_id": "s_22e3bdf7575b507b6201e6be",
+        "name": "platform_status",
+        "access": "read"
+      }
+    ],
+    "WRITE": [
+      {
+        "resource_id": "s_48a2fcb62cdba6e1c7bf5528",
+        "name": "simulated_doorbell",
+        "access": "write"
+      }
+    ],
+    "IRQ": [
+      {
+        "resource_id": "s_046e222213039f7eb8df8ad5",
+        "name": "irq_count",
+        "access": "write"
+      }
+    ]
+  },
+  "limitations": [
+    "Wasm 模拟器为 Demo 构建产物，不证明真实设备/内核行为；执行在 Host worker 隔离内完成，不联网、不写源码"
+  ]
+}

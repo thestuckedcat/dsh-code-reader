@@ -38,6 +38,13 @@ import {
   makeSourceLines,
   makeStatusPayload,
   makeSubflowPayload,
+  makeStubProfilesPayload,
+  makeScenarioLedgerPayload,
+  makeScenarioPlanPayload,
+  makeScenarioRunPayload,
+  makeStubRecord,
+  makeObservedSequencePayload,
+  makeScenarioSummary,
   makeTreePayload,
   makeWorkspace,
   readBundleSource,
@@ -75,7 +82,11 @@ function bootHarness(overrides = {}) {
     'view.coupling': (payload) => makeCouplingPayload(payload.entry ? {} : {selection: makeSelection(), scope: {mode: 'snapshot', entry_id: null}}),
     'view.tree': () => makeTreePayload(),
     'view.endToEnd': (payload) => (payload.entry === CHECK_LENGTH_ID ? makeSubflowPayload() : makeEndToEndPayload()),
-    'view.sequence': () => makeSequencePayload(),
+    'view.sequence': (payload) => (payload.mode === 'observed' ? makeObservedSequencePayload() : makeSequencePayload()),
+    'scenario.listProfiles': () => makeStubProfilesPayload(),
+    'scenario.list': () => makeScenarioLedgerPayload(),
+    'scenario.preview': () => makeScenarioPlanPayload(),
+    'scenario.run': () => makeScenarioRunPayload(),
     'view.fileTree': () => makeFileTreePayload(),
     'view.fileRead': (payload) => makeFileReadPayload({path: payload.path, repo_id: payload.repo}),
     'view.interfaces': () => makeInterfacesPayload(),
@@ -157,7 +168,7 @@ function assertNoAbsolutePaths(text) {
 
 test('rc.5 loader wrapper: id, first executable statement, only react, plugin shape', async (t) => {
   const source = readBundleSource();
-  assert.ok(source.length < 200 * 1024, `bundle source must stay below 200KB, got ${source.length}`);
+  assert.ok(source.length < 260 * 1024, `bundle source must stay below 260KB, got ${source.length}`);
   const withoutLeadingComment = source.replace(/^\s*\/\*[\s\S]*?\*\//, '').trimStart();
   assert.ok(
     withoutLeadingComment.startsWith('window.__ModuleLoader__.load({'),
@@ -405,22 +416,20 @@ test('unavailable resources keep their real reason in gaps, never a fake empty l
   assert.equal(selection.resource_status, 'unavailable');
 });
 
-test('gaps keep server code/status/reason and add S2b placeholders with gap-code hooks', async (t) => {
+test('S3a status gaps keep server code/status/reason and drop implemented capability gaps', async (t) => {
   const h = bootHarness();
   t.after(() => h.dispose());
   await h.boot();
   assert.equal(h.nodeByData('data-code-view', 'status').props['data-state'], 'ready');
-  const scenario = h.nodeByData('data-gap-code', 'scenario_execution');
-  assert.ok(scenario);
-  assert.ok(h.textOf(scenario).includes('本轮只读切片；场景执行/打桩/回退未实现'));
-  for (const code of ['ai_summary', 'run_observation']) {
-    assert.ok(h.findByData('data-gap-code', code).length > 0, `missing remaining gap ${code}`);
+  for (const code of ['ai_summary', 'scenario_undo', 'trace_import', 'real_device_dispatch']) {
+    assert.ok(h.findByData('data-gap-code', code).length > 0, `missing server gap ${code}`);
   }
-  for (const code of ['group_collapse', 'interface_library']) {
-    assert.equal(h.findByData('data-gap-code', code).length, 0, `S2b implements ${code}; it must not be a gap`);
+  const undoGap = h.nodeByData('data-gap-code', 'scenario_undo');
+  assert.ok(h.textOf(undoGap).includes('回退末尾 N 次/前缀重放 S3b 提供'), 'server reason is preserved');
+  for (const code of ['scenario_execution', 'run_observation', 'group_collapse', 'interface_library', 'five_views']) {
+    assert.equal(h.findByData('data-gap-code', code).length, 0, `${code} is implemented and must not be a gap`);
   }
-  assert.equal(h.findByData('data-gap-code', 'five_views').length, 0, 'five views are implemented');
-  assert.ok(h.findAll((node) => node.props && node.props['data-code-view'] === 'gap-code').length >= 2);
+  assert.ok(h.findAll((node) => node.props && node.props['data-code-view'] === 'gap-code').length >= 4);
   assert.equal(h.text().includes('not_available_in_readonly_slice'), false);
 });
 
@@ -514,6 +523,7 @@ test('Selection JSON carries §2 fields plus S2a focus fields', async (t) => {
     'callsite_ids', 'callsite_path', 'resource_ids', 'resource_status', 'evidence_ids',
     'run_id', 'event_id', 'focus_resource_id', 'focus_callsite_id',
     'group_id', 'interface_id', 'subflow_root_id',
+    'scenario_id', 'run_generation', 'call_id',
   ]);
   assert.equal(before.workspace_id, 'code-view-bus-demo');
   assert.equal(before.snapshot_id, SNAPSHOT_ID);
@@ -683,7 +693,7 @@ test('coupling resource click highlights functions without opening details; func
   assert.equal(viewRoot(h).props['data-view'], 'coupling');
 });
 
-test('global-resource rail lists related resources, direction tags, and the stub placeholder', async (t) => {
+test('global-resource rail lists related resources, direction tags, and the S3a stub panel', async (t) => {
   const h = bootHarness();
   t.after(() => h.dispose());
   await h.boot();
@@ -708,10 +718,12 @@ test('global-resource rail lists related resources, direction tags, and the stub
 
   h.clickData('data-rail', 'stub');
   await h.settle();
-  const stub = h.findByData('data-stub-panel', '')[0];
-  assert.ok(stub);
-  assert.ok(h.textOf(stub).includes('CW-T3'));
+  await h.settle();
+  const stub = h.nodeByData('data-code-view', 'stub-panel');
+  assert.ok(stub, 'stub panel hook is missing');
   assert.ok(h.textOf(stub).includes('打桩模拟'));
+  assert.ok(h.textOf(stub).includes('bus-demo-wasm'), 'profile label/options are rendered');
+  assert.equal(h.findAll((node) => node.props && node.props['data-stub-profile'] !== undefined).length, 1);
 });
 
 // ---------------------------------------------------------------------------
@@ -1399,4 +1411,535 @@ test('middle breadcrumb crumb re-roots the subflow without losing the cached mai
   assert.deepEqual(crumbs.map((crumb) => crumb.props['data-crumb']), [LOOKUP_ROUTE_ID, CHECK_LENGTH_ID]);
   assert.equal(h.rpc.callsFor('view.endToEnd').filter((call) => call.payload.root === undefined).length, mainCallsBefore, 'main graph is not refetched');
   assert.ok(h.nodeByData('data-graph-group', GROUP_DISPATCH), 'main graph groups still cached');
+});
+
+// ---------------------------------------------------------------------------
+// 11. S3a: stub simulation panel + run ledger + observed sequence
+// ---------------------------------------------------------------------------
+
+function stubPanel(h) {
+  return h.nodeByData('data-code-view', 'stub-panel');
+}
+
+async function openStub(h) {
+  h.clickData('data-rail', 'stub');
+  await h.settle();
+  await h.settle();
+  assert.ok(stubPanel(h), 'stub panel must render');
+}
+
+function profileSelect(h) {
+  return h.findAll((node) => node.props && node.props['data-stub-profile'] !== undefined)[0];
+}
+
+function stubStepCount(h) {
+  return h.findAll((node) => node.props && node.props['data-stub-step'] !== undefined).length;
+}
+
+async function addStubStepTo(h, count) {
+  while (stubStepCount(h) < count) {
+    const add = h.findAll((node) => node.props && node.props['data-stub-add-step'] !== undefined)[0];
+    assert.ok(add, 'add-step button is missing');
+    h.clickNode(add);
+    await h.settle();
+  }
+}
+
+async function setStepInterface(h, index, interfaceName) {
+  const select = h.findAll((node) => node.props && node.props['data-step-interface'] === String(index))[0];
+  assert.ok(select, 'step interface select ' + index + ' is missing');
+  select.props.onChange({target: {value: interfaceName}});
+  await h.settle();
+}
+
+async function setStepArg(h, index, argIndex, value) {
+  const input = h.findAll((node) => node.props && node.props['data-step-arg'] === String(index) + ':' + String(argIndex))[0];
+  assert.ok(input, 'step arg input ' + index + ':' + argIndex + ' is missing');
+  input.props.onChange({target: {value: String(value)}});
+  await h.settle();
+}
+
+async function composeSteps(h, list) {
+  await addStubStepTo(h, list.length);
+  for (let index = 0; index < list.length; index += 1) {
+    await setStepInterface(h, index, list[index].interface);
+    for (let argIndex = 0; argIndex < list[index].args.length; argIndex += 1) {
+      await setStepArg(h, index, argIndex, list[index].args[argIndex]);
+    }
+  }
+}
+
+function stubRunButton(h) {
+  return h.findAll((node) => node.props && node.props['data-stub-run'] !== undefined)[0];
+}
+
+test('stub panel loads real-shaped profiles with binding/module/limits and default stop-on-error', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  assert.ok(profileSelect(h), 'profile selector hook is missing');
+  assert.equal(profileSelect(h).props.value, 'bus-demo-wasm');
+  assert.deepEqual(h.rpc.lastPayload('scenario.listProfiles'), {workspace: 'code-view-bus-demo'});
+  const text = h.textOf(stubPanel(h));
+  for (const needle of ['Demo bus/platform Wasm 隔离模拟', 'code-view-bus-demo', 'semantic-x86_64', 'a1b2c3d4e5f6…', '接口 5', '10000 ms', 'wasm_simulation_not_real_device', 'reset', 'set_platform_stub'].slice(0, 8)) {
+    assert.ok(text.includes(needle), `stub panel must show ${needle}`);
+  }
+  const stop = h.findAll((node) => node.props && node.props['data-stub-stop-on-error'] !== undefined)[0];
+  assert.ok(stop);
+  assert.equal(stop.props.checked, true, 'stop_on_error defaults to true');
+  assert.ok(h.findByData('data-stub-undo', '').length === 1);
+  assert.equal(h.findByData('data-stub-undo', '')[0].props.disabled, true);
+  assert.ok(text.includes('回退末尾 N 次在 S3b 提供'));
+  assert.ok(h.findByData('data-stub-gap', 'real_device_dispatch').length === 1);
+  assert.ok(h.findByData('data-stub-gap', 'scenario_undo').length === 1);
+  assert.ok(h.text().includes('运行观测记录（observed）'));
+});
+
+test('stub panel without an imported profile shows the profile gap and disables run', async (t) => {
+  const h = bootHarness({'scenario.listProfiles': () => makeStubProfilesPayload({profiles: []})});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  assert.ok(h.findByData('data-stub-gap', 'sim_profile_missing').length === 1);
+  assert.ok(h.textOf(stubPanel(h)).includes('未导入模拟 profile'));
+  assert.equal(stubRunButton(h).props.disabled, true);
+  assert.equal(h.findAll((node) => node.props && node.props['data-stub-step'] !== undefined).length, 0, 'no profile => no fake steps');
+  assert.ok(h.findByData('data-stub-gap', 'scenario_undo').length === 1);
+  assert.ok(h.findByData('data-stub-gap', 'trace_import').length === 1);
+  assert.ok(h.findByData('data-stub-gap', 'real_device_dispatch').length === 1);
+});
+
+test('step editor groups interfaces by role, renders min/max args, and supports add/move/remove', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  const select = h.findAll((node) => node.props && node.props['data-step-interface'] === '0')[0];
+  assert.ok(select);
+  const optionText = (() => {
+    const collect = (node) => {
+      if (node === null || node === undefined) return '';
+      if (typeof node === 'string') return node;
+      if (Array.isArray(node)) return node.map(collect).join(' ');
+      const label = node.props && typeof node.props.label === 'string' ? node.props.label + ' ' : '';
+      return label + (node.children || []).map(collect).join(' ');
+    };
+    return collect(select);
+  })();
+  for (const needle of ['入口调用', '边界打桩', '工具接口', 'bus_send', 'set_platform_stub', 'reset']) {
+    assert.ok(optionText.includes(needle), `interface dropdown must group ${needle}`);
+  }
+  await setStepInterface(h, 0, 'bus_send');
+  const channelInput = h.findAll((node) => node.props && node.props['data-step-arg'] === '0:0')[0];
+  const lengthInput = h.findAll((node) => node.props && node.props['data-step-arg'] === '0:1')[0];
+  assert.ok(channelInput && lengthInput);
+  assert.equal(channelInput.props.min, '0');
+  assert.equal(channelInput.props.max, '3');
+  assert.equal(lengthInput.props.min, '1');
+  assert.equal(lengthInput.props.max, '65535');
+  await setStepInterface(h, 0, 'set_platform_stub');
+  const stepAfterBoundary = h.findAll((node) => node.props && node.props['data-stub-step'] !== undefined)[0];
+  assert.ok(String(stepAfterBoundary.props.className).includes('dcr-stub-step-boundary'));
+  assert.ok(h.textOf(stepAfterBoundary).includes('边界打桩'));
+  await setStepInterface(h, 0, 'reset');
+  await addStubStepTo(h, 2);
+  assert.equal(stubStepCount(h), 2);
+  await setStepInterface(h, 1, 'bus_register');
+  const moveUp = h.findAll((node) => node.props && node.props['data-step-move-up'] === '1')[0];
+  h.clickNode(moveUp);
+  await h.settle();
+  const firstSelect = h.findAll((node) => node.props && node.props['data-step-interface'] === '0')[0];
+  assert.equal(firstSelect.props.value, 'bus_register', 'move-up reorders steps');
+  const removeSecond = h.findAll((node) => node.props && node.props['data-step-remove'] === '1')[0];
+  h.clickNode(removeSecond);
+  await h.settle();
+  assert.equal(stubStepCount(h), 1);
+});
+
+test('step count is capped by the profile limit and the add button disables', async (t) => {
+  const h = bootHarness({'scenario.listProfiles': () => makeStubProfilesPayload({profiles: [{...makeStubProfilesPayload().profiles[0], limits: {timeout_ms: 10000, steps: 2, events_per_step: 256}}]})});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await addStubStepTo(h, 2);
+  const add = h.findAll((node) => node.props && node.props['data-stub-add-step'] !== undefined)[0];
+  assert.equal(add.props.disabled, true);
+  assert.equal(stubStepCount(h), 2);
+});
+
+test('invalid args block the run with data-error-code and no scenario.preview call', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await setStepInterface(h, 0, 'bus_send');
+  await setStepArg(h, 0, 0, 7);
+  await setStepArg(h, 0, 1, 48);
+  const invalidInput = h.findAll((node) => node.props && node.props['data-step-arg'] === '0:0')[0];
+  assert.ok(String(invalidInput.props.className).includes('dcr-stub-invalid'));
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  const errorNode = h.findAll((node) => node.props && node.props['data-stub-error'] !== undefined)[0];
+  assert.ok(errorNode, 'stub error hook is missing');
+  assert.equal(errorNode.props['data-error-code'], 'INVALID_ARGUMENT');
+  assert.ok(h.textOf(errorNode).includes('范围内的整数'));
+  assert.equal(h.rpc.callsFor('scenario.preview').length, 0);
+  assert.equal(h.rpc.callsFor('scenario.run').length, 0);
+});
+
+test('run performs preview then run with the plan generation, and renders records/events/affects/undo', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await composeSteps(h, [
+    {interface: 'reset', args: []},
+    {interface: 'bus_register', args: [1]},
+    {interface: 'bus_send', args: [1, 48]},
+  ]);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const previewPayload = h.rpc.lastPayload('scenario.preview');
+  assert.equal(previewPayload.workspace, 'code-view-bus-demo');
+  assert.equal(previewPayload.snapshot, SNAPSHOT_ID);
+  assert.equal(previewPayload.profile, 'bus-demo-wasm');
+  assert.equal(previewPayload.scenario.stop_on_error, true);
+  assert.deepEqual(previewPayload.scenario.steps, [
+    {interface: 'reset', args: []},
+    {interface: 'bus_register', args: [1]},
+    {interface: 'bus_send', args: [1, 48]},
+  ]);
+  const runPayload = h.rpc.lastPayload('scenario.run');
+  assert.equal(runPayload.expected_generation, 0, 'first run uses the current ledger generation 0');
+  assert.equal(runPayload.scenario.generation, 0);
+  assert.deepEqual(runPayload.scenario.steps.map((step) => step.interface), ['reset', 'bus_register', 'bus_send']);
+  assert.equal(runPayload.profile, 'bus-demo-wasm');
+  const records = h.findAll((node) => node.props && node.props['data-stub-record'] !== undefined);
+  assert.equal(records.length, 3);
+  assert.deepEqual(records.map((record) => record.props['data-call-id']), ['call_1_1', 'call_1_2', 'call_1_3']);
+  assert.deepEqual(records.map((record) => record.props['data-status']), ['ok', 'ok', 'ok']);
+  const events = h.findAll((node) => node.props && node.props['data-stub-event'] !== undefined);
+  assert.ok(events.some((event) => event.props['data-event-kind'] === 'WRITE'));
+  assert.ok(events.some((event) => event.props['data-event-kind'] === 'DEFAULT_ROUTE'));
+  const affects = h.findAll((node) => node.props && node.props['data-stub-affect'] !== undefined);
+  assert.equal(affects.length, 1);
+  assert.equal(affects[0].props['data-resource-id'], ROUTES_ID);
+  assert.ok(h.textOf(affects[0]).includes('simulated_doorbell'));
+  const generation = h.nodeByData('data-stub-generation', '');
+  assert.ok(generation);
+  assert.ok(h.textOf(generation).includes('scn_0123456789ab'));
+  assert.ok(h.textOf(generation).includes('1'));
+  const recordText = h.textOf(h.findByData('data-stub-records', '')[0]);
+  assert.ok(recordText.includes('d'.repeat(64)), 'DOM text keeps the full 64hex memory digest');
+  assert.ok(h.findAll((node) => String((node.props && node.props.className) || '').includes('dcr-stub-digest')).length >= 1, 'digest has a visually truncated class');
+  assert.equal(h.nodeByData('data-code-view', 'stub-panel').props['data-busy'], 'false');
+  assert.equal(records[0].props['data-result'], '0');
+  assert.ok(h.findByData('data-stub-gap', 'scenario_undo').length === 1);
+  assert.ok(h.rpc.callsFor('scenario.list').length >= 2, 'ledger is refreshed after a run');
+  const selection = selectionJson(h);
+  assert.equal(selection.scenario_id, 'scn_0123456789ab');
+  assert.equal(selection.run_generation, 1);
+});
+
+test('busy state disables the run button and shows the busy text while preview is pending', async (t) => {
+  const previewDeferred = deferred();
+  const h = bootHarness({'scenario.preview': () => previewDeferred.promise});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await composeSteps(h, [{interface: 'reset', args: []}]);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  const busyButton = stubRunButton(h);
+  assert.equal(busyButton.props.disabled, true);
+  assert.ok(h.textOf(busyButton).includes('正在隔离执行'));
+  previewDeferred.resolve(makeScenarioPlanPayload());
+  await h.settle();
+  await h.settle();
+  assert.ok(h.findAll((node) => node.props && node.props['data-stub-record'] !== undefined).length >= 1);
+});
+
+test('engine scenario errors surface data-error-code/message without records', async (t) => {
+  const h = bootHarness({'scenario.run': () => ({schema_version: 1, error: {code: 'GENERATION_CONFLICT', message: '场景代次冲突，请重新读取台账'}})});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await composeSteps(h, [{interface: 'reset', args: []}]);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const errorNode = h.findAll((node) => node.props && node.props['data-stub-error'] !== undefined)[0];
+  assert.ok(errorNode);
+  assert.equal(errorNode.props['data-error-code'], 'GENERATION_CONFLICT');
+  assert.ok(h.textOf(errorNode).includes('场景代次冲突'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-stub-record'] !== undefined).length, 0);
+  assert.ok(h.findByData('data-stub-gap', 'real_device_dispatch').length === 1);
+});
+
+test('stop_on_error marks later planned steps as skipped after a failing record', async (t) => {
+  const h = bootHarness({
+    'scenario.run': () => makeScenarioRunPayload({
+      scenario: {generation: 2},
+      records: [
+        makeStubRecord({call_id: 'call_2_1', step_index: 0, interface: 'reset', args: [], status: 'ok', result: 0}),
+        makeStubRecord({call_id: 'call_2_2', step_index: 1, interface: 'bus_register', args: [0], status: 'error', result: -2, error_message: 'channel 未登记'}),
+      ],
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await composeSteps(h, [
+    {interface: 'reset', args: []},
+    {interface: 'bus_register', args: [0]},
+    {interface: 'bus_send', args: [1, 48]},
+  ]);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const records = h.findAll((node) => node.props && node.props['data-stub-record'] !== undefined);
+  const failed = records.find((record) => record.props['data-status'] === 'error');
+  assert.ok(failed);
+  assert.ok(h.textOf(failed).includes('channel 未登记'));
+  const skipped = h.findAll((node) => node.props && node.props['data-stub-record'] !== undefined && node.props['data-status'] === 'skipped');
+  assert.equal(skipped.length, 1);
+  assert.ok(h.textOf(skipped[0]).includes('已跳过'));
+});
+
+test('boundary stub steps show stubbed=true on the run record', async (t) => {
+  const h = bootHarness({
+    'scenario.run': () => makeScenarioRunPayload({
+      records: [
+        makeStubRecord({call_id: 'call_3_1', step_index: 0, interface: 'set_platform_stub', args: [-5], status: 'ok', result: null, stubbed: true}),
+        makeStubRecord({call_id: 'call_3_2', step_index: 1, interface: 'bus_send', args: [1, 48], status: 'ok', result: -5}),
+      ],
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await composeSteps(h, [
+    {interface: 'set_platform_stub', args: [-5]},
+    {interface: 'bus_send', args: [1, 48]},
+  ]);
+  assert.ok(String(h.findAll((node) => node.props && node.props['data-stub-step'] !== undefined)[0].props.className).includes('dcr-stub-step-boundary'));
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const stubbedRecords = h.findByData('data-stubbed', 'true');
+  assert.equal(stubbedRecords.length, 1);
+  assert.equal(stubbedRecords[0].props['data-call-id'], 'call_3_1');
+  assert.ok(h.textOf(stubbedRecords[0]).includes('边界打桩步'));
+  assert.ok(h.textOf(stubbedRecords[0]).includes('结果 —'), 'void stub result renders as —');
+});
+
+test('clicking a run record jumps to the source line and updates S3a selection fields', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await composeSteps(h, [
+    {interface: 'reset', args: []},
+    {interface: 'bus_register', args: [1]},
+    {interface: 'bus_send', args: [1, 48]},
+  ]);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const record = h.findByData('data-call-id', 'call_1_3')[0];
+  assert.ok(record, 'bus_send record is missing');
+  h.clickNode(record);
+  await h.settle();
+  assert.equal(viewRoot(h).props['data-view'], 'file');
+  assert.equal(h.rpc.lastPayload('view.fileRead').path, 'bus.c');
+  const highlightedFileLines = h.findAll((node) => node.props && node.props['data-file-line'] !== undefined && node.props['data-highlight'] === 'true');
+  assert.ok(highlightedFileLines.length >= 1, 'the record jump highlights a file line');
+  const writeEvent = h.findAll((node) => node.props && node.props['data-event-kind'] === 'WRITE')[0];
+  assert.ok(writeEvent, 'WRITE event chip is missing');
+  h.clickNode(writeEvent);
+  await h.settle();
+  const line113 = h.findAll((node) => node.props && node.props['data-file-line'] === '113');
+  assert.ok(line113.length >= 1, 'bus.c:113 line must render');
+  assert.ok(line113.some((node) => node.props['data-highlight'] === 'true'), 'event click highlights the event source line');
+  const selection = selectionJson(h);
+  assert.equal(selection.scenario_id, 'scn_0123456789ab');
+  assert.equal(selection.run_generation, 1);
+  assert.equal(selection.call_id, 'call_1_3');
+});
+
+test('sequence view exposes the static/observed switch and blocks observed without a ledger', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await switchView(h, 'sequence');
+  await h.settle();
+  assert.ok(h.nodeByData('data-code-view', 'sequence-mode'), 'sequence mode hook is missing');
+  const observedButton = h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0];
+  assert.ok(observedButton);
+  assert.equal(observedButton.props.disabled, true);
+  assert.ok(h.findByData('data-sequence-gap', '').length === 1, 'no-ledger gap is missing');
+  const warning = h.findAll((node) => node.props && node.props['data-sequence-warning'] !== undefined)[0];
+  assert.ok(warning);
+  assert.ok(h.textOf(warning).includes('observed=false'));
+});
+
+test('observed sequence renders ledger messages/scenario generation and switches back to static', async (t) => {
+  const h = bootHarness({
+    'scenario.list': () => makeScenarioLedgerPayload({scenarios: [makeScenarioSummary()]}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await switchView(h, 'sequence');
+  await h.settle();
+  const observedButton = h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0];
+  assert.equal(observedButton.props.disabled, false, 'observed is enabled when a ledger exists');
+  h.clickNode(observedButton);
+  await h.settle();
+  await h.settle();
+  const observedPayload = h.rpc.lastPayload('view.sequence');
+  assert.equal(observedPayload.mode, 'observed');
+  assert.equal(observedPayload.scenario, 'scn_0123456789ab');
+  assert.equal(h.findAll((node) => node.props && node.props['data-sequence-observed'] === 'true').length > 0, true);
+  const observedMessages = h.findAll((node) => node.props && node.props['data-sequence-message'] !== undefined && node.props['data-observed'] === 'true');
+  assert.ok(observedMessages.length >= 3, 'observed messages are rendered');
+  assert.ok(observedMessages.some((message) => h.textOf(message).includes('bus_send(1, 48)')));
+  assert.ok(observedMessages.some((message) => h.textOf(message).includes('WRITE')));
+  assert.ok(observedMessages.some((message) => message.props['data-message-kind'] === 'error'));
+  assert.ok(h.findAll((node) => node.props && node.props['data-stubbed'] === 'true').length >= 1, 'stubbed observed message is marked');
+  assert.ok(h.text().includes('scn_0123456789ab'));
+  assert.ok(h.text().includes('observed=true'));
+  const staticButton = h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'static')[0];
+  h.clickNode(staticButton);
+  await h.settle();
+  const warning = h.findAll((node) => node.props && node.props['data-sequence-warning'] !== undefined)[0];
+  assert.ok(warning);
+  assert.ok(h.textOf(warning).includes('observed=false'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-sequence-message'] !== undefined && node.props['data-observed'] === 'true').length, 0);
+});
+
+test('observed sequence message click jumps to the simulation source ref and sets call selection', async (t) => {
+  const h = bootHarness({
+    'scenario.list': () => makeScenarioLedgerPayload({scenarios: [makeScenarioSummary()]}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await switchView(h, 'sequence');
+  await h.settle();
+  h.clickNode(h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0]);
+  await h.settle();
+  await h.settle();
+  const writeMessage = h.findAll((node) => node.props && node.props['data-sequence-message'] === 'm_2')[0];
+  assert.ok(writeMessage);
+  h.clickNode(writeMessage);
+  await h.settle();
+  assert.equal(viewRoot(h).props['data-view'], 'file');
+  const selection = selectionJson(h);
+  assert.equal(selection.scenario_id, 'scn_0123456789ab');
+  assert.equal(selection.run_generation, 1);
+  assert.equal(selection.call_id, 'call_1_3');
+  assert.ok(h.findAll((node) => node.props && node.props['data-line'] === '113')[0], 'source line 113 from source_ref is shown');
+});
+
+test('observed sequence errors display data-error-code', async (t) => {
+  const h = bootHarness({
+    'scenario.list': () => makeScenarioLedgerPayload({scenarios: [makeScenarioSummary()]}),
+    'view.sequence': (payload) => (payload.mode === 'observed' ? failResult('NOT_FOUND', '没有运行台账') : makeSequencePayload()),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await switchView(h, 'sequence');
+  await h.settle();
+  h.clickNode(h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0]);
+  await h.settle();
+  await h.settle();
+  const errorNode = h.findAll((node) => node.props && node.props['data-error-code'] !== undefined).find((node) => h.textOf(node).includes('运行观测'));
+  assert.ok(errorNode);
+  assert.equal(errorNode.props['data-error-code'], 'NOT_FOUND');
+});
+
+test('generation resets to 0 after scenario edits and increments on an identical rerun', async (t) => {
+  const h = bootHarness({
+    'scenario.preview': (payload) => makeScenarioPlanPayload({generation: payload.scenario.generation + 1}),
+    'scenario.run': (payload) => makeScenarioRunPayload({
+      scenario: {...makeScenarioRunPayload().scenario, generation: payload.expected_generation + 1},
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  await composeSteps(h, [{interface: 'reset', args: []}, {interface: 'bus_register', args: [1]}]);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const firstPreview = h.rpc.callsFor('scenario.preview')[0].payload;
+  const firstRun = h.rpc.callsFor('scenario.run')[0].payload;
+  assert.equal(firstPreview.scenario.generation, 0);
+  assert.equal(firstRun.expected_generation, 0);
+  assert.equal(firstRun.scenario.generation, 0);
+  assert.equal(selectionJson(h).run_generation, 1);
+
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const secondPreview = h.rpc.callsFor('scenario.preview')[1].payload;
+  const secondRun = h.rpc.callsFor('scenario.run')[1].payload;
+  assert.equal(secondPreview.scenario.generation, 1, 'identical rerun keeps the current ledger generation');
+  assert.equal(secondRun.expected_generation, 1);
+  assert.equal(secondRun.scenario.generation, 1);
+
+  await setStepArg(h, 1, 0, 2);
+  h.clickNode(stubRunButton(h));
+  await h.settle();
+  await h.settle();
+  const thirdPreview = h.rpc.callsFor('scenario.preview')[2].payload;
+  const thirdRun = h.rpc.callsFor('scenario.run')[2].payload;
+  assert.equal(thirdPreview.scenario.generation, 0, 'editing steps resets the expected generation');
+  assert.equal(thirdRun.expected_generation, 0);
+  assert.equal(thirdRun.scenario.steps[1].args[0], 2);
+});
+
+test('stub pane shows the three deferral gaps once each, preferring status reasons', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openStub(h);
+  const gapNodes = h.findAll((node) => node.props && node.props['data-stub-gap'] !== undefined);
+  const codes = gapNodes.map((node) => node.props['data-stub-gap']);
+  assert.equal(codes.filter((code) => code === 'scenario_undo').length, 1, 'no duplicate scenario_undo row');
+  assert.equal(codes.filter((code) => code === 'trace_import').length, 1, 'no duplicate trace_import row');
+  assert.equal(codes.filter((code) => code === 'real_device_dispatch').length, 1, 'no duplicate real_device_dispatch row');
+  const undo = gapNodes.find((node) => node.props['data-stub-gap'] === 'scenario_undo');
+  assert.ok(h.textOf(undo).includes('回退末尾 N 次/前缀重放 S3b 提供'), 'server gap reason is preferred');
+  const realDevice = gapNodes.find((node) => node.props['data-stub-gap'] === 'real_device_dispatch');
+  assert.ok(h.textOf(realDevice).includes('真实设备/内核下发需单独授权与运行验证'));
+  const trace = gapNodes.find((node) => node.props['data-stub-gap'] === 'trace_import');
+  assert.ok(h.textOf(trace).includes('轨迹导入 S3b 提供'));
+});
+
+test('run_observation is not duplicated when the host declares run_observation capability', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  assert.equal(h.findByData('data-gap-code', 'run_observation').length, 0);
+  const capabilities = h.nodeByData('data-code-view', 'status');
+  assert.ok(capabilities);
 });

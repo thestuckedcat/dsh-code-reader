@@ -1,0 +1,2362 @@
+{
+  "schema_version": 1,
+  "stage": "S3a",
+  "contract": "docs/scenario-contract.md (CL-VIEW-T3-CONTRACT)",
+  "started_at_utc": "2026-11-15T08:37:19.137Z",
+  "purpose": "Independent black-box acceptance of S3a: stub panel + real isolated Wasm scenario execution ledger (3 records 0/0/0, stub -5, -2, invalid rejection), observed sequence mode, sim-profile registration through the real engine, S1/S2a/S2b regression and real Cordis mount/dispose/remount with real scenario.run.",
+  "host": {
+    "executable_path": "E:/dsh/DeepSeek Harness.exe",
+    "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+    "archive_path": "E:/dsh/resources/app.asar",
+    "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+    "dsh_version": "0.2.1-rc.5",
+    "embedded_node": "24.21.0",
+    "electron": "44.7.0"
+  },
+  "layers": {
+    "demo_observed": true,
+    "atlas_snapshot": true,
+    "dsh_host": true
+  },
+  "checks": {
+    "host.pinned_baseline": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "executable": {
+          "path": "E:/dsh/DeepSeek Harness.exe",
+          "sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+        },
+        "archive": {
+          "path": "E:/dsh/resources/app.asar",
+          "sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "dsh_version": "0.2.1-rc.5"
+        },
+        "completed_checks": 12,
+        "failed_checks": []
+      }
+    },
+    "host.client_s3_contract": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "ok": true,
+        "package": {
+          "name": "@local/dsh-code-reader",
+          "version": "0.1.0",
+          "main": "index.js",
+          "dsh": {
+            "bundle": {
+              "patch": "./cordis.patch.yml"
+            },
+            "client": {
+              "inject": [
+                "@deepseek-ai/dsh-client-connection",
+                "@deepseek-ai/dsh-client-ui-layout",
+                "@deepseek-ai/dsh-client-ui-renderer"
+              ],
+              "platform": "web"
+            }
+          }
+        },
+        "client_bundle": {
+          "path": "bundle/client.js",
+          "bytes": 259297,
+          "sha256": "3042c2859d73b5a37a234efc0e89cc41b879df116388f518e7eeb42ab5439f28"
+        },
+        "checks": {
+          "name": true,
+          "client_platform": true,
+          "client_export": true,
+          "client_bundle_exists": true,
+          "client_loader": true,
+          "client_s3_labels": true,
+          "client_s3_hooks": true
+        }
+      }
+    },
+    "host.isolated_profile": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "home": "scratch/readonly-home/home",
+        "home_is_isolated_from_user_profile": true,
+        "inbox": {
+          "path": "scratch/s3/inbox",
+          "files": [
+            "bus.wasm",
+            "sim-profile.json",
+            "snapshot-bus",
+            "workspace.json"
+          ],
+          "note": "isolated copy of Lead slice inbox + evidence/scenario-sim/inbox sim-profile.json + bus.wasm"
+        },
+        "bootstrap": {
+          "path": "scratch/readonly-home/home/code-reader/bootstrap.json",
+          "import_inbox_dir": "E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\inbox",
+          "candidate_roots": [
+            {
+              "root_ref": "slice-root",
+              "absolute_path": "evidence/code-view-slice"
+            }
+          ]
+        },
+        "python": {
+          "command": "E:/Anaconda-main/python.exe",
+          "version": "3.11.4",
+          "directory": "E:\\Anaconda-main"
+        },
+        "imports": {
+          "workspace": 0,
+          "snapshot": 0
+        },
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "path": "evidence/code-view-slice/snapshot/ed326d554334432b907de21297207eb8"
+        }
+      }
+    },
+    "host.entry_hints": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "entry_count": 19,
+        "bus_send_line": 152
+      }
+    },
+    "atlas.sim_profile_import": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile sim-profile.json --operation-id <uuid>",
+        "profile_id": "bus-demo-wasm",
+        "label": "Demo bus/platform Wasm 隔离模拟",
+        "binding": {
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "snapshot_id": "ed326d554334432b907de21297207eb8"
+        },
+        "module": {
+          "sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+          "bytes": 1547
+        },
+        "module_sha256_expected": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+        "module_bytes": 1547,
+        "interface_count": 7,
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.sim_profile_list": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "sim-profile-list --workspace code-view-bus-demo",
+        "profiles": [
+          {
+            "profile_id": "bus-demo-wasm",
+            "label": "Demo bus/platform Wasm 隔离模拟",
+            "module_sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+            "interface_count": 7,
+            "limits": {
+              "timeout_ms": 10000,
+              "steps": 20,
+              "events_per_step": 256
+            },
+            "trace_events": {
+              "BUFFERED": 14,
+              "CHECK_LENGTH": 6,
+              "COMMIT": 12,
+              "DEFAULT_ROUTE": 1,
+              "DIRECT": 13,
+              "DOORBELL": 19,
+              "ENCODE": 11,
+              "INVALID": 8,
+              "IRQ": 17,
+              "LIBRARY": 16,
+              "LOCK": 15,
+              "LOOKUP": 5,
+              "REQUEST": 4,
+              "STAGE": 10,
+              "STORE_ROUTE": 3,
+              "STUB_ROUTE": 2,
+              "TRANSFER": 9,
+              "UNREGISTER": 18,
+              "WRITE": 7
+            }
+          }
+        ],
+        "interfaces": [
+          {
+            "name": "reset",
+            "returns": "void",
+            "role": "util",
+            "entry_id": null,
+            "params": []
+          },
+          {
+            "name": "bus_register",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_5aad5c091d5772eb2dada479",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              }
+            ]
+          },
+          {
+            "name": "stub_route",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_4962656fc82c513cdd5a744c",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              },
+              {
+                "name": "lane",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              },
+              {
+                "name": "max_len",
+                "type": "u32",
+                "min": 1,
+                "max": 65535
+              }
+            ]
+          },
+          {
+            "name": "bus_unregister",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_a691fe380ba8d75efac40379",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              }
+            ]
+          },
+          {
+            "name": "bus_send",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_afa8298f2d197e5fd110e49a",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              },
+              {
+                "name": "length",
+                "type": "u32",
+                "min": 0,
+                "max": 65535
+              }
+            ]
+          },
+          {
+            "name": "bus_irq",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_ff22940e08661e4950585599",
+            "params": []
+          },
+          {
+            "name": "set_platform_stub",
+            "returns": "void",
+            "role": "stub_control",
+            "entry_id": null,
+            "params": [
+              {
+                "name": "return_code",
+                "type": "i32",
+                "min": -4095,
+                "max": 0
+              }
+            ]
+          }
+        ],
+        "limits": {
+          "timeout_ms": 10000,
+          "steps": 20,
+          "events_per_step": 256
+        },
+        "error": null
+      }
+    },
+    "atlas.scenario_plan": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "scenario-plan --workspace code-view-bus-demo --snapshot <snapshot> --profile bus-demo-wasm --scenario-json <base64>",
+        "plan_id": "plan_c59921350f0b6c6aa91907f8632ca54b",
+        "scenario_id": "scn_0eb3626beb3d",
+        "generation": 1,
+        "steps": [
+          {
+            "index": 0,
+            "interface": "reset",
+            "role": "util",
+            "args": []
+          },
+          {
+            "index": 1,
+            "interface": "bus_register",
+            "role": "entry",
+            "args": [
+              2
+            ]
+          },
+          {
+            "index": 2,
+            "interface": "bus_send",
+            "role": "entry",
+            "args": [
+              2,
+              48
+            ]
+          }
+        ],
+        "limits": {
+          "timeout_ms": 10000,
+          "steps": 20,
+          "events_per_step": 256
+        },
+        "expires_at": "2026-11-15T08:47:20Z",
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.scenario_module": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "ok": true,
+        "bytes": 1547,
+        "sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+        "expected_sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+        "expected_bytes": 1547,
+        "trace": {
+          "import": {
+            "field": "trace",
+            "module": "env"
+          },
+          "signature": [
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+          ],
+          "events": {
+            "BUFFERED": 14,
+            "CHECK_LENGTH": 6,
+            "COMMIT": 12,
+            "DEFAULT_ROUTE": 1,
+            "DIRECT": 13,
+            "DOORBELL": 19,
+            "ENCODE": 11,
+            "INVALID": 8,
+            "IRQ": 17,
+            "LIBRARY": 16,
+            "LOCK": 15,
+            "LOOKUP": 5,
+            "REQUEST": 4,
+            "STAGE": 10,
+            "STORE_ROUTE": 3,
+            "STUB_ROUTE": 2,
+            "TRANSFER": 9,
+            "UNREGISTER": 18,
+            "WRITE": 7
+          }
+        },
+        "profile_id": "bus-demo-wasm",
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "host.web_shell": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "final_url": "http://127.0.0.1:3703/",
+        "redirects": 1,
+        "bytes": 38241,
+        "cookies_issued_by_host": [
+          "dsh-auth-umKKAw8rE8zpKTphxXnXQtjFvrW6WP0ue7_3qdNccxk"
+        ]
+      }
+    },
+    "host.boot_release": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "release": {
+          "version": "0.2.1-rc.5",
+          "commit": "d4db512"
+        },
+        "entries": 71
+      }
+    },
+    "host.boot_graph_entry": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "entry": {
+          "id": "@local/dsh-code-reader",
+          "url": "plugins/??@local/dsh-code-reader/client.js&rev=3c019e0bdab2",
+          "inject": [
+            "@deepseek-ai/dsh-client-connection",
+            "@deepseek-ai/dsh-client-ui-layout",
+            "@deepseek-ai/dsh-client-ui-renderer"
+          ]
+        },
+        "plugin_entries": 71
+      }
+    },
+    "host.boot_graph_inject": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "boot_graph_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ],
+        "package_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ]
+      }
+    },
+    "host.client_bundle_bytes": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "fetched": true,
+        "url": "http://127.0.0.1:3703/plugins/??@local/dsh-code-reader/client.js&rev=3c019e0bdab2",
+        "status": 200,
+        "bytes": 259377,
+        "sha256": "ce35309be220d258a03c14a667c8a6fe6bf97437ecac155ead0c277c5d529895",
+        "repo_bytes": 259297,
+        "exact_prefix": true
+      }
+    },
+    "host.rpc_admission": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 401,
+        "body_head": "unauthorized",
+        "interpretation": "connection admission refused the cookie-less request (seam active)"
+      }
+    },
+    "host.rpc_view_status": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "capabilities": {
+          "readonly_workbench": true,
+          "five_views": true,
+          "resource_graph": true,
+          "group_collapse": true,
+          "interface_library": true,
+          "subflow_breadcrumb": true,
+          "scenario_execution": true,
+          "run_observation": true,
+          "scenario_undo": false,
+          "trace_import": false,
+          "real_device_dispatch": false,
+          "ai_summary": false
+        },
+        "gaps": [
+          "ai_summary",
+          "scenario_undo",
+          "trace_import",
+          "real_device_dispatch"
+        ],
+        "engine": {
+          "python": "available",
+          "bootstrap": {
+            "configured": true,
+            "exists": true
+          }
+        }
+      }
+    },
+    "host.rpc_list_snapshots": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "manifest_sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6",
+          "tool_version": "0.8.0",
+          "status": "verified",
+          "freshness": "fresh",
+          "atlas_schema": "0.1",
+          "imported_at": "2026-11-15T08:37:19Z",
+          "entry_count": 19,
+          "coverage": {
+            "failed_count": 0,
+            "pending_count": 0,
+            "whole_program_complete": false
+          },
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "limitations": [],
+          "error": null
+        }
+      }
+    },
+    "host.rpc_list_profiles": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "profiles": [
+          {
+            "profile_id": "bus-demo-wasm",
+            "module_sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+            "interface_count": 7
+          }
+        ],
+        "error": null
+      }
+    },
+    "host.rpc_scenario_preview": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "plan_id": "plan_0c85a5b15fe355fe854c2168915db471",
+        "steps": 3,
+        "error": null
+      }
+    },
+    "host.rpc_scenario_run_a": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "scenario_id": "scn_0eb3626beb3d",
+        "generation": 1,
+        "records": [
+          {
+            "call_id": "call_1_1",
+            "interface": "reset",
+            "args": [],
+            "status": "ok",
+            "result": null,
+            "stubbed": false,
+            "event_count": 0,
+            "records_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b"
+          },
+          {
+            "call_id": "call_1_2",
+            "interface": "bus_register",
+            "args": [
+              2
+            ],
+            "status": "ok",
+            "result": 0,
+            "stubbed": false,
+            "event_count": 2,
+            "records_digest": "8f2ee9f92e432caceddec1a0cc84c9fc82e682372ec2303ba05c07c162cddcd9"
+          },
+          {
+            "call_id": "call_1_3",
+            "interface": "bus_send",
+            "args": [
+              2,
+              48
+            ],
+            "status": "ok",
+            "result": 0,
+            "stubbed": false,
+            "event_count": 12,
+            "records_digest": "309ef296ea6d05a9bf511e494c3c0d9b93a879450f67fe94406de61ae8e7206d"
+          }
+        ],
+        "events": [
+          "DEFAULT_ROUTE",
+          "STORE_ROUTE",
+          "REQUEST",
+          "LOOKUP",
+          "CHECK_LENGTH",
+          "LOCK",
+          "TRANSFER",
+          "DIRECT",
+          "COMMIT",
+          "ENCODE",
+          "DOORBELL",
+          "LIBRARY",
+          "WRITE"
+        ],
+        "write_affects": [
+          {
+            "resource_id": "s_0860e6738eaa8c95f37d0d03",
+            "name": "routes",
+            "access": "read"
+          },
+          {
+            "resource_id": "s_0860e6738eaa8c95f37d0d03",
+            "name": "routes",
+            "access": "read",
+            "field": "max_len"
+          },
+          {
+            "resource_id": "s_8cd93ce6e6fb42be71433996",
+            "name": "transfer_lock",
+            "access": "write"
+          },
+          {
+            "resource_id": "s_22e3bdf7575b507b6201e6be",
+            "name": "platform_status",
+            "access": "read"
+          },
+          {
+            "resource_id": "s_48a2fcb62cdba6e1c7bf5528",
+            "name": "simulated_doorbell",
+            "access": "write"
+          }
+        ],
+        "error": null
+      }
+    },
+    "host.rpc_scenario_run_b": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "records": [
+          {
+            "interface": "reset",
+            "status": "ok",
+            "result": null,
+            "stubbed": false
+          },
+          {
+            "interface": "bus_register",
+            "status": "ok",
+            "result": 0,
+            "stubbed": false
+          },
+          {
+            "interface": "set_platform_stub",
+            "status": "ok",
+            "result": null,
+            "stubbed": true
+          },
+          {
+            "interface": "bus_send",
+            "status": "error",
+            "result": -5,
+            "stubbed": false
+          }
+        ],
+        "lock_events": [
+          {
+            "event_id": "ev_1_3_3",
+            "event": "LOCK",
+            "code": 15,
+            "a": 1,
+            "b": 0,
+            "c": 0,
+            "line": 169
+          },
+          {
+            "event_id": "ev_1_3_10",
+            "event": "LOCK",
+            "code": 15,
+            "a": 0,
+            "b": 0,
+            "c": 0,
+            "line": 172
+          }
+        ],
+        "error": null
+      }
+    },
+    "host.rpc_scenario_run_c": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "send": {
+          "call_id": "call_1_2",
+          "step_index": 1,
+          "interface": "bus_send",
+          "args": [
+            0,
+            49
+          ],
+          "status": "error",
+          "result": -2,
+          "memory_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b",
+          "affected_resources": [
+            {
+              "resource_id": "s_0860e6738eaa8c95f37d0d03",
+              "name": "routes",
+              "access": "read"
+            }
+          ],
+          "stubbed": false,
+          "execution_events": [
+            {
+              "event_id": "ev_1_1_0",
+              "event": "REQUEST",
+              "code": 4,
+              "a": 0,
+              "b": 49,
+              "c": 0,
+              "line": 154
+            },
+            {
+              "event_id": "ev_1_1_1",
+              "event": "LOOKUP",
+              "code": 5,
+              "a": 0,
+              "b": 0,
+              "c": 0,
+              "line": 92
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    "host.rpc_invalid_scenario": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "code": "INVALID_ARGUMENT",
+        "result": {
+          "ok": true,
+          "value": {
+            "schema_version": 1,
+            "error": {
+              "code": "INVALID_ARGUMENT",
+              "message": "scenario.steps[0].args[0] is outside the declared range [0, 3]",
+              "details_ref": null,
+              "retryable": false
+            },
+            "operation_id": null
+          }
+        },
+        "ledger_before": 3,
+        "ledger_after": 3
+      }
+    },
+    "host.rpc_scenario_list": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "scenarios": [
+          {
+            "scenario_id": "scn_0eb3626beb3d",
+            "generation": 1,
+            "step_count": 3,
+            "profile_id": "bus-demo-wasm"
+          },
+          {
+            "scenario_id": "scn_2feaa2ca08f4",
+            "generation": 1,
+            "step_count": 2,
+            "profile_id": "bus-demo-wasm"
+          },
+          {
+            "scenario_id": "scn_ca4c87dae0b1",
+            "generation": 1,
+            "step_count": 4,
+            "profile_id": "bus-demo-wasm"
+          }
+        ]
+      }
+    },
+    "host.rpc_scenario_get": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "generation": 1,
+        "record_count": 3,
+        "records_digest": "6af60df6bee754454e52fd24353cfff188758265e2d3c4855317de02567b1892"
+      }
+    },
+    "host.rpc_sequence_observed": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "mode": "observed",
+        "message_count": 20,
+        "message_kinds": [
+          "call",
+          "return",
+          "access",
+          "event"
+        ],
+        "error": null
+      }
+    },
+    "host.rpc_sequence_static": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "mode": "static",
+        "observed": false
+      }
+    },
+    "atlas.scenario_list": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "scenario-list --workspace code-view-bus-demo",
+        "scenarios": [
+          {
+            "scenario_id": "scn_0eb3626beb3d",
+            "generation": 1,
+            "step_count": 3,
+            "profile_id": "bus-demo-wasm",
+            "records_digest": "6af60df6bee754454e52fd24353cfff188758265e2d3c4855317de02567b1892"
+          },
+          {
+            "scenario_id": "scn_2feaa2ca08f4",
+            "generation": 1,
+            "step_count": 2,
+            "profile_id": "bus-demo-wasm",
+            "records_digest": "14ce416d520084dd95feb3cc490e7a5c0ed27be0cccbf0733eaf6efdd35d5033"
+          },
+          {
+            "scenario_id": "scn_ca4c87dae0b1",
+            "generation": 1,
+            "step_count": 4,
+            "profile_id": "bus-demo-wasm",
+            "records_digest": "147e01777f2c165195c5a9c16034c17f4a554dc18eaec8f14bcef8b1276c63b5"
+          }
+        ],
+        "error": null
+      }
+    },
+    "atlas.scenario_get": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "scenario-get --workspace code-view-bus-demo --scenario <id>",
+        "generation": 1,
+        "record_count": 3,
+        "results": [
+          null,
+          0,
+          0
+        ],
+        "records_digest": "6af60df6bee754454e52fd24353cfff188758265e2d3c4855317de02567b1892",
+        "error": null
+      }
+    },
+    "atlas.view_sequence_observed": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-sequence-observed --workspace code-view-bus-demo --scenario <id>",
+        "mode": "observed",
+        "message_count": 20,
+        "messages": [
+          {
+            "kind": "call",
+            "label": "reset()",
+            "event": null,
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "return",
+            "label": "返回 null",
+            "event": null,
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "call",
+            "label": "bus_register(2)",
+            "event": null,
+            "result": 0,
+            "observed": true
+          },
+          {
+            "kind": "access",
+            "label": "DEFAULT_ROUTE: read route_defaults",
+            "event": "DEFAULT_ROUTE",
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "access",
+            "label": "STORE_ROUTE: write routes",
+            "event": "STORE_ROUTE",
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "return",
+            "label": "返回 0",
+            "event": null,
+            "result": 0,
+            "observed": true
+          },
+          {
+            "kind": "call",
+            "label": "bus_send(2, 48)",
+            "event": null,
+            "result": 0,
+            "observed": true
+          },
+          {
+            "kind": "event",
+            "label": "REQUEST",
+            "event": "REQUEST",
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "access",
+            "label": "LOOKUP: read routes",
+            "event": "LOOKUP",
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "access",
+            "label": "CHECK_LENGTH: read routes",
+            "event": "CHECK_LENGTH",
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "access",
+            "label": "LOCK: write transfer_lock",
+            "event": "LOCK",
+            "result": null,
+            "observed": true
+          },
+          {
+            "kind": "event",
+            "label": "TRANSFER",
+            "event": "TRANSFER",
+            "result": null,
+            "observed": true
+          }
+        ],
+        "scenario": {
+          "scenario_id": "scn_0eb3626beb3d",
+          "generation": 1,
+          "profile_id": "bus-demo-wasm",
+          "workspace_id": "code-view-bus-demo",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "records_digest": "6af60df6bee754454e52fd24353cfff188758265e2d3c4855317de02567b1892",
+          "created_at": "2026-11-15T08:37:23Z"
+        },
+        "error": null
+      }
+    },
+    "host.s3_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "duration_ms": 38724,
+        "failed_steps": [],
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "sidebarEntry": true,
+          "panelOpened": true,
+          "statusReady": true,
+          "entryListed": true,
+          "entryClicked": true,
+          "workbenchOpened": true,
+          "stubPanelOpened": true,
+          "stubRun": true,
+          "observedSequence": true,
+          "stubChrome": true,
+          "mainScreenshot": true,
+          "selectionFields": true,
+          "noAbsolutePaths": true,
+          "noConsoleErrors": true
+        },
+        "console_error_count": 0,
+        "screenshots": {
+          "stub-run": {
+            "path": "evidence/s3/s3-stub-run.png",
+            "bytes": 336564,
+            "sha256": "e2db04b55b4c7cb055325543b8dee5f9965763a829fa30bacf25406adab048a2"
+          },
+          "stub-stub": {
+            "path": "evidence/s3/s3-stub-stub.png",
+            "bytes": 294786,
+            "sha256": "c363f4279705f0e014bcb4d1c08e8e7625638e688f74274d36a55a818c2c4e8d"
+          },
+          "sequence-observed": {
+            "path": "evidence/s3/s3-sequence-observed.png",
+            "bytes": 289706,
+            "sha256": "c73156fd134f16acb2965a963be8a4f1d67977b86077e417512639bd09d7d342"
+          },
+          "main": {
+            "path": "evidence/s3/s3-main.png",
+            "bytes": 329036,
+            "sha256": "bb0f562d08d8c1949d3cb8147049d743967d77e0bb1ce85a7be490e32a6844ce"
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "host.s3_screenshots": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "required": [
+          "stub-run",
+          "stub-stub",
+          "sequence-observed",
+          "main"
+        ],
+        "copied": {
+          "stub-run": {
+            "path": "evidence/s3/s3-stub-run.png",
+            "bytes": 336564,
+            "sha256": "e2db04b55b4c7cb055325543b8dee5f9965763a829fa30bacf25406adab048a2"
+          },
+          "stub-stub": {
+            "path": "evidence/s3/s3-stub-stub.png",
+            "bytes": 294786,
+            "sha256": "c363f4279705f0e014bcb4d1c08e8e7625638e688f74274d36a55a818c2c4e8d"
+          },
+          "sequence-observed": {
+            "path": "evidence/s3/s3-sequence-observed.png",
+            "bytes": 289706,
+            "sha256": "c73156fd134f16acb2965a963be8a4f1d67977b86077e417512639bd09d7d342"
+          },
+          "main": {
+            "path": "evidence/s3/s3-main.png",
+            "bytes": 329036,
+            "sha256": "bb0f562d08d8c1949d3cb8147049d743967d77e0bb1ce85a7be490e32a6844ce"
+          }
+        },
+        "unique_frames": 4
+      }
+    },
+    "host.s3_stub_run": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "panelOpened": true,
+          "profileSelector": true,
+          "profileInterfaces": true,
+          "profileBindingVisible": true,
+          "interfaceOptions": true,
+          "stepEditor": true,
+          "stopOnError": true,
+          "stepsBuiltA": true,
+          "recordsA3": true,
+          "resultsA000": true,
+          "eventSetA": true,
+          "writeAffects": true,
+          "memoryDigest": true,
+          "callIds": true,
+          "statusOk": true,
+          "generationIncrement": true,
+          "recordsB4": true,
+          "stubStepMarked": true,
+          "sendResultMinus5": true,
+          "noWriteInB": true,
+          "lockOneToZero": true,
+          "statusOkB": true,
+          "sendStatusErrorB": true,
+          "sendResultMinus2": true,
+          "invalidRejected": true,
+          "invalidNoLedger": true
+        },
+        "detail": {
+          "profile": {
+            "ok": true,
+            "mode": "select",
+            "options": [
+              "",
+              "bus-demo-wasm"
+            ]
+          },
+          "interfaceOptions": [
+            "接口…",
+            "bus_register",
+            "stub_route",
+            "bus_unregister",
+            "bus_send",
+            "bus_irq",
+            "set_platform_stub",
+            "reset"
+          ],
+          "steps_built": [
+            {
+              "index": 0,
+              "interface_value": "reset",
+              "interface_text": "接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset",
+              "args": [],
+              "text": "#1 接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset 上移 下移 移除"
+            },
+            {
+              "index": 1,
+              "interface_value": "bus_register",
+              "interface_text": "接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset",
+              "args": [
+                {
+                  "value": "1",
+                  "min": "0",
+                  "max": "3"
+                }
+              ],
+              "text": "#2 接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset channel:u32 [0,3] 上移 下移 移除"
+            },
+            {
+              "index": 2,
+              "interface_value": "bus_send",
+              "interface_text": "接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset",
+              "args": [
+                {
+                  "value": "1",
+                  "min": "0",
+                  "max": "3"
+                },
+                {
+                  "value": "48",
+                  "min": "0",
+                  "max": "65535"
+                }
+              ],
+              "text": "#3 接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset channel:u32 [0,3] length:u32 [0,65535] 上移 下移 移除"
+            }
+          ],
+          "records_a": [
+            {
+              "call_id": "call_1_1",
+              "status": "ok",
+              "result": null,
+              "stubbed": null,
+              "memory_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b",
+              "events": [],
+              "affects": []
+            },
+            {
+              "call_id": "call_1_2",
+              "status": "ok",
+              "result": "0",
+              "stubbed": null,
+              "memory_digest": "19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1",
+              "events": [
+                "DEFAULT_ROUTE",
+                "STORE_ROUTE"
+              ],
+              "affects": [
+                {
+                  "resource_id": "s_df7e9ea6246145b01953fcaa",
+                  "text": "route_defaults · 读取"
+                },
+                {
+                  "resource_id": "s_0860e6738eaa8c95f37d0d03",
+                  "text": "routes · 写入 / 修改"
+                }
+              ]
+            },
+            {
+              "call_id": "call_1_3",
+              "status": "ok",
+              "result": "0",
+              "stubbed": null,
+              "memory_digest": "2b34d0d64694207443ed6cb6d9e8b0c42ebad1e6c4e4833651a4e24bf44d60ea",
+              "events": [
+                "REQUEST",
+                "LOOKUP",
+                "CHECK_LENGTH",
+                "LOCK",
+                "TRANSFER",
+                "DIRECT",
+                "COMMIT",
+                "ENCODE",
+                "DOORBELL",
+                "LIBRARY",
+                "WRITE",
+                "LOCK"
+              ],
+              "affects": [
+                {
+                  "resource_id": "s_0860e6738eaa8c95f37d0d03",
+                  "text": "routes · 读取"
+                },
+                {
+                  "resource_id": "s_0860e6738eaa8c95f37d0d03",
+                  "text": "routes · 读取"
+                },
+                {
+                  "resource_id": "s_8cd93ce6e6fb42be71433996",
+                  "text": "transfer_lock · 写入 / 修改"
+                },
+                {
+                  "resource_id": "s_22e3bdf7575b507b6201e6be",
+                  "text": "platform_status · 读取"
+                },
+                {
+                  "resource_id": "s_48a2fcb62cdba6e1c7bf5528",
+                  "text": "simulated_doorbell · 写入 / 修改"
+                }
+              ]
+            }
+          ],
+          "events_a": [
+            "DEFAULT_ROUTE",
+            "STORE_ROUTE",
+            "REQUEST",
+            "LOOKUP",
+            "CHECK_LENGTH",
+            "LOCK",
+            "TRANSFER",
+            "DIRECT",
+            "COMMIT",
+            "ENCODE",
+            "DOORBELL",
+            "LIBRARY",
+            "WRITE"
+          ],
+          "stub_record": {
+            "call_id": "call_1_3",
+            "status": "ok",
+            "stubbed": "true",
+            "result": null,
+            "text": "#3 step 2 set_platform_stub(-5) status ok 结果 — 边界打桩步 memory 516376f7ccc58e26c879de2668138f7635bacec133cfb7124f8e824026ee6b3b",
+            "events": [],
+            "affects": [],
+            "memory_digest": "516376f7ccc58e26c879de2668138f7635bacec133cfb7124f8e824026ee6b3b"
+          },
+          "send_record_b": {
+            "call_id": "call_1_4",
+            "status": "error",
+            "stubbed": null,
+            "result": "-5",
+            "text": "#4 step 3 bus_send(1, 48) status error 结果 -5 memory 516376f7ccc58e26c879de2668138f7635bacec133cfb7124f8e824026ee6b3b REQUEST@154 #4 LOOKUP@92 #5 CHECK_LENGTH@99 #6 LOCK@169 #15 TRANSFER@146 #9 DIRECT@132 #13 COMMIT@118 #12 ENCODE@106 #11 DOORBELL@112 #19 LIBRARY@21 #16 LOCK@172 #15 routes · 读取 routes · 读取 transfer_lock · 写入 / 修改 platform_status · 读取 返回 -5",
+            "events": [
+              {
+                "kind": "REQUEST",
+                "text": "REQUEST@154 #4",
+                "title": "REQUEST code=4 a=1 b=48 c=0 line=154",
+                "a": 1,
+                "b": 48,
+                "c": 0
+              },
+              {
+                "kind": "LOOKUP",
+                "text": "LOOKUP@92 #5",
+                "title": "LOOKUP code=5 a=1 b=2 c=64 line=92",
+                "a": 1,
+                "b": 2,
+                "c": 64
+              },
+              {
+                "kind": "CHECK_LENGTH",
+                "text": "CHECK_LENGTH@99 #6",
+                "title": "CHECK_LENGTH code=6 a=48 b=64 c=1 line=99",
+                "a": 48,
+                "b": 64,
+                "c": 1
+              },
+              {
+                "kind": "LOCK",
+                "text": "LOCK@169 #15",
+                "title": "LOCK code=15 a=1 b=0 c=0 line=169",
+                "a": 1,
+                "b": 0,
+                "c": 0
+              },
+              {
+                "kind": "TRANSFER",
+                "text": "TRANSFER@146 #9",
+                "title": "TRANSFER code=9 a=48 b=0 c=48 line=146",
+                "a": 48,
+                "b": 0,
+                "c": 48
+              },
+              {
+                "kind": "DIRECT",
+                "text": "DIRECT@132 #13",
+                "title": "DIRECT code=13 a=2 b=48 c=0 line=132",
+                "a": 2,
+                "b": 48,
+                "c": 0
+              },
+              {
+                "kind": "COMMIT",
+                "text": "COMMIT@118 #12",
+                "title": "COMMIT code=12 a=2 b=48 c=0 line=118",
+                "a": 2,
+                "b": 48,
+                "c": 0
+              },
+              {
+                "kind": "ENCODE",
+                "text": "ENCODE@106 #11",
+                "title": "ENCODE code=11 a=2 b=48 c=131120 line=106",
+                "a": 2,
+                "b": 48,
+                "c": 131120
+              },
+              {
+                "kind": "DOORBELL",
+                "text": "DOORBELL@112 #19",
+                "title": "DOORBELL code=19 a=4160 b=131120 c=0 line=112",
+                "a": 4160,
+                "b": 131120,
+                "c": 0
+              },
+              {
+                "kind": "LIBRARY",
+                "text": "LIBRARY@21 #16",
+                "title": "LIBRARY code=16 a=4160 b=131120 c=-5 line=21",
+                "a": 4160,
+                "b": 131120,
+                "c": -5
+              },
+              {
+                "kind": "LOCK",
+                "text": "LOCK@172 #15",
+                "title": "LOCK code=15 a=0 b=0 c=0 line=172",
+                "a": 0,
+                "b": 0,
+                "c": 0
+              }
+            ],
+            "affects": [
+              {
+                "resource_id": "s_0860e6738eaa8c95f37d0d03",
+                "text": "routes · 读取"
+              },
+              {
+                "resource_id": "s_0860e6738eaa8c95f37d0d03",
+                "text": "routes · 读取"
+              },
+              {
+                "resource_id": "s_8cd93ce6e6fb42be71433996",
+                "text": "transfer_lock · 写入 / 修改"
+              },
+              {
+                "resource_id": "s_22e3bdf7575b507b6201e6be",
+                "text": "platform_status · 读取"
+              }
+            ],
+            "memory_digest": "516376f7ccc58e26c879de2668138f7635bacec133cfb7124f8e824026ee6b3b"
+          },
+          "lock_events": [
+            {
+              "text": "LOCK@169 #15",
+              "a": 1,
+              "b": 0,
+              "c": 0,
+              "title": "LOCK code=15 a=1 b=0 c=0 line=169"
+            },
+            {
+              "text": "LOCK@172 #15",
+              "a": 0,
+              "b": 0,
+              "c": 0,
+              "title": "LOCK code=15 a=0 b=0 c=0 line=172"
+            }
+          ],
+          "send_record_c": {
+            "call_id": "call_1_2",
+            "status": "error",
+            "stubbed": null,
+            "result": "-2",
+            "text": "#2 step 1 bus_send(0, 48) status error 结果 -2 memory 53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b REQUEST@154 #4 LOOKUP@92 #5 routes · 读取 返回 -2",
+            "events": [
+              {
+                "kind": "REQUEST",
+                "text": "REQUEST@154 #4",
+                "title": "REQUEST code=4 a=0 b=48 c=0 line=154",
+                "a": 0,
+                "b": 48,
+                "c": 0
+              },
+              {
+                "kind": "LOOKUP",
+                "text": "LOOKUP@92 #5",
+                "title": "LOOKUP code=5 a=0 b=0 c=0 line=92",
+                "a": 0,
+                "b": 0,
+                "c": 0
+              }
+            ],
+            "affects": [
+              {
+                "resource_id": "s_0860e6738eaa8c95f37d0d03",
+                "text": "routes · 读取"
+              }
+            ],
+            "memory_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b"
+          },
+          "invalid_error_codes": [
+            "INVALID_ARGUMENT",
+            "INVALID_ARGUMENT"
+          ],
+          "observed_messages": null,
+          "observed_attr_text": null,
+          "static_state": null,
+          "undo": null,
+          "gaps": null,
+          "selection": null
+        }
+      }
+    },
+    "host.s3_observed_sequence": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "sequenceView": true,
+          "modeControl": true,
+          "observedMode": true,
+          "callMessage": true,
+          "eventMessages": true,
+          "platformBoundary": true,
+          "returnMessage": true,
+          "allObserved": true,
+          "staticRestored": true
+        },
+        "detail": {
+          "profile": null,
+          "interfaceOptions": null,
+          "steps_built": null,
+          "records_a": [],
+          "events_a": null,
+          "stub_record": null,
+          "send_record_b": null,
+          "lock_events": null,
+          "send_record_c": null,
+          "invalid_error_codes": null,
+          "observed_messages": [
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#1 调用方 → 驱动 reset() 调用 运行观测 call call_2_1 status ok"
+            },
+            {
+              "kind": "return",
+              "observed": "true",
+              "text": "#2 驱动 → 调用方 返回 null 返回 运行观测 call call_2_1 status ok"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#3 调用方 → 驱动 bus_register(1) 调用 运行观测 call call_2_2 status ok 结果 0"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#4 驱动 → 驱动资源 DEFAULT_ROUTE: read route_defaults 资源访问 运行观测 call call_2_2 event DEFAULT_ROUTE #1 route_defaults · 读取"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#5 驱动 → 驱动资源 STORE_ROUTE: write routes 资源访问 运行观测 call call_2_2 event STORE_ROUTE #3 routes · 写入 / 修改"
+            },
+            {
+              "kind": "return",
+              "observed": "true",
+              "text": "#6 驱动 → 调用方 返回 0 返回 运行观测 call call_2_2 status ok 结果 0"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#7 调用方 → 驱动 bus_send(1, 48) 调用 运行观测 call call_2_3 status ok 结果 0"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#8 驱动 → 驱动 REQUEST 调用 运行观测 call call_2_3 event REQUEST #4"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#9 驱动 → 驱动资源 LOOKUP: read routes 资源访问 运行观测 call call_2_3 event LOOKUP #5 routes · 读取"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#10 驱动 → 驱动资源 CHECK_LENGTH: read routes 资源访问 运行观测 call call_2_3 event CHECK_LENGTH #6 routes · 读取"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#11 驱动 → 驱动资源 LOCK: write transfer_lock 资源访问 运行观测 call call_2_3 event LOCK #15 transfer_lock · 写入 / 修改"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#12 驱动 → 驱动 TRANSFER 调用 运行观测 call call_2_3 event TRANSFER #9"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#13 驱动 → 驱动 DIRECT 调用 运行观测 call call_2_3 event DIRECT #13"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#14 驱动 → 驱动 COMMIT 调用 运行观测 call call_2_3 event COMMIT #12"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#15 驱动 → 驱动 ENCODE 调用 运行观测 call call_2_3 event ENCODE #11"
+            },
+            {
+              "kind": "call",
+              "observed": "true",
+              "text": "#16 驱动 → 驱动 DOORBELL 调用 运行观测 call call_2_3 event DOORBELL #19"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#17 驱动 → 平台/设备边界 LIBRARY: read platform_status 资源访问 运行观测 call call_2_3 event LIBRARY #16 platform_status · 读取"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#18 驱动 → 平台/设备边界 WRITE: write simulated_doorbell 资源访问 运行观测 call call_2_3 event WRITE #7 simulated_doorbell · 写入 / 修改"
+            },
+            {
+              "kind": "access",
+              "observed": "true",
+              "text": "#19 驱动 → 驱动资源 LOCK: write transfer_lock 资源访问 运行观测 call call_2_3 event LOCK #15 transfer_lock · 写入 / 修改"
+            },
+            {
+              "kind": "return",
+              "observed": "true",
+              "text": "#20 驱动 → 调用方 返回 0 返回 运行观测 call call_2_3 status ok 结果 0"
+            }
+          ],
+          "observed_attr_text": "运行观测（observed） · observed=true（运行台账）",
+          "static_state": {
+            "observed_true": false,
+            "warning": "静态预测：无运行观测，不表示实际执行顺序或取值 · observed=false（静态预测，无运行观测）",
+            "modes": [
+              "静态预测",
+              "运行观测"
+            ]
+          },
+          "undo": null,
+          "gaps": null,
+          "selection": null
+        }
+      }
+    },
+    "host.s3_stub_chrome": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "undoDisabled": true,
+          "undoGap": true,
+          "s3bGap": true,
+          "realDeviceGap": true,
+          "compilerGap": true,
+          "traceImportGap": true,
+          "selectionFields": true,
+          "runLedgerVisible": true,
+          "capabilityGaps": true
+        },
+        "detail": {
+          "profile": null,
+          "interfaceOptions": null,
+          "steps_built": null,
+          "records_a": [],
+          "events_a": null,
+          "stub_record": null,
+          "send_record_b": null,
+          "lock_events": null,
+          "send_record_c": null,
+          "invalid_error_codes": null,
+          "observed_messages": null,
+          "observed_attr_text": null,
+          "static_state": null,
+          "undo": {
+            "disabled": true,
+            "text": "回退末尾 N 次（S3b 提供）"
+          },
+          "gaps": [
+            "scenario_undo 回退末尾 N 次/前缀重放在 S3b 提供",
+            "trace_import 轨迹导入在 S3b 提供",
+            "real_device_dispatch 真实设备下发需单独授权与运行验证；编译器/构建未启用（不在插件内编译）",
+            "ai_summary",
+            "scenario_undo",
+            "trace_import",
+            "real_device_dispatch",
+            "resource_object_unresolved",
+            "ai_summary",
+            "run_observation",
+            "run_observation",
+            "scenario_execution"
+          ],
+          "selection": {
+            "workspace_id": "code-view-bus-demo",
+            "variant_id": "semantic-x86_64",
+            "snapshot_id": "ed326d554334432b907de21297207eb8",
+            "repo_id": "bus",
+            "entry_id": "f_afa8298f2d197e5fd110e49a",
+            "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+            "callsite_ids": [],
+            "callsite_path": [],
+            "resource_ids": [
+              "s_0860e6738eaa8c95f37d0d03"
+            ],
+            "resource_status": "partial",
+            "evidence_ids": [
+              "e_231505a73a485bc1d8c9249d"
+            ],
+            "run_id": null,
+            "event_id": null,
+            "focus_resource_id": null,
+            "focus_callsite_id": null,
+            "group_id": null,
+            "interface_id": null,
+            "subflow_root_id": null,
+            "scenario_id": "scn_cdf5e1a61792",
+            "run_generation": 1,
+            "call_id": null
+          }
+        }
+      }
+    },
+    "host.s3_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_error_count": 0,
+        "console_errors": []
+      }
+    },
+    "host.s3_no_absolute_paths": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "leak": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "regression.s2b_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "failed_steps": [],
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "sidebarEntry": true,
+          "panelOpened": true,
+          "statusReady": true,
+          "snapshotClicked": true,
+          "entryListed": true,
+          "entryClicked": true,
+          "s1SourceLine": true,
+          "tabsFive": true,
+          "workbenchOpened": true,
+          "endToEndReady": true,
+          "groups": true,
+          "interfaces": true,
+          "mainScreenshot": true,
+          "subflow": true,
+          "selectionExtensionFields": true,
+          "gapsIncludeOutOfScope": true,
+          "noAbsolutePaths": true,
+          "noConsoleErrors": true
+        },
+        "console_error_count": 0,
+        "screenshots": {
+          "groups": {
+            "path": "evidence/s3/s2b-groups.png",
+            "bytes": 211589,
+            "sha256": "1026d7a8b8609bc0fe6586c3fe89a0a970d34e4eccfb09b617720ea847f33a13"
+          },
+          "interfaces": {
+            "path": "evidence/s3/s2b-interfaces.png",
+            "bytes": 219339,
+            "sha256": "4256549abf6c6f64ef16e326fbe7d2332343bde0f2ce94d056cd71a839499afd"
+          },
+          "subflow": {
+            "path": "evidence/s3/s2b-subflow.png",
+            "bytes": 129990,
+            "sha256": "70c4b86203bcb82e441c9a8f165e7a8a3681b59cfcafb7e1b7c8aeb2c5cf3901"
+          },
+          "main": {
+            "path": "evidence/s3/s2b-main.png",
+            "bytes": 216426,
+            "sha256": "7365f7d909eeae7396fe563032581707e14c20cc94628464d087bee57fbc7221"
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "regression.s2b_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_error_count": 0
+      }
+    },
+    "regression.s2a_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 1,
+        "failed_steps": [
+          "view_coupling_assertions"
+        ],
+        "coupling_failed": [],
+        "coupling_ignored_superseded": [
+          "gapsOriginal",
+          "stubPanel"
+        ],
+        "other_views": {
+          "tree": true,
+          "end_to_end": true,
+          "sequence": true,
+          "file": true
+        },
+        "console_error_count": 0,
+        "screenshots": {
+          "coupling": {
+            "path": "evidence/s3/s2a-coupling.png",
+            "bytes": 182129,
+            "sha256": "a55e8ab58992388c2474cbfd778bf8c901a24d7b9c7ac4cad94f26ed210c4f89"
+          },
+          "tree": {
+            "path": "evidence/s3/s2a-tree.png",
+            "bytes": 274485,
+            "sha256": "35a1d28c273af1c689aee09c44d0991051c153629f64c5cb1d3df6a8d3d880f6"
+          },
+          "end_to_end": {
+            "path": "evidence/s3/s2a-end_to_end.png",
+            "bytes": 221552,
+            "sha256": "cf52c9d65ca3e20d6e0b70332173686e02dddca5d2b48a8d7c8d9a162739b4e3"
+          },
+          "sequence": {
+            "path": "evidence/s3/s2a-sequence.png",
+            "bytes": 295669,
+            "sha256": "a81b75169273f3fb260b3e60859fb847c91be3ffc6fd8366502843a97604955e"
+          },
+          "file": {
+            "path": "evidence/s3/s2a-file.png",
+            "bytes": 201962,
+            "sha256": "970e2345b2e54832eddc75950c89c19232b4d62169dd4be2e2d9c3096b6a5b2c"
+          },
+          "main": {
+            "path": "evidence/s3/s2a-main.png",
+            "bytes": 224615,
+            "sha256": "f7044f8c6b7af913faae8affc1eef197be31ea018fabcf1a7fed2523138c8f1d"
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "regression.s1_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 1,
+        "required_steps": [
+          "pageLoaded",
+          "sidebarEntry",
+          "panelOpened",
+          "snapshotClicked",
+          "entryListed",
+          "entryClicked",
+          "sourceLineOk",
+          "sourceBoundsOk",
+          "evidenceClassesPresent",
+          "resourcesReadPresent",
+          "selectionEntrySelected",
+          "selectionMatchesClickedEntry",
+          "returnToChat",
+          "chatRestored",
+          "panelReopened",
+          "reopenedSourceKept",
+          "reopenSelectionKept",
+          "writeEntryClicked",
+          "writeSourceLineOk",
+          "writeExactResource",
+          "writeSelectionEntry",
+          "noConsoleErrors",
+          "screenshotCaptured"
+        ],
+        "failed_steps": [],
+        "console_error_count": 0,
+        "screenshot": {
+          "path": "evidence/s3/s1-regression.png",
+          "bytes": 164082,
+          "sha256": "b7bfb73270eb5bbfcf0e20aa6351cc4f699e9b933fbe5dab67ce12a24a02d9b7"
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "dsh_host.s3_host_runtime": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "tap_summary": {
+          "tests": 1,
+          "pass": 1,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "duration_ms": 2956,
+        "evidence": "evidence/s3/host-runtime.json",
+        "tap": "evidence/s3/host-runtime.tap",
+        "stdout_tail": "",
+        "stderr_tail": ""
+      }
+    },
+    "demo.code_view_demo_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "demo_observed",
+      "detail": {
+        "command": "node --test demo/code-view/demo.test.cjs",
+        "status": 0,
+        "summary": {
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "TAP version 13\n# Subtest: interface registration selects the default route and observes the C write\nok 1 - interface registration selects the default route and observes the C write\n  ---\n  duration_ms: 2.5734\n  type: 'test'\n  ...\n# Subtest: a stub route changes the write and resetting discards the previous state\nok 2 - a stub route changes the write and resetting discards the previous state\n  ---\n  duration_ms: 0.4525\n  type: 'test'\n  ...\n# Subtest: unregistered keys, invalid input and long payloads return without a write\nok 3 - unregistered keys, invalid input and long payloads return without a write\n  ---\n  duration_ms: 0.2945\n  type: 'test'\n  ...\n# Subtest: call graph and embedded code map to fixture source\nok 4 - call graph and embedded code map to fixture source\n  ---\n  duration_ms: 0.1471\n  type: 'test'\n  ...\n# Subtest: 48 bytes take the direct branch and 49 bytes stage before encoding\nok 5 - 48 bytes take the direct branch and 49 bytes stage before encoding\n  ---\n  duration_ms: 0.8419\n  type: 'test'\n  ...\n# Subtest: nested folding reconnects edges and merges duplicate boundary links\nok 6 - nested folding reconnects edges and merges duplicate boundary links\n  ---\n  duration_ms: 0.3224\n  type: 'test'\n  ...\n# Subtest: a shared implementation does not borrow observations from the other caller\nok 7 - a shared implementation does not borrow observations from the other caller\n  ---\n  duration_ms: 0.1837\n  type: 'test'\n  ...\n# Subtest: platform return stubs propagate to the entry and release the transfer lock\nok 8 - platform return stubs propagate to the entry and release the transfer lock\n  ---\n  duration_ms: 0.5245\n  type: 'test'\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 108.7524\n\n"
+      }
+    },
+    "dsh_host.repo_node_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "files": [
+          "tests/node/bridge.test.mjs",
+          "tests/node/client.test.mjs",
+          "tests/node/plugin.test.mjs",
+          "tests/node/scenario.test.mjs",
+          "tests/node/sim-runner.test.mjs",
+          "tests/node/view-rpc.test.mjs"
+        ],
+        "status": 0,
+        "summary": {
+          "tests": 136,
+          "pass": 136,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "  type: 'test'\n  ...\n# Subtest: createViewDispatch fails closed for unknown endpoints\nok 123 - createViewDispatch fails closed for unknown endpoints\n  ---\n  duration_ms: 0.2312\n  type: 'test'\n  ...\n# Subtest: VIEW_ENDPOINTS keeps the read-only endpoints and appends the five-view and S2b endpoints\nok 124 - VIEW_ENDPOINTS keeps the read-only endpoints and appends the five-view and S2b endpoints\n  ---\n  duration_ms: 0.155\n  type: 'test'\n  ...\n# Subtest: view.coupling maps to the fixed argv with an optional entry\nok 125 - view.coupling maps to the fixed argv with an optional entry\n  ---\n  duration_ms: 0.5036\n  type: 'test'\n  ...\n# Subtest: view.tree maps to the fixed argv and requires a bounded entry\nok 126 - view.tree maps to the fixed argv and requires a bounded entry\n  ---\n  duration_ms: 0.4065\n  type: 'test'\n  ...\n# Subtest: view.endToEnd maps to the fixed argv and supports the optional S2b root\nok 127 - view.endToEnd maps to the fixed argv and supports the optional S2b root\n  ---\n  duration_ms: 0.561\n  type: 'test'\n  ...\n# Subtest: view.fileTree maps to the fixed argv and rejects entry input\nok 128 - view.fileTree maps to the fixed argv and rejects entry input\n  ---\n  duration_ms: 0.3346\n  type: 'test'\n  ...\n# Subtest: view.fileRead validates the repository path and maps to the fixed argv\nok 129 - view.fileRead validates the repository path and maps to the fixed argv\n  ---\n  duration_ms: 0.9754\n  type: 'test'\n  ...\n# Subtest: view.sequence maps to the fixed static argv and rejects invalid modes\nok 130 - view.sequence maps to the fixed static argv and rejects invalid modes\n  ---\n  duration_ms: 0.5448\n  type: 'test'\n  ...\n# Subtest: view.sequence observed mode maps to view-sequence-observed from the ledger\nok 131 - view.sequence observed mode maps to view-sequence-observed from the ledger\n  ---\n  duration_ms: 0.439\n  type: 'test'\n  ...\n# Subtest: view.interfaces maps to the fixed argv with an optional entry\nok 132 - view.interfaces maps to the fixed argv with an optional entry\n  ---\n  duration_ms: 0.4945\n  type: 'test'\n  ...\n# Subtest: view endpoints map BridgeError without leaking host paths\nok 133 - view endpoints map BridgeError without leaking host paths\n  ---\n  duration_ms: 0.5063\n  type: 'test'\n  ...\n# Subtest: the 512 KiB response cap still applies to five-view responses\nok 134 - the 512 KiB response cap still applies to five-view responses\n  ---\n  duration_ms: 0.7618\n  type: 'test'\n  ...\n# Subtest: plugin identity is unchanged and the UI fiber stays pending without host services\nok 135 - plugin identity is unchanged and the UI fiber stays pending without host services\n  ---\n  duration_ms: 0.6889\n  type: 'test'\n  ...\n# Subtest: plugin mounts the /code-view prefix route when host services are available\nok 136 - plugin mounts the /code-view prefix route when host services are available\n  ---\n  duration_ms: 1.0907\n  type: 'test'\n  ...\n1..136\n# tests 136\n# suites 0\n# pass 136\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 2758.9087\n\n"
+      }
+    }
+  },
+  "not_verified": [
+    {
+      "item": "undo last N / prefix replay / trace import (S3b)",
+      "reason": "scenario-contract §0: deferred to S3b; UI shows disabled undo + gap",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "AI summary / model-generated description text",
+      "reason": "not provided in S3a; gap shown, no fabricated text",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "scenario observed async/IRQ causal refinement + real device dispatch",
+      "reason": "S3a only records ordered step ledger; real device is S4/external authorization",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+      "reason": "CW-T4 scope",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "OS-wide egress certification",
+      "reason": "verifier only performs loopback HTTP and local process/worker observation",
+      "layer": null,
+      "out_of_scope": true
+    }
+  ],
+  "commands": [
+    {
+      "at": "2026-11-15T08:37:19.139Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\tools\\verify-s3.mjs",
+        "--with-repo-tests"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "note": "self (S3a verifier entry point)",
+      "display": "C:\\Program Files\\nodejs\\node.exe E:\\dsh\\plugin\\04-code-learning\\tools\\verify-s3.mjs --with-repo-tests"
+    },
+    {
+      "at": "2026-11-15T08:37:19.615Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "workspace-import",
+        "--manifest",
+        "workspace.json",
+        "--expected-revision",
+        "0",
+        "--operation-id",
+        "8d586360-ccbd-42c6-a78d-124fc17b7c60"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json workspace-import --manifest workspace.json --expected-revision 0 --operation-id 8d586360-ccbd-42c6-a78d-124fc17b7c60 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:19.752Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "snapshot-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--snapshot",
+        "snapshot-bus",
+        "--operation-id",
+        "32d1120b-d945-4d34-b2ce-4fa128c99d8a"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json snapshot-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --snapshot snapshot-bus --operation-id 32d1120b-d945-4d34-b2ce-4fa128c99d8a [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:19.861Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entries",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-entries --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:19.995Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--profile",
+        "sim-profile.json",
+        "--operation-id",
+        "cfb800fd-066e-42ed-9e12-58d20e90fc5c"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile sim-profile.json --operation-id cfb800fd-066e-42ed-9e12-58d20e90fc5c [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:20.108Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-list",
+        "--workspace",
+        "code-view-bus-demo"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-list --workspace code-view-bus-demo [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:20.250Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-plan",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--profile",
+        "bus-demo-wasm",
+        "--scenario-json",
+        "eyJnZW5lcmF0aW9uIjowLCJzdG9wX29uX2Vycm9yIjp0cnVlLCJzdGVwcyI6W3siaW50ZXJmYWNlIjoicmVzZXQiLCJhcmdzIjpbXX0seyJpbnRlcmZhY2UiOiJidXNfcmVnaXN0ZXIiLCJhcmdzIjpbMl19LHsiaW50ZXJmYWNlIjoiYnVzX3NlbmQiLCJhcmdzIjpbMiw0OF19XX0="
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-plan --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --profile bus-demo-wasm --scenario-json eyJnZW5lcmF0aW9uIjowLCJzdG9wX29uX2Vycm9yIjp0cnVlLCJzdGVwcyI6W3siaW50ZXJmYWNlIjoicmVzZXQiLCJhcmdzIjpbXX0seyJpbnRlcmZhY2UiOiJidXNfcmVnaXN0ZXIiLCJhcmdzIjpbMl19LHsiaW50ZXJmYWNlIjoiYnVzX3NlbmQiLCJhcmdzIjpbMiw0OF19XX0= [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:20.371Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-module",
+        "--plan",
+        "plan_c59921350f0b6c6aa91907f8632ca54b"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-module --plan plan_c59921350f0b6c6aa91907f8632ca54b [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:22.171Z",
+      "executable": "E:/dsh/DeepSeek Harness.exe",
+      "args": [
+        "E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js",
+        "web",
+        "--no-open",
+        "--port",
+        "0"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\scratch",
+      "note": "isolated dsh web boot (one-time URL token redacted)",
+      "display": "E:/dsh/DeepSeek Harness.exe E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js web --no-open --port 0"
+    },
+    {
+      "at": "2026-11-15T08:37:25.116Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-list",
+        "--workspace",
+        "code-view-bus-demo"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-list --workspace code-view-bus-demo [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:25.226Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-get",
+        "--workspace",
+        "code-view-bus-demo",
+        "--scenario",
+        "scn_0eb3626beb3d"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-get --workspace code-view-bus-demo --scenario scn_0eb3626beb3d [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:37:25.340Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-sequence-observed",
+        "--workspace",
+        "code-view-bus-demo",
+        "--scenario",
+        "scn_0eb3626beb3d"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-sequence-observed --workspace code-view-bus-demo --scenario scn_0eb3626beb3d [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:38:04.201Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s3-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s3-probe-app --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:38:34.261Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s2b-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s2b-probe-app --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:38:56.114Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s2a-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 1,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s2a-probe-app --no-sandbox --disable-gpu [exit 1]"
+    },
+    {
+      "at": "2026-11-15T08:39:01.084Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s1-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 1,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\s3\\s1-probe-app --no-sandbox --disable-gpu [exit 1]"
+    },
+    {
+      "at": "2026-11-15T08:39:04.042Z",
+      "executable": "E:/dsh/DeepSeek Harness.exe",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\s3\\host-runtime.tap",
+        "tools/s3-host-runtime.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "E:/dsh/DeepSeek Harness.exe --test --test-concurrency=1 --test-reporter=tap --test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\s3\\host-runtime.tap tools/s3-host-runtime.test.mjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:39:04.264Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "demo/code-view/demo.test.cjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 demo/code-view/demo.test.cjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T08:39:07.122Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "tests/node/bridge.test.mjs",
+        "tests/node/client.test.mjs",
+        "tests/node/plugin.test.mjs",
+        "tests/node/scenario.test.mjs",
+        "tests/node/sim-runner.test.mjs",
+        "tests/node/view-rpc.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 tests/node/bridge.test.mjs tests/node/client.test.mjs tests/node/plugin.test.mjs tests/node/scenario.test.mjs tests/node/sim-runner.test.mjs tests/node/view-rpc.test.mjs [exit 0]"
+    }
+  ],
+  "environment": {
+    "node": "26.13.0",
+    "platform": "win32",
+    "workspace": "E:\\dsh\\plugin\\04-code-learning"
+  },
+  "limitations": [
+    "Uses the locally installed generic Electron binary only as the Chromium test instrument; it is not a shipped dependency.",
+    "The isolated fresh DSH_HOME may show the host first-run overlay in screenshots; S3a DOM assertions are recorded independently of host UI (captures close host overlays first).",
+    "The Wasm profile is the Demo build artifact executed in the Host sandboxed worker: it is not evidence of real device/kernel behavior.",
+    "No OS-wide egress certification; only loopback HTTP and local process/worker observation.",
+    "DEMO layer is the Wasm/JS demo model, ATLAS is the real imported snapshot + engine projections, DSH_HOST is the pinned local rc.5; the three are never mixed.",
+    "S3b (undo last N / prefix replay / trace import) and S4 (real Linux/Kbuild, CFG/locks, performance) remain out of scope."
+  ],
+  "in_scope_not_verified": [],
+  "out_of_scope_not_verified": [
+    {
+      "item": "undo last N / prefix replay / trace import (S3b)",
+      "reason": "scenario-contract §0: deferred to S3b; UI shows disabled undo + gap",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "AI summary / model-generated description text",
+      "reason": "not provided in S3a; gap shown, no fabricated text",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "scenario observed async/IRQ causal refinement + real device dispatch",
+      "reason": "S3a only records ordered step ledger; real device is S4/external authorization",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+      "reason": "CW-T4 scope",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "OS-wide egress certification",
+      "reason": "verifier only performs loopback HTTP and local process/worker observation",
+      "layer": null,
+      "out_of_scope": true
+    }
+  ],
+  "checks_summary": {
+    "total": 43,
+    "passed": 43,
+    "failed": 0,
+    "in_scope_not_verified": 0,
+    "out_of_scope_not_verified": 5
+  },
+  "ok": true,
+  "verified": true,
+  "finished_at_utc": "2026-11-15T08:39:07.339Z",
+  "duration_ms": 108202
+}

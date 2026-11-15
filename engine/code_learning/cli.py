@@ -202,6 +202,72 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode", choices=("static",), default="static", metavar="MODE"
     )
 
+    # -- controlled scenarios (S3a) ------------------------------------------
+    sim_profile_import = subparsers.add_parser(
+        "sim-profile-import",
+        help="Verify a trusted inbox Wasm simulation profile and register it.",
+    )
+    sim_profile_import.add_argument("--workspace", required=True, metavar="WID")
+    sim_profile_import.add_argument("--variant", required=True, metavar="VID")
+    sim_profile_import.add_argument("--repo", required=True, metavar="RID")
+    sim_profile_import.add_argument("--profile", dest="profile_name", required=True, metavar="NAME")
+    sim_profile_import.add_argument(
+        "--operation-id", dest="operation_id", required=True, metavar="ID"
+    )
+
+    sim_profile_list = subparsers.add_parser(
+        "sim-profile-list", help="Registered Wasm simulation profiles of one workspace."
+    )
+    sim_profile_list.add_argument("--workspace", required=True, metavar="WID")
+
+    scenario_plan = subparsers.add_parser(
+        "scenario-plan", help="Validate a scenario and sign a TTL plan (never executes)."
+    )
+    scenario_plan.add_argument("--workspace", required=True, metavar="WID")
+    scenario_plan.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    scenario_plan.add_argument("--profile", dest="profile_ref", required=True, metavar="PROFILE")
+    scenario_plan.add_argument(
+        "--scenario-json", dest="scenario_json", required=True, metavar="B64"
+    )
+    scenario_plan.add_argument(
+        "--expected-generation", dest="expected_generation", type=int, default=None, metavar="N"
+    )
+
+    scenario_module = subparsers.add_parser(
+        "scenario-module", help="Isolated-worker payload for one signed scenario plan."
+    )
+    scenario_module.add_argument("--plan", dest="plan_id", required=True, metavar="PLAN")
+
+    scenario_record = subparsers.add_parser(
+        "scenario-record", help="Validate worker records and append one ledger generation."
+    )
+    scenario_record.add_argument("--plan", dest="plan_id", required=True, metavar="PLAN")
+    scenario_record.add_argument(
+        "--records-json", dest="records_json", required=True, metavar="B64"
+    )
+    scenario_record.add_argument(
+        "--operation-id", dest="operation_id", required=True, metavar="ID"
+    )
+
+    scenario_list = subparsers.add_parser(
+        "scenario-list", help="Scenario ledger summaries of one workspace."
+    )
+    scenario_list.add_argument("--workspace", required=True, metavar="WID")
+
+    scenario_get = subparsers.add_parser(
+        "scenario-get", help="Current immutable generation of one scenario ledger."
+    )
+    scenario_get.add_argument("--workspace", required=True, metavar="WID")
+    scenario_get.add_argument("--scenario", dest="scenario_ref", required=True, metavar="SCN")
+
+    view_sequence_observed = subparsers.add_parser(
+        "view-sequence-observed", help="Observed timing DTO built from a scenario ledger."
+    )
+    view_sequence_observed.add_argument("--workspace", required=True, metavar="WID")
+    view_sequence_observed.add_argument(
+        "--scenario", dest="scenario_ref", required=True, metavar="SCN"
+    )
+
     # -- paths and relations -------------------------------------------------
     query_path = subparsers.add_parser("path", help="Bounded call-path query inside one variant.")
     query_path.add_argument("--workspace", required=True, metavar="WID")
@@ -398,6 +464,51 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
             args.snapshot_ref,
             args.entry_ref,
             mode=args.mode,
+        )
+    if command in (
+        "sim-profile-import",
+        "sim-profile-list",
+        "scenario-plan",
+        "scenario-module",
+        "scenario-record",
+        "scenario-list",
+        "scenario-get",
+        "view-sequence-observed",
+    ):
+        from . import scenario
+
+        if command == "sim-profile-import":
+            return scenario.sim_profile_import(
+                state,
+                args.workspace,
+                args.variant,
+                args.repo,
+                args.profile_name,
+                args.operation_id,
+            )
+        if command == "sim-profile-list":
+            return scenario.sim_profile_list(state, args.workspace)
+        if command == "scenario-plan":
+            return scenario.scenario_plan(
+                state,
+                args.workspace,
+                args.snapshot_ref,
+                args.profile_ref,
+                args.scenario_json,
+                expected_generation=args.expected_generation,
+            )
+        if command == "scenario-module":
+            return scenario.scenario_module(state, args.plan_id)
+        if command == "scenario-record":
+            return scenario.scenario_record(
+                state, args.plan_id, args.records_json, args.operation_id
+            )
+        if command == "scenario-list":
+            return scenario.scenario_list(state, args.workspace)
+        if command == "scenario-get":
+            return scenario.scenario_get(state, args.workspace, args.scenario_ref)
+        return scenario.view_sequence_observed(
+            state, args.workspace, args.scenario_ref
         )
     if command == "path":
         return service.query_path(

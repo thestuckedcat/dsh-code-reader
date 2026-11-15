@@ -230,5 +230,48 @@ find 返回示例（节选）：
   字符集并经 `connection.admit` 准入；引擎不接受绝对路径/argv；RPC/UI 不输出绝对路径、bootstrap/state 路径。
 - Python 缺失、bootstrap 缺失、未登记、快照无效/过期、源码不可读等情况**不隐藏面板**，在缺口区显示原因；
   引擎逻辑错误以 `value.error.code`（如 `NOT_FOUND`、`STALE_SNAPSHOT`）显示。
-- S2a 不提供：组折叠/展开、基础接口库、AI 归纳正文、运行观测、场景执行/打桩/回退、图内源码写回。这些以
-  缺口/占位显示，按 S2b/S3/S4 继续验收；S2a dsh-web 验收见 `evidence/five-views/`。
+- 尚未提供（以缺口显示）：AI 归纳正文、回退末尾 N 次/前缀重放/轨迹导入（S3b）、observed 异步/IRQ 因果、
+  真实设备下发、图内源码写回；真实 Linux/Kbuild/CFG/性能按 S4 继续。已交付阶段验收见 `evidence/`
+  下 `readonly-slice/`、`five-views/`、`s2b/`、`s3/`。
+
+## 8. 受控场景与打桩模拟（S3a）
+
+产品「打桩模拟」由 DSH 插件实现：可信 Wasm 模拟 profile + Host 隔离 worker + 引擎运行台账。**执行只由用户在
+工作台点击「运行」触发**；Agent/浏览器不提供执行入口，也不能指定模块路径或任意代码。
+
+### 8.1 前置：登记模拟 profile（人工/Host，一次性）
+
+把 `sim-profile.json` 与其 `module.file`（Wasm）放入 bootstrap 的可信 `import_inbox_dir`，然后由人工/Host 执行：
+
+```bash
+python -m code_learning.cli --bootstrap <bootstrap.json> sim-profile-import \
+  --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus \
+  --profile sim-profile.json --operation-id <uuid>
+```
+
+引擎校验绑定（workspace/variant/repo 已登记、快照已导入且匹配）、模块 sha256/大小、接口/参数范围、trace 事件表与
+`event_resources`（只能引用该快照对象）后复制到 `state/sim/`。Demo 夹具见 `evidence/scenario-sim/`
+（bus.wasm 1547B，sha256 `69c8622d…321c`）。未登记 profile 时面板显示 gap，不伪造。
+
+### 8.2 一次打桩模拟
+
+1. 左栏「打桩模拟」→ 选择 profile（显示绑定、模块 sha、接口数、limits）。
+2. 组合有序步骤：`reset` → `bus_register(1)` → `bus_send(1, 48)`；接口/参数由 profile 约束（min/max；
+   `set_platform_stub` 为边界打桩接口，UI 标「边界打桩」）。
+3. 点击「运行」→ Host 引擎 plan → 隔离 worker 执行 Wasm（`env.trace` 收集事件，仅内存/超时限制，无 fs/网络）
+   → 引擎写不可变台账（generation，CAS）。
+4. 记录逐条显示：接口(实参)、结果（void 显示“—”）、status、call_id、事件（DEFAULT_ROUTE/STORE_ROUTE/
+   REQUEST/LOOKUP/CHECK_LENGTH/LOCK/TRANSFER/…/WRITE）、受影响资源（如 `simulated_doorbell` write）、
+   memory digest、records_digest、是否边界打桩。
+5. 失败/打桩示例：先 `set_platform_stub(-5)` 再 `bus_send(1,48)` → bus_send 结果 `-5`、状态 error、无 WRITE、
+   LOCK 1→0；未登记通道 `bus_send(0,48)` → `-2`；非法参数被 UI/引擎拒绝且不产生台账。
+6. 时序图切「运行观测」（`observed=true`）读取台账消息（call/return/access/event，含 DOORBELL/WRITE、平台边界）；
+   切回「静态预测」仍是 `observed=false` 的静态推断。S3a observed 默认最近台账（多场景选择器在 S3b）。
+
+### 8.3 边界与失败
+
+- 运行只发生在 `worker_threads`：仅 `env.trace` 回调、无 fs/网络/其他 import；总超时 15s、内存 ≤64MB；
+  超时/取消/崩溃返回 `OUTCOME_UNKNOWN` 且**不落台账**。
+- 台账只追加、带签名/plan_id/module_sha256/records_digest/代次；同一场景重复运行代次 +1；不同场景各自从 0 开始。
+- 未提供：回退末尾 N 次与前缀重放、轨迹导入、真实设备下发、图内源码写回（gap 显示；S3b/后续验收）。
+  Wasm 模拟不证明真实设备/内核行为。

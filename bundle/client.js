@@ -47,6 +47,10 @@ var ACCESS_VALUES=['read','write','rmw','init','deinit','alloc','free','acquire'
 var SHAPE_VALUES=['ellipse','rect','diamond','rectangle','parallelogram'];
 var NODE_KIND_VALUES=['entry','process','decision','exit','external','io'];
 var SEQUENCE_KINDS=['call','return','access','external','error'];
+var SEQUENCE_MODES=['static','observed'];
+var SIM_ROLES=['entry','stub_control','util'];
+var MAX_STUB_STEPS=20;
+var MAX_STUB_ARGS=8;
 var EDGE_KINDS=['call','guard','return','exception','external'];
 var EVIDENCE_LABELS={
 exact:'静态确定',
@@ -179,7 +183,7 @@ e2eHint:'竖排 · 正交折线 · 拖节点/平移/缩放',
 e2eCanvasLabel:'端到端图画布，方向键平移',
 sequenceHint:'生命线 · 消息分色；点击消息定位源码。',
 sequenceWarning:'静态预测：无运行观测，不表示实际执行顺序',
-sequenceObserved:'observed=false（S2a 无运行观测）',
+sequenceObserved:'observed=false（静态预测，无运行观测）',
 fileTreeTitle:'文件',
 fileReadLoading:'正在读取文件…',
 fileReadFailed:'文件读取失败（见错误区）。',
@@ -238,12 +242,82 @@ breadcrumbUnavailable:'没有从根入口到当前函数的已解析调用路径
 legendGroups:'组与黑盒',
 legendGroupRow:'矩形组框：折叠后成员/内部边隐藏，跨组边接组端口并保留原 edge_id',
 legendBlackboxRow:'黑盒接口：显示接口摘要并隐藏下游步骤，可展开恢复',
+stubPanelTitle:'打桩模拟（Wasm 隔离执行）',
+stubHint:'可信 profile → 有序接口调用 → 隔离 worker 执行 → 只追加运行台账；仅在点击「运行」时执行。',
+stubProfileTitle:'模拟 profile',
+stubProfilesLoading:'正在读取模拟 profile…',
+stubProfilesFailed:'模拟 profile 读取失败（见错误区）。',
+stubProfilesEmpty:'未导入模拟 profile：请把 sim-profile.json 与对应 .wasm 放入 bootstrap import_inbox_dir，由 Host 校验/签名后再使用。',
+stubNoProfile:'先选择模拟 profile。',
+stubStubControl:'边界打桩（stub_control）',
+stubRoleEntry:'入口调用',
+stubRoleStub:'边界打桩',
+stubRoleUtil:'工具接口',
+stubBoundaryHint:'该步只设置平台/设备模拟返回值，运行记录 stubbed=true；不触发真实设备。',
+stubStepsTitle:'场景步骤',
+stubStepInterface:'接口',
+stubStepArg:'实参',
+stubStepAdd:'新增步骤',
+stubStepUp:'上移',
+stubStepDown:'下移',
+stubStepRemove:'移除',
+stubStepLimit:'步骤已达上限（最多 20 步）。',
+stubStopOnError:'失败即停止（stop_on_error）',
+stubRun:'运行场景',
+stubRunBusy:'正在隔离执行…',
+stubRunHint:'运行会真实调用隔离 Wasm worker；超时/取消返回 OUTCOME_UNKNOWN 且不落台账。',
+stubPreviewHint:'先 scenario.preview 校验并签发 plan，再执行。',
+stubRunFailed:'场景执行失败：',
+stubRecordsTitle:'运行记录（只追加台账）',
+stubRecordsEmpty:'尚未运行；运行成功后在这里显示每步结果、事件与受影响资源。',
+stubRecordStatus:'status',
+stubRecordResult:'结果',
+stubRecordSkipped:'已跳过（stop_on_error）',
+stubStubbed:'边界打桩步',
+stubEvents:'事件',
+stubAffects:'受影响资源',
+stubMemoryDigest:'memory',
+stubUndo:'回退末尾 N 次（S3b 提供）',
+stubUndoGap:'回退末尾 N 次在 S3b 提供；当前保留只读历史。',
+stubGeneration:'台账当前代',
+stubScenarioId:'scenario',
+stubPlan:'plan',
+stubGapProfileMissing:'sim_profile_missing',
+stubGapRealDevice:'real_device_not_authorized',
+stubGapCompiler:'compiler_build_disabled',
+stubGapUnknown:'scenario_outcome_unknown',
+stubGapRealDeviceReason:'真实设备/内核下发未授权；S3a 只在隔离 Wasm worker 中模拟。',
+stubGapCompilerReason:'编译器/构建未启用：不在插件内编译/链接源码。',
+stubGapUnknownReason:'运行超时/取消，结果未知且未落台账；可重新运行。',
+stubGapUndo:'scenario_undo_deferred',
+stubInvalidArg:'实参必须是范围内的整数（min/max）。',
+stubSelectInterfaceFirst:'请先为每一步选择接口。',
+sequenceModeStatic:'静态预测',
+sequenceModeObserved:'运行观测',
+sequenceModeLabel:'时序模式',
+sequenceObservedGap:'尚未读取运行台账：先在「打桩模拟」运行一次场景，或切到打桩模拟刷新台账。',
+sequenceObservedLoading:'正在读取运行台账时序…',
+sequenceObservedFailed:'运行观测时序读取失败（见错误区）。',
+sequenceObservedEmpty:'没有可用的运行台账记录。',
+sequenceObservedTitle:'运行观测（observed）',
+sequenceObservedHint:'消息来自模拟运行台账，observed=true；只代表隔离 Wasm 模拟，不等同真实设备/内核行为。',
+sequenceScenario:'scenario',
+sequenceGeneration:'代次',
+sequenceObservedTrue:'observed=true（运行台账）',
+legendObserved:'运行观测',
+legendObservedRow:'运行观测记录（observed）：来自隔离 Wasm 模拟台账，不代表真实设备行为',
 };
 function isRecord(value){
 return typeof value==='object'&&value!==null&&!Array.isArray(value);
 }
 function toInteger(value){
 return typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;
+}
+function toSignedInteger(value){
+return typeof value==='number'&&Number.isSafeInteger(value)?value:null;
+}
+function toBoundedInteger(value){
+return typeof value==='number'&&Number.isSafeInteger(value)&&Math.abs(value)<=2147483647?value:null;
 }
 function numberText(value){
 var number=toInteger(value);
@@ -364,6 +438,9 @@ focus_callsite_id:null,
 group_id:null,
 interface_id:null,
 subflow_root_id:null,
+scenario_id:null,
+run_generation:null,
+call_id:null,
 };
 }
 function mergeSelectionField(target,source,field){
@@ -373,7 +450,12 @@ var status=copyNullableString(source[field]);
 if(status!==null)target[field]=status;
 return;
 }
-if(field==='run_id'||field==='event_id'||field==='focus_resource_id'||field==='focus_callsite_id'||field==='group_id'||field==='interface_id'||field==='subflow_root_id'){
+if(field==='run_generation'){
+var generation=toSignedInteger(source[field]);
+if(generation!==null)target[field]=generation;
+return;
+}
+if(field==='run_id'||field==='event_id'||field==='focus_resource_id'||field==='focus_callsite_id'||field==='group_id'||field==='interface_id'||field==='subflow_root_id'||field==='scenario_id'||field==='call_id'){
 var scalar=copyNullableString(source[field]);
 if(scalar!==null)target[field]=scalar;
 return;
@@ -386,7 +468,7 @@ return;
 var value=copyNullableString(source[field]);
 if(value!==null)target[field]=value;
 }
-function buildSelection(view,focusResourceId,focusCallsiteId,groupId,interfaceId,subflowRootId){
+function buildSelection(view,focusResourceId,focusCallsiteId,groupId,interfaceId,subflowRootId,scenarioId,runGeneration,callId){
 var selection=selectionDefaults();
 var strings=['workspace_id','variant_id','snapshot_id','repo_id','entry_id','symbol_id'];
 var arrays=['callsite_ids','callsite_path','resource_ids','evidence_ids'];
@@ -441,6 +523,10 @@ if(copyNullableString(focusCallsiteId)!==null)selection.focus_callsite_id=focusC
 if(copyNullableString(groupId)!==null)selection.group_id=groupId;
 if(copyNullableString(interfaceId)!==null)selection.interface_id=interfaceId;
 if(copyNullableString(subflowRootId)!==null)selection.subflow_root_id=subflowRootId;
+if(copyNullableString(scenarioId)!==null)selection.scenario_id=scenarioId;
+var generation=toSignedInteger(runGeneration);
+if(generation!==null)selection.run_generation=generation;
+if(copyNullableString(callId)!==null)selection.call_id=callId;
 return selection;
 }
 function flattenSnapshots(payload){
@@ -597,6 +683,9 @@ if(mainEndToEnd&&isRecord(mainEndToEnd.payload)&&isRecord(mainEndToEnd.payload.g
 servers.push(mainEndToEnd.payload.grouping.gaps);
 }
 if(view.interfaces&&isRecord(view.interfaces.payload)&&Array.isArray(view.interfaces.payload.gaps))servers.push(view.interfaces.payload.gaps);
+if(view.stub&&view.stub.latest&&isRecord(view.stub.latest)&&Array.isArray(view.stub.latest.gaps))servers.push(view.stub.latest.gaps);
+var observedSequenceEntry=view.data?view.data.sequence_observed:null;
+if(observedSequenceEntry&&isRecord(observedSequenceEntry.payload)&&Array.isArray(observedSequenceEntry.payload.gaps))servers.push(observedSequenceEntry.payload.gaps);
 if(view.file){
 if(view.file.tree&&isRecord(view.file.tree.payload)&&Array.isArray(view.file.tree.payload.gaps))servers.push(view.file.tree.payload.gaps);
 if(view.file.read&&isRecord(view.file.read.payload)&&Array.isArray(view.file.read.payload.gaps))servers.push(view.file.read.payload.gaps);
@@ -663,10 +752,13 @@ reason:copyNullableString(resources.reason)||'快照未提供 objects/field_acce
 });
 }
 }
-if(!hasObservedEvidence(view)){
-addDerived({code:'run_observation',status:'unavailable',reason:'S2b 仍未提供运行观测：无 run_id/event_id/observation_refs，运行证据不可用。'});
+var observedLedger=observedSequenceEntry!==null&&observedSequenceEntry!==undefined&&observedSequenceEntry.state==='ready';
+var stubRecords=view.stub&&view.stub.latest&&isRecord(view.stub.latest)&&Array.isArray(view.stub.latest.records)&&view.stub.latest.records.length>0;
+var statusCapabilities=isRecord(statusData)&&isRecord(statusData.capabilities)?statusData.capabilities:{};
+if(!hasObservedEvidence(view)&&observedLedger!==true&&stubRecords!==true&&statusCapabilities.run_observation!==true){
+addDerived({code:'run_observation',status:'unavailable',reason:'运行观测尚未开启：需先由「打桩模拟」运行场景并写入台账。'});
 }
-addDerived({code:'ai_summary',status:'unavailable',reason:'AI 归纳正文尚未接入；S2b 只显示已核验事实与缺口。'});
+addDerived({code:'ai_summary',status:'unavailable',reason:'AI 归纳正文尚未接入；S3a 只显示已核验事实、运行台账与缺口。'});
 return gaps;
 }
 function computeState(view){
@@ -1174,6 +1266,7 @@ for(var mi=0;mi<rawMessages.length&&mi<MAX_MESSAGES;mi+=1){
 var message=rawMessages[mi];
 if(!isRecord(message))continue;
 var kind=SEQUENCE_KINDS.indexOf(message.kind)>=0?message.kind:'call';
+var sourceRef=isRecord(message.source_ref)?message.source_ref:null;
 messages.push({
 message_id:copyNullableString(message.message_id)||'m-'+String(mi),
 index:toInteger(message.index)===null?mi+1:message.index,
@@ -1188,14 +1281,243 @@ depth:toInteger(message.depth),
 certainty:normalizeCertainty(message.certainty),
 evidence_ids:copyStringArray(message.evidence_ids,32),
 limitations:copyStringArray(message.limitations,32),
+observed:message.observed===true,
+call_id:copyNullableString(message.call_id),
+step_index:toInteger(message.step_index),
+stubbed:message.stubbed===true,
+status:message.status==='error'?'error':(message.status==='ok'?'ok':null),
+result:toSignedInteger(message.result),
+event:copyNullableString(message.event),
+code:toSignedInteger(message.code),
+affected_resources:normalizeAffectedResources(message.affected_resources),
+source_ref:sourceRef===null?null:{function_id:copyNullableString(sourceRef.function_id),file:copyNullableString(sourceRef.file),line:toInteger(sourceRef.line)},
 });
 }
 return{
 mode:copyNullableString(source.mode)||'static',
 observed:source.observed===true,
-warning:copyNullableString(source.warning)||TEXT.sequenceWarning,
+warning:source.warning===null||source.warning===undefined?(source.observed===true?null:TEXT.sequenceWarning):copyNullableString(source.warning),
+scenario:normalizeObservedScenario(source.scenario),
 participants:participants,
 messages:messages,
+gaps:Array.isArray(source.gaps)?source.gaps:[],
+truncated:source.truncated===true,
+};
+}
+function normalizeAffectedResources(value){
+var list=[];
+if(!Array.isArray(value))return list;
+for(var index=0;index<value.length&&index<64;index+=1){
+var item=value[index];
+if(!isRecord(item)||copyNullableString(item.resource_id)===null)continue;
+list.push({resource_id:item.resource_id,name:copyNullableString(item.name)||item.resource_id,access:normalizeAccess(item.access)});
+}
+return list;
+}
+function normalizeObservedScenario(value){
+if(!isRecord(value))return null;
+return{
+scenario_id:copyNullableString(value.scenario_id),
+generation:toSignedInteger(value.generation),
+profile_id:copyNullableString(value.profile_id),
+workspace_id:copyNullableString(value.workspace_id),
+snapshot_id:copyNullableString(value.snapshot_id),
+records_digest:copyNullableString(value.records_digest),
+created_at:copyNullableString(value.created_at),
+};
+}
+function normalizeStubParam(value){
+if(!isRecord(value))return null;
+var name=copyNullableString(value.name)||'arg';
+var type=value.type==='i32'||value.type==='u32'?value.type:'i32';
+var min=toSignedInteger(value.min);
+var max=toSignedInteger(value.max);
+return{name:name,type:type,min:min,max:max};
+}
+function normalizeStubInterface(value){
+if(!isRecord(value))return null;
+var name=copyNullableString(value.name);
+if(name===null)return null;
+var params=[];
+if(Array.isArray(value.params)){
+for(var index=0;index<value.params.length&&index<MAX_STUB_ARGS;index+=1){
+var param=normalizeStubParam(value.params[index]);
+if(param!==null)params.push(param);
+}
+}
+return{
+name:name,
+params:params,
+returns:value.returns==='void'?'void':'i32',
+role:SIM_ROLES.indexOf(value.role)>=0?value.role:'util',
+entry_id:copyNullableString(value.entry_id),
+};
+}
+function normalizeStubProfile(value){
+if(!isRecord(value))return null;
+var profileId=copyNullableString(value.profile_id);
+if(profileId===null)return null;
+var binding=isRecord(value.binding)?value.binding:{};
+var module=isRecord(value.module)?value.module:{};
+var limits=isRecord(value.limits)?value.limits:{};
+var interfaces=[];
+if(Array.isArray(value.interfaces)){
+for(var index=0;index<value.interfaces.length&&index<32;index+=1){
+var iface=normalizeStubInterface(value.interfaces[index]);
+if(iface!==null)interfaces.push(iface);
+}
+}
+return{
+profile_id:profileId,
+label:copyNullableString(value.label)||profileId,
+kind:copyNullableString(value.kind)||'wasm32',
+binding:{workspace_id:copyNullableString(binding.workspace_id),variant_id:copyNullableString(binding.variant_id),repo_id:copyNullableString(binding.repo_id),snapshot_id:copyNullableString(binding.snapshot_id)},
+module:{sha256:copyNullableString(module.sha256)||copyNullableString(value.module_sha256),bytes:toInteger(module.bytes)!==null?toInteger(module.bytes):toInteger(value.module_bytes),file:copyNullableString(module.file)},
+interfaces:interfaces,
+interface_count:toInteger(value.interface_count),
+limited:value.limited===true,
+status:copyNullableString(value.status),
+limits:{timeout_ms:toInteger(limits.timeout_ms),steps:toInteger(limits.steps),events_per_step:toInteger(limits.events_per_step)},
+limitations:copyStringArray(value.limitations,32),
+truncated:value.truncated===true,
+};
+}
+function normalizeStubProfiles(payload){
+var source=isRecord(payload)?payload:{};
+var raw=Array.isArray(source.profiles)?source.profiles:(Array.isArray(source.items)?source.items:(Array.isArray(payload)?payload:[]));
+var profiles=[];
+for(var index=0;index<raw.length&&index<32;index+=1){
+var profile=normalizeStubProfile(raw[index]);
+if(profile!==null)profiles.push(profile);
+}
+return{profiles:profiles,gaps:Array.isArray(source.gaps)?source.gaps:[],truncated:source.truncated===true};
+}
+function normalizeScenarioLedger(payload){
+var source=isRecord(payload)?payload:{};
+var raw=Array.isArray(source.scenarios)?source.scenarios:(Array.isArray(source.items)?source.items:[]);
+var scenarios=[];
+for(var index=0;index<raw.length&&index<64;index+=1){
+var item=raw[index];
+if(!isRecord(item))continue;
+var scenarioId=copyNullableString(item.scenario_id);
+if(scenarioId===null)continue;
+scenarios.push({
+scenario_id:scenarioId,
+profile_id:copyNullableString(item.profile_id),
+generation:toSignedInteger(item.generation),
+steps:toInteger(item.steps)!==null?toInteger(item.steps):toInteger(item.step_count),
+created_at:copyNullableString(item.created_at),
+updated_at:copyNullableString(item.updated_at),
+records_digest:copyNullableString(item.records_digest),
+workspace_id:copyNullableString(item.workspace_id),
+snapshot_id:copyNullableString(item.snapshot_id),
+limitations:copyStringArray(item.limitations,32),
+});
+}
+scenarios.sort(function(left,right){
+var leftTime=Date.parse(String(left.updated_at||left.created_at||''));
+var rightTime=Date.parse(String(right.updated_at||right.created_at||''));
+if(Number.isFinite(leftTime)&&Number.isFinite(rightTime)&&leftTime!==rightTime)return rightTime-leftTime;
+return (right.generation||0)-(left.generation||0);
+});
+return{scenarios:scenarios,gaps:Array.isArray(source.gaps)?source.gaps:[],truncated:source.truncated===true};
+}
+function normalizeScenarioPlan(payload){
+var source=isRecord(payload)?payload:{};
+var steps=[];
+if(Array.isArray(source.steps)){
+for(var index=0;index<source.steps.length&&index<MAX_STUB_STEPS;index+=1){
+var step=source.steps[index];
+if(!isRecord(step))continue;
+steps.push({
+index:toInteger(step.index)===null?index:step.index,
+interface:copyNullableString(step.interface)||'',
+role:SIM_ROLES.indexOf(step.role)>=0?step.role:'util',
+args:normalizeStubArgs(step.args),
+});
+}
+}
+var limits=isRecord(source.limits)?source.limits:{};
+return{
+plan_id:copyNullableString(source.plan_id),
+profile_id:copyNullableString(source.profile_id),
+module_sha256:copyNullableString(source.module_sha256),
+scenario_id:copyNullableString(source.scenario_id),
+scenario_digest:copyNullableString(source.scenario_digest),
+generation:toSignedInteger(source.generation),
+steps:steps,
+trace:isRecord(source.trace)?source.trace:null,
+limits:{timeout_ms:toInteger(limits.timeout_ms),steps:toInteger(limits.steps),events_per_step:toInteger(limits.events_per_step)},
+expires_at:copyNullableString(source.expires_at),
+limitations:copyStringArray(source.limitations,32),
+};
+}
+function normalizeStubArgs(value){
+var args=[];
+if(!Array.isArray(value))return args;
+for(var index=0;index<value.length&&index<MAX_STUB_ARGS;index+=1){
+var number=toSignedInteger(value[index]);
+if(number!==null)args.push(number);
+}
+return args;
+}
+function normalizeStubEvent(value){
+if(!isRecord(value))return null;
+var event=copyNullableString(value.event);
+if(event===null)return null;
+return{
+event_id:copyNullableString(value.event_id)||'',
+event:event,
+code:toSignedInteger(value.code),
+a:toSignedInteger(value.a),
+b:toSignedInteger(value.b),
+c:toSignedInteger(value.c),
+line:toInteger(value.line),
+};
+}
+function normalizeStubRecord(value){
+if(!isRecord(value))return null;
+var status=value.status==='error'?'error':(value.status==='ok'?'ok':'unknown');
+var events=[];
+var rawEvents=Array.isArray(value.execution_events)?value.execution_events:(Array.isArray(value.events)?value.events:[]);
+for(var index=0;index<rawEvents.length&&index<256;index+=1){
+var event=normalizeStubEvent(rawEvents[index]);
+if(event!==null)events.push(event);
+}
+var errorMessage=copyNullableString(value.error_message)||copyNullableString(isRecord(value.error)?value.error.message:null)||'';
+return{
+call_id:copyNullableString(value.call_id),
+step_index:toInteger(value.step_index)===null?null:value.step_index,
+interface:copyNullableString(value.interface)||'',
+args:normalizeStubArgs(value.args),
+status:status,
+result:toSignedInteger(value.result),
+memory_digest:copyNullableString(value.memory_digest),
+affected_resources:normalizeAffectedResources(value.affected_resources),
+stubbed:value.stubbed===true,
+events:events,
+error_message:cleanText(errorMessage,200),
+};
+}
+function normalizeScenarioRun(payload){
+var source=isRecord(payload)?payload:{};
+var scenario=isRecord(source.scenario)?source.scenario:source;
+var rawRecords=Array.isArray(source.records)?source.records:(Array.isArray(scenario.records)?scenario.records:[]);
+var records=[];
+for(var index=0;index<rawRecords.length&&index<MAX_STUB_STEPS;index+=1){
+var record=normalizeStubRecord(rawRecords[index]);
+if(record!==null)records.push(record);
+}
+return{
+scenario_id:copyNullableString(scenario.scenario_id)||copyNullableString(source.scenario_id),
+generation:toSignedInteger(scenario.generation)!==null?scenario.generation:toSignedInteger(source.generation),
+profile_id:copyNullableString(scenario.profile_id)||copyNullableString(source.profile_id),
+workspace_id:copyNullableString(scenario.workspace_id)||copyNullableString(source.workspace_id),
+snapshot_id:copyNullableString(scenario.snapshot_id)||copyNullableString(source.snapshot_id),
+records_digest:copyNullableString(scenario.records_digest)||copyNullableString(source.records_digest),
+created_at:copyNullableString(scenario.created_at)||copyNullableString(source.created_at),
+records:records,
+limitations:copyStringArray(source.limitations,32),
 gaps:Array.isArray(source.gaps)?source.gaps:[],
 truncated:source.truncated===true,
 };
@@ -1849,6 +2171,11 @@ el('div',{className:'dcr-legend-row'},el('span',{className:'dcr-swatch dcr-swatc
 el('div',{className:'dcr-legend-row'},el('span',{className:'dcr-swatch dcr-swatch-ai'}),el('span',null,TEXT.legendAi+'：'+TEXT.aiSummaryGap))
 ),
 el('div',{className:'dcr-legend-section'},
+el('h4',null,TEXT.legendObserved),
+el('div',{className:'dcr-legend-row'},el(EvidenceBadge,{value:'observed'}),el('span',null,TEXT.legendObservedRow)),
+el('div',{className:'dcr-legend-row'},el('span',{className:'dcr-swatch dcr-swatch-observed'}),el('span',null,'运行台账记录：scenario_id / generation / call_id'))
+),
+el('div',{className:'dcr-legend-section'},
 el('h4',null,TEXT.legendGroups),
 el('div',{className:'dcr-legend-row'},el('span',{className:'dcr-swatch dcr-swatch-group'}),el('span',null,TEXT.legendGroupRow)),
 el('div',{className:'dcr-legend-row'},el('span',{className:'dcr-swatch dcr-swatch-blackbox'}),el('span',null,TEXT.legendBlackboxRow))
@@ -1947,6 +2274,229 @@ el('p',{className:'dcr-muted'},TEXT.interfaceAddHint)
 :null
 );
 }
+function stubRoleLabel(role){
+if(role==='entry')return TEXT.stubRoleEntry;
+if(role==='stub_control')return TEXT.stubRoleStub;
+return TEXT.stubRoleUtil;
+}
+function findStubInterface(profile,name){
+if(profile===null||profile===undefined)return null;
+for(var index=0;index<profile.interfaces.length;index+=1){
+if(profile.interfaces[index].name===name)return profile.interfaces[index];
+}
+return null;
+}
+function findStubProfile(stub,profileId){
+var payload=stub.profiles?stub.profiles.payload:null;
+if(payload===null||!Array.isArray(payload.profiles))return null;
+for(var index=0;index<payload.profiles.length;index+=1){
+if(payload.profiles[index].profile_id===profileId)return payload.profiles[index];
+}
+return null;
+}
+function stubArgInvalid(value,param){
+if(value===null||value===undefined||!Number.isInteger(value))return true;
+if(param.min!==null&&value<param.min)return true;
+if(param.max!==null&&value>param.max)return true;
+return false;
+}
+function stubValidation(profile,stub){
+var errors=[];
+if(profile===null){
+errors.push({code:'NO_PROFILE',message:TEXT.stubNoProfile});
+return{errors:errors,steps:[]};
+}
+var limit=profile.limits&&profile.limits.steps?Math.min(MAX_STUB_STEPS,profile.limits.steps):MAX_STUB_STEPS;
+var steps=Array.isArray(stub.steps)?stub.steps:[];
+if(steps.length===0)errors.push({code:'INVALID_ARGUMENT',message:TEXT.stubSelectInterfaceFirst});
+if(steps.length>limit)errors.push({code:'LIMIT_EXCEEDED',message:'步骤数超过上限 '+String(limit)+'。'});
+var normalized=[];
+for(var index=0;index<steps.length;index+=1){
+var step=steps[index];
+var iface=findStubInterface(profile,step.interface);
+if(iface===null){
+errors.push({code:'INVALID_ARGUMENT',message:'第 '+String(index+1)+' 步：'+TEXT.stubSelectInterfaceFirst});
+continue;
+}
+if(step.args.length!==iface.params.length){
+errors.push({code:'INVALID_ARGUMENT',message:'第 '+String(index+1)+' 步 '+iface.name+' 参数个数不匹配。'});
+continue;
+}
+var args=[];
+for(var pi=0;pi<iface.params.length;pi+=1){
+var value=step.args[pi];
+if(stubArgInvalid(value,iface.params[pi])){
+errors.push({code:'INVALID_ARGUMENT',message:'第 '+String(index+1)+' 步 '+iface.name+'.'+iface.params[pi].name+'：'+TEXT.stubInvalidArg});
+continue;
+}
+args.push(value);
+}
+normalized.push({interface:iface.name,args:args});
+}
+if(errors.length>0)return{errors:errors,steps:normalized};
+return{errors:errors,steps:normalized};
+}
+function stubGapList(stub,profile,statusData){
+var gaps=[];
+var serverReasons={};
+if(isRecord(statusData)&&Array.isArray(statusData.gaps)){
+for(var sgi=0;sgi<statusData.gaps.length;sgi+=1){
+var serverGap=statusData.gaps[sgi];
+if(isRecord(serverGap)&&typeof serverGap.code==='string'&&typeof serverGap.reason==='string')serverReasons[serverGap.code]=serverGap.reason;
+}
+}
+if(stub.profiles.state==='error')gaps.push({code:'sim_profile_read_failed',status:'unavailable',reason:TEXT.stubProfilesFailed});
+if((stub.profiles.state==='ready'||stub.profiles.state==='empty')&&(stub.profiles.payload===null||stub.profiles.payload.profiles.length===0))gaps.push({code:'sim_profile_missing',status:'unavailable',reason:TEXT.stubProfilesEmpty});
+if(profile!==null&&profile!==undefined&&profile.interfaces.length===0)gaps.push({code:'stub_profile_interfaces_unavailable',status:'unavailable',reason:'模拟 profile 未返回接口定义（仅 interface_count，无法生成 role/参数下拉）；需 Host/引擎在 listProfiles 返回 interfaces，不伪造接口。'});
+var deferredGaps=[
+{code:'scenario_undo',fallback:'回退末尾 N 次/前缀重放在 S3b 提供；当前只保留只读历史。'},
+{code:'trace_import',fallback:'轨迹导入在 S3b 提供；当前只支持面板内场景运行。'},
+{code:'real_device_dispatch',fallback:'真实设备/内核下发需单独授权与运行验证；编译器/构建未启用（不在插件内编译）；S3a 只在隔离 Wasm worker 中模拟。'}
+];
+for(var dgi=0;dgi<deferredGaps.length;dgi+=1){
+var reason=serverReasons[deferredGaps[dgi].code]||deferredGaps[dgi].fallback;
+if(deferredGaps[dgi].code==='real_device_dispatch'&&!/编译器|构建/.test(reason))reason=reason+'；编译器/构建未启用（不在插件内编译）';
+gaps.push({code:deferredGaps[dgi].code,status:'unavailable',reason:reason});
+}
+if(stub.runError!==null&&stub.runError!==undefined&&stub.runError.code==='OUTCOME_UNKNOWN')gaps.push({code:'scenario_outcome_unknown',status:'unknown',reason:TEXT.stubGapUnknownReason});
+return gaps;
+}
+function StubPanel(props){
+var stub=props.stub;
+var profilesPayload=stub.profiles.state==='ready'?stub.profiles.payload:null;
+var profiles=profilesPayload===null?[]:profilesPayload.profiles;
+var profile=findStubProfile(stub,stub.profileId);
+var steps=Array.isArray(stub.steps)?stub.steps:[];
+var limit=profile!==null&&profile.limits&&profile.limits.steps?Math.min(MAX_STUB_STEPS,profile.limits.steps):MAX_STUB_STEPS;
+var gaps=stubGapList(stub,profile,props.status);
+var latest=stub.latest;
+var records=latest===null||latest===undefined?[]:latest.records;
+var failedIndex=-1;
+for(var ri=0;ri<records.length;ri+=1){
+if(records[ri].status==='error'&&failedIndex<0)failedIndex=records[ri].step_index===null?-1:records[ri].step_index;
+}
+function renderStep(step,index){
+var iface=findStubInterface(profile,step.interface);
+var boundary=iface!==null&&iface.role==='stub_control';
+return el('div',{key:'step-'+String(index),className:'dcr-stub-step'+(boundary?' dcr-stub-step-boundary':''),'data-stub-step':'','data-step-index':String(index)},
+el('div',{className:'dcr-stub-step-head'},
+el('span',{className:'dcr-chip'},'#'+String(index+1)),
+boundary?el('span',{className:'dcr-chip dcr-stub-boundary-chip'},TEXT.stubRoleStub):null
+),
+el('select',{className:'dcr-select','data-step-interface':String(index),'aria-label':'步骤接口','value':step.interface,onChange:function(event){props.onStepInterface(index,event&&event.target?event.target.value:'');}},
+el('option',{value:''},TEXT.stubStepInterface+'…'),
+SIM_ROLES.map(function(role){
+var list=profile===null?[]:profile.interfaces.filter(function(item){return item.role===role;});
+if(list.length===0)return null;
+return el('optgroup',{key:role,label:stubRoleLabel(role)},list.map(function(item){
+return el('option',{key:item.name,value:item.name},item.name+(item.role==='entry'?' · 入口':''));
+}));
+})
+),
+iface!==null?el('div',{className:'dcr-stub-args'},iface.params.map(function(param,pi){
+var value=step.args[pi];
+var invalid=stubArgInvalid(value,param);
+return el('label',{key:'arg-'+String(pi),className:'dcr-stub-arg'},
+el('span',{className:'dcr-meta'},param.name+':'+param.type+(param.min!==null&&param.max!==null?' ['+String(param.min)+','+String(param.max)+']':'')),
+el('input',{type:'number',className:'dcr-stub-arg-input'+(invalid?' dcr-stub-invalid':''),'data-step-arg':String(index)+':'+String(pi),'data-step-index':String(index),min:param.min===null?undefined:String(param.min),max:param.max===null?undefined:String(param.max),step:'1',value:value===null||value===undefined?'':String(value),onChange:function(event){props.onStepArg(index,pi,event&&event.target?event.target.value:'');}})
+);
+})):null,
+boundary?el('p',{className:'dcr-meta dcr-stub-boundary-note'},TEXT.stubBoundaryHint):null,
+el('div',{className:'dcr-stub-step-actions'},
+el('button',{type:'button',className:'dcr-btn','data-step-move-up':String(index),disabled:index===0,onClick:function(){props.onMoveStep(index,-1);}},TEXT.stubStepUp),
+el('button',{type:'button',className:'dcr-btn','data-step-move-down':String(index),disabled:index===steps.length-1,onClick:function(){props.onMoveStep(index,1);}},TEXT.stubStepDown),
+el('button',{type:'button',className:'dcr-btn','data-step-remove':String(index),onClick:function(){props.onRemoveStep(index);}},TEXT.stubStepRemove)
+)
+);
+}
+function renderRecord(record){
+var stubbed=record.stubbed===true;
+return el('div',{key:record.call_id||('step-'+String(record.step_index)),className:'dcr-stub-record'+(stubbed?' dcr-stub-record-stubbed':''),'data-stub-record':'','data-call-id':record.call_id||'','data-status':record.status,'data-step-index':record.step_index===null?'':String(record.step_index),'data-result':record.result===null?undefined:String(record.result),'data-stubbed':stubbed?'true':undefined,tabIndex:0,role:'button',onClick:function(){props.onJumpRecord(record,null);},onKeyDown:function(event){if(event.key==='Enter'||event.key===' '){if(event.preventDefault)event.preventDefault();props.onJumpRecord(record,null);}}},
+el('div',{className:'dcr-stub-record-head'},
+el('span',{className:'dcr-chip'},'#'+String((record.step_index===null?0:record.step_index)+1)+' step '+String(record.step_index===null?0:record.step_index)+' '+record.interface+'('+record.args.join(', ')+')'),
+el('span',{className:'dcr-chip dcr-stub-status-'+record.status},TEXT.stubRecordStatus+' '+record.status),
+el('span',{className:'dcr-meta'},TEXT.stubRecordResult+' '+(record.result===null?'—':String(record.result))),
+stubbed?el('span',{className:'dcr-chip dcr-stub-boundary-chip'},TEXT.stubStubbed):null,
+el('span',{className:'dcr-meta dcr-stub-digest',title:String(record.memory_digest||'')},TEXT.stubMemoryDigest+' '+String(record.memory_digest||'—'))
+),
+record.events.length>0?el('div',{className:'dcr-stub-events'},record.events.map(function(event,eventIndex){
+return el('button',{key:event.event_id||String(eventIndex),type:'button',className:'dcr-chip dcr-stub-event','data-stub-event':event.event_id||event.event,'data-event-kind':event.event,title:event.event+' code='+String(event.code===null?'—':event.code)+' a='+String(event.a===null?'—':event.a)+' b='+String(event.b===null?'—':event.b)+' c='+String(event.c===null?'—':event.c)+' line='+String(event.line===null?'—':event.line),onClick:function(eventClick){if(eventClick&&eventClick.stopPropagation)eventClick.stopPropagation();props.onJumpRecord(record,event);}},event.event+(event.line===null?'':'@'+String(event.line))+' #'+String(event.code===null?'—':event.code));
+})):null,
+record.affected_resources.length>0?el('div',{className:'dcr-stub-affects'},record.affected_resources.map(function(resource){
+return el('span',{key:resource.resource_id,className:'dcr-chip dcr-stub-affect','data-stub-affect':resource.resource_id,'data-resource-id':resource.resource_id,'data-access':resource.access},resource.name+' · '+accessLabel(resource.access));
+})):null,
+record.status==='error'?el('p',{className:'dcr-error dcr-stub-record-error'},record.error_message||('返回 '+String(record.result===null?'—':record.result))):null
+);
+}
+var recordRows=records.map(renderRecord);
+if(stub.stopOnError===true&&failedIndex>=0){
+for(var si=failedIndex+1;si<steps.length;si+=1){
+recordRows.push(el('div',{key:'skipped-'+String(si),className:'dcr-stub-record dcr-stub-record-skipped','data-stub-record':'','data-call-id':'','data-status':'skipped','data-step-index':String(si)},
+el('span',{className:'dcr-chip'},'#'+String(si+1)+' '+String(steps[si].interface||'—')),
+el('span',{className:'dcr-meta'},TEXT.stubRecordSkipped)
+));
+}
+}
+var profileOptions=[el('option',{key:'none',value:''},'（未选择）')];
+for(var poi=0;poi<profiles.length;poi+=1){
+profileOptions.push(el('option',{key:profiles[poi].profile_id,value:profiles[poi].profile_id},profiles[poi].label+' · '+profiles[poi].profile_id));
+}
+return el('div',{className:'dcr-stub dcr-stub-panel','data-code-view':'stub-panel','data-busy':stub.busy===true?'true':'false'},
+el('h3',{className:'dcr-subheading'},TEXT.stubPanelTitle),
+el('p',{className:'dcr-muted'},TEXT.stubHint),
+props.workspaceReady!==true?el('p',{className:'dcr-warning'},'请先在「快照与入口」选择已核验快照；打桩模拟按快照绑定执行。'):null,
+el('div',{className:'dcr-stub-section'},
+el('label',{className:'dcr-subheading'},TEXT.stubProfileTitle+' ',
+el('select',{className:'dcr-select','data-stub-profile':'','aria-label':TEXT.stubProfileTitle,value:stub.profileId||'',disabled:stub.busy,onChange:function(event){props.onSelectProfile(event&&event.target?event.target.value:null);}},profileOptions)
+),
+stub.profiles.state==='loading'?el('p',{className:'dcr-muted',role:'status'},TEXT.stubProfilesLoading):null,
+stub.profiles.state==='error'?el('p',{className:'dcr-error'},TEXT.stubProfilesFailed):null,
+stub.profiles.state==='ready'&&profiles.length===0?el('p',{className:'dcr-muted'},TEXT.stubProfilesEmpty):null,
+stub.profiles.state==='empty'?el('p',{className:'dcr-muted'},TEXT.stubProfilesEmpty):null,
+profile!==null?el('div',{className:'dcr-stub-profile-facts'},
+el('span',{className:'dcr-chip'},profile.label),
+el('span',{className:'dcr-meta'},'binding '+String(profile.binding.workspace_id||'—')+' / '+String(profile.binding.variant_id||'—')+' / '+String(profile.binding.repo_id||'—')+' / '+String(profile.binding.snapshot_id||'—')),
+el('span',{className:'dcr-meta'},'module sha256 '+shortDigest(profile.module.sha256)+(profile.module.bytes!==null?' · '+numberText(profile.module.bytes)+' B':'')),
+el('span',{className:'dcr-meta'},'接口 '+(profile.interfaces.length>0?String(profile.interfaces.length):(profile.interface_count!==null?'定义未随列表提供（'+String(profile.interface_count)+'，需 Host/引擎补充 interfaces）':'—'))+' · limits timeout '+(profile.limits.timeout_ms===null?'—':String(profile.limits.timeout_ms)+' ms')+' · steps '+(profile.limits.steps===null?'—':String(profile.limits.steps))+' · events/step '+(profile.limits.events_per_step===null?'—':String(profile.limits.events_per_step))),
+profile.limitations.length>0?el('span',{className:'dcr-muted'},'局限：'+profile.limitations.join('、')):null
+):el('p',{className:'dcr-muted'},TEXT.stubNoProfile)
+),
+profile!==null&&profile.interfaces.length>0?el('div',{className:'dcr-stub-section','data-stub-editor':''},
+el('h3',{className:'dcr-subheading'},TEXT.stubStepsTitle+'（'+String(steps.length)+'/'+String(limit)+'）'),
+steps.map(renderStep),
+el('div',{className:'dcr-stub-step-actions'},
+el('button',{type:'button',className:'dcr-btn','data-stub-add-step':'',disabled:stub.busy||steps.length>=limit,onClick:props.onAddStep},TEXT.stubStepAdd),
+el('label',{className:'dcr-stub-check'},el('input',{type:'checkbox','data-stub-stop-on-error':'','checked':stub.stopOnError===true,disabled:stub.busy,onChange:props.onToggleStopOnError}),' '+TEXT.stubStopOnError)
+),
+):null,
+el('div',{className:'dcr-stub-section dcr-stub-run-section'},
+el('p',{className:'dcr-muted'},TEXT.stubRunHint),
+el('div',{className:'dcr-stub-runbar'},
+el('button',{type:'button',className:'dcr-btn dcr-btn-primary','data-stub-run':'',disabled:stub.busy===true||profile===null||profile.interfaces.length===0||props.workspaceReady!==true,onClick:props.onRun},stub.busy===true?TEXT.stubRunBusy:TEXT.stubRun),
+profile!==null&&stub.plan!==null&&stub.plan!==undefined?el('span',{className:'dcr-chip','data-stub-plan':''},TEXT.stubPlan+' '+shortDigest(stub.plan.plan_id)+' · 代次 '+String(stub.plan.generation===null?'—':stub.plan.generation)+' · timeout '+(stub.plan.limits.timeout_ms===null?'—':String(stub.plan.limits.timeout_ms)+' ms')):null
+),
+profile===null?el('p',{className:'dcr-muted'},TEXT.stubNoProfile):null,
+stub.runError!==null&&stub.runError!==undefined?el('p',{className:'dcr-error','data-stub-error':'','data-error-code':stub.runError.code},TEXT.stubRunFailed+' '+String(stub.runError.code)+'：'+String(stub.runError.message)):null
+),
+stub.latest!==null&&stub.latest!==undefined?el('div',{className:'dcr-stub-section dcr-stub-records','data-stub-records':''},
+el('h3',{className:'dcr-subheading'},TEXT.stubRecordsTitle),
+el('div',{className:'dcr-stub-generation','data-stub-generation':''},
+el('span',{className:'dcr-chip'},TEXT.stubScenarioId+' '+String(stub.latest.scenario_id||'—')),
+el('span',{className:'dcr-chip'},TEXT.stubGeneration+' '+String(stub.latest.generation===null?'—':stub.latest.generation)),
+el('span',{className:'dcr-meta'},'records_digest '+shortDigest(stub.latest.records_digest)),
+el('span',{className:'dcr-meta'},'profile '+String(stub.latest.profile_id||'—'))
+),
+recordRows.length===0?el('p',{className:'dcr-muted'},TEXT.stubRecordsEmpty):recordRows
+):el('p',{className:'dcr-muted'},TEXT.stubRecordsEmpty),
+el('div',{className:'dcr-stub-section'},
+el('button',{type:'button',className:'dcr-btn','data-stub-undo':'',disabled:true},TEXT.stubUndo),
+el('p',{className:'dcr-muted','data-stub-undo-gap':''},TEXT.stubUndoGap)
+),
+gaps.length>0?el('div',{className:'dcr-stub-gaps'},gaps.map(function(gap){
+return el('p',{key:gap.code,className:'dcr-muted dcr-stub-gap','data-stub-gap':gap.code},el('code',null,gap.code),' '+String(gap.reason||''));
+})):null
+);
+}
 function RailPanel(props){
 var resources=Array.isArray(props.resources)?props.resources:[];
 var related=[];
@@ -1992,12 +2542,9 @@ return el('span',{key:key,className:'dcr-chip dcr-access-chip dcr-access-'+key},
 );
 }));
 }
+var stubProps=assign({stub:props.stub,workspaceReady:props.workspaceReady,status:props.status},props.stubHandlers);
 var modeContent=props.mode==='stub'
-?el('div',{className:'dcr-stub','data-stub-panel':''},
-el('h3',{className:'dcr-subheading'},TEXT.stubTitle),
-el('p',{className:'dcr-muted'},TEXT.stubReason),
-el('button',{type:'button',className:'dcr-btn',disabled:true},TEXT.stubAction)
-)
+?el(StubPanel,stubProps)
 :el('div',{className:'dcr-rail-pane'},
 el('h3',{className:'dcr-subheading'},TEXT.railResources),
 el('p',{className:'dcr-muted'},TEXT.resourceRelated+' · '+String(related.length)+' 项'),
@@ -3329,29 +3876,21 @@ if(found<0)found=fallbackIndex%count;
 return((found+0.5)/count)*100;
 }
 function SequenceView(props){
-var sequence=normalizeSequence(props.payload);
+var mode=props.mode==='observed'?'observed':'static';
+var observed=props.observed||{state:'idle',payload:null,error:null};
+function deriveParticipants(sequence){
 var participants=sequence.participants.slice();
 if(participants.length===0){
 var seen={};
 for(var index=0;index<sequence.messages.length;index+=1){
 var message=sequence.messages[index];
-if(seen[message.from]!==true){
-seen[message.from]=true;
-participants.push({participant_id:message.from,label:message.from});
-}
-if(seen[message.to]!==true){
-seen[message.to]=true;
-participants.push({participant_id:message.to,label:message.to});
+if(seen[message.from]!==true){seen[message.from]=true;participants.push({participant_id:message.from,label:message.from});}
+if(seen[message.to]!==true){seen[message.to]=true;participants.push({participant_id:message.to,label:message.to});}
 }
 }
+return participants;
 }
-var fromIndex={};
-var toIndex={};
-for(var pi=0;pi<participants.length;pi+=1){
-fromIndex[participants[pi].participant_id]=pi;
-toIndex[participants[pi].participant_id]=pi;
-}
-function renderMessage(message,messageIndex){
+function renderMessage(sequence,participants,message,messageIndex,observedFlag){
 var fromX=sequencePercent(participants,message.from,messageIndex);
 var toX=sequencePercent(participants,message.to,messageIndex+1);
 var self=participants.length>0&&fromX===toX;
@@ -3365,6 +3904,8 @@ className:'dcr-seq-row dcr-seq-'+message.kind+(selected?' dcr-selected':''),
 'data-sequence-message':message.message_id,
 'data-message-kind':message.kind,
 'data-certainty':message.certainty,
+'data-observed':observedFlag===true?'true':undefined,
+'data-call-id':observedFlag===true&&message.call_id!==null?message.call_id:undefined,
 tabIndex:0,
 role:'button',
 onClick:function(){props.onSelectMessage(message);},
@@ -3384,22 +3925,23 @@ el('span',{className:'dcr-chip'},'#'+String(message.index)),
 el('span',{className:'dcr-seq-'+message.kind},sequenceParticipantLabel(participants,message.from)+' → '+sequenceParticipantLabel(participants,message.to)),
 el('span',null,message.label),
 el('span',{className:'dcr-chip'},KIND_LABELS[message.kind]||message.kind),
-el(EvidenceBadge,{value:message.certainty}),
+observedFlag===true?el(EvidenceBadge,{value:'observed'}):el(EvidenceBadge,{value:message.certainty}),
+observedFlag===true&&message.call_id!==null?el('span',{className:'dcr-meta'},'call '+message.call_id):null,
+observedFlag===true&&message.status!==null?el('span',{className:'dcr-chip dcr-stub-status-'+message.status},'status '+message.status):null,
+observedFlag===true&&message.result!==null?el('span',{className:'dcr-meta'},'结果 '+String(message.result)):null,
+observedFlag===true&&message.stubbed===true?el('span',{className:'dcr-chip dcr-stub-boundary-chip','data-stubbed':'true'},'stubbed'):null,
+observedFlag===true&&message.event!==null?el('span',{className:'dcr-chip'},'event '+message.event+(message.code===null?'':' #'+String(message.code))):null,
+observedFlag===true?message.affected_resources.map(function(resource){
+return el('span',{key:resource.resource_id,className:'dcr-chip dcr-stub-affect','data-stub-affect':resource.resource_id,'data-resource-id':resource.resource_id},resource.name+' · '+accessLabel(resource.access));
+}):null,
 message.evidence_ids.length>0?el('span',{className:'dcr-meta'},'证据 '+message.evidence_ids.join('、')):null,
 message.limitations.length>0?el('span',{className:'dcr-muted'},'限制 '+message.limitations.join('、')):null
 )
 );
 }
-return el('div',{className:'dcr-view-inner'},
-el('div',{className:'dcr-section-head'},
-el('h3',{className:'dcr-heading'},VIEW_LABELS.sequence),
-el('span',{className:'dcr-chip'},'mode '+sequence.mode),
-el('span',{className:'dcr-chip'},'observed '+(sequence.observed?'true':'false')),
-sequence.truncated?el('span',{className:'dcr-chip'},'已截断'):null
-),
-el('p',{className:'dcr-warning','data-sequence-warning':'','data-observed':sequence.observed?'true':'false'},sequence.warning+' · '+TEXT.sequenceObserved),
-el('p',{className:'dcr-muted'},TEXT.sequenceHint),
-el('div',{className:'dcr-seq'},
+function renderDiagram(sequence,observedFlag){
+var participants=deriveParticipants(sequence);
+return el('div',{className:'dcr-seq'},
 el('div',{className:'dcr-seq-head'},participants.map(function(participant){
 return el('div',{key:participant.participant_id,className:'dcr-seq-participant'},participant.label);
 })),
@@ -3407,10 +3949,54 @@ el('div',{className:'dcr-seq-body'},
 participants.map(function(participant){
 return el('div',{key:'lane-'+participant.participant_id,className:'dcr-seq-lane',style:{left:sequencePercent(participants,participant.participant_id,0)+'%'}});
 }),
-sequence.messages.map(function(message,index){return renderMessage(message,index);})
-)
+sequence.messages.map(function(message,index){return renderMessage(sequence,participants,message,index,observedFlag);})
 )
 );
+}
+var staticSequence=normalizeSequence(props.payload);
+var modeBar=el('div',{className:'dcr-seq-mode','data-code-view':'sequence-mode','aria-label':TEXT.sequenceModeLabel},
+el('span',{className:'dcr-meta'},TEXT.sequenceModeLabel),
+el('button',{type:'button',className:'dcr-btn'+(mode==='static'?' dcr-btn-selected':''),'data-sequence-mode':'static','aria-pressed':mode==='static'?'true':'false',onClick:function(){props.onSelectMode('static');}},TEXT.sequenceModeStatic),
+el('button',{type:'button',className:'dcr-btn'+(mode==='observed'?' dcr-btn-selected':''),'data-sequence-mode':'observed','aria-pressed':mode==='observed'?'true':'false',disabled:props.scenarioAvailable!==true,onClick:function(){props.onSelectMode('observed');}},TEXT.sequenceModeObserved),
+props.scenarioAvailable!==true?el('span',{className:'dcr-muted','data-sequence-gap':''},TEXT.sequenceObservedGap):null
+);
+var head=el('div',{className:'dcr-section-head'},
+el('h3',{className:'dcr-heading'},VIEW_LABELS.sequence),
+el('span',{className:'dcr-chip'},'mode '+mode),
+el('span',{className:'dcr-chip'},'observed '+(mode==='observed'?'true':'false')),
+mode==='observed'&&observed.state==='ready'&&isRecord(observed.payload)&&isRecord(observed.payload.scenario)?el('span',{className:'dcr-chip'},TEXT.sequenceScenario+' '+String(observed.payload.scenario.scenario_id||'—')):null,
+mode==='observed'&&observed.state==='ready'&&isRecord(observed.payload)&&isRecord(observed.payload.scenario)?el('span',{className:'dcr-chip'},TEXT.sequenceGeneration+' '+String(observed.payload.scenario.generation===null?'—':observed.payload.scenario.generation)):null,
+staticSequence.truncated&&mode==='static'?el('span',{className:'dcr-chip'},'已截断'):null
+);
+var body;
+if(mode==='observed'){
+if(observed.state==='loading')body=el('p',{className:'dcr-muted',role:'status','data-sequence-observed':'true'},TEXT.sequenceObservedLoading);
+else if(observed.state==='error')body=el('p',{className:'dcr-error','data-error-code':observed.error?observed.error.code:'UNKNOWN_ERROR'},TEXT.sequenceObservedFailed);
+else if(observed.state!=='ready')body=el('p',{className:'dcr-muted','data-sequence-gap':''},TEXT.sequenceObservedEmpty);
+else{
+var observedSequence=normalizeSequence(observed.payload);
+var scenario=observedSequence.scenario;
+body=el('div',null,
+el('p',{className:'dcr-warning dcr-warning-observed','data-sequence-observed':'true'},TEXT.sequenceObservedTitle+' · '+TEXT.sequenceObservedTrue),
+el('div',{className:'dcr-seq-scenario','data-scenario-id':scenario!==null&&scenario.scenario_id!==null?scenario.scenario_id:undefined,'data-scenario-generation':scenario!==null&&scenario.generation!==null?String(scenario.generation):undefined},
+scenario!==null?el('span',{className:'dcr-chip'},'scenario_id '+String(scenario.scenario_id||'—')):null,
+scenario!==null?el('span',{className:'dcr-chip'},'generation '+String(scenario.generation===null?'—':scenario.generation)):null,
+scenario!==null?el('span',{className:'dcr-meta'},'profile '+String(scenario.profile_id||'—')):null,
+scenario!==null?el('span',{className:'dcr-meta'},'records_digest '+shortDigest(scenario.records_digest)):null,
+scenario!==null?el('span',{className:'dcr-meta'},'created '+String(scenario.created_at||'—')):null
+),
+el('p',{className:'dcr-muted'},TEXT.sequenceObservedHint),
+el('div',{'data-sequence-observed':'true'},renderDiagram(observedSequence,true))
+);
+}
+}else{
+body=el('div',null,
+el('p',{className:'dcr-warning','data-sequence-warning':'','data-observed':'false'},staticSequence.warning+' · '+TEXT.sequenceObserved),
+el('p',{className:'dcr-muted'},TEXT.sequenceHint),
+renderDiagram(staticSequence,false)
+);
+}
+return el('div',{className:'dcr-view-inner'},head,modeBar,body);
 }
 function FileView(props){
 var tree=normalizeFileTree(props.treePayload);
@@ -3708,6 +4294,11 @@ subflowRootId:null,
 focusGroupId:null,
 focusInterfaceId:null,
 libraryOpen:true,
+stubProfileId:null,
+sequenceMode:'static',
+scenarioId:null,
+runGeneration:null,
+callId:null,
 };
 function rememberSnapshot(row){
 remembered.snapshot={
@@ -3823,6 +4414,41 @@ var EXTRA_CSS=[
 '.dcr-subflow-node{font-size:11px;cursor:pointer;}',
 '.dcr-swatch-group{border-style:dashed;}',
 '.dcr-swatch-blackbox{border-style:double;border-width:3px;}',
+'.dcr-swatch-observed{border-style:double;border-width:3px;}',
+'.dcr-stub-panel{display:flex;flex-direction:column;gap:6px;min-width:0;}',
+'.dcr-stub-section{border:1px solid var(--dsh-border-color,rgba(127,127,127,0.3));border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:5px;min-width:0;}',
+'.dcr-select{font:inherit;max-width:100%;padding:3px 6px;border-radius:6px;border:1px solid var(--dsh-border-color,rgba(127,127,127,0.45));background:transparent;color:inherit;}',
+'.dcr-stub-profile-facts{display:flex;flex-direction:column;gap:2px;}',
+'.dcr-stub-step{border:1px solid var(--dsh-border-color,rgba(127,127,127,0.35));border-left-width:4px;border-radius:6px;padding:5px 6px;display:flex;flex-direction:column;gap:4px;}',
+'.dcr-stub-step.dcr-stub-step-boundary{border-left-color:var(--dsh-warning-color,currentColor);}',
+'.dcr-stub-step-head{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;}',
+'.dcr-stub-args{display:flex;flex-direction:column;gap:3px;}',
+'.dcr-stub-arg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;}',
+'.dcr-stub-arg-input{font:inherit;width:92px;padding:2px 6px;border-radius:6px;border:1px solid var(--dsh-border-color,rgba(127,127,127,0.45));background:transparent;color:inherit;}',
+'.dcr-stub-arg-input.dcr-stub-invalid{border-color:var(--dsh-danger-color,currentColor);color:var(--dsh-danger-color,currentColor);}',
+'.dcr-stub-step-actions{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}',
+'.dcr-stub-check{display:inline-flex;align-items:center;gap:4px;font-size:12px;}',
+'.dcr-stub-runbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}',
+'.dcr-stub-boundary-chip{border-color:var(--dsh-warning-color,currentColor);}',
+'.dcr-stub-boundary-note{color:var(--dsh-warning-color,currentColor);}',
+'.dcr-stub-records{max-height:44vh;overflow:auto;}',
+'.dcr-stub-generation{display:flex;flex-wrap:wrap;gap:5px;align-items:baseline;}',
+'.dcr-stub-record{border:1px solid var(--dsh-border-color,rgba(127,127,127,0.35));border-radius:6px;padding:5px 6px;display:flex;flex-direction:column;gap:3px;cursor:pointer;}',
+'.dcr-stub-record.dcr-stub-record-stubbed{border-style:double;border-color:var(--dsh-warning-color,currentColor);}',
+'.dcr-stub-record.dcr-stub-record-skipped{opacity:0.7;border-style:dashed;cursor:default;}',
+'.dcr-stub-record-head{display:flex;flex-wrap:wrap;gap:5px;align-items:baseline;}',
+'.dcr-stub-events,.dcr-stub-affects{display:flex;flex-wrap:wrap;gap:4px;}',
+'.dcr-stub-event{font:inherit;font-size:11px;cursor:pointer;border-radius:999px;padding:0 6px;border:1px solid var(--dsh-border-color,rgba(127,127,127,0.4));background:transparent;color:inherit;}',
+'.dcr-stub-status-ok{border-color:var(--dsh-accent-color,currentColor);}',
+'.dcr-stub-status-error{color:var(--dsh-danger-color,currentColor);border-color:var(--dsh-danger-color,currentColor);}',
+'.dcr-stub-status-skipped{opacity:0.75;}',
+'.dcr-stub-gaps{display:flex;flex-direction:column;gap:3px;}',
+'.dcr-stub-gap{font-size:12px;}',
+'.dcr-stub-record-error{margin:2px 0 0;}',
+'.dcr-stub-digest{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;vertical-align:bottom;}',
+'.dcr-seq-mode{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:4px 0;}',
+'.dcr-seq-scenario{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:2px 0;}',
+'.dcr-warning-observed{border-color:var(--dsh-accent-color,currentColor);border-style:double;}',
 ].join('\n');
 CSS=CSS+'\n'+EXTRA_CSS;
 function createInitialFileState(){
@@ -3838,6 +4464,22 @@ readError:null,
 selectedRepo:null,
 selectedPath:null,
 highlightLine:null,
+};
+}
+function createInitialStubState(){
+return{
+profiles:{key:null,state:'idle',payload:null,error:null},
+ledger:{key:null,state:'idle',payload:null,error:null},
+profileId:sessionUi.stubProfileId,
+steps:[{interface:'',args:[]}],
+stopOnError:true,
+busy:false,
+runError:null,
+plan:null,
+latest:null,
+latestScenarioId:null,
+latestGeneration:null,
+notice:'',
 };
 }
 function createInitialPanelView(){
@@ -3870,6 +4512,7 @@ groupCollapsed:assign({},sessionUi.groupCollapsed),
 groupOverrides:assign({},sessionUi.groupOverrides),
 addedInterfaces:assign({},sessionUi.addedInterfaces),
 blackboxExpanded:assign({},sessionUi.blackboxExpanded),
+stub:createInitialStubState(),
 file:createInitialFileState(),
 actionError:null,
 notice:'',
@@ -3889,6 +4532,10 @@ detailsTab:sessionUi.detailsTab,
 subflowRootId:sessionUi.subflowRootId,
 libraryOpen:sessionUi.libraryOpen,
 subflow:{key:null,state:'idle',payload:null,error:null,entryId:null,rootId:null},
+sequenceMode:sessionUi.sequenceMode==='observed'?'observed':'static',
+focus_scenario_id:sessionUi.scenarioId,
+focus_run_generation:sessionUi.runGeneration,
+focus_call_id:sessionUi.callId,
 };
 }
 function findResourceById(payload,resourceId){
@@ -4004,6 +4651,11 @@ sessionUi.subflowRootId=currentUi.subflowRootId;
 sessionUi.focusGroupId=currentUi.focus_group_id;
 sessionUi.focusInterfaceId=currentUi.focus_interface_id;
 sessionUi.libraryOpen=currentUi.libraryOpen;
+sessionUi.stubProfileId=current.stub!==undefined&&current.stub!==null?current.stub.profileId:sessionUi.stubProfileId;
+sessionUi.sequenceMode=currentUi.sequenceMode;
+sessionUi.scenarioId=currentUi.focus_scenario_id;
+sessionUi.runGeneration=currentUi.focus_run_generation;
+sessionUi.callId=currentUi.focus_call_id;
 }
 function openPanel(){
 patchView(createInitialPanelView());
@@ -4076,6 +4728,7 @@ selectedFunctionId:null,
 selectedFunctionName:null,
 data:{},
 interfaces:{key:null,state:'idle',payload:null,error:null},
+stub:createInitialStubState(),
 file:createInitialFileState(),
 actionError:null,
 notice:'',
@@ -4277,6 +4930,301 @@ return;
 var normalized=normalizeInterfaces(result.value);
 patchView({interfaces:{key:key,state:normalized.candidates.length>0?'ready':'empty',payload:result.value,error:null}});
 });
+}
+function patchStub(patch){
+patchView(function(previous){
+var stub=assign({},previous.stub,typeof patch==='function'?patch(previous.stub):patch);
+return{stub:stub};
+});
+}
+function stubEditResetPatch(){
+return{latestGeneration:0,plan:null};
+}
+function selectedStubProfile(){
+var stub=getViewState().stub;
+return findStubProfile(stub,stub.profileId);
+}
+function defaultStubSteps(){
+return[{interface:'',args:[]}];
+}
+function defaultStubArg(param){
+var min=param.min!==null?param.min:(param.type==='u32'?0:-2147483648);
+var max=param.max!==null?param.max:2147483647;
+if(min<=0&&max>=0)return 0;
+return min;
+}
+function loadStubProfiles(force){
+var snapshot=currentSnapshot();
+if(snapshot===null)return;
+var workspace=snapshot.workspace_id;
+var key='ws|'+String(workspace);
+var stub=getViewState().stub;
+if(force!==true&&stub.profiles.key===key&&(stub.profiles.state==='loading'||stub.profiles.state==='ready'||stub.profiles.state==='empty'||stub.profiles.state==='error'))return;
+patchStub({profiles:{key:key,state:'loading',payload:null,error:null}});
+request('stubProfiles','scenario.listProfiles',{workspace:workspace}).then(function(result){
+if(!result)return;
+if(result.kind==='error'){
+patchStub({profiles:{key:key,state:'error',payload:null,error:result}});
+return;
+}
+var normalized=normalizeStubProfiles(result.value);
+var current=getViewState().stub;
+var selected=current.profileId;
+var holder={profiles:{payload:normalized}};
+if(selected===null||findStubProfile(holder,selected)===null)selected=normalized.profiles.length>0?normalized.profiles[0].profile_id:null;
+if(selected!==null)sessionUi.stubProfileId=selected;
+var profile=findStubProfile(holder,selected);
+var steps=current.steps;
+var reset=profile===null||steps.length===0;
+if(!reset){
+for(var index=0;index<steps.length;index+=1){
+if(steps[index].interface!==''&&findStubInterface(profile,steps[index].interface)===null){reset=true;break;}
+}
+}
+patchStub({profiles:{key:key,state:normalized.profiles.length>0?'ready':'empty',payload:normalized,error:null},profileId:selected,steps:reset?defaultStubSteps():steps});
+});
+}
+function setScenarioFocus(scenarioId,generation,callId){
+var current=getUiState();
+var nextScenario=copyNullableString(scenarioId)!==null?scenarioId:current.focus_scenario_id;
+var nextGeneration=toSignedInteger(generation)!==null?generation:current.focus_run_generation;
+var nextCall=callId===undefined?current.focus_call_id:callId;
+sessionUi.scenarioId=nextScenario;
+sessionUi.runGeneration=nextGeneration;
+sessionUi.callId=nextCall;
+patchUi({focus_scenario_id:nextScenario,focus_run_generation:nextGeneration,focus_call_id:nextCall});
+}
+function loadScenarioLedger(force,callback){
+var snapshot=currentSnapshot();
+if(snapshot===null){if(typeof callback==='function')callback();return;}
+var workspace=snapshot.workspace_id;
+var key='ws|'+String(workspace);
+var stub=getViewState().stub;
+if(force!==true&&stub.ledger.key===key&&(stub.ledger.state==='loading'||stub.ledger.state==='ready'||stub.ledger.state==='empty')){
+if(typeof callback==='function')callback();
+return;
+}
+patchStub({ledger:{key:key,state:'loading',payload:null,error:null}});
+request('scenarios','scenario.list',{workspace:workspace}).then(function(result){
+if(!result){if(typeof callback==='function')callback();return;}
+if(result.kind==='error'){
+patchStub({ledger:{key:key,state:'error',payload:null,error:result}});
+if(typeof callback==='function')callback();
+return;
+}
+var normalized=normalizeScenarioLedger(result.value);
+var latest=normalized.scenarios.length>0?normalized.scenarios[0]:null;
+var current=getViewState().stub;
+patchStub({ledger:{key:key,state:normalized.scenarios.length>0?'ready':'empty',payload:normalized,error:null},latestScenarioId:latest!==null?latest.scenario_id:current.latestScenarioId});
+if(latest!==null)setScenarioFocus(latest.scenario_id,latest.generation,getUiState().focus_call_id);
+if(typeof callback==='function')callback();
+});
+}
+function ensureStubData(){
+var snapshot=currentSnapshot();
+if(snapshot===null)return;
+var stub=getViewState().stub;
+if(stub.profiles.key===null||stub.profiles.state==='idle'||stub.profiles.state==='error')loadStubProfiles(false);
+if(stub.ledger.key===null||stub.ledger.state==='idle'||stub.ledger.state==='error')loadScenarioLedger(false);
+}
+function selectStubProfile(profileId){
+var id=copyNullableString(profileId);
+sessionUi.stubProfileId=id;
+patchStub(assign(stubEditResetPatch(),{profileId:id,steps:defaultStubSteps(),runError:null,latest:null}));
+}
+function addStubStep(){
+var stub=getViewState().stub;
+var profile=selectedStubProfile();
+var limit=profile!==null&&profile.limits&&profile.limits.steps?Math.min(MAX_STUB_STEPS,profile.limits.steps):MAX_STUB_STEPS;
+if(stub.steps.length>=limit)return;
+patchStub(assign(stubEditResetPatch(),{steps:stub.steps.concat([{interface:'',args:[]}])}));
+}
+function removeStubStep(index){
+patchStub(function(stub){
+var steps=stub.steps.slice();
+if(index>=0&&index<steps.length)steps.splice(index,1);
+return assign(stubEditResetPatch(),{steps:steps.length===0?defaultStubSteps():steps});
+});
+}
+function moveStubStep(index,delta){
+patchStub(function(stub){
+var steps=stub.steps.slice();
+var target=index+delta;
+if(index<0||index>=steps.length||target<0||target>=steps.length)return{};
+var moved=steps[index];
+steps[index]=steps[target];
+steps[target]=moved;
+return assign(stubEditResetPatch(),{steps:steps});
+});
+}
+function setStubStepInterface(index,name){
+var profile=selectedStubProfile();
+var iface=findStubInterface(profile,name);
+var args=[];
+if(iface!==null){
+for(var pi=0;pi<iface.params.length;pi+=1)args.push(defaultStubArg(iface.params[pi]));
+}
+patchStub(function(stub){
+var steps=stub.steps.slice();
+if(index<0||index>=steps.length)return{};
+steps[index]=assign({},steps[index],{interface:name,args:args});
+return assign(stubEditResetPatch(),{steps:steps});
+});
+}
+function setStubStepArg(index,argIndex,raw){
+var text=typeof raw==='string'?raw.trim():String(raw===undefined||raw===null?'':raw);
+var value=null;
+if(text!==''&&/^-?\d+$/.test(text)){
+var number=Number(text);
+if(Number.isSafeInteger(number))value=number;
+}
+patchStub(function(stub){
+var steps=stub.steps.slice();
+if(index<0||index>=steps.length)return{};
+var step=assign({},steps[index]);
+var args=step.args.slice();
+args[argIndex]=value;
+step.args=args;
+steps[index]=step;
+return assign(stubEditResetPatch(),{steps:steps});
+});
+}
+function toggleStubStopOnError(){
+patchStub(function(stub){return assign(stubEditResetPatch(),{stopOnError:stub.stopOnError!==true});});
+}
+function buildStubScenario(stub,steps,generation){
+return{generation:generation,stop_on_error:stub.stopOnError===true,steps:steps.map(function(step){return{interface:step.interface,args:step.args.slice()};})};
+}
+function runStub(){
+var stub=getViewState().stub;
+if(stub.busy===true)return;
+var snapshot=currentSnapshot();
+if(snapshot===null)return;
+var profile=selectedStubProfile();
+var check=stubValidation(profile,stub);
+if(check.errors.length>0){
+patchStub({runError:{code:check.errors[0].code,message:check.errors[0].message},plan:null});
+return;
+}
+var expected=toSignedInteger(stub.latestGeneration)!==null?stub.latestGeneration:0;
+var payload={workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,profile:profile.profile_id};
+var scenario=buildStubScenario(stub,check.steps,expected);
+patchStub({busy:true,runError:null,plan:null});
+request('stubPreview','scenario.preview',assign({},payload,{scenario:scenario})).then(function(previewResult){
+if(!previewResult)return;
+if(previewResult.kind==='error'){
+patchStub({busy:false,runError:previewResult});
+return;
+}
+var plan=normalizeScenarioPlan(previewResult.value);
+patchStub({plan:plan});
+var runScenario=assign({},scenario,{generation:expected});
+request('stubRun','scenario.run',assign({},payload,{scenario:runScenario,expected_generation:expected})).then(function(runResult){
+if(!runResult)return;
+if(runResult.kind==='error'){
+patchStub({busy:false,runError:runResult});
+if(runResult.code==='STATE_CONFLICT')loadScenarioLedger(true);
+if(runResult.code==='OUTCOME_UNKNOWN'||runResult.code==='TRANSPORT_FAILURE')loadScenarioLedger(true);
+return;
+}
+var latest=normalizeScenarioRun(runResult.value);
+var currentStub=getViewState().stub;
+patchStub({busy:false,runError:null,latest:latest,latestScenarioId:latest.scenario_id!==null?latest.scenario_id:currentStub.latestScenarioId,latestGeneration:latest.generation!==null?latest.generation:currentStub.latestGeneration,notice:'已写入运行台账（generation '+String(latest.generation===null?'—':latest.generation)+'）。'});
+if(latest.scenario_id!==null)setScenarioFocus(latest.scenario_id,latest.generation,null);
+patchView(function(previous){
+var data=assign({},previous.data);
+delete data.sequence_observed;
+return{data:data};
+});
+loadScenarioLedger(true);
+if(getUiState().sequenceMode==='observed')loadObservedSequence();
+});
+});
+}
+function observedScenarioId(){
+var ui=getUiState();
+var stub=getViewState().stub;
+if(copyNullableString(ui.focus_scenario_id)!==null)return ui.focus_scenario_id;
+if(copyNullableString(stub.latestScenarioId)!==null)return stub.latestScenarioId;
+var ledger=stub.ledger.payload;
+if(ledger!==null&&ledger!==undefined&&Array.isArray(ledger.scenarios)&&ledger.scenarios.length>0)return ledger.scenarios[0].scenario_id;
+return null;
+}
+function loadObservedSequence(){
+var snapshot=currentSnapshot();
+var scenarioId=observedScenarioId();
+if(snapshot===null||scenarioId===null){
+setData('sequence_observed',{key:null,state:'empty',payload:null,error:null});
+return;
+}
+var generation=getUiState().focus_run_generation;
+var key=snapshot.snapshot_id+'|'+scenarioId+'|'+String(generation);
+var existing=getViewState().data.sequence_observed;
+if(existing&&existing.key===key&&(existing.state==='loading'||existing.state==='ready'||existing.state==='error'))return;
+setData('sequence_observed',{key:key,state:'loading',payload:null,error:null});
+var payload={workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,mode:'observed',scenario:scenarioId};
+request('sequenceObserved','view.sequence',payload).then(function(result){
+if(!result)return;
+if(result.kind==='error'){
+setData('sequence_observed',{state:'error',payload:null,error:result});
+return;
+}
+var normalized=normalizeSequence(result.value);
+setData('sequence_observed',{state:normalized.messages.length>0||normalized.participants.length>0?'ready':'empty',payload:result.value,error:null});
+if(normalized.scenario!==null&&normalized.scenario.scenario_id!==null)setScenarioFocus(normalized.scenario.scenario_id,normalized.scenario.generation,getUiState().focus_call_id);
+});
+}
+function switchSequenceMode(mode){
+var next=mode==='observed'?'observed':'static';
+if(next===getUiState().sequenceMode)return;
+patchUi({sequenceMode:next});
+sessionUi.sequenceMode=next;
+if(next==='observed'){
+var stub=getViewState().stub;
+if(stub.latestScenarioId!==null){
+if(stub.ledger.state!=='ready')loadScenarioLedger(false,loadObservedSequence);
+else loadObservedSequence();
+}else{
+loadScenarioLedger(false,loadObservedSequence);
+}
+}else{
+loadData('sequence');
+}
+}
+function observedSequenceScenario(){
+var entry=getViewState().data.sequence_observed;
+if(!entry||!isRecord(entry.payload))return null;
+return normalizeSequence(entry.payload).scenario;
+}
+function onJumpStubRecord(record,event){
+var stub=getViewState().stub;
+var snapshot=currentSnapshot();
+if(snapshot===null)return;
+var scenarioId=stub.latestScenarioId!==null?stub.latestScenarioId:observedScenarioId();
+setScenarioFocus(scenarioId,stub.latestGeneration!==null?stub.latestGeneration:getUiState().focus_run_generation,record.call_id);
+var profile=selectedStubProfile();
+var iface=profile!==null?findStubInterface(profile,record.interface):null;
+var line=null;
+var file=null;
+var meta=iface!==null&&iface.entry_id!==null?locateFunctionMeta(iface.entry_id):null;
+if(event!==null&&event!==undefined&&toInteger(event.line)!==null){
+line=event.line;
+}
+if(line===null&&(event===null||event===undefined)&&meta!==null&&toInteger(meta.line)!==null)line=meta.line;
+for(var index=0;index<record.events.length&&line===null;index+=1){
+if(toInteger(record.events[index].line)!==null)line=record.events[index].line;
+}
+if(meta!==null&&copyNullableString(meta.file)!==null)file=meta.file;
+if(file===null&&getViewState().entryDetail!==null)file=getViewState().entryDetail.file;
+if(file===null&&remembered.file!==null)file=remembered.file.path;
+if(copyNullableString(file)===null){
+patchView({notice:'运行记录 '+String(record.call_id||'')+' 没有可定位的源码行（缺口）。'});
+return;
+}
+patchUi({view:'file'});
+remembered.view='file';
+openFile(snapshot.repo_id,file,line,true);
+ensureFileTree();
 }
 function setSubflow(patch){
 patchUi(function(previous){
@@ -4585,6 +5533,14 @@ return;
 prepareFileView();
 return;
 }
+if(name==='sequence'){
+var stubState=getViewState().stub;
+if(stubState.ledger.state==='ready'||stubState.latestScenarioId!==null){
+if(getUiState().sequenceMode==='observed')loadObservedSequence();
+}else{
+loadScenarioLedger(false,function(){if(getUiState().sequenceMode==='observed')loadObservedSequence();});
+}
+}
 loadData(name);
 }
 function onBlankCanvas(){
@@ -4608,6 +5564,25 @@ patchView({notice:'接口 '+candidate.name+'（黑盒摘要）'});
 function onSelectMessage(message){
 var snapshot=currentSnapshot();
 if(snapshot===null)return;
+if(message.observed===true||message.call_id!==null){
+var scenario=observedSequenceScenario();
+setScenarioFocus(scenario!==null?scenario.scenario_id:getUiState().focus_scenario_id,scenario!==null?scenario.generation:getUiState().focus_run_generation,message.call_id);
+if(message.observed===true&&message.source_ref!==null&&copyNullableString(message.source_ref.file)!==null){
+patchUi({focus_callsite_id:message.callsite_id});
+remembered.callsite_id=message.callsite_id;
+var refFunctionId=message.source_ref.function_id;
+if(refFunctionId!==null&&locateFunctionMeta(refFunctionId)!==null){
+selectFunctionById(refFunctionId,{name:message.label,file:message.source_ref.file,line:message.source_ref.line},{jumpFile:true});
+}else{
+patchUi({view:'file'});
+remembered.view='file';
+openFile(snapshot.repo_id,message.source_ref.file,message.source_ref.line,true);
+ensureFileTree();
+}
+return;
+}
+return;
+}
 patchUi({focus_callsite_id:message.callsite_id});
 remembered.callsite_id=message.callsite_id;
 var functionId=message.function_id!==null?message.function_id:currentEntryId();
@@ -4671,12 +5646,13 @@ if(Object.prototype.hasOwnProperty.call(map,name))map[name]+=1;
 };
 },[]);
 var gaps=collectGaps(view);
-var selection=buildSelection(view,ui.focus_resource_id,ui.focus_callsite_id,ui.focus_group_id,ui.focus_interface_id,ui.subflowRootId);
+var selection=buildSelection(view,ui.focus_resource_id,ui.focus_callsite_id,ui.focus_group_id,ui.focus_interface_id,ui.subflowRootId,ui.focus_scenario_id,ui.focus_run_generation,ui.focus_call_id);
 var errors=collectErrors(view);
 var activeData=view.data[ui.view]||null;
 if(activeData&&activeData.state==='error'&&activeData.error)errors.push(activeData.error);
 if(view.interfaces.state==='error'&&view.interfaces.error)errors.push(view.interfaces.error);
 if(ui.subflow.state==='error'&&ui.subflow.error)errors.push(ui.subflow.error);
+if(view.stub.runError!==null&&view.stub.runError!==undefined)errors.push(view.stub.runError);
 if(ui.view==='file'){
 if(view.file.treeError)errors.push(view.file.treeError);
 if(view.file.readError)errors.push(view.file.readError);
@@ -4684,6 +5660,8 @@ if(view.file.readError)errors.push(view.file.readError);
 errors=errors.slice(0,4);
 var overallState=computeState(view);
 var activeState=viewDataState(ui.view);
+var stubLedger=view.stub.ledger.payload;
+var stubScenarioAvailable=view.stub.latestScenarioId!==null||(stubLedger!==null&&stubLedger!==undefined&&Array.isArray(stubLedger.scenarios)&&stubLedger.scenarios.length>0);
 var couplingViewModel=view.data.coupling&&isRecord(view.data.coupling.payload)?view.data.coupling.payload:null;
 var railCoupling=couplingViewModel===null?null:normalizeCoupling(couplingViewModel);
 var railResources=railCoupling===null?[]:railCoupling.resources;
@@ -4742,7 +5720,11 @@ onSelectInterface:onSelectInterface,
 if(ui.view==='sequence'){
 return el(SequenceView,{
 payload:activeData.payload,
+observed:view.data.sequence_observed||{key:null,state:'idle',payload:null,error:null},
+mode:ui.sequenceMode,
+scenarioAvailable:stubScenarioAvailable,
 focusCallsiteId:ui.focus_callsite_id,
+onSelectMode:switchSequenceMode,
 onSelectMessage:onSelectMessage,
 });
 }
@@ -4836,13 +5818,31 @@ focusResourceId:ui.focus_resource_id,
 interfaces:{state:view.interfaces.state,payload:view.interfaces.payload},
 libraryOpen:ui.libraryOpen,
 addedInterfaces:view.addedInterfaces,
+stub:view.stub,
+workspaceReady:view.snapshot!==null,
+status:view.status,
+stubHandlers:{
+onSelectProfile:selectStubProfile,
+onAddStep:addStubStep,
+onRemoveStep:removeStubStep,
+onMoveStep:moveStubStep,
+onStepInterface:setStubStepInterface,
+onStepArg:setStubStepArg,
+onToggleStopOnError:toggleStubStopOnError,
+onRun:runStub,
+onJumpRecord:onJumpStubRecord,
+},
 onToggleLibrary:function(){
 patchUi({libraryOpen:!getUiState().libraryOpen});
 sessionUi.libraryOpen=!getUiState().libraryOpen;
 },
 onAddInterface:addInterface,
 onRemoveInterface:removeInterface,
-onSelectMode:function(mode){patchUi({rail:mode==='stub'?'stub':'resources'});},
+onSelectMode:function(mode){
+var next=mode==='stub'?'stub':'resources';
+patchUi({rail:next});
+if(next==='stub')ensureStubData();
+},
 onSelectResource:function(resource){selectResource(resource,{openDetails:true,ensureCoupling:true});},
 }),
 el('div',{className:'dcr-main'},
