@@ -2227,6 +2227,8 @@ className:'dcr-entry'+(selected?' dcr-selected':''),
 'data-entry-is-entry':row.is_entry===true?'true':'false',
 'aria-current':selected?'true':undefined,
 title:'入口 '+entryName+' '+formatLocation(row.file,row.line),
+onMouseEnter:function(){if(typeof props.onPrefetch==='function')props.onPrefetch(row);},
+onFocus:function(){if(typeof props.onPrefetch==='function')props.onPrefetch(row);},
 onClick:function(){props.onSelect(row);},
 },
 el('span',{className:'dcr-entry-name'},entryName+(row.is_entry===true?'（入口）':'')),
@@ -4531,7 +4533,7 @@ var content=activeTab==='subflow'?subflowContent:activeTab==='resources'?resourc
 body=el('div',{className:'dcr-details-body'},tabs,content,el(AISummarySection,{summary:props.summary,subject:props.summarySubject}));
 }
 }
-return el('section',{className:'dcr-details','data-code-view':'details','aria-label':TEXT.detailsTitle},
+return el('section',{className:'dcr-details','data-code-view':'details','aria-label':TEXT.detailsTitle,'data-cache':props.cacheHit===true?'hit':undefined},
 el('div',{className:'dcr-details-head'},
 el('h3',{className:'dcr-heading'},title),
 el('div',{className:'dcr-header-actions'},
@@ -4555,6 +4557,42 @@ callsite_id:null,
 file:null,
 };
 
+var VIEW_CACHE_LIMIT=32;
+var viewCache=new Map();
+var viewPending=new Map();
+var viewCacheGeneration=0;
+function cacheKeyFor(endpoint,payload){
+var record=isRecord(payload)?payload:{};
+var extras=[];
+var extraKeys=['root','scenario','repo','path','subject_type','subject_id','max_lines'];
+for(var index=0;index<extraKeys.length;index+=1){
+var key=extraKeys[index];
+if(record[key]!==undefined&&record[key]!==null)extras.push(key+'='+String(record[key]));
+}
+return String(copyNullableString(record.workspace)||'')+'|'+String(copyNullableString(record.snapshot)||'')+'|'+String(copyNullableString(record.entry)||'')+'|'+String(endpoint)+'|'+String(copyNullableString(record.mode)||'')+'|'+extras.join('&');
+}
+function cacheGet(key){
+var value=viewCache.get(key);
+if(value===undefined)return null;
+viewCache.delete(key);
+viewCache.set(key,value);
+return value;
+}
+function cacheSet(key,value){
+if(!isRecord(value)&&!Array.isArray(value))return;
+if(viewCache.has(key))viewCache.delete(key);
+viewCache.set(key,value);
+while(viewCache.size>VIEW_CACHE_LIMIT){
+var oldest=viewCache.keys().next();
+if(oldest.done)break;
+viewCache.delete(oldest.value);
+}
+}
+function clearViewCache(){
+viewCache.clear();
+viewPending.clear();
+viewCacheGeneration+=1;
+}
 var sessionUi={
 groupCollapsed:{},
 groupOverrides:{},
@@ -4784,6 +4822,7 @@ entryDetail:null,
 entrySelection:null,
 entryLoading:false,
 entryError:null,
+entryCached:false,
 selectedFunctionId:null,
 selectedFunctionName:null,
 data:{},
@@ -4871,13 +4910,72 @@ return map[name];
 function isCurrent(name,seq){
 return seqRef.current[name]===seq;
 }
-function request(name,endpoint,payload,signal){
+function request(name,endpoint,payload,signal,options){
+var opts=options||{};
+var cacheKey=opts.cache===true&&signal===undefined?cacheKeyFor(endpoint,payload):null;
+var cacheGeneration=viewCacheGeneration;
 var seq=nextSeq(name);
-return callCodeView(ctx?ctx.connection:null,endpoint,payload,signal).then(function(result){
-if(!isCurrent(name,seq))return null;
-if(!aliveRef.current)return null;
+if(cacheKey!==null){
+var cached=cacheGet(cacheKey);
+if(cached!==null)return Promise.resolve({kind:'ok',value:cached,cached:true});
+var pending=viewPending.get(cacheKey);
+if(pending!==undefined){
+return pending.then(function(result){
+if(cacheGeneration!==viewCacheGeneration)return null;
+if(result!==null&&result.kind==='ok')return {kind:'ok',value:result.value,cached:true};
 return result;
 });
+}
+}
+var readPromise=callCodeView(ctx?ctx.connection:null,endpoint,payload,signal).then(function(result){
+if(!isCurrent(name,seq))return null;
+if(!aliveRef.current)return null;
+if(cacheKey!==null&&cacheGeneration===viewCacheGeneration&&result&&result.kind==='ok')cacheSet(cacheKey,result.value);
+return result;
+});
+if(cacheKey!==null){
+viewPending.set(cacheKey,readPromise);
+readPromise.then(function(){viewPending.delete(cacheKey);},function(){viewPending.delete(cacheKey);});
+}
+return readPromise;
+}
+var prefetchTimerRef=useRef(null);
+function cancelPrefetchTimer(){
+if(prefetchTimerRef.current!==null){
+clearTimeout(prefetchTimerRef.current);
+prefetchTimerRef.current=null;
+}
+}
+function prefetchRequest(endpoint,payload){
+request('prefetch:'+endpoint,endpoint,payload,undefined,{cache:true});
+}
+function prefetchEntry(row){
+var snapshot=currentSnapshot();
+if(snapshot===null||!aliveRef.current)return;
+var entryId=isRecord(row)?copyNullableString(row.entry_id):null;
+if(entryId===null)return;
+var payload={workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,entry:entryId};
+prefetchRequest('view.getEntry',payload);
+prefetchRequest('view.coupling',payload);
+}
+function scheduleIdlePrefetch(rows){
+cancelPrefetchTimer();
+if(!Array.isArray(rows)||rows.length===0)return;
+var snapshot=currentSnapshot();
+if(snapshot===null)return;
+var current=getViewState();
+if(current.entry!==null||current.selectedFunctionId!==null)return;
+var first=rows[0];
+var snapshotId=snapshot.snapshot_id;
+prefetchTimerRef.current=setTimeout(function(){
+prefetchTimerRef.current=null;
+if(!aliveRef.current)return;
+var nowSnapshot=currentSnapshot();
+if(nowSnapshot===null||nowSnapshot.snapshot_id!==snapshotId)return;
+var now=getViewState();
+if(now.entry!==null||now.selectedFunctionId!==null)return;
+prefetchEntry(first);
+},40);
 }
 var summaryReqRef=useRef({key:null,timer:null,controller:null});
 var summaryEpochRef=useRef(-1);
@@ -4997,6 +5095,8 @@ sessionUi.runGeneration=currentUi.focus_run_generation;
 sessionUi.callId=currentUi.focus_call_id;
 }
 function openPanel(){
+cancelPrefetchTimer();
+clearViewCache();
 patchView(createInitialPanelView());
 patchUi(function(previous){return{rail:'resources',subflow:{key:null,state:'idle',payload:null,error:null,entryId:null,rootId:null},summaryEpoch:(previous.summaryEpoch||0)+1};});
 request('status','view.status',{}).then(function(result){
@@ -5047,6 +5147,8 @@ patchView({notice:'上次选择的快照当前未核验通过，未自动恢复�
 function chooseSnapshotRow(row,options){
 var opts=options||{};
 var restore=opts.restore===true;
+cancelPrefetchTimer();
+clearViewCache();
 if(restore!==true)resetRememberedEntryState();
 rememberSnapshot(row);
 patchView({
@@ -5063,6 +5165,7 @@ entryDetail:null,
 entrySelection:null,
 entryLoading:false,
 entryError:null,
+entryCached:false,
 selectedFunctionId:null,
 selectedFunctionName:null,
 data:{},
@@ -5106,14 +5209,16 @@ patchView({notice:'上次选择的入口不在当前入口列表中，已清除�
 resetRememberedEntryState();
 patchUi({details:null,focus_resource_id:null,focus_callsite_id:null});
 }
-loadData('coupling');
-loadInterfaces();
+scheduleIdlePrefetch(entries);
+var snapshotReads=[loadData('coupling'),loadInterfaces()];
 loadActiveView();
+if(snapshotReads.length>0&&typeof Promise.allSettled==='function')Promise.allSettled(snapshotReads).catch(function(){});
 });
 }
 function chooseEntryRow(row,options){
 var opts=options||{};
 var restore=opts.restore===true;
+cancelPrefetchTimer();
 var snapshot=currentSnapshot();
 var entryId=copyNullableString(row.entry_id);
 if(snapshot===null||entryId===null)return;
@@ -5133,6 +5238,7 @@ entryDetail:null,
 entrySelection:null,
 entryLoading:true,
 entryError:null,
+entryCached:false,
 data:{},
 interfaces:{key:null,state:'loading',payload:null,error:null},
 actionError:null,
@@ -5157,10 +5263,11 @@ remembered.resource_id=null;
 remembered.callsite_id=null;
 remembered.file=null;
 }
-loadEntryData(focusFunctionId);
-loadData('coupling');
+// Independent read-only RPCs for this selection are fired in parallel;
+// each branch owns its error/loading state so one failure cannot mask another.
+var parallelReads=[loadEntryData(focusFunctionId),loadData('coupling'),loadInterfaces()];
 loadActiveView();
-loadInterfaces();
+if(parallelReads.length>0&&typeof Promise.allSettled==='function')Promise.allSettled(parallelReads).catch(function(){});
 if(getUiState().detailsTab==='subflow'){
 setSubflow({key:null,state:'idle',payload:null,error:null,entryId:focusFunctionId,rootId:getUiState().subflowRootId});
 loadSubflow();
@@ -5172,13 +5279,13 @@ openFile(target.repo,target.path,target.line,true);
 }
 function loadEntryData(functionId){
 var snapshot=currentSnapshot();
-if(snapshot===null||functionId===null)return;
-patchView({entryLoading:true,entryError:null,entryData:null,entryDetail:null,entrySelection:null});
-request('getEntry','view.getEntry',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,entry:functionId}).then(function(result){
-if(!result)return;
+if(snapshot===null||functionId===null)return Promise.resolve(null);
+patchView({entryLoading:true,entryError:null,entryData:null,entryDetail:null,entrySelection:null,entryCached:false});
+return request('getEntry','view.getEntry',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,entry:functionId},undefined,{cache:true}).then(function(result){
+if(!result)return null;
 if(result.kind==='error'){
 patchView({entryLoading:false,entryError:result});
-return;
+return result;
 }
 var payload=result.value;
 var detail=isRecord(payload.entry)?payload.entry:null;
@@ -5193,31 +5300,32 @@ return{selectedFunctionName:previous.selectedFunctionId===functionId?name:previo
 });
 if(remembered.focus!==null&&remembered.focus.function_id===functionId)remembered.focus.name=name;
 }
-patchView({entryLoading:false,entryData:payload,entryDetail:detail,entrySelection:isRecord(payload.selection)?payload.selection:null,entryError:null});
+patchView({entryLoading:false,entryData:payload,entryDetail:detail,entrySelection:isRecord(payload.selection)?payload.selection:null,entryError:null,entryCached:result.cached===true});
 if(getUiState().detailsTab==='subflow')loadSubflow();
+return result;
 });
 }
 function loadData(name){
 if(name==='file'){
 prepareFileView();
-return;
+return Promise.resolve(null);
 }
-if(VIEW_KEYS.indexOf(name)<0)return;
+if(VIEW_KEYS.indexOf(name)<0)return Promise.resolve(null);
 var snapshot=currentSnapshot();
 if(snapshot===null){
 setData(name,{key:null,state:'empty',payload:null,error:null});
-return;
+return Promise.resolve(null);
 }
 var entryId=currentEntryId();
 if(NEEDS_ENTRY[name]!==false&&entryId===null){
 setData(name,{key:null,state:'empty',payload:null,error:null});
-return;
+return Promise.resolve(null);
 }
 
 var key=snapshot.snapshot_id+'|'+(entryId||'');
 var existing=getViewState().data[name];
-if(existing&&existing.key===key&&(existing.state==='loading'||existing.state==='ready'||existing.state==='empty'||existing.state==='error'))return;
-setData(name,{key:key,state:'loading',payload:null,error:null});
+if(existing&&existing.key===key&&(existing.state==='loading'||existing.state==='ready'||existing.state==='empty'||existing.state==='error'))return Promise.resolve(null);
+setData(name,{key:key,state:'loading',payload:null,error:null,cached:false});
 var payload={workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id};
 if(name==='coupling'){
 if(entryId!==null)payload.entry=entryId;
@@ -5225,14 +5333,15 @@ if(entryId!==null)payload.entry=entryId;
 payload.entry=entryId;
 }
 if(name==='sequence')payload.mode='static';
-request('view:'+name,VIEW_ENDPOINTS[name],payload).then(function(result){
-if(!result)return;
+return request('view:'+name,VIEW_ENDPOINTS[name],payload,undefined,{cache:true}).then(function(result){
+if(!result)return null;
 if(result.kind==='error'){
-setData(name,{state:'error',payload:null,error:result});
-return;
+setData(name,{state:'error',payload:null,error:result,cached:false});
+return result;
 }
-setData(name,{state:viewPayloadState(name,result.value),payload:result.value,error:null});
+setData(name,{state:viewPayloadState(name,result.value),payload:result.value,error:null,cached:result.cached===true});
 if(name==='end_to_end')initializeGroupDefaults(result.value);
+return result;
 });
 }
 function initializeGroupDefaults(payload){
@@ -5253,22 +5362,23 @@ patchView({groupCollapsed:collapsed});
 }
 function loadInterfaces(){
 var snapshot=currentSnapshot();
-if(snapshot===null)return;
+if(snapshot===null)return Promise.resolve(null);
 var entryId=currentEntryId();
 var key=snapshot.snapshot_id+'|'+(entryId||'');
 var existing=getViewState().interfaces;
-if(existing&&existing.key===key&&(existing.state==='loading'||existing.state==='ready'||existing.state==='empty'||existing.state==='error'))return;
+if(existing&&existing.key===key&&(existing.state==='loading'||existing.state==='ready'||existing.state==='empty'||existing.state==='error'))return Promise.resolve(null);
 patchView({interfaces:{key:key,state:'loading',payload:null,error:null}});
 var payload={workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id};
 if(entryId!==null)payload.entry=entryId;
-request('interfaces','view.interfaces',payload).then(function(result){
-if(!result)return;
+return request('interfaces','view.interfaces',payload,undefined,{cache:true}).then(function(result){
+if(!result)return null;
 if(result.kind==='error'){
 patchView({interfaces:{key:key,state:'error',payload:null,error:result}});
-return;
+return result;
 }
 var normalized=normalizeInterfaces(result.value);
-patchView({interfaces:{key:key,state:normalized.candidates.length>0?'ready':'empty',payload:result.value,error:null}});
+patchView({interfaces:{key:key,state:normalized.candidates.length>0?'ready':'empty',payload:result.value,error:null,cached:result.cached===true}});
+return result;
 });
 }
 function patchStub(patch){
@@ -5824,7 +5934,7 @@ if(snapshot===null)return Promise.resolve(null);
 var file=getViewState().file;
 if(file.tree!==null&&file.treeKey===snapshot.snapshot_id)return Promise.resolve(file.tree);
 patchFile({treeLoading:true,treeError:null});
-return request('fileTree','view.fileTree',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id}).then(function(result){
+return request('fileTree','view.fileTree',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id},undefined,{cache:true}).then(function(result){
 if(!result)return null;
 if(result.kind==='error'){
 patchFile({treeLoading:false,treeError:result});
@@ -5869,7 +5979,7 @@ var snapshot=currentSnapshot();
 if(snapshot===null||path===null)return;
 var key=snapshot.snapshot_id+'|'+String(repo)+'|'+path;
 patchFile({readLoading:true,readError:null,read:null,readKey:key});
-request('fileRead','view.fileRead',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,repo:repo,path:path,max_lines:MAX_FILE_LINES}).then(function(result){
+request('fileRead','view.fileRead',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,repo:repo,path:path,max_lines:MAX_FILE_LINES},undefined,{cache:true}).then(function(result){
 if(!result)return;
 if(result.kind==='error'){
 patchFile({readLoading:false,readError:result});
@@ -6097,6 +6207,7 @@ aliveRef.current=true;
 openPanel();
 return function(){
 aliveRef.current=false;
+cancelPrefetchTimer();
 var map=seqRef.current;
 for(var name in map){
 if(Object.prototype.hasOwnProperty.call(map,name))map[name]+=1;
@@ -6218,6 +6329,7 @@ return TEXT.viewEmptyNoData;
 return el('div',{
 className:'dcr-root',
 'data-code-view':'panel',
+'data-cache-size':String(viewCache.size),
 lang:'zh-CN',
 role:'region',
 'aria-label':PANEL_LABEL,
@@ -6260,6 +6372,7 @@ loading:view.entriesLoading,
 error:view.entriesError,
 selectedEntryId:currentEntryId(),
 onSelect:function(row){chooseEntryRow(row,{restore:false});},
+onPrefetch:prefetchEntry,
 })
 )
 )
@@ -6315,7 +6428,7 @@ if(next==='stub')ensureStubData();
 onSelectResource:function(resource){selectResource(resource,{openDetails:true,ensureCoupling:true});},
 }),
 el('div',{className:'dcr-main'},
-el('section',{className:'dcr-view','data-code-view':'view','data-view':ui.view,'data-state':activeState},
+el('section',{className:'dcr-view','data-code-view':'view','data-view':ui.view,'data-state':activeState,'data-cache':activeData&&activeData.cached===true?'hit':undefined},
 activeState==='loading'
 ?el('p',{className:'dcr-view-empty',role:'status'},TEXT.viewLoading)
 :activeState==='error'
@@ -6336,6 +6449,7 @@ jumpFile:detailsTarget,
 detailsTab:ui.detailsTab,
 onSelectTab:switchDetailsTab,
 subflow:ui.subflow,
+cacheHit:view.entryCached===true,
 summary:view.summary,
 summarySubject:activeSummarySubject,
 groupInfo:activeGroupInfo,

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "stage": "S4-feasibility",
+  "kind": "portability-probe",
+  "generated_at": "2026-11-15T13:32:02Z",
+  "environment": {
+    "host": "WSL2 Ubuntu 20.04 on Windows",
+    "kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "python": "3.8.10 (Ubuntu 20.04 default; engine requires >=3.11)",
+    "node": "v22.22.1",
+    "repo_mount": "/mnt/e/dsh/plugin/04-code-learning (read-only run, no network)"
+  },
+  "checks": {
+    "linux_node_contract_suite": {"ok": true, "tests": 164, "passed": 164, "failed": 0, "log": "linux-node-suite.log"},
+    "linux_wasm_worker": {"ok": true, "tests": 8, "passed": 8, "failed": 0, "log": "linux-host-worker.log", "note": "worker_threads + WebAssembly execute the real Demo bus.wasm on Linux"},
+    "linux_engine_cli_status": {"ok": true, "exit_code": 0, "freshness": "fresh", "valid": true, "absolute_path_leak": false, "log": "linux-engine-cli.log"},
+    "linux_engine_cli_import_cas": {"ok": true, "repeat_import_code": "STATE_CONFLICT", "note": "revision CAS behaves on Linux"},
+    "linux_engine_unittest": {"ok": false, "ran": 309, "errors": 255, "reason": "Python 3.8 does not satisfy the engine's >=3.11 requirement; test helpers use Path.write_text(newline=) (3.10+)", "log": "linux-engine-unittest.log"},
+    "linux_snapshot_from_windows_build": {"ok": false, "error": "analysis_manifest.workspace_roots does not identify this registered workspace", "reason": "Windows-built Atlas manifest is bound to Windows workspace roots; a Linux target needs a snapshot built on Linux", "log": "linux-engine-cli.log"}
+  },
+  "available": [
+    "JS layers (Host/Client/tools) contract suite on Linux",
+    "Isolated Wasm worker execution on Linux",
+    "Engine CLI basic commands (status / import CAS) on Linux default Python"
+  ],
+  "in_scope_not_verified": [
+    {"item": "real Linux kernel/Kbuild analysis and generated headers", "reason": "no kernel source/compdb/generated headers/Atlas Linux runtime in this environment"},
+    {"item": "native CFG / locks / aliases analysis", "reason": "Atlas Linux runtime and Linux-built snapshots unavailable"},
+    {"item": "review precision/recall on real repositories", "reason": "no review data and no Linux-built snapshots"},
+    {"item": "OS egress certification", "reason": "the plugin never uses the network; target-OS egress certification still requires the target environment"},
+    {"item": "engine unittest on Linux with Python>=3.11", "reason": "environment ships Python 3.8 only; engine requires >=3.11"}
+  ],
+  "out_of_scope": [
+    "real device dispatch",
+    "in-graph source write-back",
+    "Linux DSH desktop host availability"
+  ],
+  "ok": true,
+  "verified": false,
+  "verdict": "Partial portability evidence only. The S4 target gates (Linux/Kbuild, CFG/locks/aliases, review, OS egress) remain NOT verified and must not be claimed; they require a fixed Linux target with Python>=3.11, Linux-built Atlas snapshots, kernel sources and review data."
+}

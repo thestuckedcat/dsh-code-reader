@@ -32,6 +32,7 @@ const BUDGETS = {first_screen_ms: 500, cross_view_ms: 120, drag_feedback_ms: 32}
 const SMALL = 'synthetic-500-800';
 const BIG = 'synthetic-2000-10k';
 const WITH_REPO_TESTS = process.argv.includes('--with-repo-tests');
+const SKIP_REGRESSIONS = process.argv.includes('--skip-regression');
 
 const startedAt = new Date().toISOString();
 const report = {
@@ -293,6 +294,44 @@ async function main() {
       event_sequence: {n: truncationSummary.event_sequence.n, measured: truncationSummary.event_sequence.measured, failed: truncationSummary.event_sequence.failed, p50: truncationSummary.event_sequence.p50, p95: truncationSummary.event_sequence.p95},
     }, 'dsh_host');
 
+    // Stop the perf web host before the regression pack (both use scratch/readonly-home).
+    if (boot !== null) { try { await boot.stop(); } catch { /* already stopped */ } boot = null; }
+
+    if (!SKIP_REGRESSIONS) {
+      const regressionResult = spawnSync(process.execPath, [join(REPO_ROOT, 'tools', 'perf-regressions.mjs')], {cwd: REPO_ROOT, windowsHide: true, encoding: 'utf8', timeout: 900000, maxBuffer: 64 * 1024 * 1024, env: {...process.env, PYTHON_BIN: prepared.python?.command ?? 'E:/Anaconda-main/python.exe'}});
+      logCommand({executable: process.execPath, args: ['tools/perf-regressions.mjs'], cwd: REPO_ROOT, exit_code: regressionResult.status});
+      let regressionSummary = null;
+      try { regressionSummary = JSON.parse(String(regressionResult.stdout ?? '').trim().split('\n').slice(-1)[0] ?? '{}'); } catch { regressionSummary = null; }
+      const regressionPath = join(SCRATCH, 'regressions', 'regressions.json');
+      const regressionDetail = existsSync(regressionPath) ? readJsonFile(regressionPath) : null;
+      for (const [name, checkName] of Object.entries({
+        'regression.s3b_probe': 'perf.regression_s3b',
+        'regression.s3a_probe': 'perf.regression_s3a',
+        'regression.s2b_probe': 'perf.regression_s2b',
+        'regression.summary_roundtrip': 'perf.summary_roundtrip',
+      })) {
+        const row = regressionDetail?.checks?.[name];
+        requireCheck(checkName, row?.ok === true, {exit_code: regressionResult.status, check: row ?? null, summary: regressionSummary, regression_json: 'scratch/perf/regressions/regressions.json', log_tail: (regressionResult.stderr ?? '').slice(-800)}, 'regression');
+      }
+      const regressionProbes = regressionDetail?.probes ?? {};
+      const consoleClean = ['s3b', 's3a', 's2b'].every((probe) => (regressionProbes[probe]?.console_error_count ?? 1) === 0)
+        && (regressionProbes.summary_gap?.console_error_count ?? 1) === 0
+        && (regressionProbes.summary_written?.console_error_count ?? 1) === 0;
+      requireCheck('perf.regression_console_clean', consoleClean, {probes: Object.fromEntries(Object.entries(regressionProbes).map(([name, row]) => [name, row?.console_error_count ?? null]))}, 'regression');
+    } else {
+      skipCheck('perf.regression_s3b', '--skip-regression');
+    }
+
+    const demoResult = spawnSync(process.execPath, ['--test', '--test-reporter=tap', 'demo/code-view/demo.test.cjs'], {cwd: REPO_ROOT, windowsHide: true, encoding: 'utf8', timeout: 180000, maxBuffer: 64 * 1024 * 1024});
+    logCommand({executable: process.execPath, args: ['--test', 'demo/code-view/demo.test.cjs'], cwd: REPO_ROOT, exit_code: demoResult.status});
+    const demoTap = String(demoResult.stdout ?? '');
+    const demoSummary = {};
+    for (const key of ['tests', 'pass', 'fail', 'cancelled', 'skipped']) {
+      const match = demoTap.match(new RegExp(`^# ${key} (\\d+)`, 'm'));
+      demoSummary[key] = match === null ? null : Number(match[1]);
+    }
+    requireCheck('perf.demo', demoResult.status === 0 && demoSummary.fail === 0 && (demoSummary.pass ?? 0) > 0, {summary: demoSummary, output_tail: demoTap.slice(-1200)}, 'demo_observed');
+
     if (WITH_REPO_TESTS) {
       const files = readdirSync(join(REPO_ROOT, 'tests', 'node')).filter((name) => name.endsWith('.test.mjs')).map((name) => `tests/node/${name}`);
       const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap', '--test-concurrency=1', ...files], {cwd: REPO_ROOT, windowsHide: true, encoding: 'utf8', timeout: 420000, maxBuffer: 64 * 1024 * 1024});
@@ -322,12 +361,14 @@ async function main() {
     const required = ['perf.pinned_baseline', 'perf.fixtures', 'perf.fixture_import', 'perf.entry_projection', 'perf.engine_cli', 'perf.inproc_bench', 'perf.boot_graph', 'perf.ui_probe', 'perf.big_graph_truncation'];
     report.layers = {
       engine: ['perf.engine_cli', 'perf.inproc_bench', 'perf.entry_projection'].every((name) => report.checks[name]?.ok === true),
-      dsh_host: required.filter((name) => name.startsWith('perf.') && !name.startsWith('perf.engine_cli') && !name.startsWith('perf.inproc') && name !== 'perf.entry_projection').every((name) => report.checks[name]?.ok === true),
+      dsh_host: required.filter((name) => name.startsWith('perf.') && !name.startsWith('perf.engine_cli') && !name.startsWith('perf.inproc') && name !== 'perf.entry_projection').every((name) => report.checks[name]?.ok === true)
+        && ['perf.regression_s3b', 'perf.regression_s3a', 'perf.regression_s2b', 'perf.summary_roundtrip', 'perf.regression_console_clean'].every((name) => report.checks[name]?.ok === true),
       fixture: report.checks['perf.fixtures']?.ok === true,
     };
     report.in_scope_not_verified = report.not_verified.filter((row) => row.out_of_scope !== true);
     report.out_of_scope_not_verified = report.not_verified.filter((row) => row.out_of_scope === true);
-    report.ok = report.layers.engine === true && report.layers.dsh_host === true && report.layers.fixture === true && report.in_scope_not_verified.length === 0;
+    report.layers.demo_observed = report.checks['perf.demo']?.ok === true;
+    report.ok = report.layers.engine === true && report.layers.dsh_host === true && report.layers.fixture === true && report.layers.demo_observed === true && report.in_scope_not_verified.length === 0;
     report.verified = report.ok;
   } catch (error) {
     report.ok = false;

@@ -27,6 +27,7 @@ import {
   failResult,
   makeCouplingPayload,
   makeEndToEndPayload,
+  makeEntryRow,
   makeEntriesPayload,
   makeEntryPayload,
   makeFileReadPayload,
@@ -36,6 +37,7 @@ import {
   makeInterfacesPayload,
   makeSelection,
   makeSequencePayload,
+  makeSnapshotRow,
   makeSnapshotsPayload,
   makeSourceLines,
   makeStatusPayload,
@@ -2467,4 +2469,238 @@ test('refresh and closing/reopening details reload the summary', async (t) => {
   h.clickNode(h.nodeByData('data-function-node', BUS_SEND_ID));
   await waitSummary(h);
   assert.equal(h.textOf(h.nodeByData('data-ai-summary-text', '')), 'summary version 3');
+});
+
+// ---------------------------------------------------------------------------
+// 14. first-screen performance: parallel reads, idle/hover prefetch, session cache
+// ---------------------------------------------------------------------------
+
+function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+function viewCacheHit(h) { return viewRoot(h).props['data-cache']; }
+function cacheSize(h) { return Number(h.nodeByData('data-code-view', 'panel').props['data-cache-size']); }
+function entryCouplingCalls(h) { return h.rpc.callsFor('view.coupling').filter((call) => call.payload && call.payload.entry !== undefined); }
+
+test('entry selection fires getEntry and the current view in parallel; each branch resolves independently', async (t) => {
+  const entryDeferred = deferred();
+  const couplingDeferred = deferred();
+  const h = bootHarness({
+    'view.getEntry': () => entryDeferred.promise,
+    'view.coupling': (payload) => {
+      if (payload && payload.entry !== undefined) return couplingDeferred.promise;
+      return makeCouplingPayload({selection: makeSelection(), scope: {mode: 'snapshot', entry_id: null}});
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.deepEqual(h.rpc.lastPayload('view.getEntry'), {workspace: 'code-view-bus-demo', snapshot: SNAPSHOT_ID, entry: BUS_SEND_ID});
+  const entryCoupling = entryCouplingCalls(h).at(-1);
+  assert.ok(entryCoupling, 'coupling for the selected entry must be requested in parallel before getEntry resolves');
+  assert.equal(entryCoupling.payload.entry, BUS_SEND_ID);
+  couplingDeferred.resolve(makeCouplingPayload());
+  await h.settle();
+  assert.equal(viewRoot(h).props['data-state'], 'ready', 'coupling can become ready while getEntry is still pending');
+  assert.equal(viewRoot(h).props['data-view'], 'coupling');
+  entryDeferred.resolve(makeEntryPayload());
+  await h.settle();
+  assert.ok(detailsNode(h));
+  assert.equal(h.findAll((node) => node.props && node.props['data-code-view'] === 'source').length >= 1, true);
+});
+
+test('one failed parallel read does not mask the other: getEntry failure keeps the view ready and errors are not cached', async (t) => {
+  const h = bootHarness({
+    'view.getEntry': (payload) => (payload.entry === BUS_SEND_ID ? failResult('NOT_FOUND', 'entry details missing') : makeEntryPayload()),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  assert.equal(viewRoot(h).props['data-state'], 'ready', 'coupling succeeded even though getEntry failed');
+  const errorCodes = h.findAll((node) => node.props && node.props['data-error-code'] !== undefined).map((node) => node.props['data-error-code']);
+  assert.ok(errorCodes.includes('NOT_FOUND'), 'getEntry error is surfaced with data-error-code');
+  const failedCalls = h.rpc.callsFor('view.getEntry').length;
+  h.clickData('data-entry-name', 'store_route');
+  await h.settle();
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.ok(h.rpc.callsFor('view.getEntry').length > failedCalls, 'failed responses are never cached; selecting again retries');
+});
+
+test('a failed view read does not mask a successful getEntry', async (t) => {
+  const h = bootHarness({
+    'view.coupling': (payload) => (payload && payload.entry !== undefined ? failResult('OUTCOME_UNKNOWN', 'coupling projection failed') : makeCouplingPayload()),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  assert.equal(viewRoot(h).props['data-state'], 'error');
+  const errorCodes = h.findAll((node) => node.props && node.props['data-error-code'] !== undefined).map((node) => node.props['data-error-code']);
+  assert.ok(errorCodes.includes('OUTCOME_UNKNOWN'));
+  assert.ok(detailsNode(h), 'getEntry details still render when the view failed');
+  assert.equal(h.findAll((node) => node.props && node.props['data-code-view'] === 'source').length >= 1, true);
+});
+
+test('idle prefetch warms the first entry after entries load and a click is served from cache', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  await delay(140);
+  await h.settle();
+  const prefetchGet = h.rpc.callsFor('view.getEntry');
+  assert.equal(prefetchGet.length, 1, 'first entry getEntry is prefetched after entries are ready');
+  assert.equal(prefetchGet[0].payload.entry, BUS_SEND_ID);
+  const prefetchCoupling = entryCouplingCalls(h);
+  assert.equal(prefetchCoupling.length, 1, 'first entry coupling is prefetched too');
+  assert.equal(prefetchCoupling[0].payload.entry, BUS_SEND_ID);
+  assert.ok(cacheSize(h) >= 2);
+  const getCallsBefore = h.rpc.callsFor('view.getEntry').length;
+  const couplingCallsBefore = entryCouplingCalls(h).length;
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(h.rpc.callsFor('view.getEntry').length, getCallsBefore, 'cache hit: no new getEntry RPC');
+  assert.equal(entryCouplingCalls(h).length, couplingCallsBefore, 'cache hit: no new coupling RPC');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewCacheHit(h), 'hit');
+  assert.equal(detailsNode(h).props['data-cache'], 'hit');
+  assert.ok(h.text().includes('bus_send'));
+});
+
+test('hovering/focusing an entry row prefetches it and the subsequent click hits the cache', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  await delay(140);
+  await h.settle();
+  const storeRow = h.nodeByData('data-entry-name', 'store_route');
+  assert.ok(storeRow);
+  const callsBefore = h.rpc.callsFor('view.getEntry').length;
+  storeRow.props.onMouseEnter({});
+  await h.settle();
+  await delay(20);
+  await h.settle();
+  const storeCalls = h.rpc.callsFor('view.getEntry').filter((call) => call.payload.entry === STORE_ROUTE_ID);
+  assert.ok(storeCalls.length >= 1, 'hover triggers a getEntry prefetch for that entry');
+  const couplingStore = entryCouplingCalls(h).filter((call) => call.payload.entry === STORE_ROUTE_ID);
+  assert.ok(couplingStore.length >= 1, 'hover triggers a coupling prefetch too');
+  h.clickData('data-entry-name', 'store_route');
+  await h.settle();
+  assert.equal(h.rpc.callsFor('view.getEntry').length, callsBefore + storeCalls.length, 'click is served from the hover prefetch cache');
+  assert.equal(viewRoot(h).props['data-cache'], 'hit');
+});
+
+test('revisiting an already loaded entry in the same session does not repeat RPCs', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  h.clickData('data-entry-name', 'store_route');
+  await h.settle();
+  const getCallsBefore = h.rpc.callsFor('view.getEntry').length;
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(h.rpc.callsFor('view.getEntry').length, getCallsBefore, 'cached getEntry');
+  assert.equal(viewRoot(h).props['data-cache'], 'hit');
+  assert.ok(h.text().includes('bus_send'));
+});
+
+test('refresh clears the session cache and refetches the entry', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  const before = h.rpc.callsFor('view.getEntry').length;
+  h.clickButton('重新读取');
+  await h.settle();
+  await h.settle();
+  assert.ok(h.rpc.callsFor('view.getEntry').length > before, 'refresh must clear the cache and refetch');
+  assert.ok(selectionJson(h).entry_id === BUS_SEND_ID, 'restored entry after refresh');
+});
+
+test('switching snapshots clears the session cache', async (t) => {
+  const secondSnapshot = makeSnapshotRow({snapshot_id: 'b'.repeat(32)});
+  const h = bootHarness({
+    'view.listSnapshots': () => makeSnapshotsPayload({workspaces: [makeWorkspace({snapshots: [makeSnapshotRow(), secondSnapshot]})]}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  const firstCount = h.rpc.callsFor('view.getEntry').length;
+  h.clickData('data-snapshot-id', 'b'.repeat(32));
+  await h.settle();
+  h.clickData('data-snapshot-id', SNAPSHOT_ID);
+  await h.settle();
+  await delay(120);
+  await h.settle();
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.ok(h.rpc.callsFor('view.getEntry').length > firstCount, 'snapshot switch invalidates cached entries');
+});
+
+test('session cache is a bounded LRU of at most 32 entries', async (t) => {
+  const manyEntries = Array.from({length: 24}, (_, index) => makeEntryRow({
+    entry_id: 'f_many_' + String(index),
+    symbol_id: 's_many_' + String(index),
+    name: 'many_fn_' + String(index),
+    display_name: 'many_fn_' + String(index) + '()',
+    file: 'bus.c',
+    line: index + 1,
+    is_entry: index === 0,
+  }));
+  const h = bootHarness({'view.listEntries': () => makeEntriesPayload({entries: manyEntries})});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  await delay(140);
+  await h.settle();
+  const rows = h.findAll((node) => node.props && node.props['data-entry-name'] !== undefined);
+  assert.equal(rows.length, 24);
+  for (const row of rows) {
+    row.props.onMouseEnter({});
+    await h.settle();
+  }
+  await h.settle();
+  const size = cacheSize(h);
+  assert.ok(Number.isInteger(size) && size > 0 && size <= 32, 'cache size must stay within the 32-entry LRU bound, got ' + size);
+  const lastRow = rows[rows.length - 1];
+  const lastEntryId = lastRow.props['data-entry-id'];
+  lastRow.props.onMouseEnter({});
+  await h.settle();
+  const getCallsBefore = h.rpc.callsFor('view.getEntry').length;
+  h.clickData('data-entry-name', lastRow.props['data-entry-name']);
+  await h.settle();
+  assert.equal(h.rpc.callsFor('view.getEntry').length, getCallsBefore, 'most recently prefetched entry is still cached');
+  assert.ok(h.text().includes(lastRow.props['data-entry-name']));
+});
+
+test('an in-flight idle prefetch is shared with the click instead of issuing a duplicate RPC', async (t) => {
+  const entryDeferred = deferred();
+  let getEntryCalls = 0;
+  const h = bootHarness({
+    'view.getEntry': () => {
+      getEntryCalls += 1;
+      if (getEntryCalls === 1) return entryDeferred.promise;
+      return makeEntryPayload();
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  await delay(140);
+  await h.settle();
+  assert.equal(h.rpc.callsFor('view.getEntry').length, 1, 'idle prefetch started one getEntry');
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(h.rpc.callsFor('view.getEntry').length, 1, 'click shares the in-flight prefetch instead of duplicating it');
+  entryDeferred.resolve(makeEntryPayload());
+  await h.settle();
+  assert.ok(detailsNode(h));
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(detailsNode(h).props['data-cache'], 'hit');
+  assert.equal(h.rpc.callsFor('view.getEntry').length, 1);
 });
