@@ -19,7 +19,7 @@
 
 `CL-PF-07`（2026-11-12 用户提出，已交付插件版）：以 C 源码为底座的[交互式代码视图](interactive-code-view.md)，支持受控模拟下的参数与注册状态执行、分支和数据流下钻、调用图节点折叠及展开；五视图与 DSH 插件接入见[详细设计 CL-VIEW-D2](interactive-code-view-software-design.md)，分阶段验收见 `evidence/final-acceptance/`。真实设备下发和图内源码写回仍待产品确认（当前 gap）。
 
-`CL-PF-08`（2026-11-15 用户指示，已交付插件版）：交互式代码视图**以 DSH 插件交付**，插件负责代码分析、图表、场景执行和权限；配套 skill 指导生成与验收 DSH 原生侧边栏入口、工作台左栏及其联动。已按 S1 只读切片 → S2a 五视图 → S2b 组折叠/接口库/子流程 → S3a 受控场景/打桩/台账/observed → S3b 回退/轨迹导入/多场景 → CW-09 AI 归纳 → A11 性能实测 → 异步/IRQ 边界交付，全部在隔离 dsh-web 逐阶段验收（8/8 阶段、313/313 检查），见 `evidence/final-acceptance/`。规划细节见[实施路线](implementation-route.md)与各阶段契约。
+`CL-PF-08`（2026-11-15 用户指示，已交付插件版）：交互式代码视图**以 DSH 插件交付**，插件负责代码分析、图表、场景执行和权限；配套 skill 指导生成与验收 DSH 原生侧边栏入口、工作台左栏及其联动。已按 S1 只读切片 → S2a 五视图 → S2b 组折叠/接口库/子流程 → S3a 受控场景/打桩/台账/observed → S3b 回退/轨迹导入/多场景 → CW-09 AI 归纳 → A11 性能实测 → 异步/IRQ 边界交付，全部在隔离 dsh-web 逐阶段验收（8/8 阶段、320/320 检查），见 `evidence/final-acceptance/`。规划细节见[实施路线](implementation-route.md)与各阶段契约。
 
 ## 一次完整使用
 

@@ -139,7 +139,7 @@ summary 投影：
 
 ### 4.1 AI 归纳
 
-`node tools/verify-summary.mjs --with-repo-tests`：`ok=true, verified=true`，**49/49 检查通过**，
+`node tools/verify-summary.mjs --with-repo-tests`：`ok=true, verified=true`，**56/56 检查通过**（含入口归纳 7 项），
 `in_scope_not_verified=[]`；分层全 true。gap 阶段（选中 bus_send 无正文、`[data-ai-summary-gap]`）→ 真实引擎
 `summary-put`（模拟 Agent：≤500 字、facts 含真实 `e_…`、generator `{agent, verify-summary}`、
 `from_static_structure`）→ UI 刷新显示原文/facts/generator/generated_at/stale=false；非法 put
