@@ -462,7 +462,7 @@ ode tools/verify-perf.mjs --with-repo-tests → **25/25 全绿**，layers 全 tr
 时 CLI 5/5 视图与单独 view-coupling 逐字段一致、RPC 5/5 一致；view==coupling 省略 aux、sizes.coupling_aux=0；
 sizes 4 键精确且 aux 计入 480 KiB；未知 view→INVALID_ARGUMENT（优先于 entry）、未知 entry→NOT_FOUND；
 CLI/RPC 无绝对路径。回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191 + Demo 8/8
-全绿。证据 evidence/perf/（erification.json、README.md、irst-screen-consistency.json、
+全绿。证据 evidence/perf/（erification.json、README.md、irst-screen-consistency.json、
 commands.log）。剩余 not_verified：cold UI 20 冷样本（一次性 token，不伪造）、tree→file 行高亮与拖动
 （合成夹具限制）、2000/10k UI「已截断」文本（本轮未显示；加载/搜索/事件已实测）。
 

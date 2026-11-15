@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "final-acceptance-summary",
   "project": "04-code-learning (CL-VIEW-T1..T4A)",
-  "generated_at": "2026-11-15T23:10:00+08:00",
+  "generated_at": "2026-11-15T23:33:00+08:00",
   "objective": "参考 demo 以及设计文档完成所有开发，并逐阶段在 dsh-web 完成测试",
   "staged_acceptance": [
     {
@@ -274,13 +274,13 @@
     {
       "stage": "CW-09",
       "evidence_dir": "evidence/ai-summary",
-      "label": "AI 归纳（Agent 经 code_summary 写入/签名/失效/详情展示；插件不调用模型）",
+      "label": "AI 归纳（Agent 写入/签名/失效/函数·组·入口 subject 展示、入口归纳子块；插件不调用模型）",
       "command": "node tools/verify-summary.mjs --with-repo-tests",
       "ok": true,
       "verified": true,
       "checks": {
-        "total": 49,
-        "passed": 49,
+        "total": 56,
+        "passed": 56,
         "failed": 0,
         "in_scope_not_verified": 0,
         "out_of_scope_not_verified": 5
@@ -329,8 +329,8 @@
         }
       ],
       "verification_json": {
-        "bytes": 159320,
-        "sha256": "3ac29d50d5f528542f53a464454c54eccef2f69c13e821c52ac9f1376ca7b974"
+        "bytes": 206895,
+        "sha256": "398279282ede2f0ca956cf8820c5ac64adc7275229cd00aec3b31bccf65afcf3"
       }
     },
     {
@@ -565,10 +565,10 @@
   "totals": {
     "stages_all_green": 8,
     "stage_count": 8,
-    "checks_total": 313,
-    "checks_passed": 313,
-    "python_tests": 318,
-    "node_tests": 195,
+    "checks_total": 320,
+    "checks_passed": 320,
+    "python_tests": 323,
+    "node_tests": 200,
     "demo_tests": 8
   },
   "gaps": {
@@ -583,11 +583,12 @@
       "图内源码写回（产品范围待确认）"
     ],
     "known_limitations": [
-      "AI 归纳正文由 Agent 写入，插件不调用模型；入口 subject 独立归纳未在 UI 暴露（function/group 已支持）",
+      "AI 归纳正文由 Agent 写入，插件不调用模型；函数/组/入口 subject 均支持，入口归纳无记录时静默不显示 gap",
       "observed 异步标记只表示声明为异步触发，不推断中断发生/因果完成",
       "性能达标仅限合成 500/800 夹具+本机，跨参考机校准未做；cold UI 20 冷样本/tree→file/拖动/2000-10k UI 截断文本仍 not_verified",
       "真实设备/硬件行为、跨进程异步调度、ABI 字节布局仍为 unknown/未验证",
-      "历史 S3a/S3b 证据使用 rev1 profile；异步证据使用 rev2（async_events:[\"IRQ\"]），版本差异已在 evidence/scenario-sim/README.md 记录"
+      "历史 S3a/S3b 证据使用 rev1 profile；异步证据使用 rev2（async_events:[\"IRQ\"]），版本差异已在 evidence/scenario-sim/README.md 记录",
+      "分层阅读 skill 合同测试只证明规则可被机器检查，不证明真实 Agent 对话遵守（需独立对话评审）"
     ],
     "out_of_scope": [
       "真实 Linux/Kbuild 环境（外部前置）",
@@ -605,5 +606,22 @@
     "0098942 S4-prep 首屏优化+Linux 可移植性探测",
     "69a1173 S4-prep 批量首屏+coupling_aux（首屏预算达标）+机制文档"
   ],
-  "verdict": "已实现并逐阶段在隔离 dsh-web 验证：只读工作台/五视图/组折叠/接口库/子流程/场景执行/打桩/台账/回退/轨迹导入/observed/AI 归纳/批量首屏/异步 IRQ。S4 目标门禁（真实 Linux/Kbuild、CFG/locks/aliases、复核、OS 出口）因环境前置不具备而未验证、不可声明；真实设备下发与图内源码写回未授权/待产品确认。"
+  "verdict": "已实现并逐阶段在隔离 dsh-web 验证：只读工作台/五视图/组折叠/接口库/子流程/场景执行/打桩/台账/回退/轨迹导入/observed/AI 归纳（含入口归纳）/批量首屏/异步 IRQ/分层阅读与函数定位。S4 目标门禁（真实 Linux/Kbuild、CFG/locks/aliases、复核、OS 出口）因环境前置不具备而未验证、不可声明；真实设备下发与图内源码写回未授权/待产品确认。",
+  "compatibility_supplement": {
+    "stage": "S4-prep-compat",
+    "evidence_dir": "docs + skills + engine tests",
+    "label": "CL-PF-02/03 分层阅读与函数定位补充：skill references/layered-reading.md + SKILL.md 工作流“先定位再解释” + 合同测试 test_20..24（skill 可调，不提升证据等级）",
+    "command": "cd engine && python -m unittest tests.test_skill_contract -v",
+    "ok": true,
+    "verified": true,
+    "checks": {
+      "tests": 24,
+      "passed": 24,
+      "python_total": 323
+    },
+    "in_scope_not_verified": [],
+    "out_of_scope_not_verified": [
+      "机械合同测试不证明真实 Agent 对话中遵守该流程（需独立对话评审）"
+    ]
+  }
 }

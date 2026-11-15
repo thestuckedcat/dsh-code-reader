@@ -301,7 +301,8 @@ code_summary action=put workspace=<id> snapshot=<snapshot_id>
   不继续当当前事实。
 - 写入约束：≤500 字、facts ≤32 条证据/节点引用、候选/未知用 `inference_labels` 标注、无运行台账不得用
   `from_observation`、不得伪造运行观测；Host/引擎双重校验。`action=get` 读取当前归纳。
-- UI 只读展示正文/事实引用数/generator/生成时间/stale；未写入时显示 gap，不伪造正文。RPC 只读端点
+- UI 只读展示正文/事实引用数/generator/生成时间/stale；详情另可展示独立的**入口归纳**子块
+  （subject_type=entry；无记录时静默、不显示 gap）。未写入函数归纳时显示 gap，不伪造正文。RPC 只读端点
   `view.summary` 供面板使用。
 
 ## 10. 性能实测（A11）

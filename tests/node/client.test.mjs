@@ -973,7 +973,8 @@ test('details panel shows function source, resources, evidence and the AI gap', 
   assert.ok(summaryGap, 'AI summary gap hook is missing');
   assert.ok(h.textOf(summaryGap).includes('AI 归纳未生成（Agent 可通过 code_summary 写入）'));
   assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-text'] !== undefined).length, 0);
-  assert.deepEqual(h.rpc.lastPayload('view.summary'), {workspace: 'code-view-bus-demo', snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: BUS_SEND_ID});
+  const functionSummaryCalls = h.rpc.callsFor('view.summary').filter((call) => call.payload.subject_type === 'function');
+  assert.equal(functionSummaryCalls.at(-1).payload.subject_id, BUS_SEND_ID);
   assert.ok(h.textOf(details).includes('bus_send'));
   const jump = h.findAll((node) => node.tag === 'button' && h.textOf(node).includes('定位源码'))[0];
   assert.ok(jump);
@@ -2435,9 +2436,8 @@ test('group subject selection opens group details and loads group AI summary', a
   assert.ok(groupBox);
   h.clickNode(groupBox);
   await waitSummary(h);
-  const payload = h.rpc.lastPayload('view.summary');
-  assert.equal(payload.subject_type, 'group');
-  assert.equal(payload.subject_id, GROUP_DISPATCH);
+  const groupCalls = h.rpc.callsFor('view.summary').filter((call) => call.payload.subject_type === 'group');
+  assert.equal(groupCalls.at(-1).payload.subject_id, GROUP_DISPATCH);
   const details = detailsNode(h);
   assert.ok(details);
   assert.ok(h.textOf(details).includes('组详情'));
@@ -2450,6 +2450,7 @@ test('refresh and closing/reopening details reload the summary', async (t) => {
   let version = 0;
   const h = bootHarness({
     'view.summary': (payload) => {
+      if (payload.subject_type === 'entry') return makeSummaryPayload({summaries: []});
       version += 1;
       return makeSummaryPayload({
         summaries: [makeSummaryRecord({subject: {type: payload.subject_type, id: payload.subject_id}, text: 'summary version ' + String(version)})],
@@ -3185,4 +3186,158 @@ test('async markers follow the observed scenario selection', async (t) => {
   await h.settle();
   assert.equal(asyncRows(h).length, 1, 'switching back restores the async marker for the simulated ledger');
   assert.ok(asyncNote(h));
+});
+
+// ---------------------------------------------------------------------------
+// 18. S4-prep: independent entry-subject AI summary block
+// ---------------------------------------------------------------------------
+
+function entrySummaryCalls(h) {
+  return h.rpc.callsFor('view.summary').filter((call) => call.payload && call.payload.subject_type === 'entry');
+}
+function functionSummaryCalls(h) {
+  return h.rpc.callsFor('view.summary').filter((call) => call.payload && call.payload.subject_type !== 'entry');
+}
+
+test('entry subject summary is requested in parallel and rendered as a 入口归纳 sub-block', async (t) => {
+  const h = bootHarness({
+    'view.summary': (payload) => {
+      if (payload.subject_type === 'entry') {
+        return makeSummaryPayload({
+          summaries: [makeSummaryRecord({
+            subject: {type: 'entry', id: payload.subject_id},
+            text: '入口归纳正文：bus_send 入口带参数 channel/length 并触发平台写入门铃。',
+            facts: [{kind: 'evidence', ref: 'e_entry'}],
+            generator: {kind: 'agent', ref: 'entry-writer', model_ref: null},
+            inference_labels: ['from_observation'],
+          })],
+        });
+      }
+      return makeSummaryPayload({
+        summaries: [makeSummaryRecord({subject: {type: 'function', id: payload.subject_id}, text: '函数归纳正文'})],
+      });
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  assert.equal(functionSummaryCalls(h).length, 1, 'function summary request');
+  assert.equal(entrySummaryCalls(h).length, 1, 'entry summary request runs in parallel');
+  assert.deepEqual(entrySummaryCalls(h)[0].payload, {workspace: 'code-view-bus-demo', snapshot: SNAPSHOT_ID, subject_type: 'entry', subject_id: BUS_SEND_ID});
+  const block = h.findAll((node) => node.props && node.props['data-ai-summary-entry'] !== undefined)[0];
+  assert.ok(block, 'entry summary sub-block is missing');
+  assert.ok(h.textOf(block).includes('入口归纳'));
+  assert.equal(h.textOf(h.nodeByData('data-ai-summary-entry-text', '')), '入口归纳正文：bus_send 入口带参数 channel/length 并触发平台写入门铃。');
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-entry-generator', '')).includes('entry-writer'));
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-entry-generated-at', '')).includes('2026-11-15T10:00:00Z'));
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-entry-facts', '')).includes('evidence'));
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-entry-labels', '')).includes('from_observation'));
+  assert.equal(h.nodeByData('data-code-view', 'ai-summary').props['data-ai-summary-stale'], 'false');
+  assert.equal(h.textOf(h.nodeByData('data-ai-summary-text', '')), '函数归纳正文');
+  assert.ok(h.nodeByData('data-code-view', 'details-tab'));
+  assert.equal(h.text().includes('E:\\'), false);
+});
+
+test('missing or failed entry summary stays silent while the function gap/record logic is unchanged', async (t) => {
+  const silent = bootHarness({
+    'view.summary': (payload) => (payload.subject_type === 'entry' ? makeSummaryGapPayload() : makeSummaryPayload({summaries: []})),
+  });
+  t.after(() => silent.dispose());
+  await silent.boot();
+  await openEntry(silent);
+  await waitSummary(silent);
+  assert.equal(silent.findAll((node) => node.props && node.props['data-ai-summary-entry'] !== undefined).length, 0, 'no entry block without a record');
+  assert.ok(silent.findAll((node) => node.props && node.props['data-ai-summary-gap'] !== undefined).length >= 1, 'function gap remains unchanged');
+
+  const failed = bootHarness({
+    'view.summary': (payload) => {
+      if (payload.subject_type === 'entry') return failResult('NOT_FOUND', 'entry summary unavailable');
+      return makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'function', id: payload.subject_id}, text: '函数仍可见'})]});
+    },
+  });
+  t.after(() => failed.dispose());
+  await failed.boot();
+  await openEntry(failed);
+  await waitSummary(failed);
+  assert.equal(failed.findAll((node) => node.props && node.props['data-ai-summary-entry'] !== undefined).length, 0, 'entry request failure is silent');
+  assert.equal(failed.textOf(failed.nodeByData('data-ai-summary-text', '')), '函数仍可见');
+  assert.equal(failed.findAll((node) => node.props && node.props['data-error-code'] !== undefined).length, 0, 'entry failure does not surface as an error');
+});
+
+test('switching the entry row aborts the pending entry summary and discards its late response', async (t) => {
+  const entryDeferreds = [];
+  const h = bootHarness({
+    'view.summary': (payload) => {
+      if (payload.subject_type === 'entry') {
+        const pending = deferred();
+        entryDeferreds.push(pending);
+        return pending.promise;
+      }
+      return makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'function', id: payload.subject_id}, text: '函数归纳'})]});
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  assert.equal(entryDeferreds.length, 1, 'entry summary for the first entry is pending');
+  const firstEntryCall = entrySummaryCalls(h)[0];
+  h.clickData('data-entry-name', 'store_route');
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  await h.settle();
+  assert.equal(entryDeferreds.length, 2, 'new entry triggers a new entry summary request');
+  assert.equal(firstEntryCall.signal && firstEntryCall.signal.aborted, true, 'superseded entry summary request is aborted');
+  entryDeferreds[0].resolve(makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'entry', id: BUS_SEND_ID}, text: 'OLD ENTRY SUMMARY'})]}));
+  await h.settle();
+  assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-entry'] !== undefined).length, 0, 'stale entry response must not render');
+  assert.equal(h.text().includes('OLD ENTRY SUMMARY'), false);
+  entryDeferreds[1].resolve(makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'entry', id: STORE_ROUTE_ID}, text: 'NEW ENTRY SUMMARY'})]}));
+  await h.settle();
+  assert.equal(h.textOf(h.nodeByData('data-ai-summary-entry-text', '')), 'NEW ENTRY SUMMARY');
+  assert.equal(h.text().includes('OLD ENTRY SUMMARY'), false);
+});
+
+test('entry summary block renders inside the function gap state and keeps old hooks', async (t) => {
+  const h = bootHarness({
+    'view.summary': (payload) => (payload.subject_type === 'entry'
+      ? makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'entry', id: payload.subject_id}, text: '入口记录'})]})
+      : makeSummaryPayload({summaries: []})),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  assert.ok(h.findAll((node) => node.props && node.props['data-ai-summary-gap'] !== undefined).length >= 1);
+  assert.ok(h.nodeByData('data-ai-summary-entry', ''));
+  assert.equal(h.textOf(h.nodeByData('data-ai-summary-entry-text', '')), '入口记录');
+  assert.equal(h.nodeByData('data-ai-summary-text', ''), null);
+  assert.ok(h.nodeByData('data-code-view', 'details'));
+  assert.ok(h.nodeByData('data-code-view', 'selection'));
+});
+
+test('switching snapshots aborts a pending entry summary and drops its late response', async (t) => {
+  const entryDeferred = deferred();
+  const secondSnapshot = makeSnapshotRow({snapshot_id: 'b'.repeat(32)});
+  const h = bootHarness({
+    'view.listSnapshots': () => makeSnapshotsPayload({workspaces: [makeWorkspace({snapshots: [makeSnapshotRow(), secondSnapshot]})]}),
+    'view.summary': (payload) => {
+      if (payload.subject_type === 'entry') return entryDeferred.promise;
+      return makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'function', id: payload.subject_id}, text: '函数归纳'})]});
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  const pendingEntry = entrySummaryCalls(h)[0];
+  assert.ok(pendingEntry, 'entry summary request is pending');
+  h.clickData('data-snapshot-id', 'b'.repeat(32));
+  await h.settle();
+  assert.equal(pendingEntry.signal && pendingEntry.signal.aborted, true, 'snapshot switch aborts the entry summary request');
+  entryDeferred.resolve(makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'entry', id: BUS_SEND_ID}, text: 'OLD SNAPSHOT ENTRY SUMMARY'})]}));
+  await h.settle();
+  assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-entry'] !== undefined).length, 0, 'late entry summary from the old snapshot must not render');
+  assert.equal(h.text().includes('OLD SNAPSHOT ENTRY SUMMARY'), false);
+  assert.equal(detailsNode(h), null, 'new snapshot has no restored details');
 });

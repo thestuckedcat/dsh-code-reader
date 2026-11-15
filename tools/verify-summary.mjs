@@ -1364,6 +1364,10 @@ function summaryGroupId(python, inbox, snapshotId) {
 
 /** Run summary-put / view-summary through the real engine CLI, including the
  * invalid payload cases (over-long text, control character, invalid facts). */
+const ENTRY_ID = 'f_afa8298f2d197e5fd110e49a';
+const ABSENT_ENTRY_NAME = 'bus_register';
+const ENTRY_TEXT = 'bus_send 入口归纳：先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。此归纳基于静态结构与源码文本，未含运行观测。';
+
 async function verifySummaryEngine(python, inbox, snapshotId) {
   const detail = {ok: false, steps: {}};
   const evidenceId = summaryEvidenceId(python, inbox, snapshotId);
@@ -1431,11 +1435,40 @@ async function verifySummaryEngine(python, inbox, snapshotId) {
   detail.steps.groupOk = groupPut.ok && groupView.ok && groupRow !== null
     && groupRow.subject?.type === 'group' && groupRow.subject?.id === groupId && groupRow.text === groupText;
 
+  // entry-subject summary (T44): the Agent/driver writes subject_type=entry for the
+  // bus_send entry; the projection and view-summary must round-trip it.
+  const entryPayload = {
+    subject: {type: 'entry', id: ENTRY_ID},
+    text: ENTRY_TEXT,
+    facts: [{kind: 'evidence', ref: evidenceId}],
+    generator: {kind: 'agent', ref: 'verify-entry'},
+    inference_labels: ['from_static_structure'],
+  };
+  const entryPut = cli(python, ['summary-put', '--workspace', WORKSPACE_ID, '--snapshot', snapshotId, '--payload-json', b64(entryPayload)], inbox.bootstrapPath);
+  const entryProjection = entryPut.stdout_json?.summary ?? entryPut.stdout_json ?? {};
+  detail.entry = {put_exit_code: entryPut.exit_code, projection: entryProjection};
+  detail.steps.entryPutOk = entryPut.ok
+    && entryProjection?.subject?.type === 'entry' && entryProjection?.subject?.id === ENTRY_ID
+    && entryProjection?.text === ENTRY_TEXT && entryProjection?.stale === false
+    && /^20\d\d-\d\d-\d\dT/.test(entryProjection?.generated_at ?? '')
+    && (entryProjection?.facts ?? []).some((fact) => fact.ref === evidenceId)
+    && entryProjection?.generator?.kind === 'agent' && entryProjection?.generator?.ref === 'verify-entry'
+    && absolutePathLeakInJson(entryProjection).count === 0;
+  const entryView = cli(python, ['view-summary', '--workspace', WORKSPACE_ID, '--snapshot', snapshotId, '--subject-type', 'entry', '--subject-id', ENTRY_ID], inbox.bootstrapPath);
+  const entryViewValue = entryView.stdout_json ?? {};
+  const entryRow = (entryViewValue.summaries ?? [])[0] ?? null;
+  detail.entry.view = {exit_code: entryView.exit_code, row: entryRow};
+  detail.steps.entryViewOk = entryView.ok && entryRow !== null
+    && entryRow.subject?.type === 'entry' && entryRow.subject?.id === ENTRY_ID
+    && entryRow.text === ENTRY_TEXT && entryRow.stale === false
+    && (entryRow.facts ?? []).length >= 1
+    && absolutePathLeakInJson(entryViewValue).count === 0;
+
   detail.ok = Object.values(detail.steps).every((value) => value === true);
   return detail;
 }
 
-async function runSummaryProbe(boot, phase, expectText, facts) {
+async function runSummaryProbe(boot, phase, expectText, facts, extraEnv = {}) {
   const appDir = prepareProbeApp(SUMMARY_PROBE, `summary-probe-${phase}`, 'summary-probe.cjs');
   const shotDir = join(SCRATCH, `summary-shots-${phase}`);
   const outPath = join(SCRATCH, `summary-${phase}.json`);
@@ -1450,6 +1483,7 @@ async function runSummaryProbe(boot, phase, expectText, facts) {
       ...(expectText === null ? {} : {RV_EXPECT_TEXT: expectText}),
       ...(facts.snapshot_id === null ? {} : {RV_SNAPSHOT_ID: facts.snapshot_id}),
       RV_TIMEOUT_MS: '300000',
+      ...extraEnv,
     },
     logPath: join(SCRATCH, `summary-probe-${phase}.log`),
   });
@@ -1491,6 +1525,8 @@ async function verifySummaryFlow(boot, bootGraph, python, inbox, facts) {
       ['atlas.summary_view', engine.steps.viewOk, engine.view],
       ['atlas.summary_invalid', engine.steps.invalidRejected && engine.steps.invalidKeptOriginal, {invalid: engine.invalid}],
       ['atlas.summary_group', engine.steps.groupOk, engine.group],
+      ['atlas.summary_entry_put', engine.steps.entryPutOk, engine.entry],
+      ['atlas.summary_entry_view', engine.steps.entryViewOk, engine.entry?.view],
     ]) {
       requireCheck(name, ok === true, detail, {layer: 'atlas_snapshot'});
     }
@@ -1525,6 +1561,35 @@ async function verifySummaryFlow(boot, bootGraph, python, inbox, facts) {
     headers: {'content-type': 'application/json'},
     body: JSON.stringify({type: 'client-request', rpcId: 'verify-summary-admission', method: 'view.status', payload: {}}),
   });
+  // 3b) entry-subject UI sub-block + another entry without one (silent, no new gap)
+  const entryProbeRun = await runSummaryProbe(boot, 'entry', SUMMARY_TEXT, facts, {RV_EXPECT_ENTRY_TEXT: ENTRY_TEXT});
+  const entryProbe = entryProbeRun.probe;
+  const entryShot = installSummaryScreenshot({screenshots: {}}, entryProbe, 'entry', 'entry');
+  requireCheck('host.summary_entry_probe', entryProbe !== null && entryProbe.ok === true, {
+    exit_code: entryProbeRun.run.exitCode,
+    steps: entryProbe?.steps ?? null,
+    views: {entry: entryProbe?.views?.entry ?? null},
+    console_error_count: entryProbe?.console_error_count ?? null,
+    screenshot: entryShot,
+    log_tail: entryProbeRun.run.log.slice(-1500),
+  }, {layer: 'dsh_host'});
+  const absentRun = await runSummaryProbe(boot, 'entry_absent', null, facts, {RV_ABSENT_ENTRY_NAME: ABSENT_ENTRY_NAME});
+  const absentProbe = absentRun.probe;
+  requireCheck('host.summary_entry_absent_probe', absentProbe !== null && absentProbe.ok === true, {
+    exit_code: absentRun.run.exitCode,
+    steps: absentProbe?.steps ?? null,
+    views: {absent: absentProbe?.views?.absent ?? null},
+    console_error_count: absentProbe?.console_error_count ?? null,
+    log_tail: absentRun.run.log.slice(-1500),
+  }, {layer: 'dsh_host'});
+  requireCheck('host.summary_entry_screenshots', entryShot !== null && gapShot !== null
+    && entryShot.sha256 !== gapShot.sha256, {entry: entryShot, gap: gapShot}, {layer: 'dsh_host'});
+  requireCheck('host.summary_entry_console_clean', (entryProbe?.console_error_count ?? 1) === 0
+    && (absentProbe?.console_error_count ?? 1) === 0, {
+    entry: entryProbe?.console_error_count ?? null,
+    entry_absent: absentProbe?.console_error_count ?? null,
+  }, {layer: 'dsh_host'});
+
   requireCheck('host.rpc_admission', noCookie.status === 401 || noCookie.status === 403, {
     status: noCookie.status, body_head: noCookie.text.slice(0, 200),
   }, {layer: 'dsh_host'});
@@ -1555,6 +1620,15 @@ async function verifySummaryFlow(boot, bootGraph, python, inbox, facts) {
     && (groupValue.summaries ?? []).some((entry) => entry?.subject?.type === 'group'), {
     http_status: groupRpc.status, summaries: groupValue.summaries ?? null, gaps: groupValue.gaps ?? null,
   }, {layer: 'dsh_host'});
+  const entryRpc = await callRpc(boot, cookieHeader, 'view.summary', {workspace: WORKSPACE_ID, snapshot: snapshotId, subject_type: 'entry', subject_id: ENTRY_ID}, 'verify-summary-entry-rpc');
+  const entryRpcValue = entryRpc.parsed?.result?.value ?? {};
+  const entryRpcRow = (entryRpcValue.summaries ?? [])[0] ?? null;
+  requireCheck('host.rpc_summary_entry', entryRpc.parsed?.result?.ok === true && entryRpcRow !== null
+    && entryRpcRow.subject?.type === 'entry' && entryRpcRow.subject?.id === ENTRY_ID
+    && entryRpcRow.text === ENTRY_TEXT && entryRpcRow.stale === false
+    && (entryRpcRow.facts ?? []).length >= 1 && absolutePathLeakInJson(entryRpc.text).count === 0, {
+    http_status: entryRpc.status, summary: entryRpcRow, gaps: entryRpcValue.gaps ?? null, error: entryRpc.parsed?.result?.error ?? null,
+  }, {layer: 'dsh_host'});
   const status = await callRpc(boot, cookieHeader, 'view.status', {}, 'verify-summary-status');
   const caps = status.parsed?.result?.value?.capabilities ?? {};
   requireCheck('host.rpc_status_summary_caps', status.parsed?.result?.ok === true
@@ -1562,9 +1636,9 @@ async function verifySummaryFlow(boot, bootGraph, python, inbox, facts) {
     capabilities: caps, gaps: status.parsed?.result?.value?.gaps ?? null,
   }, {layer: 'dsh_host'});
   record('host.summary_flow', true, {
-    steps: {gap: gapProbe?.ok === true, written: writtenProbe?.ok === true, engine: engine?.ok === true},
-    screenshots: {gap: gapShot, written: writtenShot},
-    summary_checks: {put: engine?.steps?.putOk ?? null, view: engine?.steps?.viewOk ?? null, invalid: engine?.steps?.invalidRejected ?? null, group: engine?.steps?.groupOk ?? null},
+    steps: {gap: gapProbe?.ok === true, written: writtenProbe?.ok === true, engine: engine?.ok === true, entry: entryProbe?.ok === true, entry_absent: absentProbe?.ok === true},
+    screenshots: {gap: gapShot, written: writtenShot, entry: entryShot},
+    summary_checks: {put: engine?.steps?.putOk ?? null, view: engine?.steps?.viewOk ?? null, invalid: engine?.steps?.invalidRejected ?? null, group: engine?.steps?.groupOk ?? null, entry_put: engine?.steps?.entryPutOk ?? null, entry_view: engine?.steps?.entryViewOk ?? null},
   }, {layer: 'dsh_host'});
   return {engine, gapProbe, writtenProbe};
 }
@@ -1716,13 +1790,16 @@ async function main() {
       'atlas.trace_import', 'atlas.trace_import_idempotent', 'atlas.trace_observed',
       'atlas.undo_plan_imported_rejected',
       'atlas.summary_put', 'atlas.summary_view', 'atlas.summary_invalid', 'atlas.summary_group',
+      'atlas.summary_entry_put', 'atlas.summary_entry_view',
     ].every((name) => report.checks[name]?.ok === true);
     const requiredHostChecks = [
       'host.pinned_baseline', 'host.client_s3_contract', 'host.isolated_profile', 'host.entry_hints',
       'host.web_shell', 'host.boot_release', 'host.boot_graph_entry', 'host.boot_graph_inject',
       'host.client_bundle_bytes', 'host.rpc_admission', 'host.rpc_view_status', 'host.rpc_list_snapshots',
       'host.summary_flow', 'host.summary_gap_probe', 'host.summary_written_probe', 'host.summary_screenshots',
-      'host.summary_console_clean', 'host.rpc_summary', 'host.rpc_summary_group', 'host.rpc_status_summary_caps',
+      'host.summary_entry_probe', 'host.summary_entry_absent_probe', 'host.summary_entry_screenshots',
+      'host.summary_entry_console_clean', 'host.rpc_summary', 'host.rpc_summary_group', 'host.rpc_summary_entry',
+      'host.rpc_status_summary_caps',
       'host.s3b_probe', 'host.s3b_screenshots', 'host.s3b_undo', 'host.s3b_trace_import',
       'host.s3b_observed_scenarios', 'host.s3b_chrome', 'host.s3b_console_clean', 'host.s3b_no_absolute_paths',
       'host.s3a_regression_probe', 'host.s3a_regression_console_clean',

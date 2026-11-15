@@ -162,6 +162,8 @@ aiSummaryLabels:'推断标签',
 aiSummaryFailed:'AI 归纳读取失败：',
 aiSummarySubjectFunction:'函数',
 aiSummarySubjectGroup:'组',
+aiSummaryEntryTitle:'入口归纳',
+aiSummaryEntrySubject:'入口',
 groupDetailTitle:'组详情',
 summaryTabLabel:'AI 归纳',
 railResources:'全局资源',
@@ -1638,8 +1640,17 @@ for(var index=0;index<normalized.summaries.length;index+=1){
 var record=normalized.summaries[index];
 if(record.subject_type===subjectType&&record.subject_id===subjectId)return record;
 }
-if(normalized.summaries.length===1)return normalized.summaries[0];
+if(subjectType===null||subjectType===undefined)return normalized.summaries.length>0?normalized.summaries[0]:null;
 return null;
+}
+function entrySummarySubjectFor(view,ui){
+if(ui.details===null||ui.details===undefined)return null;
+if(ui.details.kind!=='function'&&ui.details.kind!=='group')return null;
+var entry=view.entry;
+if(entry===null||entry===undefined)return null;
+var entryId=copyNullableString(entry.entry_id);
+if(entryId===null)return null;
+return{type:'entry',id:entryId,label:copyNullableString(entry.name)||entryId};
 }
 function groupInfoForId(view,groupId){
 var entry=view.data?view.data.end_to_end:null;
@@ -4416,21 +4427,40 @@ if(Object.prototype.hasOwnProperty.call(counts,kindKey))kinds.push(kindKey+'×'+
 var refs=record.facts.slice(0,8).map(function(fact){return fact.ref;});
 return String(record.facts.length)+'（'+(kinds.length>0?kinds.join('、'):'无')+'）'+(refs.length>0?'：'+refs.join('、'):'');
 }
+function renderEntrySummaryBlock(record,subject){
+if(record===null||record===undefined)return null;
+var stale=record.stale===true;
+return el('div',{className:'dcr-ai-summary-entry','data-ai-summary-entry':'','data-ai-summary-entry-stale':stale?'true':'false'},
+el('div',{className:'dcr-section-head'},el('h4',{className:'dcr-heading'},TEXT.aiSummaryEntryTitle),subject!==null&&subject!==undefined?el('span',{className:'dcr-chip'},TEXT.aiSummaryEntrySubject+' '+String(subject.label||subject.id)):null),
+stale?el('p',{className:'dcr-warning dcr-ai-summary-stale'},TEXT.aiSummaryStale):null,
+el('p',{className:'dcr-ai-summary-text','data-ai-summary-entry-text':''},record.text),
+el('p',{className:'dcr-meta','data-ai-summary-entry-generator':''},TEXT.aiSummaryGenerator+'：'+String(record.generator.kind||'—')+' / '+String(record.generator.ref||'—')+(record.generator.model_ref!==null?' · model '+String(record.generator.model_ref):'')),
+el('p',{className:'dcr-meta','data-ai-summary-entry-generated-at':''},TEXT.aiSummaryGeneratedAt+' '+String(record.generated_at||'—')),
+el('p',{className:'dcr-meta','data-ai-summary-entry-facts':''},TEXT.aiSummaryFacts+' '+summaryFactsText(record)),
+el('p',{className:'dcr-meta','data-ai-summary-entry-labels':''},TEXT.aiSummaryLabels+'：'+(record.inference_labels.length>0?record.inference_labels.join('、'):'—')),
+record.limitations.length>0?el('p',{className:'dcr-muted'},'局限：'+record.limitations.join('、')):null,
+el('p',{className:'dcr-muted'},TEXT.aiSummaryGap)
+);
+}
 function AISummarySection(props){
 var summary=props.summary===null||props.summary===undefined?createInitialSummaryState():props.summary;
 var subject=props.subject===null||props.subject===undefined?null:props.subject;
+var entrySummary=props.entrySummary===null||props.entrySummary===undefined?null:props.entrySummary;
+var entrySubject=props.entrySubject===null||props.entrySubject===undefined?null:props.entrySubject;
+var entryRecord=entrySummary!==null&&entrySummary.state==='ready'&&entrySubject!==null?findSummaryForSubject(entrySummary.payload,'entry',entrySubject.id):null;
+var entryBlock=renderEntrySummaryBlock(entryRecord,entrySubject);
 var subjectChip=subject!==null?el('span',{className:'dcr-chip'},(subject.type==='group'?TEXT.aiSummarySubjectGroup:TEXT.aiSummarySubjectFunction)+' '+String(subject.label||subject.id)):null;
 var head=el('div',{className:'dcr-section-head'},el('h3',{className:'dcr-heading'},TEXT.aiSummaryTitle),subjectChip);
 if(summary.state==='loading'||summary.state==='idle'){
-return el('section',{className:'dcr-section dcr-ai-summary','data-ai-summary-loading':''},head,el('p',{className:'dcr-muted',role:'status'},TEXT.aiSummaryLoading));
+return el('section',{className:'dcr-section dcr-ai-summary','data-ai-summary-loading':''},head,el('p',{className:'dcr-muted',role:'status'},TEXT.aiSummaryLoading),entryBlock);
 }
 if(summary.state==='error'){
 var errorCode=summary.error!==null&&summary.error!==undefined?summary.error.code:'UNKNOWN_ERROR';
-return el('section',{className:'dcr-section dcr-ai-summary'},head,el('p',{className:'dcr-error','data-ai-summary-error':'','data-error-code':errorCode},TEXT.aiSummaryFailed+String(errorCode)));
+return el('section',{className:'dcr-section dcr-ai-summary'},head,el('p',{className:'dcr-error','data-ai-summary-error':'','data-error-code':errorCode},TEXT.aiSummaryFailed+String(errorCode)),entryBlock);
 }
 var record=findSummaryForSubject(summary.payload,subject!==null?subject.type:null,subject!==null?subject.id:null);
 if(record===null){
-return el('section',{className:'dcr-section dcr-ai-summary'},head,el('p',{className:'dcr-muted','data-ai-summary-gap':''},TEXT.aiSummaryNotGenerated),el('p',{className:'dcr-muted'},TEXT.aiSummaryGap));
+return el('section',{className:'dcr-section dcr-ai-summary'},head,el('p',{className:'dcr-muted','data-ai-summary-gap':''},TEXT.aiSummaryNotGenerated),el('p',{className:'dcr-muted'},TEXT.aiSummaryGap),entryBlock);
 }
 var stale=record.stale===true;
 return el('section',{className:'dcr-section dcr-ai-summary','data-code-view':'ai-summary','data-ai-summary-stale':stale?'true':'false'},
@@ -4442,6 +4472,7 @@ el('p',{className:'dcr-meta','data-ai-summary-generated-at':''},TEXT.aiSummaryGe
 el('p',{className:'dcr-meta','data-ai-summary-facts':''},TEXT.aiSummaryFacts+' '+summaryFactsText(record)),
 el('p',{className:'dcr-meta','data-ai-summary-labels':''},TEXT.aiSummaryLabels+'：'+(record.inference_labels.length>0?record.inference_labels.join('、'):'—')),
 record.limitations.length>0?el('p',{className:'dcr-muted'},'局限：'+record.limitations.join('、')):null,
+entryBlock,
 el('p',{className:'dcr-muted'},TEXT.aiSummaryGap)
 );
 }
@@ -4458,7 +4489,7 @@ el('p',{className:'dcr-meta'},'组 id '+String(details.group_id)),
 groupInfo!==null&&groupInfo!==undefined
 ?el('p',{className:'dcr-meta'},'成员 '+String(groupInfo.member_count)+' · '+String(groupInfo.description||'—'))
 :el('p',{className:'dcr-muted'},'组信息暂不可用（等待端到端图投影）。'),
-el(AISummarySection,{summary:props.summary,subject:props.summarySubject})
+el(AISummarySection,{summary:props.summary,subject:props.summarySubject,entrySummary:props.entrySummary,entrySubject:props.entrySubject})
 );
 }else if(details.kind==='resource'){
 var resource=props.selectedResource;
@@ -4542,7 +4573,7 @@ onCrumbClick:props.onCrumbClick,
 onSelectSubflowNode:props.onSelectSubflowNode,
 });
 var content=activeTab==='subflow'?subflowContent:activeTab==='resources'?resourcesContent:sourceContent;
-body=el('div',{className:'dcr-details-body'},tabs,content,el(AISummarySection,{summary:props.summary,subject:props.summarySubject}));
+body=el('div',{className:'dcr-details-body'},tabs,content,el(AISummarySection,{summary:props.summary,subject:props.summarySubject,entrySummary:props.entrySummary,entrySubject:props.entrySubject}));
 }
 }
 return el('section',{className:'dcr-details','data-code-view':'details','aria-label':TEXT.detailsTitle,'data-cache':props.cacheHit===true?'hit':undefined,'data-first-screen':props.firstScreen===null||props.firstScreen===undefined?undefined:props.firstScreen},
@@ -4775,6 +4806,7 @@ var EXTRA_CSS=[
 '.dcr-stub-trace{display:flex;flex-direction:column;gap:5px;}',
 '.dcr-seq-imported{display:inline-block;margin:2px 0;}',
 '.dcr-seq-async-row{border-left:2px dashed var(--dsh-warning-color,currentColor);}',
+'.dcr-ai-summary-entry{margin-top:8px;padding-top:6px;border-top:1px dashed var(--dsh-warning-color,currentColor);}',
 '.dcr-seq-async-chip{border-style:dashed;}',
 '.dcr-warning-async{margin:2px 0;padding:6px 8px;border-left:3px dashed var(--dsh-warning-color,currentColor);}',
 ].join('\n');
@@ -4845,6 +4877,7 @@ selectedFunctionName:null,
 data:{},
 interfaces:{key:null,state:'idle',payload:null,error:null},
 summary:createInitialSummaryState(),
+entrySummary:createInitialSummaryState(),
 groupCollapsed:assign({},sessionUi.groupCollapsed),
 groupOverrides:assign({},sessionUi.groupOverrides),
 addedInterfaces:assign({},sessionUi.addedInterfaces),
@@ -4995,10 +5028,12 @@ if(now.entry!==null||now.selectedFunctionId!==null)return;
 prefetchEntry(first);
 },40);
 }
-var summaryReqRef=useRef({key:null,timer:null,controller:null});
+var summaryReqRef=useRef({key:null,timer:null,controller:null,entryController:null});
 var summaryEpochRef=useRef(-1);
 var activeSummarySubject=summarySubjectFor(getViewState(),getUiState());
 var activeSummaryKey=activeSummarySubject===null?null:activeSummarySubject.type+'|'+activeSummarySubject.id;
+var activeEntrySummarySubject=entrySummarySubjectFor(getViewState(),getUiState());
+var activeEntrySummaryKey=activeEntrySummarySubject===null?null:'entry|'+activeEntrySummarySubject.id;
 function requestSummary(subject,key,controller){
 var snapshot=currentSnapshot();
 if(snapshot===null||!aliveRef.current){
@@ -5017,40 +5052,80 @@ return;
 patchView({summary:{key:key,state:'ready',payload:result.value,error:null}});
 });
 }
+function requestEntrySummary(subject,key,controller){
+var snapshot=currentSnapshot();
+if(snapshot===null||!aliveRef.current){
+patchView({entrySummary:createInitialSummaryState()});
+return;
+}
+patchView({entrySummary:{key:key,state:'loading',payload:null,error:null}});
+request('entrySummary','view.summary',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,subject_type:'entry',subject_id:subject.id},controller!==null?controller.signal:undefined).then(function(result){
+if(!result||result.kind==='aborted')return;
+var current=getViewState().entrySummary;
+if(current===null||current===undefined||current.key!==key)return;
+if(result.kind==='error'){
+patchView({entrySummary:{key:key,state:'error',payload:null,error:result}});
+return;
+}
+patchView({entrySummary:{key:key,state:'ready',payload:result.value,error:null}});
+});
+}
 useEffect(function(){
 var req=summaryReqRef.current;
 if(req.timer!==null){clearTimeout(req.timer);req.timer=null;}
 if(req.controller!==null){try{req.controller.abort();}catch(error){}req.controller=null;}
+if(req.entryController!==null){try{req.entryController.abort();}catch(error){}req.entryController=null;}
 var epoch=getsUiEpoch();
 var force=summaryEpochRef.current!==epoch;
 summaryEpochRef.current=epoch;
-if(activeSummaryKey===null){
+var currentSummary=getViewState().summary;
+var currentEntrySummary=getViewState().entrySummary;
+var functionReady=activeSummaryKey===null?true:(currentSummary!==null&&currentSummary!==undefined&&currentSummary.key===activeSummaryKey&&(currentSummary.state==='loading'||currentSummary.state==='ready'||currentSummary.state==='error'));
+var entryReady=activeEntrySummaryKey===null?true:(currentEntrySummary!==null&&currentEntrySummary!==undefined&&currentEntrySummary.key===activeEntrySummaryKey&&(currentEntrySummary.state==='loading'||currentEntrySummary.state==='ready'||currentEntrySummary.state==='error'));
+if(activeSummaryKey===null&&activeEntrySummaryKey===null){
 req.key=null;
-patchView({summary:createInitialSummaryState()});
+patchView({summary:createInitialSummaryState(),entrySummary:createInitialSummaryState()});
 return;
 }
-var currentSummary=getViewState().summary;
-if(!force&&currentSummary!==null&&currentSummary!==undefined&&currentSummary.key===activeSummaryKey&&(currentSummary.state==='loading'||currentSummary.state==='ready'||currentSummary.state==='error'))return;
-var subject=activeSummarySubject;
-var key=activeSummaryKey;
-req.key=key;
-if(force&&currentSummary!==null&&currentSummary!==undefined&&currentSummary.key===key)patchView({summary:createInitialSummaryState()});
+if(activeSummaryKey===null&&currentSummary!==null&&currentSummary!==undefined&&currentSummary.state!=='idle')patchView({summary:createInitialSummaryState()});
+if(activeEntrySummaryKey===null&&currentEntrySummary!==null&&currentEntrySummary!==undefined&&currentEntrySummary.state!=='idle')patchView({entrySummary:createInitialSummaryState()});
+var needFunction=activeSummaryKey!==null&&(force||!functionReady);
+var needEntry=activeEntrySummaryKey!==null&&(force||!entryReady);
+if(!needFunction&&!needEntry)return;
+if(needFunction&&force)patchView({summary:createInitialSummaryState()});
+if(needEntry&&force)patchView({entrySummary:createInitialSummaryState()});
+var functionSubject=activeSummarySubject;
+var functionKey=activeSummaryKey;
+var entrySubject=activeEntrySummarySubject;
+var entryKey=activeEntrySummaryKey;
+req.key=functionKey;
 req.timer=setTimeout(function(){
 req.timer=null;
 if(!aliveRef.current)return;
+if(needFunction){
 var controller=null;
 if(typeof AbortController==='function'){
 controller=new AbortController();
 req.controller=controller;
 }
-requestSummary(subject,key,controller);
+requestSummary(functionSubject,functionKey,controller);
+}
+if(needEntry){
+var entryController=null;
+if(typeof AbortController==='function'){
+entryController=new AbortController();
+req.entryController=entryController;
+}
+requestEntrySummary(entrySubject,entryKey,entryController);
+}
 },120);
 return function(){
 var cleanupReq=summaryReqRef.current;
 if(cleanupReq.timer!==null){clearTimeout(cleanupReq.timer);cleanupReq.timer=null;}
 if(cleanupReq.controller!==null){try{cleanupReq.controller.abort();}catch(error){}cleanupReq.controller=null;}
+if(cleanupReq.entryController!==null){try{cleanupReq.entryController.abort();}catch(error){}cleanupReq.entryController=null;}
 };
-},[activeSummaryKey,ui.summaryEpoch]);
+},[activeSummaryKey,activeEntrySummaryKey,ui.summaryEpoch]);
 function getsUiEpoch(){return toInteger(getUiState().summaryEpoch)||0;}
 function setData(name,patch){
 patchView(function(previous){
@@ -5191,6 +5266,7 @@ selectedFunctionName:null,
 data:{},
 interfaces:{key:null,state:'idle',payload:null,error:null},
 summary:createInitialSummaryState(),
+entrySummary:createInitialSummaryState(),
 stub:createInitialStubState(),
 file:createInitialFileState(),
 actionError:null,
@@ -6269,7 +6345,7 @@ loadData(name);
 }
 function onBlankCanvas(){
 patchUi({details:null,focus_resource_id:null,focus_callsite_id:null,focus_group_id:null,focus_interface_id:null});
-patchView({summary:createInitialSummaryState()});
+patchView({summary:createInitialSummaryState(),entrySummary:createInitialSummaryState()});
 sessionUi.focusGroupId=null;
 sessionUi.focusInterfaceId=null;
 remembered.details=null;
@@ -6405,6 +6481,14 @@ var railResources=railCoupling===null?[]:railCoupling.resources;
 var selectedResource=ui.focus_resource_id===null?null:findResourceById(couplingViewModel,ui.focus_resource_id);
 var detailsTarget=detailsFileTarget();
 var activeSummarySubject=summarySubjectFor(view,ui);
+var activeEntrySummarySubject=entrySummarySubjectFor(view,ui);
+var activeEntrySummaryKey=activeEntrySummarySubject===null?null:'entry|'+activeEntrySummarySubject.id;
+var entrySummaryForPanel=null;
+var entrySubjectForPanel=null;
+if(activeEntrySummarySubject!==null&&view.entrySummary!==null&&view.entrySummary!==undefined&&view.entrySummary.key===activeEntrySummaryKey){
+entrySummaryForPanel=view.entrySummary;
+entrySubjectForPanel=activeEntrySummarySubject;
+}
 var activeGroupInfo=ui.details!==null&&ui.details.kind==='group'?groupInfoForId(view,ui.details.group_id):null;
 function renderActiveView(){
 if(ui.view==='coupling'){
@@ -6621,6 +6705,8 @@ cacheHit:view.entryCached===true,
 firstScreen:view.firstScreen,
 summary:view.summary,
 summarySubject:activeSummarySubject,
+entrySummary:entrySummaryForPanel,
+entrySubject:entrySubjectForPanel,
 groupInfo:activeGroupInfo,
 onCrumbClick:onCrumbClick,
 onSelectSubflowNode:onSelectSubflowNode,

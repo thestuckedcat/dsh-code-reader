@@ -67,6 +67,10 @@ summary 投影：
     （事实引用数/列表）、`[data-ai-summary-labels]`（推断标签）、`[data-ai-summary-stale="true|false"]`
     （stale 显示“基于旧快照，待复核”警告）；
   - 无记录：`[data-ai-summary-gap]` 文案“AI 归纳未生成（Agent 可通过 code_summary 写入）”，不伪造正文；
+  - **入口归纳**：详情打开时在函数/组归纳之外并行请求 `view.summary` {subject_type:'entry',
+    subject_id:<entry_id>}；有记录时在 AI 归纳区渲染“入口归纳”子块
+    （[data-ai-summary-entry]/[data-ai-summary-entry-text]/generator/generated_at/facts/labels/stale），
+    无记录/失败/加载中完全静默（无子块、无 gap，不影响函数归纳）；与函数归纳一起 abort/丢弃旧响应。
   - 记录与当前 Selection 不匹配（subject 变化竞态）时丢弃过期响应；
   - 详情其它 tabs（source/subflow/resources）与布局保持；总结不写入 Selection（Selection 不含归纳文本）。
 - 图例/缺口：`ai_summary` gap 文案更新为“归纳正文由 Agent 写入（code_summary），插件不自动生成”。
@@ -179,16 +183,16 @@ hover/focus 预取、会话内只读 LRU≤32 + in-flight 去重、snapshot 切�
 
 **为什么仍超预算**：Host lib/bridge.mjs 对 Engine CLI 串行执行；一次新入口首屏仍需 getEntry + coupling +
 interfaces + 当前视图（如 end_to_end）4 个 RPC ≈ 4×130 ms + 渲染 ≈ 769 ms。T28 的并行只并行排队、不减少串行
-总时长。**待实现（S4 后续）**：与设计 §5“Host 合并同键只读计算”一致的**批量首屏端点**（iew.firstScreen
+总时长。**待实现（S4 后续）**：与设计 §5“Host 合并同键只读计算”一致的**批量首屏端点**（iew.firstScreen
 一次返回 entry+五视图所需投影，Host/引擎各一次调用；客户端一次 RPC 装载并填缓存），或 Host 只读命令并发池；
 目标把 hot p95 压到 500 ms 内后复测。该迭代未在本轮实现，不作达标声明。
 
-**后续更新（2026-11-15，T37 最终）**：经批量首屏端点 iew.firstScreen + coupling_aux 两轮优化后，
-erify-perf 最终 **25/25 全绿、layers 全 true、ok=true, verified=true**；首屏 hot p50/p95 =
+**后续更新（2026-11-15，T37 最终）**：经批量首屏端点 `view.firstScreen` + coupling_aux 两轮优化后，
+erify-perf 最终 **25/25 全绿、layers 全 true、ok=true, verified=true**；首屏 hot p50/p95 =
 **330/387 ms ≤ 500 ms ✅**（历史：batch 前 646/704、batch 无 aux 455/527）；coupling p95 3 ms ✅。
 cold UI/tree/拖动/已截断文本仍 not_verified（不伪造）。结论：功能与数据链路可用，**首屏拟验收预算已达标**；
 tree 定位与拖动反馈在合成夹具上不可测、cold UI 受一次性 token 限制，均如实记 in_scope_not_verified；
-合成图仅作规模/截断证据，不代表真实仓库或 Linux/Kbuild。证据 evidence/perf/（erification.json、README.md 含方法/
+合成图仅作规模/截断证据，不代表真实仓库或 Linux/Kbuild。证据 evidence/perf/（erification.json、README.md 含方法/
 机器信息/not_verified、commands.log、探针原始 JSON）。
 
 **过程中修复的跨阶段缺陷**：Windows 上 State.secret 用 os.open 未带 O_BINARY，CRT 文本模式把随机

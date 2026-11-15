@@ -2,11 +2,11 @@
 
 版本 `MECH-04-2`，2026-11-15。本文按[机制说明合同](../../docs/mechanism-document-contract.md)交付：以 **场景→触发→输入与前置条件→判断规则→工具动作→状态/输出→证据→失败与恢复** 为主线，解释为什么这样设计、代价与已知限制，并区分 **skill 可调策略** 与 **plugin/Host/引擎必须执行的硬边界**。
 
-**覆盖的交付**：首版 `CL-IMPL-1`（2026-11-07，登记/源码证据/快照/路径/记录/resume/6 工具/skill）+ `CL-VIEW-T1` 只读工作台切片（CW-T1）+ `CW-T2` 五视图 S2a / 组折叠·接口库·子流程 S2b + `CW-T3` 受控场景 S3a / 回退·轨迹导入 S3b + `CW-T4A` S4-prep（AI 归纳 CW-09、性能实测 A11、异步/IRQ 事件边界、Linux 可移植性探测）。本文覆盖 2026-11-15 最终交付（T37 批量首屏收口提交 `69a1173` + 异步/IRQ 增量）；`view.firstScreen` 已**验证通过**、首屏预算已达标（见 M-04-22、§12.2 与[五视图契约 §12](five-view-contract.md)）；异步/IRQ 事件边界已**验证通过**（M-04-33、[场景契约 §11](scenario-contract.md)）；**S4 目标门禁仍未验证**，见证据边界。
+**覆盖的交付**：首版 `CL-IMPL-1`（2026-11-07，登记/源码证据/快照/路径/记录/resume/6 工具/skill）+ `CL-VIEW-T1` 只读工作台切片（CW-T1）+ `CW-T2` 五视图 S2a / 组折叠·接口库·子流程 S2b + `CW-T3` 受控场景 S3a / 回退·轨迹导入 S3b + `CW-T4A` S4-prep（AI 归纳 CW-09 含函数/组/**入口 subject**、性能实测 A11、异步/IRQ 事件边界、Linux 可移植性探测）+ 分层阅读补充（CL-PF-02/03）。本文覆盖 2026-11-15 最终交付（基线提交 `3751203`，含 T44 入口归纳与 T45 分层阅读/最终验收汇总增量）；最终验收汇总 `evidence/final-acceptance/`：**8/8 阶段、320/320 检查**；`view.firstScreen` 已**验证通过**、首屏预算已达标（M-04-22、§12.2）；AI 归纳（含入口 subject）已**验证通过**（M-04-29、CW-09 56/56）；异步/IRQ 事件边界已**验证通过**（M-04-33）；分层阅读见 M-04-34；**S4 目标门禁仍未验证**，见证据边界。
 
 ## 证据边界（先读，不得改写为已通过）
 
-1. **本版只覆盖 2026-11-15 最终交付**。已知测试：**318 Python unittest、195 Node 测试、Demo 8/8**（本轮独立复跑：引擎 `Ran 318 tests, OK`、Node `195/195`）；隔离 dsh-web 阶段验收 S1 `26/26`、S2a `37/37`、S2b `41/41`、S3a `43/43`、S3b `58/58`、AI 归纳 `49/49`；性能实测 **25/25 全绿**（含批量首屏/`coupling_aux` 一致性与 5 项回归）；**异步/IRQ 事件边界 34/34 全绿**（`in_scope_not_verified=0`、`out_of_scope=5`），均 `ok=true, verified=true`。
+1. **本版只覆盖 2026-11-15 最终交付**。已知测试：**323 Python unittest、200 Node 测试、Demo 8/8**（本轮独立复跑：引擎 `Ran 323 tests, OK`、Node `200/200`）；隔离 dsh-web 阶段验收 S1 `26/26`、S2a `37/37`、S2b `41/41`、S3a `43/43`、S3b `58/58`、CW-09 AI 归纳 **`56/56`**（含入口 subject）、A11 性能 `25/25`、异步/IRQ `34/34`；**最终验收汇总 `evidence/final-acceptance/`：8/8 阶段全绿、320/320 检查通过**，均 `ok=true, verified=true`。
 2. **S4 目标门禁未验证**：真实 Linux/Kbuild 索引与生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证全部**未验证**。`evidence/s4-feasibility/` 只是 Linux 可移植性探测，`verification.json` 明确 `verified=false`；不得据 Node/Wasm 在 Linux 上跑通推断内核分析已通过。
 3. **首屏性能预算已达标（最终验收）**：500/800 图 hot 首屏 p50/p95 = **328–330/382–387 ms ≤ 500 ms**（历史：T27 基线 1078/1141 → T28 优化 646/704 → T33 批量首屏无 aux 455/527 → T37 `coupling_aux` 后 328–330/382–387）；`verify-perf` **25/25 全绿**、layers 全 true、`ok=true/verified=true`，预算未调整。剩余 not_verified 4 项（cold UI 20 冷样本、tree→file 行高亮、拖动反馈、2000/10k UI「已截断」文本）如实保留；本轮数字只对本机/本版本有效。
 4. **批量首屏 `view.firstScreen` 已验证**（[五视图契约 §12/§12.4](five-view-contract.md)）：最终 `node tools/verify-perf.mjs --with-repo-tests` **25/25 全绿**；20/20 hot 样本中 `[data-first-screen]` 共 60 处全部 `batch`（fallback=0）；`coupling_aux` 一致性 **8/8**（view!=coupling 时 CLI 5/5 视图与单独 `view-coupling` 逐字段一致、RPC 5/5 一致；view==coupling 省略 aux 且 `sizes.coupling_aux=0`；`sizes` 4 键精确、aux 计入 480 KiB；未知 view→`INVALID_ARGUMENT`（优先于 entry）、未知 entry→`NOT_FOUND`；CLI/RPC 无绝对路径）；client 消费 aux 后 0 次单独 coupling RPC，缺失/格式错回退。证据 `evidence/perf/{verification.json,first-screen-consistency.json}`。
@@ -36,8 +36,8 @@
 | M-04-14 | 预测/观察/决策的 pending 规则 | 硬边界 | `learning.py`、`records.py` | `test_records.py::DraftValidationTests`、`test_verifier_regressions.py::RecordClaimTest`、`test_skill_contract.py` |
 | M-04-15 | resume 失效重核与事件消费 | 硬边界 | `invalidation.py`、`scope.py` | `test_invalidation.py`（25）、`test_verifier_regressions.py::SourceManifestJunctionTest` |
 | M-04-16 | 编译/Atlas 执行阻断 | 硬边界 | `service.py`、`cli.py` | `test_cli_journey.py::test_plan_is_reference_only_and_run_is_blocked` |
-| M-04-17 | 工具注册、固定 argv 桥、技能分发 | 硬边界 + 预算可调 | `index.js`、`lib/{bridge,config,skills,tools}.mjs` | `tests/node/{bridge,plugin}.test.mjs`；7 个 `code_*` 工具（首版 6 个 + S4-prep `code_summary`）、195 Node 测试；Cordis `host-runtime.tap` 1/1；`evidence/plugin-install-verification.json`（首版安装旅程） |
-| M-04-18 | 学习编排 skill（阅读顺序/讲解/停止/归纳写入） | skill 可调 | `skills/learn-code-workspace/` | `test_skill_contract.py`（19 条款）；`evidence/*/verification.json` 的回归层 |
+| M-04-17 | 工具注册、固定 argv 桥、技能分发 | 硬边界 + 预算可调 | `index.js`、`lib/{bridge,config,skills,tools}.mjs` | `tests/node/{bridge,plugin}.test.mjs`；7 个 `code_*` 工具（首版 6 个 + S4-prep `code_summary`）、200 Node 测试；Cordis `host-runtime.tap` 1/1；`evidence/plugin-install-verification.json`（首版安装旅程） |
+| M-04-18 | 学习编排 skill（分层定位/阅读顺序/讲解/停止/归纳写入） | skill 可调 | `skills/learn-code-workspace/` | `test_skill_contract.py`（24 条款，含 test_20..24 分层阅读）；`evidence/*/verification.json` 的回归层 |
 | M-04-19 | 只读工作台 RPC 载体与准入 | 硬边界 | `index.js`、`lib/http-rpc.mjs`、`lib/view-service.mjs`、`bundle/client.js` | `evidence/readonly-slice/verification.json`（26/26、401 准入、71 boot 条目、bundle 精确前缀）；`host-runtime.tap` 1/1 |
 | M-04-20 | 只读读模型、五视图投影与共享 Selection | 硬边界（派生/预算）+ 展示可调 | `engine/code_learning/views.py`、`five_views.py`、`lib/view-service.mjs`、`bundle/client.js` | `evidence/five-views/verification.json`（37/37）；五视图截图；`test_views.py`（18）、`test_five_views.py`（31） |
 | M-04-21 | 组折叠/接口库/黑盒/子流程面包屑 | 可调策略（结构启发式，不升级事实） | `five_views.py`、`bundle/client.js` | `evidence/s2b/verification.json`（41/41：2 组/4 成员、10 候选、31 边元数据保留、面包屑） |
@@ -48,11 +48,12 @@
 | M-04-26 | 回退末尾 N 次与前缀重放 | 硬边界 | `scenario.py`、`lib/scenario-service.mjs`、`bundle/client.js` | `evidence/s3b/verification.json`（58/58：memory_digest 逐条一致、`undo.state_digest_verified`、count=99 拒绝） |
 | M-04-27 | 轨迹导入（只读台账） | 硬边界 | `scenario.py`、`lib/scenario-service.mjs` | `evidence/s3b/`（`scn_982682c88e20` imported 幂等；3418 B sha256 `8860df51…`；undo 禁用） |
 | M-04-28 | 运行观测时序（observed） | 硬边界（证据分级）+ 展示可调 | `scenario.py`（`view-sequence-observed`）、`lib/scenario-service.mjs`、`bundle/client.js` | `evidence/s3/`（observed 20 消息）；`evidence/s3b/`（多场景选择/imported 标记/前缀 6 消息）；`evidence/async-irq/`（IRQ async 标记，M-04-33） |
-| M-04-29 | AI 归纳（Agent 写入/签名/失效） | 硬边界 + 内容 skill 可调 | `engine/code_learning/summary.py`、`lib/tools.mjs`（`code_summary`）、`lib/view-service.mjs`、`bundle/client.js` | `evidence/ai-summary/verification.json`（49/49：gap→put→UI 展示、非法 put 拒绝、group subject、Cordis TAP 1/1） |
+| M-04-29 | AI 归纳（Agent 写入/签名/失效，含入口 subject） | 硬边界 + 内容 skill 可调 | `engine/code_learning/summary.py`、`lib/tools.mjs`（`code_summary`）、`lib/view-service.mjs`、`bundle/client.js` | `evidence/ai-summary/verification.json`（**56/56**：function/group/**entry** subject；gap→put→UI、entry 子块/缺失静默、非法 put 拒绝、Cordis TAP 1/1；证据 sha256 见 §12.3） |
 | M-04-30 | 性能实测口径与首屏预算 | 测量机制（非产品路径，**已验收**） | `tools/verify-perf.mjs`、`tools/perf-probe.cjs`、`tools/perf/*`、`tools/firstscreen-consistency.mjs` | `evidence/perf/verification.json`（25/25 全绿；hot p50/p95 328–330/382–387 ms ≤500 ✅；coupling p95 3 ms；历史 646/704→455/527→328–330/382–387；not_verified 4 项如实） |
 | M-04-31 | S4 Linux 可移植性探测与不可声明项 | 待验证门禁（只记录） | `evidence/s4-feasibility/`、`source.lock.json` | `evidence/s4-feasibility/verification.json`（Node 164/164、Wasm worker 8/8、Python 3.8 引擎单测 255 errors、Windows 快照被拒绝；`ok=true, verified=false`） |
-| M-04-32 | 分层证据与隔离 dsh-web 验收门禁 | 硬边界（证据纪律） | `tools/verify-*.mjs`、`tools/*-probe.cjs`、`evidence/*/verification.json` | S1..AI 6 阶段 + 性能 **25/25** + 异步/IRQ **34/34** 均 `ok=true, verified=true`；`in_scope_not_verified` 如实（perf 4 项、async 0 项）；pinned 宿主 SHA 门禁 |
+| M-04-32 | 分层证据与隔离 dsh-web 验收门禁 | 硬边界（证据纪律） | `tools/verify-*.mjs`、`tools/*-probe.cjs`、`evidence/*/verification.json` | **8/8 阶段、320/320 检查**（S1 26/S2a 37/S2b 41/S3a 43/S3b 58/CW-09 56/A11 25/async 34）均 `ok=true, verified=true`；`in_scope_not_verified` 如实；pinned 宿主 SHA 门禁；汇总 `evidence/final-acceptance/` |
 | M-04-33 | 异步/IRQ 事件边界（声明→校验→observed 标记→UI；不推断中断发生） | 硬边界 + 展示可调（**已验收**） | `engine/code_learning/scenario.py`、`bundle/client.js`、`tools/verify-irq.mjs` | `evidence/async-irq/verification.json`（34/34、layers 全 true、`in_scope_not_verified=0`；真实 Wasm `bus_irq`→IRQ、observed `async:true`、dsh-web `[data-sequence-async]`+“异步”chip/说明；非法声明拒绝不写）；sha256 `38080909…` |
+| M-04-34 | 分层阅读与函数定位（skill 四层 + 先定位再解释） | skill 可调（不升级事实） | `skills/learn-code-workspace/references/layered-reading.md`、`SKILL.md`、`engine/tests/test_skill_contract.py` | CL-007-D1..D3 / CL-PF-02/03；`test_20..24`（5 例，合同测试共 24 条）；四层顺序/单函数定位步骤/输出模板/边界 |
 
 ---
 
@@ -60,17 +61,17 @@
 
 ### 1.1 解决什么实际场景
 
-1. **模型侧学习**：Agent 在“已登记 workspace”上回答“某个 ioctl / 调用链 / 对象生命周期 / 同步路径如何工作”，必须能回到**真实源码行**与**已核验快照边**，区分 exact/may/unknown/source_text，并保留用户自己的预测与观察（`CL-IMPL-1`）。
+1. **模型侧学习**：Agent 在“已登记 workspace”上回答“某个 ioctl / 调用链 / 对象生命周期 / 同步路径如何工作”，必须能回到**真实源码行**与**已核验快照边**，区分 exact/may/unknown/source_text，并保留用户自己的预测与观察（`CL-IMPL-1`）；单函数问答先按分层阅读四层定位再解释（M-04-34）。
 2. **浏览器侧只读工作台**：人在 DSH 侧边栏看同一份已核验快照的入口、源码、资源读写、五视图、组/接口库/子流程，并与模型共享同一选择标识（CW-T1/T2）。
 3. **受控模拟观测**：在没有真实设备/编译器的情况下，对**已登记且可信**的 Wasm 模拟 profile 执行用户在 UI 里编排的有序接口调用，落不可变台账，得到 observed 时序；支持边界打桩、失败传播、回退前缀重放与只读轨迹导入（CW-T3）；另支持异步/IRQ 事件的声明式边界标记（M-04-33，不推断中断发生）。
-4. **AI 归纳缓存**：Agent 基于已核验证据写 ≤500 字归纳，工作台详情展示并标 generator/事实引用/stale；**插件自身不调用模型**（CW-09）。
+4. **AI 归纳缓存**：Agent 基于已核验证据写 ≤500 字归纳（function/group/**entry** subject；入口归纳在函数归纳下方独立子块），工作台详情展示并标 generator/事实引用/stale；**插件自身不调用模型**（CW-09）。
 5. **可复核的证据链**：所有能力按阶段在隔离 dsh-web 中黑盒验收，输出分层 `verification.json`，未验证项单列（CW-11/A11、S4-prep）。
 
 ### 1.2 分层职责（谁做什么、谁掌握凭据/数据、生命周期）
 
 | 层 | 负责 | 掌握凭据/数据 | 生命周期 |
 |---|---|---|---|
-| **skill** `learn-code-workspace` | 阅读顺序、挑一个问题、讲解篇幅、先预测、何时建记录/复盘、何时写 AI 归纳、停止与 Next Action | 无凭据；只产出工具参数与解释文本 | 每次对话；不持久化（状态在记录/面板里） |
+| **skill** `learn-code-workspace` | 阅读顺序、分层阅读与函数定位（四层：业务框架→文件/函数职责→关键数据/状态→实现证据）、挑一个问题、讲解篇幅、先预测、何时建记录/复盘、何时写 AI 归纳、停止与 Next Action | 无凭据；只产出工具参数与解释文本 | 每次对话；不持久化（状态在记录/面板里） |
 | **plugin Host 半**（`index.js`、`lib/*.mjs`） | 7 个 `code_*` 工具 schema、固定 argv 桥、skill provider、`/code-view` RPC 编排、场景 plan→module→worker→record 编排、AI 归纳写入工具 | 从人工/插件配置读取 `bootstrapPath`、`pythonPath`、`timeoutMs`；**不持有模型/API 密钥**，环境变量白名单剥离凭据；浏览器凭据由 Host 会话提供 | bundle `apply` 注册、`ctx.effect` 随 fiber dispose；UI 子插件依赖缺失时保持 pending，不影响旧工具 |
 | **Python 引擎**（`engine/code_learning/`） | 全部 scope/hash/schema/证据等级/记录/场景台账/归纳的**校验与持久化**；只读源码与快照副本 | HMAC secret（人工 `bootstrap-init` 首次创建，0600；Windows 0x0A 缺陷已修复）；`state_dir` 下登记/快照/记录/模拟/台账/归纳；不联网、不上传 | 每次 CLI 子进程；state 长期存在 |
 | **DSH Host** | `ctx.tools.register`、`ctx.skills.registerProvider`、`connection.admit` + `webServer.register`、rc.5 client loader、`slots/layout`、连接准入 cookie | 宿主会话凭据、UI loader/路由生命周期 | 宿主进程；升级必须重跑验收（pinned rc.5 门禁） |
@@ -102,6 +103,7 @@
 2  code_workspace import ──────► 固定 argv 桥 ──────────────────► 校验 manifest/CAS → registration.json
 3  code_snapshot import ───────► 固定 argv 桥 ──────────────────► envelope/graph_hash/workspace_roots → state 只读副本
 4  code_overview/source/path ──► 固定 argv 桥 ──────────────────► 签名引用/预算/关系查询 → 证据 JSON
+   （skill：单函数问答先按 M-04-34 四层定位再解释；业务图与局部图分开）
 5  code_learn save/resume ─────► 固定 argv 桥 ──────────────────► Draft 校验/CAS/证据重核 → 记录 revision
 6  打开「代码工作台」→ 选快照/入口 ───────────────────────────────────────────────────────► POST /code-view/view.firstScreen
    （准入 connection.admit → 校验 → 固定 argv → 引擎） ─────────► 1 次批量投影 entry+interfaces+当前视图
@@ -111,7 +113,8 @@
                                   → scenario-record（代次 CAS/不可变台账）→ 台账投影
 9  observed 时序 / undoTail / trace.import（obs=台账；undo=前缀重放+digest 核验；import=只读）
    异步/IRQ：profile/导入轨迹声明 async_events → observed 事件标 async:true → UI「异步」chip/说明（不推断中断发生）
-10 Agent code_summary put ─────► 校验+签名+graph sha 绑定 → summary 缓存；UI 只读展示/stale 标记
+10 Agent code_summary put ─────► 校验+签名+graph sha 绑定 → summary 缓存（function/group/entry subject）
+   UI 只读展示 + stale；选中入口时并行读 entry 归纳，无记录/失败静默不显示 gap（不伪造）
 11 证据：tools/verify-*.mjs 在隔离 dsh-web 产出 evidence/<stage>/verification.json（分层/not_verified）
 12 取消/部分完成/恢复：abort→OUTCOME_UNKNOWN（不落台账）；预算/能力缺失→gaps/truncated；stale→重新导入/复核
 ```
@@ -148,7 +151,7 @@
 
 ### 4.1 基础机制 M-04-01..18（保留并更新证据）
 
-以下机制在 2026-11-15 仍有效；测试计数统一更新为 **318 Python / 195 Node / Demo 8/8**，每节列出场景/判断/证据/失败恢复/可调与限制。**类别与主要代码位置见 §0 总表**；**参数范围见 §6**、**规则间依赖见 §7**、**最小验证命令见 §8**（按节内文件名即可定位到对应测试模块）。
+以下机制在 2026-11-15 仍有效；测试计数统一更新为 **323 Python / 200 Node / Demo 8/8**，每节列出场景/判断/证据/失败恢复/可调与限制。**类别与主要代码位置见 §0 总表**；**参数范围见 §6**、**规则间依赖见 §7**、**最小验证命令见 §8**（按节内文件名即可定位到对应测试模块）。
 
 - **M-04-01 可信 bootstrap 与 scope 根表（硬边界）**。**场景**：Agent 要读“某个仓库”，但不能自决读整块磁盘。**触发**：每次 CLI 调用前由 `--bootstrap`/`CODE_READER_BOOTSTRAP`/`$DSH_HOME/code-reader/bootstrap.json` 解析。**输入与前置**：`BootstrapConfigV1{schema_version:1, profile_ref, scope_ref, scope_generation, state_dir, import_inbox_dir, output_root, candidate_roots[{root_ref,absolute_path,read_grant_ref}]}`，由人工 `bootstrap-init` 创建，已存在拒绝覆盖（`STATE_CONFLICT`）。**判断**：绝对路径/字段白名单、`root_ref` 唯一、state/inbox/output 必须存在；模型参数永不出现绝对路径。**动作/状态**：`State` 持有 layout、HMAC secret（首次 0600）、workspace 锁、operation 幂等文件、snapshot 索引。**输出**：`state_root`/`inbox_dir`/`output_root`/candidate roots。**失败恢复**：缺失→`CONFIG_UNAVAILABLE`(exit 2)，人工修 bootstrap，不自动重建。**可调**：何时调用；**不可调**：根表/secret。**最小验证**：`cd engine && python -m unittest discover -s tests -p "test_workspace.py" -v`。**代价**：一次人工配置换“模型无法扩权”。
 
@@ -182,11 +185,11 @@
 
 - **M-04-16 编译/Atlas 执行阻断（硬边界）**。**规则**：`plan` 只做数据/摘要与固定 Atlas 0.8 argv 形状（引用字符串、不 embedding 绝对 host 路径、不执行）；`plan_id` 是签名令牌（TTL 600s）；`run` 校验签名/过期后**始终**返回 `EXECUTION_BLOCKED`（exit 2），因为未提供强制隔离 execution profile；没有裸跑 compiler probe/Atlas/CMake 的路径。**证据**：`test_cli_journey.py::test_plan_is_reference_only_and_run_is_blocked`。**恢复**：真实执行需未来固定 Linux 隔离 runner + 固定 Atlas runtime + 授权（未实现）。**重要区分**：CW-T3 的“受控场景执行”（M-04-23..28）是**受控 Wasm 模拟**，不是编译/Atlas/用户代码执行，不改变本机制的阻断。
 
-- **M-04-17 工具注册、固定 argv 桥、技能分发（硬边界 + 预算可调）**。**触发**：插件 bundle `apply(ctx, config)` 激活。**规则**：`inject=['tools','skills']`；`ctx.effect` 注册/清理；`ctx.tools.register` 注册 **7 个** `code_*`（首版 6 个，S4-prep 增加 `code_summary`：`code_workspace/overview/source/snapshot/path/learn/summary`）；`ctx.skills.registerProvider` 扫描 `skills/*/SKILL.md`（frontmatter/rank=550/source=custom）。每次工具调用→`lib/bridge.mjs` 解析 Python（配置 `pythonPath`/`DSH_CODE_READER_PYTHON`/`python3`/`python`，探测 `--version` 并要求 3.11+，旧 3.x 判 `DEPENDENCY_UNAVAILABLE`）→`spawn(python,['-m','code_learning.cli','--bootstrap',…,固定 argv])`，`cwd=engine/`，**无 shell**；环境变量白名单、剥离 API key 等凭据；stdout 必须是一个 JSON（>8 MiB 截断保护）；域内错误以 `{schema_version,ok,exit_code,cli}` 返回；spawn/超时/取消抛 `BridgeError`（超时=`OUTCOME_UNKNOWN/4`）。工具层参数只填 typed slots，不能提供可执行文件、cwd、根表、bootstrap；插件内**串行**化 CLI 调用避免同一 sqlite writer 竞争（这也是首屏性能瓶颈的结构原因，见 M-04-30）。**UI 子插件**：嵌套 Cordis 插件声明 `inject:['connection','webServer']` 挂载 `/code-view` 载体（13 个 view 端点 + 7 个 scenario 端点）；服务缺失时该子插件保持 pending，旧工具不受影响。**输出**：工具值 JSON + RPC 信封。**失败恢复**：`DEPENDENCY_UNAVAILABLE`→配置 `pythonPath`；超时/取消→`OUTCOME_UNKNOWN`，不得当成功。**可调**：`bootstrapPath`、`pythonPath`、`timeoutMs(1000..600000)`、更小查询预算；**不可调**：argv 形状、环境白名单、JSON/退出码合同、写作用域。**证据**：`tests/node/bridge.test.mjs`、`tests/node/plugin.test.mjs`、`tests/node/view-rpc.test.mjs`、`tests/node/scenario.test.mjs`、`tests/node/client.test.mjs`（195 Node 总计）；`evidence/plugin-install-verification.json`；Cordis `host-runtime.tap` 各阶段 1/1（7 工具注册、真实 Python 调用、dispose 注销、二次挂载再注册）。
+- **M-04-17 工具注册、固定 argv 桥、技能分发（硬边界 + 预算可调）**。**触发**：插件 bundle `apply(ctx, config)` 激活。**规则**：`inject=['tools','skills']`；`ctx.effect` 注册/清理；`ctx.tools.register` 注册 **7 个** `code_*`（首版 6 个，S4-prep 增加 `code_summary`：`code_workspace/overview/source/snapshot/path/learn/summary`）；`ctx.skills.registerProvider` 扫描 `skills/*/SKILL.md`（frontmatter/rank=550/source=custom）。每次工具调用→`lib/bridge.mjs` 解析 Python（配置 `pythonPath`/`DSH_CODE_READER_PYTHON`/`python3`/`python`，探测 `--version` 并要求 3.11+，旧 3.x 判 `DEPENDENCY_UNAVAILABLE`）→`spawn(python,['-m','code_learning.cli','--bootstrap',…,固定 argv])`，`cwd=engine/`，**无 shell**；环境变量白名单、剥离 API key 等凭据；stdout 必须是一个 JSON（>8 MiB 截断保护）；域内错误以 `{schema_version,ok,exit_code,cli}` 返回；spawn/超时/取消抛 `BridgeError`（超时=`OUTCOME_UNKNOWN/4`）。工具层参数只填 typed slots，不能提供可执行文件、cwd、根表、bootstrap；插件内**串行**化 CLI 调用避免同一 sqlite writer 竞争（这也是首屏性能瓶颈的结构原因，见 M-04-30）。**UI 子插件**：嵌套 Cordis 插件声明 `inject:['connection','webServer']` 挂载 `/code-view` 载体（13 个 view 端点 + 7 个 scenario 端点）；服务缺失时该子插件保持 pending，旧工具不受影响。**输出**：工具值 JSON + RPC 信封。**失败恢复**：`DEPENDENCY_UNAVAILABLE`→配置 `pythonPath`；超时/取消→`OUTCOME_UNKNOWN`，不得当成功。**可调**：`bootstrapPath`、`pythonPath`、`timeoutMs(1000..600000)`、更小查询预算；**不可调**：argv 形状、环境白名单、JSON/退出码合同、写作用域。**证据**：`tests/node/bridge.test.mjs`、`tests/node/plugin.test.mjs`、`tests/node/view-rpc.test.mjs`、`tests/node/scenario.test.mjs`、`tests/node/client.test.mjs`（200 Node 总计）；`evidence/plugin-install-verification.json`；Cordis `host-runtime.tap` 各阶段 1/1（7 工具注册、真实 Python 调用、dispose 注销、二次挂载再注册）。
 
-- **M-04-18 学习编排 skill（skill 可调）**。**规则**：workspace 优先 9 步（登记/校验→概览→选一个问题→一条证据路径→解释→先预测→最小授权核验→规则/未知→记录/停止）；普通问答直接答、不强制记录/测验；仅用户明确“学完了/复盘”才走完整 11 阶段，未完成字段保持 pending；Next Action ≤1（动作+分钟+完成标准）；K2/K3 无 G/Q 可停；证据分级 exact/may/unknown/source_text；不自动跑构建/测试、不自动写 05、不代填预测。**S4-prep 增量**：可选第 10 步“详情归纳”——用户要工作台详情出现归纳时用 `code_summary put` 写 ≤500 字，必须基于已核验证据、facts 放 evidence/节点引用、候选/未知用 `inference_labels` 标注、无运行台账不得用 `from_observation`、不得伪造正文或把候选写成 exact；插件不会自动调用模型。**可调**：阅读顺序、每次讲多少、何时建记录、是否总结、预算内查询范围、是否/如何写归纳、停止时机。**不可调**：M-04-01/05/08/11/12/13/14/15/16/19/20/23..29 的硬边界（skill 不能绕过 scope、不能把文本当编译事实、不能把 pending 写成 user、不能执行 run、不能伪造 observed/归纳、不能声称未验证通过）。**证据**：`test_skill_contract.py`（19 条款，含六工具/证据分级/resume/复盘/停止/秘密 ref_only）；各阶段 dsh-web 验收把 S1..S4-prep 回归层作为 skill 行为的护栏。**仍需**：独立对话评审实际学习质量（结构测试不等于效果证明）。**打包范围**：仅 `skills/learn-code-workspace/`（SKILL.md + references）；`docs/dsh-code-view-ui/SKILL.md` 是 UI 指导 skill 草案，未打包。
+- **M-04-18 学习编排 skill（skill 可调）**。**规则**：workspace 优先 **11 步**（登记/校验→概览→选一个问题→一条证据路径→**先定位再解释**（分层阅读四层，M-04-34）→解释→先预测→最小授权核验→规则/未知→记录/停止→可选详情归纳）；普通问答直接答、不强制记录/测验；仅用户明确“学完了/复盘”才走完整 11 阶段，未完成字段保持 pending；Next Action ≤1（动作+分钟+完成标准）；K2/K3 无 G/Q 可停；证据分级 exact/may/unknown/source_text；不自动跑构建/测试、不自动写 05、不代填预测。**S4-prep 增量**：可选第 11 步“详情归纳”——用户要工作台详情出现归纳时用 `code_summary put` 写 ≤500 字（function/group/entry subject），必须基于已核验证据、facts 放 evidence/节点引用、候选/未知用 `inference_labels` 标注、无运行台账不得用 `from_observation`、不得伪造正文或把候选写成 exact；插件不会自动调用模型。**可调**：阅读顺序、分层阅读展开深度/篇幅、每次讲多少、何时建记录、是否总结、预算内查询范围、是否/如何写归纳、停止时机。**不可调**：M-04-01/05/08/11/12/13/14/15/16/19/20/23..29/33 的硬边界（skill 不能绕过 scope、不能把文本当编译事实、不能把 pending 写成 user、不能执行 run、不能伪造 observed/async/归纳、不能声称未验证通过）。**证据**：`test_skill_contract.py`（**24 条款**：六工具/证据分级/resume/复盘/停止/秘密 ref_only + test_20..24 分层阅读四层顺序/定位步骤/输出模板/边界）；`skills/learn-code-workspace/references/layered-reading.md`；各阶段 dsh-web 验收把 S1..S4-prep 回归层作为 skill 行为的护栏。**仍需**：独立对话评审实际学习质量（结构测试不等于效果证明）。**打包范围**：仅 `skills/learn-code-workspace/`（SKILL.md + references/workflow.md/evidence-and-limits.md/layered-reading.md）；`docs/dsh-code-view-ui/SKILL.md` 是 UI 指导 skill 草案，未打包。
 
-### 4.2 本轮新增机制 M-04-19..33
+### 4.2 本轮新增机制 M-04-19..34
 
 #### M-04-19 只读工作台 RPC 载体与准入（硬边界）
 
@@ -241,7 +244,7 @@
 | 输入与前置 | 契约[五视图契约 §12](five-view-contract.md)：引擎 `view-first-screen --workspace --snapshot --entry [--view <coupling/tree/end_to_end/sequence/file>]`（默认 coupling）；返回 `entry`/`interfaces`/`view_payload`，当 `view!=coupling` 时额外返回 `coupling_aux`（同 `view.coupling` 同参投影）；Host 端点 `view.firstScreen` 输入 `{workspace,snapshot,entry,view?}`（枚举/有界/未知字段拒绝），映射 CLI，`VIEW_ENDPOINTS` 13 个。 |
 | 判断规则 | 一次加载并核验快照，`entry`/`interfaces`/`view_payload`/`coupling_aux` **必须与单独端点逐字段一致**（certainty/gap/预算/标签不得因批量改变）；`--view` 只接受 5 个视图枚举；未知 view→`INVALID_ARGUMENT`（优先于 entry）、未知 entry→`NOT_FOUND`；`view==coupling` 时省略 `coupling_aux`（或 null）且 `sizes.coupling_aux=0`；`sizes` 固定 4 键 `{entry,interfaces,view,coupling_aux}` 且值为各组件 canonical JSON 的 UTF-8 字节数；响应总大小引擎侧预算 ≤480 KiB（**含 aux**），超限 `LIMIT_EXCEEDED`（附 sizes），**不做静默裁剪**；client 失败（gap/`LIMIT_EXCEEDED`/旧宿主 404/aux 缺失或格式错）回退单独端点，`data-first-screen="batch 或 fallback"`，ready 仍由真实 payload 决定。 |
 | 工具动作与状态 | 引擎在单进程内一次核验快照并投影；client 优先 1 次 `view.firstScreen`，成功后写 entry/interfaces/view/`coupling_aux` 会话缓存（后续视图切换命中缓存）；`view!=coupling` 时消费 aux 填 rail/缓存 → **0 次单独 coupling RPC**；缺失 aux 时回退原单独请求路径。 |
-| 输出/证据 | 最终验收：`evidence/perf/verification.json`（116,133 B，sha256 `e350ed99fa73072c2493305ef6832021f7c3187dbca9e4669c8b2c9c7358fa0c`；25/25 全绿、layers 全 true、`ok=true/verified=true`；hot p50/p95 **328–330/382–387 ms ≤500 ✅**；20/20 hot 样本 `[data-first-screen]` 共 60 处全部 `batch`、fallback=0）；`evidence/perf/first-screen-consistency.json`（38,950 B，sha256 `8bb859f90f30909d18a7020d706e94172b2005ae056509af5d13568ec7784393`；8/8：CLI 5/5 视图+RPC 5/5 视图逐字段一致、sizes 4 键精确/aux 计入 480 KiB、负例、无绝对路径，duration 8.8 s）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191（当次；最终 195/195）+ Demo 8/8 全绿。 |
+| 输出/证据 | 最终验收：`evidence/perf/verification.json`（116,133 B，sha256 `e350ed99fa73072c2493305ef6832021f7c3187dbca9e4669c8b2c9c7358fa0c`；25/25 全绿、layers 全 true、`ok=true/verified=true`；hot p50/p95 **328–330/382–387 ms ≤500 ✅**；20/20 hot 样本 `[data-first-screen]` 共 60 处全部 `batch`、fallback=0）；`evidence/perf/first-screen-consistency.json`（38,950 B，sha256 `8bb859f90f30909d18a7020d706e94172b2005ae056509af5d13568ec7784393`；8/8：CLI 5/5 视图+RPC 5/5 视图逐字段一致、sizes 4 键精确/aux 计入 480 KiB、负例、无绝对路径，duration 8.8 s）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191（当次；最终 200/200）+ Demo 8/8 全绿。 |
 | 参数与范围 | 视图枚举 5；sizes 4 键；响应 ≤480 KiB（含 aux）；Host 输入有界；无额外缓存（首屏合并即一次调用）；`LIMIT_EXCEEDED` 走回退。 |
 | 依赖与冲突 | 依赖 M-04-19/20；与单端点共享同一 DTO 形状，若批量/aux 偏离单端点即违约；`coupling_aux` 与 `view.coupling` 同源保证 coupling 视图与左栏资源 rail 一致；失败必须回退，不能把批量失败变成面板失败。 |
 | 失败与恢复 | 旧宿主/引擎不支持→404 或引擎错误→client 回退单独端点；`LIMIT_EXCEEDED` 或 aux 缺失/格式错→回退；批量一致性不放宽（逐字段严格相等，signed `v1.*` evidence_ref 按 claims 归一化、忽略每次签发时间 t）；回退后行为与错误语义不变。 |
@@ -338,20 +341,20 @@
 | 最小验证 | `node tools/verify-s3.mjs --with-repo-tests`；`node tools/verify-s3b.mjs --with-repo-tests`；`cd engine && python -m unittest discover -s tests -p "test_scenario.py" -v`。 |
 | 限制/改进假设 | 只记录有序步骤台账，**没有异步/IRQ 因果细化**（M-04-33 仅声明式标记，不推断中断发生/完成）；observed 默认最近台账、选择无持久化；`elapsed_ms` 是 Wasm 调用耗时不是设备时延；Wasm 模拟不证明真实设备行为。 |
 
-#### M-04-29 AI 归纳（Agent 写入/签名/失效，硬边界 + 内容 skill 可调）
+#### M-04-29 AI 归纳（Agent 写入/签名/失效，含入口 subject；硬边界 + 内容 skill 可调）
 
 | 项 | 内容 |
 |---|---|
-| 场景/触发 | 详情面板需要 ≤500 字 AI 归纳（CW-09）。**插件不产生正文**：由 Agent（模型）经 DSH 工具 `code_summary` 写入，UI 只读展示并标来源。触发：Agent `code_summary action=put/get`；UI `view.summary` 懒加载（选中变化防抖 ≤200ms）。 |
-| 输入与前置 | 作用域 `workspace+snapshot+subject`；subject 类型 `function/group/entry`（entry 指入口函数详情的独立归纳，可与 function 归纳并存）；同一 subject 只保留最新一条（修订覆盖，无历史代际）；payload：`text` 1..500 Unicode 码点且禁止控制字符；`facts` ≤32 条 `{kind ∈ evidence/node/selection, ref ≤512 安全字符}`；`inference_labels` ≤8，枚举 `from_static_structure/from_source_text/may_speculative/from_observation`（**仅当有运行台账时才允许 `from_observation`**）；`generator {kind ∈ agent/user, ref, model_ref?}`（不记录密钥/路径）。function subject 必须存在；group subject 非函数不做存在性校验但记 limitation `subject_existence_not_verified`。 |
-| 判断规则 | Host 先校验 text/facts 等有界字段并组装 base64 payload；引擎再校验 schema/长度/枚举/subject，写**签名 JSON**（复用 state 签名）并记录该快照 `graph_sha256`；读取时与当前核验快照 graph sha 比较：一致→`stale:false`；不一致（重导入/内容变化）→`stale:true`，仍返回文本但 UI 必须显示“基于旧快照，待复核”并给 `limitations:['summary_stale_against_current_snapshot']`。不写入源码/快照。 |
-| 工具动作与状态 | `summary-put`/`view-summary`；`view.status` capabilities `ai_summary_store:true` 而 `ai_summary:false`（插件不自动生成）；client 详情面板 AI 归纳区展示 `[data-ai-summary-text]`、facts、generator、generated_at、labels、`[data-ai-summary-stale]`；无记录显示 `[data-ai-summary-gap]`（“AI 归纳未生成（Agent 可通过 code_summary 写入）”），不伪造；竞态时丢弃过期响应；归纳不写入 Selection。 |
-| 输出/证据 | `evidence/ai-summary/verification.json`（49/49）：未写入 gap→真实引擎 `summary-put`（模拟 Agent，约 120 字、facts 含真实 `e_…`、generator `{agent, verify-summary}`、labels `from_static_structure`）→UI 显示原文/facts/generator/generated_at/stale=false；501 字→`LIMIT_EXCEEDED`、控制字符/非法 facts（`../etc/passwd`）→`INVALID_ARGUMENT`，三次均被拒且原归纳未被覆盖；group subject put/get 成功并带 limitations；Cordis `code_summary`（7 工具）真实 put/get + dispose/二次挂载缓存保留 TAP 1/1；回归 S1/S2a/S2b/S3a/S3b + console=0、无绝对路径；`test_summary.py`（9）。 |
-| 参数与范围 | text ≤500 码点；facts ≤32；labels ≤8；generator ref 有界；无历史版本（历史走学习记录/快照）。 |
-| 依赖与冲突 | 依赖 M-04-08/09（graph sha 失效基准）、M-04-24（判断是否有运行台账以允许 `from_observation`）、M-04-19（view.summary RPC）；与 M-04-14 的“用户/Agent 身份”一样，`generator.kind/ref` 是**声明**而非密码学认证。 |
-| 失败与恢复 | 非法 put→引擎错误码，不覆盖原文；快照变化→stale 标记；无记录→gap；“插件不调用模型”是硬边界——UI/插件不得自行生成正文。 |
-| 最小验证 | `node tools/verify-summary.mjs --with-repo-tests`；`cd engine && python -m unittest discover -s tests -p "test_summary.py" -v`；`node --test tests/node/view-rpc.test.mjs`（`view.summary`）。 |
-| 限制/改进假设 | 语义质量（是否把候选/未知写成确定）**不做评分**，只校验结构/标签/失效；stale 只比较 graph sha（不单独核源码摘要，快照重导入即失效）；无历史代际；`from_observation` 仅靠“有台账”判断，不校验台账与 subject 的关联强度；归纳的正文本内容质量需独立评审。 |
+| 场景/触发 | 详情面板需要 ≤500 字 AI 归纳（CW-09）。**插件不产生正文**：由 Agent（模型）经 DSH 工具 `code_summary` 写入，UI 只读展示并标来源。触发：Agent `code_summary action=put/get`；UI `view.summary` 懒加载（选中变化防抖 ≤200ms）。**T44 扩展**：除 function/group 外支持 **entry subject**——选中入口时并行读 `view.summary subject_type=entry`，在函数归纳下方显示“入口归纳”子块。 |
+| 输入与前置 | 作用域 `workspace+snapshot+subject`；subject 类型 `function/group/entry`（entry 指入口函数详情的独立归纳，**与 function 归纳并存**；同 id 时靠 `subject.type` 区分）；同一 subject 只保留最新一条（修订覆盖，无历史代际）；payload：`text` 1..500 Unicode 码点且禁止控制字符；`facts` ≤32 条 `{kind ∈ evidence/node/selection, ref ≤512 安全字符}`；`inference_labels` ≤8，枚举 `from_static_structure/from_source_text/may_speculative/from_observation`（**仅当有运行台账时才允许 `from_observation`**）；`generator {kind ∈ agent/user, ref, model_ref?}`（不记录密钥/路径）。function/entry subject 必须存在（entry id 即入口函数 id）；group subject 非函数不做存在性校验但记 limitation `subject_existence_not_verified`。 |
+| 判断规则 | Host 先校验 text/facts 等有界字段并组装 base64 payload；引擎再校验 schema/长度/枚举/subject，写**签名 JSON**（复用 state 签名）并记录该快照 `graph_sha256`；读取时与当前核验快照 graph sha 比较：一致→`stale:false`；不一致（重导入/内容变化）→`stale:true`，仍返回文本但 UI 必须显示“基于旧快照，待复核”并给 `limitations:['summary_stale_against_current_snapshot']`。不写入源码/快照。**入口子块静默语义**：选中入口时仅当存在 entry 归纳才显示 `[data-ai-summary-entry]`；无记录/请求失败**不显示 entry-gap、不新增 gap**（契约行为），函数归纳的缺口逻辑不变。 |
+| 工具动作与状态 | `summary-put`/`view-summary`；`view.status` capabilities `ai_summary_store:true` 而 `ai_summary:false`（插件不自动生成）；client 详情面板 AI 归纳区展示函数 `[data-ai-summary-text]`/facts/generator/generated_at/labels/`[data-ai-summary-stale]`，并**并行**请求 entry 归纳，显示 `[data-ai-summary-entry]`、`-entry-text`、`-entry-generator`、`-entry-generated-at`、`-entry-facts`、`-entry-labels`、`-entry-stale`；无函数记录显示 `[data-ai-summary-gap]`，不伪造；竞态时丢弃过期响应；归纳不写入 Selection。 |
+| 输出/证据 | `evidence/ai-summary/verification.json`（**56/56**，T44 从 49/49 扩展）：function 未写入 gap→真实 `summary-put`→UI 原文/facts/generator/generated_at/stale=false；501 字→`LIMIT_EXCEEDED`、控制字符/非法 facts→`INVALID_ARGUMENT` 且不覆盖；group subject put/get 带 limitations；**entry subject**：真实 `summary-put subject_type=entry`（bus_send `f_afa…`）+ `view-summary` 读回一致，dsh-web 选中 bus_send 出现 `[data-ai-summary-entry]` 与文本/generator/facts/labels/stale，函数归纳仍正常；无 entry 归纳的 bus_register 无 entry 子块/无新增 gap（`[data-ai-summary-gap]` 仍 1 个）；`view.summary {subject_type:'entry'}` RPC 读回；Cordis `code_summary` 真实 put/get + dispose/二次挂载 TAP 1/1；回归 S1/S2a/S2b/S3a/S3b + Node 200/200 + Demo 8/8；console=0、无绝对路径。证据 sha256：`verification.json` 206,895 B `398279282ede…`、`entry.png` 167,954 B `dc151ab7…`、`written.png` 185,829 B `3983b541…`、`gap.png` 141,363 B `50a5f79c…`、`commands.log` 14,694 B `f05c14d1…`。 |
+| 参数与范围 | text ≤500 码点；facts ≤32；labels ≤8；subject 类型 3 种；generator ref 有界；无历史版本（历史走学习记录/快照）。 |
+| 依赖与冲突 | 依赖 M-04-08/09（graph sha 失效基准）、M-04-24（判断是否有运行台账以允许 `from_observation`）、M-04-19（view.summary RPC）；与 M-04-14 的“用户/Agent 身份”一样，`generator.kind/ref` 是**声明**而非密码学认证；entry 与 function 同 id，必须按 `subject.type` 匹配，不能混写。 |
+| 失败与恢复 | 非法 put→引擎错误码，不覆盖原文；快照变化→stale 标记；无函数记录→gap；“插件不调用模型”是硬边界——UI/插件不得自行生成正文；entry 无记录/失败→静默不显示（契约行为，不伪造）。 |
+| 最小验证 | `node tools/verify-summary.mjs --with-repo-tests`（56/56）；`cd engine && python -m unittest discover -s tests -p "test_summary.py" -v`；`node --test tests/node/view-rpc.test.mjs`（`view.summary`）。 |
+| 限制/改进假设 | 语义质量（是否把候选/未知写成确定）**不做评分**，只校验结构/标签/失效；stale 只比较 graph sha（不单独核源码摘要，快照重导入即失效）；无历史代际；`from_observation` 仅靠“有台账”判断，不校验台账与 subject 的关联强度；entry 请求失败静默为契约行为，本轮未构造网络层失败注入、未做长期竞态压测；归纳正文质量需独立评审。 |
 
 #### M-04-30 性能实测口径与首屏预算（测量机制，非产品运行路径；**已验收：首屏达标**）
 
@@ -390,7 +393,7 @@
 | 输入与前置 | 本机 **pinned** DSH 基线（`DeepSeek Harness.exe` SHA256 `7ae939b5…`、`app.asar` SHA256 `e1b6f25f…`、dsh `0.2.1-rc.5`、内嵌 Node 24.21.0/Electron 44.7.0、6 个已核 seam 文件）——版本/SHA 不符即失败；隔离 `DSH_HOME`（`scratch/readonly-home/home`，非真实 `~/.dsh`）与隔离 web profile（bundles=base+web-app+`@local/dsh-code-reader`）；隔离 bootstrap + 真实 Python 3.11.4；本机 Electron 仅作 Chromium 探针（不随包分发）。 |
 | 判断规则 | 每次运行重新生成 `evidence/<stage>/verification.json`（layers/checks/not_verified/commands/limitations），以**三层**（`demo_observed`/`atlas_snapshot`/`dsh_host`）分别记录、互不冒充；无 cookie 直连 `/code-view` 必须 401；Chromium 探针必须 console error=0、无绝对路径、按 DOM 钩子断言并截图；`in_scope_not_verified` 与 `out_of_scope_not_verified` 分开、不隐藏；被后续阶段正当取代的旧断言（如 S2a 的 `gapsOriginal`、打桩占位）显式记录 ignored/superseded，不静默通过。 |
 | 工具动作与状态 | 只读验收：不改插件实现、不联网（仅本机回环 HTTP）、不写真实 `%USERPROFILE%\.dsh`、不重启桌面宿主、不 git 提交；探针窗口 `opacity=0 + showInactive` 截当前 composited 帧，截图前滚动/invalidate/连拍；token redact；失败保留 `scratch/<stage>/*-probe.json` 与日志供复核。 |
-| 输出/证据 | S1..AI 6 阶段 + 性能 **25/25** 均 `ok=true, verified=true`：`evidence/readonly-slice/` 26/26、`five-views/` 37/37、`s2b/` 41/41、`s3/` 43/43、`s3b/` 58/58、`ai-summary/` 49/49；`evidence/perf/` **25/25 全绿**（hot p50/p95 328–330/382–387 ms ≤500 ✅；4 项 not_verified 如实）；每阶段 `host-runtime.tap` 1/1；`commands.log` 记录实际命令/exit code/cwd；`evidence/plugin-install-verification.json` 记录安装注册。 |
+| 输出/证据 | **8/8 阶段、320/320 检查**均 `ok=true, verified=true`：`evidence/readonly-slice/` 26/26、`five-views/` 37/37、`s2b/` 41/41、`s3/` 43/43、`s3b/` 58/58、`ai-summary/` **56/56**（含入口 subject）、`perf/` 25/25（hot p50/p95 328–330/382–387 ms ≤500 ✅；4 项 not_verified 如实）、`async-irq/` 34/34；`in_scope_not_verified` 如实（perf 4 项、async 0 项）；每阶段 `host-runtime.tap` 1/1、`commands.log` 记录实际命令/exit code/cwd；`evidence/final-acceptance/` 提供聚合索引（summary.json 含各阶段 sha256）。 |
 | 参数与范围 | 固定宿主 SHA/版本、固定隔离路径（Windows 本机；换机需同步调整，门禁会立即暴露差异）；探针超时（每视图 ≤45 s、整体 360–420 s）与截图口径固定；不联网。 |
 | 依赖与冲突 | 依赖 Host rc.5 实际接缝（M-04-19）；与开发机真实桌面宿主隔离——**桌面宿主热更新未验证**（验收用独立 profile）；`demo_observed` 层依赖 Demo Wasm/JS 行为，但不证明真实设备。 |
 | 失败与恢复 | 门禁失败→整批失败（不继续产出“通过”）；探针失败→保留中间 JSON/日志；`not_verified` 不得改写为通过；阶段回退保留旧证据目录不覆盖（S1..S4-prep 各自目录未改动）。 |
@@ -411,6 +414,21 @@
 | 失败与恢复 | 非法声明→`INVALID_ARGUMENT` 且不写 profile/台账；执行台账的 async 声明不冻结在台账里（按当前已登记 profile 解析），导入台账按自身声明；缺省无声明=旧行为（S3b）。 |
 | 最小验证 | `node tools/verify-irq.mjs --with-repo-tests`（34/34）；`cd engine && python -m unittest discover -s tests -p "test_scenario.py" -v`（async 校验/observed/导入）；`node --test tests/node/client.test.mjs`（async DOM）；回归 `verify-s3`/`verify-s3b`。 |
 | 限制/改进假设 | 只做**声明式边界标记**：不推断真实硬件 IRQ 因果/中断完成、不建模跨进程异步调度/时序竞态；真实设备/外部轨迹采集、rev1 历史证据重跑、超大 payload async 变体为 out_of_scope；rev2 fixture sha 固定，变更需重跑工具；本版不写“异步因果已被证明”。 |
+
+#### M-04-34 分层阅读与函数定位（skill 四层 + 先定位再解释；skill 可调，不升级事实）
+
+| 项 | 内容 |
+|---|---|
+| 场景/触发 | 用户问“这个函数是干什么的/它会怎么走”时，直接堆调用链会丢失业务定位与证据等级。触发：skill 在单函数/行为问答中，先给业务定位，再按四层下钻（CL-007-D1..D3 / CL-PF-02/03 补充；契约见 `docs/interactive-code-view-software-design.md` 与 `SKILL.md` 第 5 步）。 |
+| 输入与前置 | 已登记 workspace/variant 与已核验快照（或 source-only）；问题明确到某个函数/行为；可用既有只读工具：`code_overview`、`view.fileTree`/`view.tree`、`view.getEntry`、`view.coupling`、`view.endToEnd`、`code_source`、`code_path`，有台账时 observed 时序。 |
+| 判断规则 | **四层顺序固定**：① 业务总框架（谁和谁通信、本流程解决什么、从哪进入/在哪完成；先一句话定位 + 用户态/UAPI/内核/设备边界与开始→收发→完成→通知位置）→ ② 文件与函数职责（文件→主要函数→职责→关键调用；标出当前函数涉及的入口/完成/状态/设备交互）→ ③ 关键数据与状态（结构体/字段/软表/硬件资源的读写方；区分 exact 编译事实与 may 候选，软表/寄存器/设备内存标明谁读谁写、是否缺设备文档）→ ④ 实现证据（guard/锁/等待/完成/失败路径；IRQ/workqueue/异步完成点要有 observed 或明确源码证据才展开）。默认展开第 2–3 层，按需到第 4 层；用户要细节时只展开 1–2 个关键点，不做全图漫游；业务图与局部图分开，通过当前入口/Selection 关联。**不得把 may/unknown 说成 exact，不得伪造运行观测。** |
+| 工具动作与状态 | skill 只产出解释/提问/呈现（不新增工具、不写 state），按需调用既有只读工具；单函数定位步骤：先 `view.listEntries` 或 `code_source find` 选入口 → `view.getEntry` 取文件/行号/签名/调用者/被调用者/资源摘要 → 放回 `code_overview` 的组件/仓库/接口候选给一句业务定位 → `view.coupling`/`view.endToEnd` 找数据与判断/异常路径 → 需要“谁调用它/它调用谁到哪结束”时 `code_path path` 取一条有界路径并逐边 `code_source` 读源码；跨仓用 binding 候选（最多 may）。 |
+| 输出/证据 | 输出模板（短）：一句话（`<函数> 位于 <用户态/内核/设备边界>，负责 <做什么>，从 <入口> 到 <完成/通知>`）+ 3–6 行“文件→主要函数→职责”+ 关键数据读写方（标 exact/may/unknown）+ 证据与未知（文件:行号或 evidence id；缺 build/ABI/设备文档写 unknown）。证据：`skills/learn-code-workspace/references/layered-reading.md`（四层/定位步骤/输出模板/边界）；`SKILL.md` 第 5 步“先定位再解释”与 references 链接；`engine/tests/test_skill_contract.py::test_20..24`（5 例，合同测试共 24 条）；最终验收 `evidence/final-acceptance/` 8/8 阶段、320/320 检查（skill 行为由各阶段回归层护栏）。 |
+| 参数与范围 | 默认四层顺序固定；层数/篇幅/展开点由 skill 按用户问题调整；无新增 schema/端点/参数；不改变证据等级与工具预算。 |
+| 依赖与冲突 | 依赖 M-04-18（skill 编排）、M-04-01/05/10/12/19/20（工具与证据边界）、M-04-29（如需写归纳）；与“直接堆调用链/全图漫游”冲突时按 M-04-34 先业务定位再局部；不替代静态/运行证据，不新增证据来源。 |
+| 失败与恢复 | 缺入口/符号→先 `code_source find` 或列候选并显式多候选；缺快照→source-only + `semantic_status=blocked`；证据不足/跨仓边界→写 unknown/may，不猜；用户要细节时才展开第 4 层，超预算时截断并说明。 |
+| 最小验证 | `cd engine && python -m unittest discover -s tests -p "test_skill_contract.py" -v`（24 条，含 test_20..24）；`node tools/verify-readonly.mjs --with-repo-tests` 等各阶段回归（skill 行为护栏）；人工对话评审四层顺序/定位质量（结构测试不等于效果证明）。 |
+| 限制/改进假设 | skill 文本与合同测试只证明流程/结构存在，**不证明实际解释质量**；需独立对话评审。四层默认顺序可按具体问题调整，但不能改变证据等级；真实硬件/ABI/线程事实仍需专门证据（S4 未验证）。 |
 
 ---
 
@@ -435,7 +453,7 @@
 | 分层证据不互相冒充 | 验收工具 + 证据 JSON + 后端/UI 标签 | `demo_observed`/`atlas_snapshot`/`dsh_host` 各自标注；`observed`（台账）不得冒充静态 exact |
 | 导出/记忆出口 | `records.py`/`cli.py` | 只写本地 state，不上传、不自动写 05 |
 
-**skill 可以调整**（不涉及上述硬边界）：问什么/何时问、阅读顺序、每次讲多少、何时登记/重登记、查询范围与更小 glob/预算、何时建记录/复盘/写 AI 归纳（内容须基于证据）、如何呈现证据分级与 Next Action、何时停止。**skill 不能**：绕过 scope、把文本当编译事实、把 may/候选说成 exact、代填用户预测/观察、执行 `run`/场景（模型无执行入口）、伪造 observed/台账/归纳、声称 Linux/Kbuild/CFG/性能门禁通过、删除 `not_verified`。
+**skill 可以调整**（不涉及上述硬边界）：问什么/何时问、阅读顺序、分层阅读展开顺序与深度（M-04-34）、每次讲多少、何时登记/重登记、查询范围与更小 glob/预算、何时建记录/复盘/写 AI 归纳（内容须基于证据）、如何呈现证据分级与 Next Action、何时停止。**skill 不能**：绕过 scope、把文本当编译事实、把 may/候选说成 exact、代填用户预测/观察、执行 `run`/场景（模型无执行入口）、伪造 observed/async/台账/归纳、声称 Linux/Kbuild/CFG/性能门禁通过、删除 `not_verified`。
 
 ---
 
@@ -459,6 +477,7 @@
 | worker 超时 / 内存 | 10 s（≤30 s）/ 64 MB；Host 总 15 s | 固定 | Host/引擎；超时 `OUTCOME_UNKNOWN`，不落台账 |
 | undo count | 1 | 1..源步数（Host ≤200） | UI 输入 + 引擎校验；越界拒绝 |
 | summary text / facts / labels | 500 码点 / 32 / 8 | 固定 | Host+引擎双重校验；超限 `LIMIT_EXCEEDED` |
+| 分层阅读四层/输出 | 四层顺序固定，默认第 2–3 层 | 层数/篇幅按问题调整 | skill（M-04-34）；不改变证据等级/工具预算 |
 | 组数 / 接口候选 | ≤50 / ≤100 | 固定 | 引擎；超限截断 |
 | 首屏预算 | 500 ms | 拟验收基线，不调 | 验收工具；当前 hot p50/p95 328–330/382–387 ms 达标（25/25 全绿），未调整预算 |
 | 性能冷样本 | 关闭（cold UI 记 not_verified） | `PERF_COLD_SAMPLES=20` 可开启 | 验收工具；一次性 token 限制，不伪造样本 |
@@ -480,16 +499,17 @@
 10. 首屏性能（M-04-30）→ M-04-22 批量首屏（已验证）：首屏由 4 个 RPC 合并为 1 次批量 RPC + `coupling_aux`，hot p50/p95 328–330/382–387 ms ≤500；批量与单端点 DTO 必须逐字段一致（M-04-20 的预算/证据等级不变），失败回退单端点。
 11. `coupling_aux`（M-04-22）→ coupling 视图/左栏资源 rail 与单独 `view.coupling` 同源；sizes 4 键含 aux、总预算 480 KiB；client 消费后跳过单独 coupling RPC（0 次），aux 缺失/格式错回退。
 12. 异步声明（M-04-33）→ profile/导入轨迹 `async_events` → observed event 消息 `async` 与顶层 `async_events`；只影响标记，不改台账顺序/静态投影；rev1 无声明保持 S3b 旧行为。
+13. 分层阅读（M-04-34）→ 依赖 M-04-18/10/12/19/20 的只读工具与证据等级；只改变解释顺序/深度（先业务定位再局部下钻），不新增证据、不改变 exact/may/unknown；归纳写入仍走 M-04-29。
 
 ---
 
 ## 8. 最小验证清单（改 skill/机制后至少重跑）
 
 ```bash
-# 引擎（合成 fixture + 真实 Atlas fixture；当前 318 tests）
+# 引擎（合成 fixture + 真实 Atlas fixture；当前 323 tests；含 test_skill_contract 24 条）
 cd engine && python -m unittest discover -s tests -v
 
-# 插件 Host/Client 合同（当前 195 tests）
+# 插件 Host/Client 合同（当前 200 tests）
 node --test tests/node/*.test.mjs
 
 # Demo 行为对照（Wasm 模拟观测，8/8）
@@ -501,13 +521,13 @@ node tools/verify-five-views.mjs --with-repo-tests      # S2a 五视图（37/37�
 node tools/verify-s2b.mjs --with-repo-tests             # S2b 组/接口库/子流程（41/41）
 node tools/verify-s3.mjs --with-repo-tests              # S3a 场景/打桩/台账/observed（43/43）
 node tools/verify-s3b.mjs --with-repo-tests             # S3b 回退/轨迹导入/多场景（58/58）
-node tools/verify-summary.mjs --with-repo-tests         # AI 归纳（49/49）
+node tools/verify-summary.mjs --with-repo-tests         # AI 归纳（当前 56/56；含入口 subject）
 node tools/verify-perf.mjs --with-repo-tests            # 性能实测（当前 25/25 全绿；首屏 hot p50/p95 328–330/382–387 ≤500 ✅）
 node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes 一致性（8/8；verify-perf 内含）
 node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边界（34/34；真实 Wasm IRQ + dsh-web async 标记）
 ```
 
-对照关系：CL-001（M-04-01/02/03/05/06/07）、CL-003（M-04-08/09）、CL-004（M-04-10/11/12）、CL-005（M-04-13/14）、CL-006（M-04-15）、CL-009（M-04-16/17）、CL-007（M-04-18 文档条款）；CL-VIEW-T1（M-04-19、部分 20）、CW-T2（M-04-20/21）、CW-T3（M-04-23..28）、CW-T4A（M-04-29/30/31、M-04-32、M-04-33 异步/IRQ）；S4 目标门禁仍不在此清单的“通过”含义内（M-04-22 批量首屏、M-04-33 异步/IRQ 已验收）。
+对照关系：CL-001（M-04-01/02/03/05/06/07）、CL-003（M-04-08/09）、CL-004（M-04-10/11/12）、CL-005（M-04-13/14）、CL-006（M-04-15）、CL-009（M-04-16/17）、CL-007（M-04-18 文档条款）；CL-VIEW-T1（M-04-19、部分 20）、CW-T2（M-04-20/21）、CW-T3（M-04-23..28）、CW-T4A（M-04-29/30/31、M-04-32、M-04-33 异步/IRQ）；CL-PF-02/03 分层阅读（M-04-34，`test_skill_contract.py` 24 条）；**最终验收汇总 `evidence/final-acceptance/`：8/8 阶段、320/320 检查**；S4 目标门禁仍不在此清单的“通过”含义内（M-04-22 批量首屏、M-04-29 入口归纳、M-04-33 异步/IRQ 已验收）。
 
 ---
 
@@ -532,6 +552,7 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 | 回退前缀 digest 不一致 | `STATE_CONFLICT/state_digest_mismatch`（含 step_index/digests） | 不发布；重试或保留只读历史 |
 | 导入轨迹不可回退 | `CAPABILITY_UNAVAILABLE` | 只读历史；重跑新场景 |
 | 非法 `async_events`（重复/未知/超 16/非数组） | `INVALID_ARGUMENT`（profile 与 trace-import 均拒绝） | 修正声明；profile/台账不写 |
+| 入口归纳无记录/请求失败 | 静默不显示 entry 子块（契约行为，不新增 gap） | 刷新/重选；函数归纳缺口逻辑不变 |
 | 归纳超长/控制字符/非法 facts | `LIMIT_EXCEEDED`/`INVALID_ARGUMENT` | 修正 payload；原文不被覆盖 |
 | 快照变化后的旧归纳 | `stale:true` + `summary_stale_against_current_snapshot` | UI 显示“基于旧快照，待复核”；重写归纳 |
 | 性能预算未达标（历史） | 验收 `ok=false`（首屏，历史 run） | 优化后复测；不得调预算。当前已达标：hot p95 387 ms、25/25 全绿 |
@@ -543,14 +564,16 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 318 引擎测试 + 195 Node 测试 + 安装后 Host 工具旅程 |
+| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 323 引擎测试 + 200 Node 测试 + 安装后 Host 工具旅程 |
 | 真实 Atlas 0.8 产物适配（Windows runtime，合成 C） | **actual（非 Linux 门禁）** | `evidence/real-atlas/`、`evidence/code-view-slice/`：envelope/graph_hash/coverage/真实 file/line/exact 边/flow_legacy |
 | 只读工作台 RPC/面板/五视图/组折叠/接口库/子流程 | **actual** | S1 26/26、S2a 37/37、S2b 41/41 隔离 dsh-web 验收 |
 | 受控 Wasm 场景/打桩/台账/observed/回退/轨迹导入 | **actual** | S3a 43/43、S3b 58/58 隔离 dsh-web 验收（Demo Wasm，非真实设备） |
 | 异步/IRQ 事件边界（observed `async` 标记） | **actual（已验证）** | `verify-irq` 34/34：真实 Wasm `bus_irq`→IRQ、observed `async_events:["IRQ"]`/IRQ `async:true`、dsh-web `[data-sequence-async]`+“异步”chip/说明；static/rev1 无标记；非法声明拒绝不写（M-04-33） |
-| AI 归纳写入/缓存/展示/失效 | **actual** | 49/49，Agent 写入 ≠ 插件生成 |
+| AI 归纳写入/缓存/展示/失效（含入口 subject） | **actual** | CW-09 **56/56**（function/group/entry；入口子块与缺失静默），Agent 写入 ≠ 插件生成 |
+| 分层阅读与函数定位（CL-007-D1..D3 / CL-PF-02/03） | **actual（结构/合同）** | `layered-reading.md` 四层 + SKILL 第 5 步；`test_20..24`（合同测试共 24 条）；实际解释质量待独立对话评审（M-04-34） |
 | 性能实测与大图规模证据 | **actual，首屏预算已达标** | `evidence/perf/`：25/25 全绿，首屏 hot p50/p95 328–330/382–387 ms ≤500；coupling p95 3 ms；not_verified 4 项（cold UI/tree→file/拖动/2000-10k 截断文本）如实 |
 | 批量首屏 `view.firstScreen`（含 `coupling_aux`） | **actual（已验证）** | `verify-perf` 25/25；一致性 8/8；20/20 hot 60 处 batch、fallback=0；client 消费 aux→0 次单独 coupling RPC（M-04-22） |
+| 最终验收汇总（8 阶段 dsh-web） | **actual** | `evidence/final-acceptance/`：8/8 阶段、320/320 检查、tests 323/200/8；**S4 门禁仍未验证** |
 | 真实 Linux/Kbuild 索引/生成头/目标 ABI | **blocked（未验证）** | 需 Linux 工具链 + Linux 构建的 Atlas 快照；`evidence/s4-feasibility/` 只做探测 |
 | native CFG / 数据流 / 锁 / 别名深分析 | **blocked（未验证）** | 快照 `cfg=unsupported`；关系查询返回 unavailable |
 | 真实设备/硬件/线程重叠/字节布局/真实设备下发 | **blocked（未验证）** | 静态证据与 Wasm 模拟均不证明；需单独授权与运行验证 |
@@ -571,6 +594,8 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 8. **已知交互限制**：observed 默认最近更新台账（可切换但无持久化）；client `expected_generation` 依赖全局 latestGeneration，跨场景后重跑旧场景可能 CAS 冲突；组名/接口库修订只在会话内；接口候选是规则候选（全部 may）。
 9. **首屏批量的边界**：`LIMIT_EXCEEDED`（480 KiB）路径最终 verifier run 未触发（真实快照远低于上限），其 sizes/回退由引擎/Node 测试覆盖；跨参考机预算校准为 out_of_scope；cold UI、tree→file 行高亮、拖动反馈、2000/10k UI「已截断」文本仍 not_verified（不伪造）。
 10. **异步/IRQ 边界（M-04-33）**：按 profile/导入轨迹的 `async_events` 声明给事件加 `async` 标记与 UI chip/说明，**不推断**真实硬件中断/因果；rev1/rev2 兼容，静态投影与台账语义不变；out_of_scope 5 项已列在证据。
+11. **入口归纳（T44）**：entry subject 与 function subject 同用入口函数 id，按 `subject.type` 区分；无记录/请求失败**静默不显示 entry 子块、不新增 gap**（契约行为）；函数归纳/缺口逻辑不变。
+12. **分层阅读（CL-PF-02/03，T45）**：skill 文本/参考文件 + 合同测试，默认四层顺序与“先定位再解释”；只改变解释顺序/深度，不新增证据/参数；实际解释质量仍需独立对话评审。
 
 ---
 
@@ -586,8 +611,9 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 6. **首屏达标（已达成，T37 最终验收）**：M-04-22 批量首屏 + `coupling_aux` 使 hot p50/p95 = 328–330/382–387 ms ≤500，一致性 8/8、fallback=0；**仍待补测**：cold UI 20 冷样本、tree→file 行高亮、拖动反馈、2000/10k UI「已截断」文本（not_verified 4 项，不伪造）；跨参考机预算校准为 out_of_scope。
 7. **异步/IRQ 声明式边界（M-04-33）已实现并验收（34/34）**；**仍未验证**：真实硬件 IRQ 因果/中断完成判定、跨进程异步调度/时序竞态、真实设备下发的可回退语义（当前仅有序步骤 + memory digest 前缀）。
 8. **结构布局/compat**：只有真实目标 ABI 证据才可解释字节偏移。
-9. **skill 实际学习质量**：独立对话评审（结构测试不能证明学习效果）；AI 归纳语义质量（是否把候选写成确定）需评审。
+9. **skill 实际学习质量**：独立对话评审（结构测试不能证明学习效果；分层阅读 M-04-34、入口归纳 M-04-29 均只证结构与流程）；AI 归纳语义质量（是否把候选写成确定）需评审。
 10. **OS 出口认证**：需要目标 OS 的网络策略证据，当前只有“不联网”的代码事实与本机回环观测。
+11. **入口归纳/归纳竞态压测**：本轮入口成功与无记录两条路径已验，未构造网络层失败注入、未做长期竞态/刷新压力测试；需后续验证。
 
 ---
 
@@ -617,15 +643,19 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 | S2b 组/接口库/子流程 | `verify-s2b` 41/41 | 组折叠必须边不合并（31 条原边元数据 before/after 全量比对）；接口候选全部 may；组修订仅会话 |
 | S3a 场景/打桩/observed | `verify-s3` 43/43 | 契约 §5 DOM 示例与实际差异如实记录（如 `data-code-view="stub-panel"` 实际为容器类名）；observed 默认最近台账、跨场景 CAS 限制记录为交互改进候选 |
 | S3b 回退/轨迹导入/多场景 | `verify-s3b` 58/58 | imported 台账 undo 实际返回 `CAPABILITY_UNAVAILABLE`（契约只写“不提供”），按实际码记录；S3a 回归探针新增 `RV_SCENARIO_CHANNEL` 避免共享台账 CAS 冲突 |
-| S4-prep AI 归纳 | `verify-summary` 49/49 | **Windows 签名密钥文本模式损坏**：`State.secret` 用 `os.open` 未带 `O_BINARY`，CRT 文本模式把随机密钥中的 `0x0A` 扩展为 CRLF，导致签名文件约 12% 概率损坏、已签 profile/台账/plan/summary 随机 `SCOPE_DENIED`（S3/S4 偶发失败根因）。修复为二进制打开+严格 32 字节校验，回归 `test_io_robustness.py`（含 0x0A/0x0D 密钥 round-trip 与损坏文件报错）；修复后引擎套件稳定（最终 318 tests） |
+| S4-prep AI 归纳 + 入口 subject（T44） | `verify-summary` **56/56 全绿**（原 49）、layers 全 true、`ok/verified=true`、`in_scope_not_verified=0`、out_of_scope 5 | **Windows 签名密钥文本模式损坏**：`State.secret` 用 `os.open` 未带 `O_BINARY`，CRT 文本模式把随机密钥中的 `0x0A` 扩展为 CRLF，导致签名文件约 12% 概率损坏、已签 profile/台账/plan/summary 随机 `SCOPE_DENIED`（S3/S4 偶发失败根因）。修复为二进制打开+严格 32 字节校验，回归 `test_io_robustness.py`（含 0x0A/0x0D 密钥 round-trip 与损坏文件报错）；修复后引擎套件稳定（最终 323 tests）。**T44 入口归纳**：真实 `summary-put/view-summary subject_type=entry`（bus_send `f_afa…`）+ dsh-web `[data-ai-summary-entry]` 子块（文本/generator/facts/labels/stale）与函数归纳并存；无 entry 归纳的入口无子块/无新增 gap（静默契约）；`view.summary {subject_type:'entry'}` RPC；Cordis TAP 1/1；回归 S1..S3b + Node 200/200 + Demo 8/8；证据 sha256 见 §12.3 |
 | S4-prep 性能 + 首屏批量（T27–T37） | `verify-perf` **25/25 全绿**，`ok=true/verified=true` | 首屏链路：T27 基线 1078/1141 → T28 并行/预取/缓存 646/704 → T33 批量首屏 455/527 → T37 `coupling_aux` **328–330/382–387 ms ≤500 ✅**；coupling p95 3 ms；`data-first-screen` 20/20 样本 60 处 batch、fallback=0；`coupling_aux` 一致性 8/8；剩余 not_verified 4 项（cold UI/tree→file/拖动/2000-10k 截断文本）如实；`LIMIT_EXCEEDED` 路径本 run 未触发（引擎/Node 测试覆盖） |
-| S4-prep 异步/IRQ 边界（T39–T41） | `verify-irq` **34/34 全绿**、layers 全 true、`ok/verified=true`、`in_scope_not_verified=0` | 真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`；dsh-web `[data-sequence-async="true"]`+“异步”chip/说明；static/rev1 导入台账无标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195 + Demo 8/8；证据 sha256 见 §12.3 |
+| S4-prep 异步/IRQ 边界（T39–T41） | `verify-irq` **34/34 全绿**、layers 全 true、`ok/verified=true`、`in_scope_not_verified=0` | 真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`；dsh-web `[data-sequence-async="true"]`+“异步”chip/说明；static/rev1 导入台账无标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195（当次；最终 200/200）+ Demo 8/8；证据 sha256 见 §12.3 |
+| CL-007 分层阅读（CL-PF-02/03，T45） | 合同测试 `test_skill_contract.py` **24/24**（含 test_20..24） | 新增 `references/layered-reading.md`（四层/单函数定位/输出模板/边界）；SKILL.md 工作流第 5 步“先定位再解释”；只改 skill 文本+合同测试，不新增运行时能力；实际解释质量待独立对话评审（M-04-34） |
+| 最终验收汇总（T45） | `evidence/final-acceptance/`：**8/8 阶段、320/320 检查**、tests **323/200/8** | 由各阶段 `verification.json` 聚合（含 sha256）；CW-09 49→56、总检查 313→320；S4 门禁/产品范围待确认项如实保留；**不替代** S4 目标门禁 |
 | S4 可行性 | `evidence/s4-feasibility/`（`ok=true, verified=false`） | Linux 可移植性探测：Node 164/164、真实 Wasm worker 8/8、引擎 CLI status/import 可用；Python 3.8 引擎套件 255 errors；Windows 构建快照被拒绝——Kbuild/CFG/复核/OS 出口保持不可声明 |
 
 ### 12.3 最终验收收口（2026-11-15）
 
-- **M-04-22 批量首屏 `view.firstScreen`（含 `coupling_aux`）已完成最终验收**：`node tools/verify-perf.mjs --with-repo-tests` → 25/25 全绿、layers 全 true、`ok=true/verified=true`；首屏 hot p50/p95 = **328–330/382–387 ms ≤500 ✅**（历史：batch 前 646/704、无 aux 455/527）；20/20 hot 样本 `[data-first-screen]` 60 处全部 batch（fallback=0）；一致性 8/8（CLI 5/5 视图 + RPC 5/5 逐字段一致、sizes 4 键、aux 计入 480 KiB、未知 view→INVALID_ARGUMENT/未知 entry→NOT_FOUND、无绝对路径）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191（当次；最终 195/195）+ Demo 8/8 全绿。证据 sha256：`verification.json` `e350ed99…`、`first-screen-consistency.json` `8bb859f9…`、`README.md` `f2d39214…`、`commands.log` `a62f8942…`。
-- **M-04-33 异步/IRQ 事件边界已完成最终验收（T41）**：`node tools/verify-irq.mjs --with-repo-tests` → **34/34 全绿**（layers 全 true、`ok=true/verified=true`、`in_scope_not_verified=0`、out_of_scope 5）；真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`（label `IRQ: write irq_count`）；dsh-web `[data-sequence-async="true"]`=1 + `[data-sequence-async-chip]`“异步” + `[data-sequence-async-note]` 说明；static 与 rev1 导入台账 0 标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195 + Demo 8/8。证据 sha256：`verification.json` `38080909…`、`README.md` `5914291e…`、`async-irq.png` `36907e95…`、`commands.log` `bf493784…`。
+- **M-04-22 批量首屏 `view.firstScreen`（含 `coupling_aux`）已完成最终验收**：`node tools/verify-perf.mjs --with-repo-tests` → 25/25 全绿、layers 全 true、`ok=true/verified=true`；首屏 hot p50/p95 = **328–330/382–387 ms ≤500 ✅**（历史：batch 前 646/704、无 aux 455/527）；20/20 hot 样本 `[data-first-screen]` 60 处全部 batch（fallback=0）；一致性 8/8（CLI 5/5 视图 + RPC 5/5 逐字段一致、sizes 4 键、aux 计入 480 KiB、未知 view→INVALID_ARGUMENT/未知 entry→NOT_FOUND、无绝对路径）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191（当次；最终 200/200）+ Demo 8/8 全绿。证据 sha256：`verification.json` `e350ed99…`、`first-screen-consistency.json` `8bb859f9…`、`README.md` `f2d39214…`、`commands.log` `a62f8942…`。
+- **M-04-33 异步/IRQ 事件边界已完成最终验收（T41）**：`node tools/verify-irq.mjs --with-repo-tests` → **34/34 全绿**（layers 全 true、`ok=true/verified=true`、`in_scope_not_verified=0`、out_of_scope 5）；真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`（label `IRQ: write irq_count`）；dsh-web `[data-sequence-async="true"]`=1 + `[data-sequence-async-chip]`“异步” + `[data-sequence-async-note]` 说明；static 与 rev1 导入台账 0 标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195（当次；最终 200/200）+ Demo 8/8。证据 sha256：`verification.json` `38080909…`、`README.md` `5914291e…`、`async-irq.png` `36907e95…`、`commands.log` `bf493784…`。
+- **M-04-29 AI 归纳（含入口 subject）已完成最终验收（T44）**：`node tools/verify-summary.mjs --with-repo-tests` → **56/56 全绿**（layers 全 true、`ok=true/verified=true`、`in_scope_not_verified=0`、out_of_scope 5）；function/group 归纳路径不变；真实 `summary-put subject_type=entry`（bus_send `f_afa…`）+ `view-summary --subject-type entry` 读回一致；dsh-web 选中 bus_send 出现 `[data-ai-summary-entry]` 子块（`-entry-text/-entry-generator/-entry-generated-at/-entry-facts/-entry-labels`、`data-ai-summary-entry-stale="false"`）且函数归纳仍正常；无 entry 归纳的 bus_register 无子块、无新增 gap（`[data-ai-summary-gap]` 仍 1 个，静默契约）；`view.summary {subject_type:'entry'}` RPC 读回；console=0、无绝对路径；回归 S1..S3b + Cordis TAP 1/1 + Node 200/200 + Demo 8/8。证据：`verification.json` 206,895 B sha256 `398279282ede…`、`README.md` 7,440 B `d1a217a3…`、`commands.log` 14,694 B `f05c14d1…`、`entry.png` 167,954 B `dc151ab7…`、`written.png` 185,829 B `3983b541…`、`gap.png` 141,363 B `50a5f79c…`（不变）、`host-runtime.tap` 364 B `43bd8381…`。
+- **CL-007 分层阅读补充已交付（T45）**：新增 `skills/learn-code-workspace/references/layered-reading.md`（四层：业务总框架→文件与函数职责→关键数据与状态→实现证据；单函数定位步骤；输出模板；边界），`SKILL.md` 工作流第 5 步“先定位再解释”并链接该文件；合同测试 `test_skill_contract.py` 新增 test_20..24（5 例，合同测试共 24 条）；最终验收汇总 `evidence/final-acceptance/`：**8/8 阶段、320/320 检查**（S1 26/S2a 37/S2b 41/S3a 43/S3b 58/CW-09 56/A11 25/async 34）、tests **323/200/8**。
 - **S4 目标门禁**：在具备 Linux 内核源码/compdb/生成头、Linux 构建 Atlas 快照、固定 Atlas Linux runtime、复核数据的固定 Linux 目标上重跑同一验收口径；在此之前不得更新本文件的“未验证”结论。
 
 ---
@@ -640,10 +670,12 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 | CW-T2 S2b | `node tools/verify-s2b.mjs --with-repo-tests` | `evidence/s2b/`（41/41、组/接口/子流程截图） | actual |
 | CW-T3 S3a | `node tools/verify-s3.mjs --with-repo-tests` | `evidence/s3/`（43/43、打桩/台账/observed 截图） | actual（Wasm 模拟） |
 | CW-T3 S3b | `node tools/verify-s3b.mjs --with-repo-tests` | `evidence/s3b/`（58/58、undo/imported/多场景截图） | actual（Wasm 模拟） |
-| CW-09 AI 归纳 | `node tools/verify-summary.mjs --with-repo-tests` | `evidence/ai-summary/`（49/49、gap/written 截图） | actual（Agent 写入） |
+| CW-09 AI 归纳（含入口 subject） | `node tools/verify-summary.mjs --with-repo-tests` | `evidence/ai-summary/`（**56/56**；function/group/entry；入口子块与缺失静默；entry/gap/written 截图；sha256 见 §12.3） | actual（Agent 写入） |
+| CL-007 分层阅读（CL-PF-02/03） | `cd engine && python -m unittest discover -s tests -p "test_skill_contract.py" -v`；各阶段回归 | `skills/learn-code-workspace/references/layered-reading.md`、`SKILL.md`（第 5 步）、`engine/tests/test_skill_contract.py`（24 条，含 test_20..24） | actual（结构/合同；解释质量待独立对话评审） |
 | CW-11/A11 性能（含首屏批量/aux） | `node tools/verify-perf.mjs --with-repo-tests`（内含 `tools/firstscreen-consistency.mjs`） | `evidence/perf/`（25/25 全绿、hot p50/p95 328–330/382–387 ≤500 ✅、一致性 8/8、60 处 batch/fallback=0、4 项 not_verified 如实） | **actual（已验证）** |
 | 异步/IRQ 事件边界（S4-prep 收尾） | `node tools/verify-irq.mjs --with-repo-tests` | `evidence/async-irq/`（34/34、layers 全 true、`in_scope_not_verified=0`/out_of_scope 5、真实 Wasm IRQ、async DOM、截图；4 个证据 sha256 见 §12.3） | **actual（已验证）** |
+| 最终验收汇总（8 阶段） | 见 `evidence/final-acceptance/README.md` | `evidence/final-acceptance/{README.md,summary.json}`（**8/8 阶段、320/320 检查**、tests 323/200/8；各阶段 sha256 索引） | **actual（聚合；S4 门禁仍未验证）** |
 | S4 可行性 | 见 `evidence/s4-feasibility/README.md` | `evidence/s4-feasibility/`（Node 164/164、worker 8/8、引擎限制） | **仅探测，门禁未验证** |
 | 首屏批量端点（`view.firstScreen`+aux） | `node tools/verify-perf.mjs --with-repo-tests` | `evidence/perf/{verification.json,first-screen-consistency.json}`（25/25；8/8；sha256 见 §12.3） | **actual（已验证）** |
 
-**结论**：本交付可作为“合成 fixture + 真实 Atlas 产物对照 + 隔离 rc.5 dsh-web 上可安装、可自测、边界清晰”的当前整体实现；不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/CFG/locks/aliases/复核/OS 出口门禁。首屏性能已在**合成 500/800 夹具 + 本机**上达标（hot p50/p95 328–330/382–387 ms ≤500，25/25 全绿），但不代表真实仓库/其它机器；异步/IRQ 边界仅做声明式标记（34/34），**不推断**真实中断/因果；S4 门禁仍未验证。改 skill 只能调整阅读/提问/呈现/何时写归纳等策略，不能绕过硬边界，也不能把未验证结果（Linux/CFG/真实设备/异步因果）提升为事实。
+**结论**：本交付可作为“合成 fixture + 真实 Atlas 产物对照 + 隔离 rc.5 dsh-web 上可安装、可自测、边界清晰”的当前整体实现；最终验收汇总 `evidence/final-acceptance/`：**8/8 阶段、320/320 检查、tests 323/200/8**。但不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/CFG/locks/aliases/复核/OS 出口门禁：**S4 目标门禁仍未验证**（真实 Linux/Kbuild、CFG/locks/aliases、复核 precision/recall、OS 出口）。首屏性能已在**合成 500/800 夹具 + 本机**上达标（hot p50/p95 328–330/382–387 ms ≤500，25/25 全绿），但不代表真实仓库/其它机器；异步/IRQ 边界仅做声明式标记（34/34），**不推断**真实中断/因果；AI 归纳含入口子块（56/56）但正文仍由 Agent 写入、插件不调用模型；分层阅读为 skill 参考+合同测试（24 条），实际解释质量待独立对话评审。改 skill 只能调整阅读/提问/呈现/何时写归纳等策略，不能绕过硬边界，也不能把未验证结果（Linux/CFG/真实设备/异步因果）提升为事实。

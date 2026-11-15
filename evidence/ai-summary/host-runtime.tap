@@ -2,7 +2,7 @@ TAP version 13
 # Subtest: S4-prep code_summary tool registers and performs real put/get on the pinned rc.5 Cordis
 ok 1 - S4-prep code_summary tool registers and performs real put/get on the pinned rc.5 Cordis
   ---
-  duration_ms: 1054.7166
+  duration_ms: 1143.2874
   type: 'test'
   ...
 1..1
@@ -13,4 +13,4 @@ ok 1 - S4-prep code_summary tool registers and performs real put/get on the pinn
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 1146.0267
+# duration_ms 1236.3716

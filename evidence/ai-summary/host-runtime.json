@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "layer": "dsh_host",
-  "started_at_utc": "2026-11-15T12:37:11.954Z",
-  "duration_ms": 1233,
+  "started_at_utc": "2026-11-15T15:28:33.383Z",
+  "duration_ms": 1322,
   "host": {
     "executable_path": "E:/dsh/DeepSeek Harness.exe",
     "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
@@ -38,7 +38,7 @@
     "skipped": 0,
     "todo": 0
   },
-  "tap_sha256": "2e9c2356814c510abff087e5b8b9ecf2481af6be14a74133cd988ca750dd9439",
+  "tap_sha256": "43bd83816c326b6695a10b3d0562191c57736c046ee5427c0fd98a356b73b10d",
   "stdout_tail": "",
   "stderr_tail": "",
   "ok": true,

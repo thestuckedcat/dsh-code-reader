@@ -8,7 +8,7 @@ whenToUse: 用户要快速理清或学习某个 Linux 驱动或用户态仓库�
 
 围绕**一个具体问题**学习 Linux 驱动与用户态代码：先确认已登记的 workspace/variant，再看小地图，沿一条证据路径读到源码行，给出带回文件/行号证据的解释，并保留事实、候选、未知和用户自己的预测。静态证据不能证明运行时行为。
 
-详细状态机、停止规则、证据优先级、安全续读和合成示例见 [references/workflow.md](references/workflow.md)；证据分级与 ABI 边界见 [references/evidence-and-limits.md](references/evidence-and-limits.md)。
+详细状态机、停止规则、证据优先级、安全续读和合成示例见 [references/workflow.md](references/workflow.md)；证据分级与 ABI 边界见 [references/evidence-and-limits.md](references/evidence-and-limits.md)；单函数问答的分层阅读与函数定位（CL-007-D1..D3）见 [references/layered-reading.md](references/layered-reading.md)。
 
 ## 何时使用
 
@@ -37,12 +37,13 @@ whenToUse: 用户要快速理清或学习某个 Linux 驱动或用户态仓库�
 2. **概览**：`code_overview` 取组件、仓库边界、接口候选和 unknown 边界；先给用户小地图和可选入口，不猜运行时入口。
 3. **选一个问题**：只确定本轮一个具体行为作为目标，不把整个仓库当课程。
 4. **一条证据路径**：需要结构化证据时先用 `code_snapshot` 导入已核验快照，再用 `code_path` 取一条有界路径；逐边用 `code_source` 读有界源码片段。
-5. **解释**：用文件、行号和 evidence 引用说明对象/生命周期、关键数据和失败边界；3–8 句，先讲机制再讲代价。
-6. **先预测**：要进行验证时，先请用户给出一个具体预测；用户没给就保持 pending，绝不代填。
-7. **最小授权核验**：只做用户已授权的最小只读观察或查询；没有证据就保留待验证，不自动运行目标构建或测试。
-8. **规则与未知**：留下 1–3 条可迁移规则（candidate 或 supported）和未解问题；不把推测写成事实。
-9. **记录或停止**：用户要保存或暂停时用 `code_learn` save；没有剩余价值时直接停。普通问答可只解释并在此结束，不必创建完整记录。
-10. **详情归纳（可选）**：用户要工作台详情出现归纳时，用 `code_summary put` 写 ≤500 字：必须基于已核验证据、把 evidence/节点引用放进 `facts`、候选/未知用 `inference_labels`（如 `may_speculative`）标注；无运行台账不得用 `from_observation`；不得伪造正文或把候选写成 exact。
+5. **先定位再解释**：问单个函数/行为时，先按 [references/layered-reading.md](references/layered-reading.md) 给出业务框架定位（一句话 + 组件/边界），再给文件→主要函数→职责、关键结构体/软表/硬件资源读写、guard/锁/异步完成/失败边界；业务图与局部图分开，按需下钻，不把整个仓库当课程。
+6. **解释**：用文件、行号和 evidence 引用说明对象/生命周期、关键数据和失败边界；3–8 句，先讲机制再讲代价。
+7. **先预测**：要进行验证时，先请用户给出一个具体预测；用户没给就保持 pending，绝不代填。
+8. **最小授权核验**：只做用户已授权的最小只读观察或查询；没有证据就保留待验证，不自动运行目标构建或测试。
+9. **规则与未知**：留下 1–3 条可迁移规则（candidate 或 supported）和未解问题；不把推测写成事实。
+10. **记录或停止**：用户要保存或暂停时用 `code_learn` save；没有剩余价值时直接停。普通问答可只解释并在此结束，不必创建完整记录。
+11. **详情归纳（可选）**：用户要工作台详情出现归纳时，用 `code_summary put` 写 ≤500 字：必须基于已核验证据、把 evidence/节点引用放进 `facts`、候选/未知用 `inference_labels`（如 `may_speculative`）标注；无运行台账不得用 `from_observation`；不得伪造正文或把候选写成 exact。
 
 ## 复盘（完整流程）
 

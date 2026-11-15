@@ -15,11 +15,11 @@
 | CL-PF-05 | 普通提问直接解答；明确学习复盘时区分预测、实际观察和待验证，最多给一个具体下一步 | 用户行为守则；不替用户声称已理解/已验证 |
 | CL-PF-06 | 首版不要求专用Harness学习面板，不重写Atlas解析器，不把Kbuild迁为CMake | 面板后置已确认；复用与构建适配为设计决定 |
 
-`CL-PF-02/03` 局部补充（待实现）：单函数问答先定位它在业务总框架中的位置，再给出涉及文件和主要函数、关键结构体、软表与硬件资源的读写、边界入口与出口。业务图可链接到基础组件的独立图。详见[分层阅读与函数定位](software-design.md#81-驱动代码分层阅读与函数定位)。
+`CL-PF-02/03` 局部补充（已实现）：单函数问答先定位它在业务总框架中的位置，再给出涉及文件和主要函数、关键结构体、软表与硬件资源的读写、边界入口与出口；业务图与局部图分开、通过入口/Selection 关联。落地为 skill 参考 [分层阅读与函数定位](../skills/learn-code-workspace/references/layered-reading.md) + 合同测试（`engine/tests/test_skill_contract.py`，323 Python tests），设计见[分层阅读与函数定位](software-design.md#81-驱动代码分层阅读与函数定位)。
 
-`CL-PF-07` 后置构想（2026-11-12，用户提出）：以 C 源码为底座的[交互式代码视图](interactive-code-view.md)，支持参数与注册状态下发、分支和数据流下钻、调用图节点折叠及展开。五视图和 DSH 插件接入见[详细设计 CL-VIEW-D2](interactive-code-view-software-design.md)。真实设备下发和图内源码写回的产品范围待确认。
+`CL-PF-07`（2026-11-12 用户提出，已交付插件版）：以 C 源码为底座的[交互式代码视图](interactive-code-view.md)，支持受控模拟下的参数与注册状态执行、分支和数据流下钻、调用图节点折叠及展开；五视图与 DSH 插件接入见[详细设计 CL-VIEW-D2](interactive-code-view-software-design.md)，分阶段验收见 `evidence/final-acceptance/`。真实设备下发和图内源码写回仍待产品确认（当前 gap）。
 
-`CL-PF-08`（2026-11-15 用户指示，实施中）：交互式代码视图**以 DSH 插件交付**，插件负责代码分析、图表、场景执行和权限；配套 skill 只指导生成与验收 DSH 原生侧边栏入口、工作台左栏及其联动。本轮先交付**只读切片**（CW-T1）：侧边栏「代码工作台」→ 已登记且已核验的 Atlas 快照 → 入口 → 真实 C 源码与证据，复用既有 04 源码范围/快照校验；场景执行、打桩、五视图图形化仍后置，缺口在面板内如实显示。开工说明见[实施路线](implementation-route.md)，实施/验收契约见[只读工作台契约](readonly-workbench-contract.md)。
+`CL-PF-08`（2026-11-15 用户指示，已交付插件版）：交互式代码视图**以 DSH 插件交付**，插件负责代码分析、图表、场景执行和权限；配套 skill 指导生成与验收 DSH 原生侧边栏入口、工作台左栏及其联动。已按 S1 只读切片 → S2a 五视图 → S2b 组折叠/接口库/子流程 → S3a 受控场景/打桩/台账/observed → S3b 回退/轨迹导入/多场景 → CW-09 AI 归纳 → A11 性能实测 → 异步/IRQ 边界交付，全部在隔离 dsh-web 逐阶段验收（8/8 阶段、313/313 检查），见 `evidence/final-acceptance/`。规划细节见[实施路线](implementation-route.md)与各阶段契约。
 
 ## 一次完整使用
 
@@ -45,12 +45,12 @@ skill负责阅读顺序、讲解、提问和停止；固定Atlas CLI负责已有
 | S2b 组折叠/接口库（黑盒）/子流程面包屑 | ✅ 已验证 41/41（`evidence/s2b/`） |
 | S3a 受控场景/边界打桩/不可变台账/运行观测 | ✅ 已验证 43/43（`evidence/s3/`） |
 | S3b 回退末尾 N 步+前缀重放/轨迹导入/observed 多台账选择 | ✅ 已验证 58/58（`evidence/s3b/`） |
-| CW-09 AI 归纳（Agent 经 `code_summary` 写入/签名/失效/UI 展示，插件不调用模型） | ✅ 已验证 49/49（`evidence/ai-summary/`） |
+| CW-09 AI 归纳（Agent 经 `code_summary` 写入/签名/失效；函数/组/入口 subject 展示与入口归纳子块；插件不调用模型） | ✅ 已验证 56/56（`evidence/ai-summary/`） |
 | A11 性能实测（合成 500/800、2000/10k；首屏预算 500 ms） | ✅ 25/25，首屏 hot p95 382–387 ms 达标、coupling p95 3–4 ms（`evidence/perf/`）；合成夹具+本机限定 |
 | 异步/IRQ 事件边界（observed `async:true` + “异步”标记） | ✅ 已验证 34/34（`evidence/async-irq/`；真实 Wasm `bus_irq` 产生 IRQ、导入异步轨迹、static/rev1 无标记） |
 | S4 目标门禁：真实 Linux/Kbuild、生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证 | ⛔ **未验证/不可声明**：需要固定 Linux 目标（Python≥3.11、Linux 构建 Atlas 快照、内核源码/compdb、复核数据）；已做 Linux 可移植性探测（`evidence/s4-feasibility/`：Node 契约 164/164、真实 Wasm worker 8/8、引擎 CLI 可用；Python 3.8<3.11、Windows 快照 manifest 路径绑定被拒） |
 | 真实设备下发、图内源码写回 | 产品范围待确认/未授权（面板内以 gap 显示） |
-| 入口 subject 独立 AI 归纳 | 契约允许但 UI 目前按 function/group 展示（限制记录于 mechanisms） |
+| 入口 subject 独立 AI 归纳 | ✅ 已交付（详情“入口归纳”子块；无记录静默；dsh-web 56/56 覆盖） |
 
 `CL-PF-06` 的“首版不要求专用 Harness 学习面板”已被后续用户指示（`CL-PF-07/08`）取代：本版以 DSH
 插件侧边栏工作台交付，替代原学习面板；这不是未经确认的产品扩张，而是 2026-11-12/15 的用户明确要求。

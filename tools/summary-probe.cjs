@@ -21,9 +21,11 @@ const {dirname, join} = require('node:path');
 const url = process.env.RV_URL;
 const out = process.env.RV_OUT;
 const shotDir = process.env.RV_SHOT_DIR;
-const phase = process.env.RV_PHASE || 'gap'; // gap | written
+const phase = process.env.RV_PHASE || 'gap'; // gap | written | entry | entry_absent
 const expectSnapshotId = process.env.RV_SNAPSHOT_ID || null;
 const expectText = process.env.RV_EXPECT_TEXT || null;
+const expectEntryText = process.env.RV_EXPECT_ENTRY_TEXT || null;
+const absentEntryName = process.env.RV_ABSENT_ENTRY_NAME || 'bus_register';
 const overallTimeoutMs = Number(process.env.RV_TIMEOUT_MS || 300000);
 const consoleLines = [];
 const startedAt = Date.now();
@@ -143,6 +145,15 @@ function summaryStateExpr() {
       generated_at_text: generatedAt === null ? null : (generatedAt.textContent || '').trim().slice(0, 200),
       labels_text: labels === null ? null : (labels.textContent || '').trim().slice(0, 300),
       stale: stale === null ? null : stale.getAttribute('data-ai-summary-stale') || (stale.textContent || '').trim().slice(0, 200),
+      entry_present: document.querySelector('[data-ai-summary-entry]') !== null,
+      entry_text: (() => { const element = document.querySelector('[data-ai-summary-entry-text]'); return element === null ? null : (element.textContent || '').trim(); })(),
+      entry_facts_text: (() => { const element = document.querySelector('[data-ai-summary-entry-facts]'); return element === null ? null : (element.textContent || '').trim().slice(0, 600); })(),
+      entry_generator_text: (() => { const element = document.querySelector('[data-ai-summary-entry-generator]'); return element === null ? null : (element.textContent || '').trim().slice(0, 300); })(),
+      entry_generated_at_text: (() => { const element = document.querySelector('[data-ai-summary-entry-generated-at]'); return element === null ? null : (element.textContent || '').trim().slice(0, 200); })(),
+      entry_labels_text: (() => { const element = document.querySelector('[data-ai-summary-entry-labels]'); return element === null ? null : (element.textContent || '').trim().slice(0, 300); })(),
+      entry_stale: (() => { const element = document.querySelector('[data-ai-summary-entry-stale]'); return element === null ? null : (element.getAttribute('data-ai-summary-entry-stale') || (element.textContent || '').trim().slice(0, 120)); })(),
+      entry_gap_text: (() => { const element = document.querySelector('[data-ai-summary-entry-gap]'); return element === null ? null : (element.textContent || '').trim().slice(0, 300); })(),
+      gap_count: document.querySelectorAll('[data-ai-summary-gap]').length,
       entries,
       details_text: (() => {
         const details = document.querySelector('[data-code-view="details"]');
@@ -218,7 +229,7 @@ async function main() {
       result.steps.noSummaryRecord = state?.summary_present !== true || state?.text === null;
       await screenshot(win, result, 'gap', "document.querySelector('[data-code-view=\"details\"]')");
       result.ok = result.steps.gapShown === true && result.steps.noText === true;
-    } else {
+    } else if (phase === 'written') {
       // Re-select the entry to force a fresh view.summary request, then assert
       // the written record is rendered.
       await refreshDetails(win);
@@ -243,6 +254,43 @@ async function main() {
       result.ok = result.steps.textShown === true && result.steps.textMatches === true
         && result.steps.generatorShown === true && result.steps.generatedAtShown === true
         && result.steps.factsShown === true && result.steps.staleFalse === true;
+    } else if (phase === 'entry') {
+      // Entry-subject summary sub-block: the driver wrote subject_type=entry for
+      // the bus_send entry before this phase. The function summary is still
+      // present; the entry sub-block must render its own text/facts/generator.
+      const seen = await waitFor(win, `document.querySelector('[data-ai-summary-entry]') !== null`, 20000);
+      await sleep(800);
+      state = await evaluate(win, summaryStateExpr()).catch(() => null);
+      result.views.entry = state;
+      result.steps.entryShown = seen !== false && state?.entry_present === true;
+      result.steps.entryTextShown = (state?.entry_text ?? '').length >= 2;
+      result.steps.entryTextMatches = expectEntryText === null || (state?.entry_text ?? '').includes(expectEntryText);
+      result.steps.entryGeneratorShown = /agent|verify-entry/.test(state?.entry_generator_text ?? '');
+      result.steps.entryGeneratedAtShown = /20\d\d-\d\d-\d\dT/.test(state?.entry_generated_at_text ?? '');
+      result.steps.entryFactsShown = /e_/.test(state?.entry_facts_text ?? '');
+      result.steps.entryStaleFalse = state?.entry_stale === 'false';
+      result.steps.functionSummaryUnchanged = state?.text !== null && (expectText === null || (state?.text ?? '').includes(expectText));
+      await screenshot(win, result, 'entry', "document.querySelector('[data-ai-summary-entry]') ?? document.querySelector('[data-code-view=\"details\"]')");
+      result.ok = result.steps.entryShown === true && result.steps.entryTextShown === true && result.steps.entryTextMatches === true
+        && result.steps.entryGeneratorShown === true && result.steps.entryGeneratedAtShown === true
+        && result.steps.entryFactsShown === true && result.steps.entryStaleFalse === true
+        && result.steps.functionSummaryUnchanged === true;
+    } else if (phase === 'entry_absent') {
+      // Another entry without an entry summary: no sub-block and no NEW gap.
+      // The function summary logic is unchanged (this entry has no function
+      // summary, so the normal [data-ai-summary-gap] remains exactly one).
+      const selected = await selectEntry(win, absentEntryName);
+      result.steps.absentEntrySelected = selected?.ok === true;
+      await sleep(1500);
+      state = await evaluate(win, summaryStateExpr()).catch(() => null);
+      result.views.absent = state;
+      result.steps.entryAbsent = state?.entry_present !== true && state?.entry_text === null;
+      result.steps.noEntryGap = state?.entry_gap_text === null;
+      result.steps.functionGapNormal = (state?.gap_count ?? -1) === 1 && /code_summary|AI/.test(state?.gap_text ?? '');
+      result.steps.noEntryTextLeak = !/entry|\u5165\u53e3\u5f52\u7eb3/.test((state?.entry_text ?? '') + (state?.entry_gap_text ?? ''));
+      await screenshot(win, result, 'entry-absent', "document.querySelector('[data-code-view=\"details\"]')");
+      result.ok = result.steps.entryAbsent === true && result.steps.noEntryGap === true
+        && result.steps.functionGapNormal === true && result.steps.noEntryTextLeak === true;
     }
     result.leak = await evaluate(win, `(() => { const panel = document.querySelector('[data-code-view="panel"]'); const text = panel === null ? document.body.innerText : panel.innerText; const matches = (String(text||'').match(/[A-Za-z]:[\\\\/][^\\s"'<>]*/g) || []); return {count: matches.length, samples: matches.slice(0, 10)}; })()`).catch(() => ({count: -1}));
     result.steps.noAbsolutePaths = result.leak.count === 0;

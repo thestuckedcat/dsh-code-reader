@@ -172,7 +172,7 @@ test('S4-prep code_summary tool registers and performs real put/get on the pinne
   });
   assert.equal(get.ok, true, `code_summary get failed: ${get.error ?? ''}`);
   const getValue = get.value?.cli ?? get.value ?? {};
-  const row = (getValue.summaries ?? [])[0];
+  const row = (getValue.summaries ?? []).find((entry) => entry?.subject?.type === 'function' && entry?.subject?.id === 'f_afa8298f2d197e5fd110e49a') ?? (getValue.summaries ?? [])[0];
   assert.ok(row !== undefined, 'code_summary get: summary missing');
   assert.equal(row.text, SUMMARY_TEXT);
   assert.equal(row.stale, false);
@@ -187,7 +187,7 @@ test('S4-prep code_summary tool registers and performs real put/get on the pinne
   });
   assert.equal(invalid.ok, false, 'over-long summary text must be rejected');
   const afterInvalid = await callEndpoint(route, 'view.summary', {workspace: WORKSPACE_ID, snapshot: snapshotId});
-  const kept = (afterInvalid.summaries ?? []).find((entry) => entry?.subject?.id === 'f_afa8298f2d197e5fd110e49a');
+  const kept = (afterInvalid.summaries ?? []).find((entry) => entry?.subject?.type === 'function' && entry?.subject?.id === 'f_afa8298f2d197e5fd110e49a');
   assert.equal(kept?.text, SUMMARY_TEXT, 'invalid put must not replace the stored summary');
 
   // group subject

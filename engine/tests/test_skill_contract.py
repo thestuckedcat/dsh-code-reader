@@ -30,6 +30,7 @@ SKILL_DIR = REPO_ROOT / "skills" / "learn-code-workspace"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 WORKFLOW_MD = SKILL_DIR / "references" / "workflow.md"
 LIMITS_MD = SKILL_DIR / "references" / "evidence-and-limits.md"
+LAYERED_MD = SKILL_DIR / "references" / "layered-reading.md"
 
 # Tool surface fixed by docs/implementation-contract.md §10 (six tools, prefix code_).
 TOOL_ACTIONS = {
@@ -164,7 +165,7 @@ class LearnCodeWorkspaceSkillContractTest(unittest.TestCase):
     # -- files and frontmatter ------------------------------------------------
 
     def test_01_required_files_exist(self):
-        for path in (SKILL_MD, WORKFLOW_MD, LIMITS_MD):
+        for path in (SKILL_MD, WORKFLOW_MD, LIMITS_MD, LAYERED_MD):
             self.assertTrue(path.is_file(), f"缺少必需文件：{path}")
 
     def test_02_frontmatter_matches_host_parser(self):
@@ -391,6 +392,132 @@ class LearnCodeWorkspaceSkillContractTest(unittest.TestCase):
             self.assertIn(token.lower(), lowered, f"evidence-and-limits.md 缺少 {token!r}")
         self.assertRegex(limits, r"不是.{0,8}运行时|不证明.{0,8}运行时", "限制说明应声明不能证明运行时行为")
 
+
+    # -- layered reading reference (CL-007-D1..D3 / CL-PF-02/03) -------------
+
+    def test_20_skill_links_layered_reading(self):
+        text = read_required(SKILL_MD)
+        _metadata, body, _block = parse_frontmatter(text)
+        self.assertIn(
+            "references/layered-reading.md",
+            body,
+            "SKILL.md 必须引用 references/layered-reading.md",
+        )
+        for keyword in ("先定位再解释", "业务框架", "分层"):
+            self.assertIn(
+                keyword, body, f"SKILL.md 缺少分层阅读关键词 {keyword!r}"
+            )
+        workflow = find_section(body, "工作流")
+        self.assertIn(
+            "references/layered-reading.md",
+            workflow,
+            "标准工作流应把分层阅读参考文件作为步骤依据",
+        )
+        self.assertIn("先定位再解释", workflow, "标准工作流应包含“先定位再解释”步骤")
+        self.assertRegex(
+            workflow,
+            r"(?:^|\n)\s*\d+\.\s*\*\*先定位再解释\*\*",
+            "标准工作流应有编号的“先定位再解释”步骤",
+        )
+        # Every Markdown reference link in the skill body must exist on disk.
+        for match in re.finditer(r"\]\(((?:references|assets)/[^)\s]+\.md)\)", body):
+            target = SKILL_DIR / match.group(1)
+            self.assertTrue(target.is_file(), f"SKILL.md 引用了不存在的文件：{match.group(1)}")
+
+    def test_21_layered_reading_four_layers_in_order(self):
+        layered = read_required(LAYERED_MD)
+        self.assertGreater(len(layered.encode("utf-8")), 2000, "layered-reading.md 过短，无法承载四层说明")
+        self.assertLess(len(layered.encode("utf-8")), 30000, "layered-reading.md 过长，模型参考应保持精简")
+        self.assertGreaterEqual(len(CJK_RE.findall(layered)), 500, "layered-reading.md 应为实质性中文说明")
+        layers = (
+            "业务总框架",
+            "文件与函数职责",
+            "关键数据与状态",
+            "实现证据",
+        )
+        assert_ordered(self, layered, layers, "layered-reading.md 四层顺序")
+        section = find_section(layered, "四层顺序")
+        assert_ordered(self, section, layers, "四层顺序章节")
+        # Each layer has a concrete answer/tool requirement, not just a title.
+        for tool in (
+            "code_overview",
+            "view.fileTree",
+            "view.tree",
+            "code_source",
+            "view.coupling",
+            "view.getEntry",
+            "view.endToEnd",
+            "observed",
+        ):
+            self.assertIn(tool, section, f"四层表缺少工具/视图 {tool!r}")
+
+    def test_22_single_function_localization_steps(self):
+        layered = read_required(LAYERED_MD)
+        section = find_section(layered, "当前函数定位步骤")
+        self.assertRegex(section, r"(?:^|\n)\s*1\.", "定位步骤应使用有序编号列表")
+        assert_ordered(
+            self,
+            section,
+            (
+                "view.listEntries",
+                "view.getEntry",
+                "code_overview",
+                "view.coupling",
+                "view.endToEnd",
+                "code_path path",
+                "code_source",
+                "code_path relation",
+            ),
+            "单函数定位步骤",
+        )
+        self.assertIn("一句话", layered, "分层阅读应先给一句话业务定位")
+        self.assertRegex(
+            layered,
+            r"业务图.{0,20}(?:局部图|组件图).{0,20}(?:分开|区分|不同)",
+            "应说明业务图/组件图与局部图分开",
+        )
+
+    def test_23_layered_reading_output_template(self):
+        layered = read_required(LAYERED_MD)
+        template = find_section(layered, "输出模板")
+        for field in ("一句话", "文件与函数", "关键数据", "证据与未知"):
+            self.assertIn(field, template, f"输出模板缺少 {field!r}")
+        self.assertRegex(template, r"<函数>|<功能>|函数", "模板应说明一句话定位的函数对象")
+        self.assertIn("exact/may/unknown", template, "关键数据模板应标注 exact/may/unknown")
+        self.assertIn("unknown", template, "证据与未知模板应保留 unknown")
+
+    def test_24_layered_reading_boundaries(self):
+        layered = read_required(LAYERED_MD)
+        self.assertRegex(
+            layered,
+            r"(?:不能|不得|禁止|绝不).{0,30}(?:may|unknown).{0,12}(?:说成|写成|当作|升级|冒充).{0,10}exact",
+            "必须明确不得把 may/unknown 写成 exact",
+        )
+        self.assertRegex(
+            layered,
+            r"(?:不能|不得|禁止|绝不).{0,10}伪造.{0,10}(?:运行观测|观测|设备行为)",
+            "必须明确不得伪造运行观测/设备行为",
+        )
+        self.assertRegex(
+            layered,
+            r"静态证据.{0,20}(?:不证明|不能证明).{0,30}运行时",
+            "必须声明静态证据不证明运行时行为",
+        )
+        self.assertRegex(
+            layered,
+            r"observed.{0,30}(?:只证明|仅证明|只说明|仅说明)",
+            "必须限定 observed 只证明台账中观察到的事实",
+        )
+        self.assertRegex(
+            layered,
+            r"IRQ.{0,20}workqueue.{0,40}(?:observed|证据)",
+            "异步/中断完成点应有 observed 或源码证据约束",
+        )
+        self.assertRegex(
+            layered,
+            r"(?:skill|技能).{0,30}(?:可以|可).{0,10}(?:调整|变化).{0,20}(?:顺序|长度|详略)",
+            "应说明 skill 可调整解释顺序/长度而不改变证据结论",
+        )
 
 if __name__ == "__main__":
     unittest.main()

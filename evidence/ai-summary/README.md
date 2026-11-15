@@ -1,23 +1,61 @@
-# S4-prep AI 归纳（CW-09）· 独立黑盒验收证据
+# S4-prep AI 归纳（含入口 subject，T44）· 独立黑盒验收证据
 
 本目录是 **verifier（独立验收者）** 对 S4-prep AI 归纳切片的验收产物。验收只读：不改插件实现、
 不联网（仅本机回环 HTTP）、不写真实 `%USERPROFILE%\.dsh`、不重启桌面宿主、无 git 提交。
-契约依据：[docs/ai-summary-perf-contract.md](../../docs/ai-summary-perf-contract.md) §1（CL-VIEW-T4A）。
-S1/S2a/S2b/S3a/S3b 成果分别在 `evidence/readonly-slice/`、`five-views/`、`s2b/`、`s3/`、`s3b/`（均未改动）。
+契约依据：[docs/ai-summary-perf-contract.md](../../docs/ai-summary-perf-contract.md)、
+[docs/five-view-contract.md](../../docs/five-view-contract.md)。S1/S2a/S2b/S3a/S3b 成果分别在
+`evidence/readonly-slice/`、`five-views/`、`s2b/`、`s3/`、`s3b/`（均未改动）。
 
-## 1. 最终结论（2026-11-15T19:50+08:00）
+## 1. 最终结论（T44，2026-11-15T23:19–23:22 UTC；上一轮 49/49 → 本轮 56/56）
 
-`node tools/verify-summary.mjs --with-repo-tests` → **`ok=true, verified=true`，49/49 检查通过**，
-`in_scope_not_verified=[]`，`out_of_scope_not_verified=5`；layers 全 true。
+`node tools/verify-summary.mjs --with-repo-tests` → **`ok=true, verified=true`，56/56 检查通过**，
+`in_scope_not_verified=[]`、`out_of_scope_not_verified=5`；layers 全 true；
+**运行 193.2 s（duration_ms 177,442）**。
 
 | 层 | 结果 | 证据 |
 |---|---|---|
-| `demo_observed` | ✅ 8/8 | `demo.code_view_demo_tests` |
-| `atlas_snapshot`（真实引擎 summary-put/view-summary，含非法 payload 拒绝与组 subject） | ✅ | `atlas.summary_*` |
-| `dsh_host`（隔离 dsh web 两阶段探针 + RPC + Cordis code_summary put/get + 回归） | ✅ | `host.summary_*` / `host.rpc_*` / `dsh_host.summary_host_runtime` |
-| 仓库 Node 测试 | ✅ 164/164 | `commands.log` 末行 |
+| `demo_observed` | ✅ Demo 8/8 | `demo.code_view_demo_tests` |
+| `atlas_snapshot`（真实引擎 summary-put/view-summary；function/entry/group + 非法 payload） | ✅ | `atlas.summary_*` |
+| `dsh_host`（隔离 dsh web gap/written + **entry 子块/另一个无 entry 归纳入口** + RPC + Cordis + 回归） | ✅ | `host.summary_*` / `host.rpc_*` / `dsh_host.summary_host_runtime` |
+| 仓库 Node 全量 | ✅ **200/200** | `dsh_host.repo_node_tests` |
 
-## 2. 运行命令
+## 2. 本轮新增：entry subject 归纳（T44）检查项
+
+引擎/证据（real CLI，隔离 state）：
+- `atlas.summary_entry_put`：真实 `summary-put` 写 `subject_type=entry, subject_id=f_afa8298f2d197e5fd110e49a`
+  （bus_send 入口函数 id），text≤500、facts 含真实 `e_231505a73a485bc1d8c9249d`、
+  generator `{agent, verify-entry}`、labels `from_static_structure`；投影 text/facts/generator/generated_at/
+  stale=false，无绝对路径。
+- `atlas.summary_entry_view`：`view-summary --subject-type entry --subject-id …` 读回一致。
+
+dsh-web（真实 Chromium 探针）：
+- `host.summary_entry_probe`：选中 bus_send 详情 → **`[data-ai-summary-entry]` 出现**，
+  `[data-ai-summary-entry-text]` 原文精确匹配；`[data-ai-summary-entry-generator]` = `agent / verify-entry`、
+  `[data-ai-summary-entry-generated-at]` 为 ISO 时间、`[data-ai-summary-entry-facts]` 含 `e_…`、
+  `[data-ai-summary-entry-labels]` = from_static_structure、`data-ai-summary-entry-stale="false"`；
+  **函数归纳仍正常显示**（written 原文仍在），console=0、无绝对路径。
+- `host.summary_entry_absent_probe`：选中 **无 entry 归纳**的入口 bus_register → 无
+  `[data-ai-summary-entry]` 子块、无 `[data-ai-summary-entry-gap]`、无新增 gap；函数归纳缺口逻辑不变
+  （`[data-ai-summary-gap]` 仍只有 1 个，文案“AI 归纳未生成（Agent 可通过 code_summary 写入）”）。
+- `host.summary_entry_screenshots`：新增 `entry.png`（与 gap/written 不同帧）。
+- `host.summary_entry_console_clean`：entry/absent 两阶段 console error = 0。
+- `host.rpc_summary_entry`：真实 RPC `view.summary {subject_type:'entry'}` 返回同一条记录
+  （text/facts/generator/stale=false，无路径）。
+- `dsh_host.summary_host_runtime`：真实 Cordis 工具 put/get 仍通过；因 entry subject 与入口函数共享 id，
+  verifier 测试按 `subject.type` 一并过滤（tools-only 修正，不改插件）。
+
+## 3. 关键 DOM / 数据（实测）
+
+- entry 子块文本：`bus_send 入口归纳：先校验通道与长度，再查路由表；长度上限取 route->max_len，
+  超长返回 -22。此归纳基于静态结构与源码文本，未含运行观测。`
+- `[data-ai-summary-entry-generator]`：`generator：agent / verify-entry`
+- `[data-ai-summary-entry-generated-at]`：`生成于 2026-11-15T15:19:48Z`
+- `[data-ai-summary-entry-facts]`：`事实引用 1（evidence×1）：e_231505a73a485bc1d8c9249d`
+- `[data-ai-summary-entry-labels]`：`推断标签：from_static_structure`；`data-ai-summary-entry-stale="false"`
+- 函数归纳原文仍可见（written 阶段同一详情）；无 entry 归纳的 bus_register：entry 子块不存在，
+  gap_count=1（仅函数归纳缺口），无 entry-gap；两阶段 console=0、绝对路径=0。
+
+## 4. 运行命令
 
 ```powershell
 node tools\verify-summary.mjs --with-repo-tests
@@ -25,67 +63,42 @@ node tools\verify-summary.mjs --with-repo-tests
 ```
 
 隔离运行时在 `04-code-learning/scratch/summary/`（`.gitignore` 覆盖 `scratch/`）。
+工具：`tools/verify-summary.mjs`、`tools/summary-probe.cjs`、`tools/summary-host-runtime.test.mjs`。
 
-## 3. 产物与 sha256（Lead 最终独立复跑后目录内当前值；每次运行重新生成报告/截图，值随之变化）
+## 5. 产物与 sha256
 
 | 文件 | 说明 | sha256 |
 |---|---|---|
-| `verification.json` | 权威报告（159,320 B） | `3ac29d50d5f528542f53a464454c54eccef2f69c13e821c52ac9f1376ca7b974` |
-| `gap.png` | 未写入：详情显示「AI 归纳未生成（Agent 可通过 code_summary 写入）」gap、无正文 | `50a5f79c1239e1b92e20216a4fb93a265f20c34538f62c0eacea3c859888414d` |
-| `written.png` | 写入后：原文、generator `agent / verify-summary`、generated_at、事实引用 `e_…`、推断标签、stale=false | `724c7ca8dd6d62e3bf1fcf1d535053dcaeb2217656ac61047f3e230fee7d0baf` |
-| `host-runtime.tap/json` | 真实 Cordis：code_summary 工具 put/get、非法 put 拒绝、dispose/二次挂载持久化 | TAP 1/1（`2e9c2356…9439` / `b875fa65…e835`） |
-| `s3a-*` / `s2a-*` / `s2b-*` / `s1-regression.png` | S3b/S3a/S2b/S2a/S1 回归截图 | 见 `verification.json` |
-| `commands.log` | 实际命令（含真实 summary-put argv/exit code） | `666b6707388a262cce0de7514c4596fb8a696551f7133d17c29bcd88badc7dc3` |
+| `verification.json` | 权威报告 56 checks / layers / 命令 / not_verified（206,895 B） | `398279282ede2f0ca956cf8820c5ac64adc7275229cd00aec3b31bccf65afcf3` |
+| `entry.png` | bus_send 详情：函数归纳 + **入口归纳子块**（167,954 B） | `dc151ab77810498b6383859c618432e9c1727887bbcccd5c0681c8f9588421bd` |
+| `written.png` | 函数归纳写入后详情（185,829 B） | `3983b5411060c8d352267565ad44728a539c1ed34f067d572e5f4297013c35fb` |
+| `gap.png` | 未写入：函数/入口归纳 gap 阶段（141,363 B） | `50a5f79c1239e1b92e20216a4fb93a265f20c34538f62c0eacea3c859888414d` |
+| `host-runtime.tap` | 真实 Cordis code_summary put/get（TAP 1/1） | `43bd83816c326b6695a10b3d0562191c57736c046ee5427c0fd98a356b73b10d` |
+| `commands.log` | 引擎/RPC/探针/回归/Node/Demo 命令（14,694 B） | `f05c14d19a0c6421a15e581116c65a3ccd4eb1abd3a6af558f81bc9116e58284` |
+| `README.md` | 本文件 | 见目录实际哈希 |
 
-工具：`tools/verify-summary.mjs`、`tools/summary-probe.cjs`、`tools/summary-host-runtime.test.mjs`。
+## 6. 回归（本轮同一 run + 独立 perf-regressions 包）
 
-## 4. 关键验收证据（契约 §1.5）
+- verify-summary 内：S3b 探针、S3a 回归（`residual_failed_steps=[]`）、S2b、S2a、S1 探针全过；
+  Cordis host runtime 1/1；仓库 Node **200/200**、Demo **8/8**；console=0、无绝对路径。
+- 独立 `node tools/perf-regressions.mjs`（S3b/S3a/S2b/summary 四探针，117.9 s）→ **4/4 检查通过**；
+  S3a `residual_failed_steps=[]`；5 个探针 console error=0。
+- 结论：**未发现 entry subject 归纳引入的真实回归**；入口子块静默语义与旧有函数归纳/缺口行为一致。
 
-1. **未写入 gap**：选中 `bus_send` 函数详情 → `[data-ai-summary-gap]` 存在，`[data-ai-summary-text]` 不存在；
-   探针 console=0、无绝对路径，截图 `gap.png`。
-2. **真实引擎写入（模拟 Agent）**：隔离 state 内
-   `summary-put --workspace code-view-bus-demo --snapshot <snap> --payload-json <b64>`，payload：
-   subject `{type:function,id:f_afa8298f2d197e5fd110e49a}`、text（约 120 字 ≤500）、
-   facts `[{kind:'evidence',ref:'e_231505a73a485bc1d8c9249d'}]`（真实 e_ evidence id）、
-   generator `{kind:'agent',ref:'verify-summary'}`、labels `['from_static_structure']`；
-   返回投影含 text/facts/generator/generated_at/snapshot_graph_sha256/stale=false，`view-summary` 读回一致。
-3. **UI 显示**：页面重新加载/重选后 `[data-ai-summary-text]` 原文、`[data-ai-summary-facts]` 含 e_ 事实、
-   `[data-ai-summary-generator]`=agent / verify-summary、`[data-ai-summary-generated-at]`、stale=false、
-   gap 消失；探针 17 项全 true（`host.summary_written_probe`），截图 `written.png`。
-4. **非法 put**：>500 码点 → `LIMIT_EXCEEDED`；控制字符 → `INVALID_ARGUMENT`；facts ref 非法
-   （`../etc/passwd`）→ `INVALID_ARGUMENT`；三次均被拒且**原 summary 未被覆盖**（`atlas.summary_invalid`）。
-5. **组 subject**：`group:f_ec61140249f393550eb97946:294d40d8` put/get 成功，投影含
-   `limitations:["subject_existence_not_verified",…]`，RPC `view.summary` 可读（`atlas.summary_group`、
-   `host.rpc_summary_group`）。
-6. **View.status**：caps `ai_summary_store=true`、`ai_summary=false`；gaps `ai_summary`（reason：
-   「归纳正文由 Agent 经 code_summary 写入；插件不调用模型」）+ `real_device_dispatch`。
-7. **RPC**：`view.summary` 读回（无写时 gaps 含 `ai_summary_not_generated`，本验收在写入后读取）；
-   `view.status`/`listSnapshots`/401 准入等基础检查通过。
-8. **Cordis**：真实挂载后 `code_summary` 工具注册（7 工具），经工具 handler→bridge→真实 Python
-   写读成功；非法 501 字被 Host 拒；dispose/二次挂载后缓存仍在且再次 put/get 成功（TAP 1/1，1.2s）。
-9. **回归**：S3b 探针 ok、S3a 探针 `residual_failed_steps=[]`（`s3bGap/traceImportGap/capabilityGaps/undoDisabled`
-   属 S3b 已实现而正当取代）、S2b 全过、S2a 全过（`gapsOriginal`/`stubPanel` superseded）、S1 全过；
-   console 均 0。Demo 8/8、仓库 Node 164/164。
+## 7. `not_verified`
 
-## 5. 实际 DOM 钩子（契约 §1.4）
-
-实际实现与契约一致：`[data-code-view="ai-summary"]`、`[data-ai-summary-text]`、
-`[data-ai-summary-generator]`、`[data-ai-summary-generated-at]`、`[data-ai-summary-facts]`、
-`[data-ai-summary-labels]`、`[data-ai-summary-stale]`、`[data-ai-summary-gap]`、
-`[data-ai-summary-error][data-error-code]`（本次未触发错误态）。组详情：点击组框打开「组详情」并显示组归纳
-（验收以 RPC/引擎投影与探针对照记录；组详情 UI 截图未作为独立证据帧，组数据面已由 atlas/RPC 覆盖）。
-未记录到契约差异需要 client 修改。
-
-## 6. `not_verified` 与局限（如实声明）
-
-`in_scope_not_verified=[]`（契约 §1.5 全部通过）；`out_of_scope_not_verified` 5 项：
-
-1. 插件/模型侧自动生成归纳正文（插件不调用模型；正文由 Agent 经 code_summary 写入——本验收以模拟 Agent 的
-   真实 CLI 与工具调用证明写入/读取/展示链路）；
-2. AI 归纳的语义质量（是否把候选/未知写成确定事实）不做评分，仅校验 facts/generator/labels/stale 结构；
-3. 真实 Linux/Kbuild 与 CFG/locks/aliases 深分析（S4 后续）；
-4. 真实设备下发 / 图内源码写回；
+`in_scope_not_verified=[]`（T44 检查全部通过；无新增 not_verified）。
+`out_of_scope_not_verified=5`：
+1. 插件/模型侧自动生成归纳正文（插件不调用模型；正文由 Agent 经 code_summary/summary-put 写入）；
+2. 真实 Linux/Kbuild + CFG/locks/aliases 深分析（S4 后续）；
+3. 真实设备下发/图内源码写回；
+4. 真实 Linux/Kbuild index、CFG/locks/aliases/dataflow、目标验证、性能预算（S4 范围）；
 5. OS 级出口认证（仅本机回环 HTTP/本地进程观测）。
 
-另：本工具以真实引擎 CLI `summary-put` 模拟 Agent 写入（与 Host `code_summary` put 使用同一引擎路径）；
-Cordis 测试额外通过真实工具 handler 完成一次真实 put/get。engine 307 unittest 由团队执行与报告。
+## 8. 已知限制
+
+- 入口归纳的 subject_id 使用入口函数 id（bus_send `f_afa…`）；与 function subject 同 id 时靠
+  `subject.type` 区分（引擎/RPC/UI 均按 type+id 匹配）。
+- 入口归纳请求失败静默为契约行为；本轮 entry 成功与 entry 缺失两条路径均验证，未构造网络层失败注入。
+- AI 归纳语义质量不做评分；只校验结构（text/facts/generator/labels/stale）与 subject 归属。
+- 恢复/刷新时入口子块与函数归纳一起 abort/丢弃旧响应；本轮以重选/刷新序列验证，未做长期竞态压测。
