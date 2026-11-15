@@ -28,7 +28,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 from . import atlas, scope, source
 from . import views as readmodel
 from .errors import CodeLearningError, fail
-from .util import check_id, safe_relative_path, utc_now_iso
+from .util import canonical_json, check_id, safe_relative_path, utc_now_iso
 from .validation import expect_int, expect_str, one_of
 
 SCHEMA_VERSION = 1
@@ -51,6 +51,10 @@ MAX_FILE_TREE_FILES = 2000
 MAX_FILE_READ_BYTES = 64 * 1024
 MAX_FILE_READ_LINES = 2000
 MAX_EVIDENCE_SPAN = scope.MAX_EVIDENCE_SPAN
+
+#: S4-prep (contract section 12): batch first-screen budget / view enum.
+MAX_FIRST_SCREEN_BYTES = 480 * 1024
+FIRST_SCREEN_VIEWS = ("coupling", "tree", "end_to_end", "sequence", "file")
 
 #: S2b (contract section 10) limits.
 MAX_GROUPS = 50
@@ -959,6 +963,117 @@ def coupling(
 # ---------------------------------------------------------------------------
 # 2) tree -- collapsible text tree from one entry
 # ---------------------------------------------------------------------------
+def _projection_size(value: Any) -> int:
+    """UTF-8 byte length of one projection in canonical JSON form."""
+    return len(canonical_json(value).encode("utf-8"))
+
+
+def first_screen(
+    state: Any,
+    workspace_ref: Any,
+    snapshot_ref: Any,
+    entry_ref: Any,
+    view: str = "coupling",
+) -> Dict[str, Any]:
+    """Batch first-screen payload (contract section 12): entry + interfaces + one view.
+
+    Every component is the unchanged projection of its single endpoint; this
+    wrapper only combines them in one engine process and enforces the response
+    budget.  When the selected view is not ``coupling`` the response also carries
+    ``coupling_aux`` (the same projection as ``view-coupling`` with the same
+    entry) so the client can skip that extra RPC for the resource rail; for
+    ``view == "coupling"`` the top-level ``coupling_aux`` field is omitted to
+    keep the payload small, while ``sizes`` always contains the
+    ``coupling_aux`` key (0 in that case) for a stable shape.  ``coupling_aux``
+    counts towards the 480 KiB total budget.  It never trims a component: when
+    the combined JSON would exceed the budget the caller receives
+    ``LIMIT_EXCEEDED`` with the real sizes so the Host/client can fall back to
+    the individual endpoints.
+    """
+    selected_view = one_of(view, FIRST_SCREEN_VIEWS, "view")
+    entry_payload = readmodel.entry_detail(
+        state, workspace_ref, snapshot_ref, entry_ref
+    )
+    snapshot_block = entry_payload.get("snapshot")
+    workspace_id = (
+        snapshot_block.get("workspace_id")
+        if isinstance(snapshot_block, dict)
+        else None
+    )
+    snapshot_id = (
+        snapshot_block.get("snapshot_id")
+        if isinstance(snapshot_block, dict)
+        else None
+    )
+    entry_block = entry_payload.get("entry")
+    entry_id = entry_block.get("entry_id") if isinstance(entry_block, dict) else None
+    if not isinstance(entry_id, str) or not entry_id:
+        selection_block = entry_payload.get("selection")
+        entry_id = (
+            selection_block.get("entry_id")
+            if isinstance(selection_block, dict)
+            else None
+        )
+    if not isinstance(entry_id, str) or not entry_id:
+        fail("INTERNAL_ERROR", "entry projection is missing its entry id")
+    if not isinstance(workspace_id, str) or not isinstance(snapshot_id, str):
+        fail("INTERNAL_ERROR", "entry projection is missing its snapshot identity")
+
+    interfaces_payload = interfaces(
+        state, workspace_ref, snapshot_ref, entry_ref
+    )
+    if selected_view == "coupling":
+        view_payload = coupling(state, workspace_ref, snapshot_ref, entry_ref)
+    elif selected_view == "tree":
+        view_payload = tree(state, workspace_ref, snapshot_ref, entry_ref)
+    elif selected_view == "end_to_end":
+        view_payload = end_to_end(state, workspace_ref, snapshot_ref, entry_ref)
+    elif selected_view == "sequence":
+        view_payload = sequence_static(
+            state, workspace_ref, snapshot_ref, entry_ref
+        )
+    else:
+        view_payload = file_tree(state, workspace_ref, snapshot_ref)
+
+    coupling_aux: Optional[Dict[str, Any]] = None
+    if selected_view != "coupling":
+        coupling_aux = coupling(state, workspace_ref, snapshot_ref, entry_ref)
+
+    sizes = {
+        "entry": _projection_size(entry_payload),
+        "interfaces": _projection_size(interfaces_payload),
+        "view": _projection_size(view_payload),
+        "coupling_aux": _projection_size(coupling_aux) if coupling_aux is not None else 0,
+    }
+    response: Dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "workspace_id": workspace_id,
+        "snapshot_id": snapshot_id,
+        "entry_id": entry_id,
+        "view": selected_view,
+        "entry": entry_payload,
+        "interfaces": interfaces_payload,
+        "view_payload": view_payload,
+        "sizes": sizes,
+        "truncated": False,
+        "limitations": [],
+    }
+    if coupling_aux is not None:
+        response["coupling_aux"] = coupling_aux
+    total_bytes = _projection_size(response)
+    if total_bytes > MAX_FIRST_SCREEN_BYTES:
+        fail(
+            "LIMIT_EXCEEDED",
+            "first-screen payload exceeds the 480 KiB engine budget; fall back to individual endpoints",
+            details={
+                "sizes": sizes,
+                "total_bytes": total_bytes,
+                "limit_bytes": MAX_FIRST_SCREEN_BYTES,
+            },
+        )
+    return response
+
+
 def _tree_external_reason(
     ctx: _Context, callsite_info: Dict[str, Any]
 ) -> Tuple[str, str]:

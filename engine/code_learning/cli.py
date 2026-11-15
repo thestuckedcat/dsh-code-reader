@@ -202,6 +202,21 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode", choices=("static",), default="static", metavar="MODE"
     )
 
+    view_first_screen = subparsers.add_parser(
+        "view-first-screen",
+        help="Batch first-screen payload: entry + interfaces + one view (S4-prep).",
+    )
+    view_first_screen.add_argument("--workspace", required=True, metavar="WID")
+    view_first_screen.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_first_screen.add_argument("--entry", dest="entry_ref", required=True, metavar="ENTRY")
+    view_first_screen.add_argument(
+        "--view",
+        dest="view",
+        default="coupling",
+        metavar="VIEW",
+        help="coupling|tree|end_to_end|sequence|file (default coupling; file -> file tree)",
+    )
+
     # -- controlled scenarios (S3a) ------------------------------------------
     sim_profile_import = subparsers.add_parser(
         "sim-profile-import",
@@ -478,6 +493,7 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
         "view-file-read",
         "view-sequence",
         "view-interfaces",
+        "view-first-screen",
     ):
         from . import five_views
 
@@ -511,6 +527,14 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
         if command == "view-interfaces":
             return five_views.interfaces(
                 state, args.workspace, args.snapshot_ref, args.entry_ref
+            )
+        if command == "view-first-screen":
+            return five_views.first_screen(
+                state,
+                args.workspace,
+                args.snapshot_ref,
+                args.entry_ref,
+                view=args.view,
             )
         return five_views.sequence_static(
             state,

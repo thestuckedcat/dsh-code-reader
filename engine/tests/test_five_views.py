@@ -33,7 +33,7 @@ from unittest import mock
 from tests import helpers
 from tests.fixtures.snapshots import support
 
-from code_learning import five_views, snapshot as snapshot_module, source, workspace
+from code_learning import five_views, snapshot as snapshot_module, source, util, views, workspace
 from code_learning.errors import CodeLearningError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -71,6 +71,23 @@ def _iter_strings(node: Any) -> Iterable[str]:
     elif isinstance(node, str):
         yield node
 
+
+
+#: Source reads return a signed evidence token whose payload contains the read
+#: timestamp (``t``), so two independent reads of the same window legitimately
+#: differ in that token only.  Batch-vs-single consistency compares every other
+#: field and freezes these tokens to a placeholder.
+_SIGNED_REF_RE = re.compile(r"^v1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")
+
+
+def _freeze_signed_refs(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: _freeze_signed_refs(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_freeze_signed_refs(item) for item in value]
+    if isinstance(value, str) and _SIGNED_REF_RE.match(value):
+        return "<signed-ref>"
+    return value
 
 def _rewrite_under(value: str, old_root: str, new_root: str) -> str:
     text = value.replace("\\", "/")
@@ -361,8 +378,8 @@ class RealBusFiveViewTest(FiveViewTestBase):
         self.assertEqual({"mode": "snapshot", "entry_id": None}, first["scope"])
         self.assertGreater(len(first["resources"]), 1)
         self.assertEqual(
-            json.dumps(first, ensure_ascii=False, sort_keys=True),
-            json.dumps(second, ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(first), ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(second), ensure_ascii=False, sort_keys=True),
         )
         routes = next(item for item in first["resources"] if item.get("name") == "routes")
         tuples = [
@@ -377,8 +394,8 @@ class RealBusFiveViewTest(FiveViewTestBase):
         first = five_views.tree(self.env.state, WORKSPACE_ID, self.snapshot_id, "bus_send")
         second = five_views.tree(self.env.state, WORKSPACE_ID, self.snapshot_id, "bus_send")
         self.assertEqual(
-            json.dumps(first, ensure_ascii=False, sort_keys=True),
-            json.dumps(second, ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(first), ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(second), ensure_ascii=False, sort_keys=True),
         )
         self.assertEqual("bus_send", first["entry"]["name"])
         self.assertEqual("bus.c", first["entry"]["file"])
@@ -428,8 +445,8 @@ class RealBusFiveViewTest(FiveViewTestBase):
             self.env.state, WORKSPACE_ID, self.snapshot_id, "bus_send"
         )
         self.assertEqual(
-            json.dumps(first, ensure_ascii=False, sort_keys=True),
-            json.dumps(second, ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(first), ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(second), ensure_ascii=False, sort_keys=True),
         )
         self.assertEqual("bus_send", first["entry"]["name"])
         self.assertEqual({"direction": "DOWN", "edge_routing": "ORTHOGONAL"}, first["layout"])
@@ -730,8 +747,8 @@ class RealBusFiveViewTest(FiveViewTestBase):
         first = five_views.interfaces(self.env.state, WORKSPACE_ID, self.snapshot_id)
         second = five_views.interfaces(self.env.state, WORKSPACE_ID, self.snapshot_id)
         self.assertEqual(
-            json.dumps(first, ensure_ascii=False, sort_keys=True),
-            json.dumps(second, ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(first), ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(second), ensure_ascii=False, sort_keys=True),
         )
         candidates = first["candidates"]
         self.assertGreaterEqual(len(candidates), 5)
@@ -1161,6 +1178,301 @@ class RealBusFiveViewTest(FiveViewTestBase):
         )
         self.assertEqual("NOT_FOUND", json.loads(completed.stdout)["error"]["code"])
 
+
+    # -- S4-prep batch first screen (contract section 12) -------------------
+    def test_first_screen_each_view_matches_individual_endpoints(self) -> None:
+        entry_ref = "bus_send"
+        workspace_id = self.workspace_id
+        snapshot_id = self.snapshot_id
+        state = self.env.state
+        expected_views = {
+            "coupling": lambda: five_views.coupling(
+                state, workspace_id, snapshot_id, entry_ref
+            ),
+            "tree": lambda: five_views.tree(
+                state, workspace_id, snapshot_id, entry_ref
+            ),
+            "end_to_end": lambda: five_views.end_to_end(
+                state, workspace_id, snapshot_id, entry_ref
+            ),
+            "sequence": lambda: five_views.sequence_static(
+                state, workspace_id, snapshot_id, entry_ref
+            ),
+            "file": lambda: five_views.file_tree(
+                state, workspace_id, snapshot_id
+            ),
+        }
+        for selected, build_view in expected_views.items():
+            with self.subTest(view=selected):
+                batch = five_views.first_screen(
+                    state, workspace_id, snapshot_id, entry_ref, view=selected
+                )
+                expected_entry = views.entry_detail(
+                    state, workspace_id, snapshot_id, entry_ref
+                )
+                expected_interfaces = five_views.interfaces(
+                    state, workspace_id, snapshot_id, entry_ref
+                )
+                expected_view = build_view()
+                self.assertEqual(1, batch["schema_version"])
+                self.assertEqual(workspace_id, batch["workspace_id"])
+                self.assertEqual(snapshot_id, batch["snapshot_id"])
+                self.assertEqual(BUS_SEND_ID, batch["entry_id"])
+                self.assertEqual(selected, batch["view"])
+                self.assertEqual(
+                    _freeze_signed_refs(expected_entry),
+                    _freeze_signed_refs(batch["entry"]),
+                )
+                self.assertEqual(
+                    _freeze_signed_refs(expected_interfaces),
+                    _freeze_signed_refs(batch["interfaces"]),
+                )
+                self.assertEqual(
+                    _freeze_signed_refs(expected_view),
+                    _freeze_signed_refs(batch["view_payload"]),
+                )
+                expected_aux = None
+                if selected != "coupling":
+                    expected_aux = five_views.coupling(
+                        state, workspace_id, snapshot_id, entry_ref
+                    )
+                    self.assertEqual(
+                        _freeze_signed_refs(expected_aux),
+                        _freeze_signed_refs(batch["coupling_aux"]),
+                    )
+                    # The auxiliary rail projection equals the single endpoint
+                    # (signed source evidence refs are time-stamped, so freeze).
+                    cli_aux = self.cli_json(
+                        "view-coupling",
+                        "--workspace",
+                        workspace_id,
+                        "--snapshot",
+                        snapshot_id,
+                        "--entry",
+                        entry_ref,
+                    )
+                    self.assertEqual(
+                        _freeze_signed_refs(cli_aux),
+                        _freeze_signed_refs(batch["coupling_aux"]),
+                    )
+                else:
+                    self.assertNotIn("coupling_aux", batch)
+                self.assertEqual(
+                    {
+                        "entry": len(util.canonical_json(expected_entry).encode("utf-8")),
+                        "interfaces": len(
+                            util.canonical_json(expected_interfaces).encode("utf-8")
+                        ),
+                        "view": len(
+                            util.canonical_json(expected_view).encode("utf-8")
+                        ),
+                        "coupling_aux": (
+                            len(util.canonical_json(expected_aux).encode("utf-8"))
+                            if expected_aux is not None
+                            else 0
+                        ),
+                    },
+                    batch["sizes"],
+                )
+                if selected != "coupling":
+                    self.assertGreater(batch["sizes"]["coupling_aux"], 0)
+                else:
+                    self.assertEqual(0, batch["sizes"]["coupling_aux"])
+                self.assertLessEqual(
+                    len(util.canonical_json(batch).encode("utf-8")), 480 * 1024
+                )
+                self.assertFalse(batch["truncated"])
+                self.assertEqual([], batch["limitations"])
+                self.assert_no_absolute_paths(batch)
+                self.assert_relative_path_fields(batch)
+                # The batch CLI returns exactly the same document.
+                cli_batch = self.cli_json(
+                    "view-first-screen",
+                    "--workspace",
+                    workspace_id,
+                    "--snapshot",
+                    snapshot_id,
+                    "--entry",
+                    entry_ref,
+                    "--view",
+                    selected,
+                )
+                self.assertEqual(
+                    json.dumps(
+                        _freeze_signed_refs(batch), ensure_ascii=False, sort_keys=True
+                    ),
+                    json.dumps(
+                        _freeze_signed_refs(cli_batch),
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ),
+                )
+
+    def test_first_screen_default_view_and_determinism(self) -> None:
+        first = self.cli_json(
+            "view-first-screen",
+            "--workspace",
+            self.workspace_id,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "bus_send",
+        )
+        self.assertEqual("coupling", first["view"])
+        # Convention: view=coupling omits the top-level field but keeps the
+        # stable sizes key at 0 (480 KiB budget口径 unchanged).
+        self.assertNotIn("coupling_aux", first)
+        self.assertEqual(0, first["sizes"]["coupling_aux"])
+        self.assertEqual(
+            {"entry", "interfaces", "view", "coupling_aux"},
+            set(first["sizes"].keys()),
+        )
+        self.assertEqual(first["sizes"], five_views.first_screen(
+            self.env.state, self.workspace_id, self.snapshot_id, "bus_send"
+        )["sizes"])
+        second = self.cli_json(
+            "view-first-screen",
+            "--workspace",
+            self.workspace_id,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "bus_send",
+        )
+        self.assertEqual(
+            json.dumps(_freeze_signed_refs(first), ensure_ascii=False, sort_keys=True),
+            json.dumps(_freeze_signed_refs(second), ensure_ascii=False, sort_keys=True),
+        )
+        tree_batch = self.cli_json(
+            "view-first-screen",
+            "--workspace",
+            self.workspace_id,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "bus_send",
+            "--view",
+            "tree",
+        )
+        self.assertEqual("tree", tree_batch["view"])
+        self.assertIn("coupling_aux", tree_batch)
+        self.assertGreater(tree_batch["sizes"]["coupling_aux"], 0)
+        self.assertEqual(
+            _freeze_signed_refs(tree_batch["coupling_aux"]),
+            _freeze_signed_refs(
+                self.cli_json(
+                    "view-coupling",
+                    "--workspace",
+                    self.workspace_id,
+                    "--snapshot",
+                    self.snapshot_id,
+                    "--entry",
+                    "bus_send",
+                )
+            ),
+        )
+        self.assertEqual(
+            _freeze_signed_refs(tree_batch["view_payload"]),
+            _freeze_signed_refs(
+                self.cli_json(
+                    "view-tree",
+                    "--workspace",
+                    self.workspace_id,
+                    "--snapshot",
+                    self.snapshot_id,
+                    "--entry",
+                    "bus_send",
+                )
+            ),
+        )
+        completed = helpers.run_cli(
+            self.env.bootstrap_path,
+            "view-first-screen",
+            "--workspace",
+            self.workspace_id,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "bus_send",
+        )
+        lines = [line for line in completed.stdout.splitlines() if line.strip()]
+        self.assertEqual(1, len(lines), completed.stdout)
+
+    def test_first_screen_errors(self) -> None:
+        with self.assertRaises(CodeLearningError) as context:
+            five_views.first_screen(
+                self.env.state,
+                self.workspace_id,
+                self.snapshot_id,
+                "bus_send",
+                view="not-a-view",
+            )
+        self.assertEqual("INVALID_ARGUMENT", context.exception.code)
+        # Unknown view is rejected before entry resolution (JSON error via CLI).
+        completed = helpers.run_cli(
+            self.env.bootstrap_path,
+            "view-first-screen",
+            "--workspace",
+            self.workspace_id,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "no-such-entry",
+            "--view",
+            "not-a-view",
+            expect=2,
+        )
+        self.assertEqual(
+            "INVALID_ARGUMENT", json.loads(completed.stdout)["error"]["code"]
+        )
+        completed = helpers.run_cli(
+            self.env.bootstrap_path,
+            "view-first-screen",
+            "--workspace",
+            self.workspace_id,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "no-such-entry",
+            expect=2,
+        )
+        self.assertEqual("NOT_FOUND", json.loads(completed.stdout)["error"]["code"])
+        completed = helpers.run_cli(
+            self.env.bootstrap_path,
+            "view-first-screen",
+            "--workspace",
+            "no-such-workspace",
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "bus_send",
+            expect=2,
+        )
+        self.assertEqual("NOT_FOUND", json.loads(completed.stdout)["error"]["code"])
+
+    def test_first_screen_budget_limit_is_explicit(self) -> None:
+        huge_view = {"payload": "x" * (480 * 1024)}
+        with mock.patch.object(
+            five_views, "file_tree", lambda state, workspace, snapshot: huge_view
+        ):
+            with self.assertRaises(CodeLearningError) as context:
+                five_views.first_screen(
+                    self.env.state,
+                    self.workspace_id,
+                    self.snapshot_id,
+                    "bus_send",
+                    view="file",
+                )
+        error = context.exception
+        self.assertEqual("LIMIT_EXCEEDED", error.code)
+        sizes = error.details["sizes"]
+        self.assertEqual(
+            {"entry", "interfaces", "view", "coupling_aux"}, set(sizes.keys())
+        )
+        self.assertGreater(sizes["view"], 480 * 1024)
+        self.assertGreater(sizes["coupling_aux"], 0)
+        self.assertGreater(error.details["total_bytes"], 480 * 1024)
+        self.assertEqual(480 * 1024, error.details["limit_bytes"])
 
 class MiniFiveViewTest(FiveViewTestBase):
     """Committed real mini snapshot: small chain and no resource layer."""

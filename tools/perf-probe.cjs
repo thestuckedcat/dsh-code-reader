@@ -177,7 +177,8 @@ async function hotFirstView(win, samples) {
   }
   for (let index = 0; index < samples; index += 1) {
     const result = await measure(win, () => clickFirstEntry(win, index), readyExpr('end_to_end'), 30000);
-    rows.push({index, ms: result.ms, ok: result.ok});
+    const firstScreenAttrs = await evaluate(win, `(() => [...document.querySelectorAll('[data-first-screen]')].map((element) => ({value: element.getAttribute('data-first-screen'), tag: element.tagName, view: element.getAttribute('data-view') || null})))()`).catch(() => []);
+    rows.push({index, ms: result.ms, ok: result.ok, first_screen: firstScreenAttrs});
   }
   return rows;
 }

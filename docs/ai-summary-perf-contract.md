@@ -170,7 +170,7 @@ hover/focus 预取、会话内只读 LRU≤32 + in-flight 去重、snapshot 切�
 
 | 指标 | 优化前 | 优化后 | 变化 | 预算判定 |
 |---|---|---|---|---|
-| 首屏 hot p50 / p95 | 1078 / 1141 ms | **646–705 / 704–769 ms**（verifier 705/769，Lead 复跑 646/704） | −34.6%～−40.1% / −32.6%～−38.3% | ≤500 ms 仍 ❌ fail（如实记录） |
+| 首屏 hot p50 / p95（batch+aux 前） | 1078 / 1141 ms | **646–705 / 704–769 ms** | −34.6%～−40.1% / −32.6%～−38.3% | 当时仍 fail；后续 batch+aux 最终 330/387 ✅（见 §4.2 更新） |
 | coupling p50 / p95 | 3 / 6 ms | 2 / 4 ms | −33% | ≤120 ms ✅ pass |
 | 引擎 CLI entries p50/p95 | 209 / 228 ms | 125 / 133 ms | −38%…−41% | 基线记录 |
 | 引擎 CLI e2e/coupling/tree p95 | 227 / 218 / 232 ms | 133 / 132 / 134 ms | −41% | 基线记录 |
@@ -183,10 +183,12 @@ interfaces + 当前视图（如 end_to_end）4 个 RPC ≈ 4×130 ms + 渲染 �
 一次返回 entry+五视图所需投影，Host/引擎各一次调用；客户端一次 RPC 装载并填缓存），或 Host 只读命令并发池；
 目标把 hot p95 压到 500 ms 内后复测。该迭代未在本轮实现，不作达标声明。
 
-结论：功能与数据链路可用；**首屏热路径实测 704–1141 ms 超 500 ms 拟验收预算**（两次独立 run 均未达标，
-机器负载导致波动），需要在后续优化（投影/渲染裁剪、缓存首屏、减少重复 RPC）后复测；tree 定位与拖动反馈在
-合成夹具上不可测、cold UI 受一次性 token 限制，均记 in_scope_not_verified 并保留失败数；合成图仅作规模/
-截断证据，不代表真实仓库或 Linux/Kbuild。证据 evidence/perf/（erification.json、README.md 含方法/
+**后续更新（2026-11-15，T37 最终）**：经批量首屏端点 iew.firstScreen + coupling_aux 两轮优化后，
+erify-perf 最终 **25/25 全绿、layers 全 true、ok=true, verified=true**；首屏 hot p50/p95 =
+**330/387 ms ≤ 500 ms ✅**（历史：batch 前 646/704、batch 无 aux 455/527）；coupling p95 3 ms ✅。
+cold UI/tree/拖动/已截断文本仍 not_verified（不伪造）。结论：功能与数据链路可用，**首屏拟验收预算已达标**；
+tree 定位与拖动反馈在合成夹具上不可测、cold UI 受一次性 token 限制，均如实记 in_scope_not_verified；
+合成图仅作规模/截断证据，不代表真实仓库或 Linux/Kbuild。证据 evidence/perf/（erification.json、README.md 含方法/
 机器信息/not_verified、commands.log、探针原始 JSON）。
 
 **过程中修复的跨阶段缺陷**：Windows 上 State.secret 用 os.open 未带 O_BINARY，CRT 文本模式把随机

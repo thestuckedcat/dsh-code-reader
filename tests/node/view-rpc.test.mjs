@@ -643,6 +643,7 @@ test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the increment end
     'view.sequence',
     'view.interfaces',
     'view.summary',
+    'view.firstScreen',
   ])
   const service = createViewService({ bridge: createBridgeStub(), settings: testSettings() })
   assert.deepEqual(Object.keys(service), [...VIEW_ENDPOINTS])
@@ -1130,6 +1131,112 @@ test('view.summary passes engine error documents through unchanged', async () =>
   }
 })
 
+// ---------------------------------------------------------------------------
+// S4-prep batch first screen (five-view contract §12)
+// ---------------------------------------------------------------------------
+test('view.firstScreen maps to the fixed argv with the optional view budget', async () => {
+  const engineJson = {
+    schema_version: 1,
+    workspace_id: WORKSPACE,
+    snapshot_id: SNAPSHOT_ID,
+    entry_id: ENTRY,
+    view: 'coupling',
+    entry: { entry_id: ENTRY, name: 'bus_send' },
+    interfaces: { candidates: [] },
+    view_payload: { scope: {} },
+    sizes: { entry: 123, interfaces: 456, view: 789 },
+    truncated: false,
+    limitations: [],
+  }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.firstScreen',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY },
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  const baseArgv = ['view-first-screen', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY]
+  assert.deepEqual(bridge.calls.at(-1).argv, baseArgv)
+
+  // An explicit view budget is forwarded (even the default "coupling" one).
+  for (const view of ['coupling', 'tree', 'end_to_end', 'sequence', 'file']) {
+    await invoke(route, {
+      endpoint: 'view.firstScreen',
+      payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, view },
+    })
+    assert.deepEqual(bridge.calls.at(-1).argv, [...baseArgv, '--view', view])
+  }
+  // Explicit null behaves like omitted: default coupling, no --view flag.
+  await invoke(route, {
+    endpoint: 'view.firstScreen',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, view: null },
+  })
+  assert.deepEqual(bridge.calls.at(-1).argv, baseArgv)
+
+  const before = bridge.calls.length
+  const rejected = [
+    [{}, /workspace is required/],
+    [{ workspace: WORKSPACE }, /snapshot is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID }, /entry is required/],
+    [
+      { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, view: 'coupling ' },
+      /view must be one of: coupling, tree, end_to_end, sequence, file/,
+    ],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, view: 'graph' }, /view must be one of/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, view: 42 }, /view must be one of/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, extra: true }, /unknown payload field: extra/],
+    [{ workspace: 'Bad', snapshot: SNAPSHOT_ID, entry: ENTRY }, /workspace must match/],
+    [{ workspace: WORKSPACE, snapshot: 'bad snapshot', entry: ENTRY }, /snapshot must match/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 42 }, /entry must be a string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: '' }, /entry must be a non-empty string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 'bad/entry' }, /entry must match/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 'f'.repeat(513) }, /at most 512 characters/],
+  ]
+  for (const [payload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.firstScreen', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
+})
+
+test('view.firstScreen passes engine error documents through unchanged', async () => {
+  const limitDoc = {
+    schema_version: 1,
+    error: {
+      code: 'LIMIT_EXCEEDED',
+      message: 'first-screen payload exceeds the 480 KiB budget',
+      details: { sizes: { entry: 400000, interfaces: 60000, view: 50000 }, limit_bytes: 491520 },
+      details_ref: null,
+      retryable: false,
+    },
+    operation_id: null,
+  }
+  const bridge = createBridgeStub(async () => ({ schema_version: 1, ok: false, exit_code: 2, cli: limitDoc }))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.firstScreen',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, view: 'tree' },
+  })
+  assert.equal(result.response.statusCode, 200)
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, limitDoc)
+  assert.equal(result.json.result.error, undefined)
+
+  for (const code of ['INVALID_ARGUMENT', 'NOT_FOUND']) {
+    const doc = { schema_version: 1, error: { code, message: `${code} from first-screen` }, operation_id: null }
+    const errorBridge = createBridgeStub(async () => ({ schema_version: 1, ok: false, exit_code: 2, cli: doc }))
+    const errorMount = mount({ bridge: errorBridge })
+    const passed = await invoke(errorMount.route, {
+      endpoint: 'view.firstScreen',
+      payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY },
+    })
+    assert.equal(passed.json.result.ok, true, code)
+    assert.deepEqual(passed.json.result.value, doc, code)
+  }
+})
+
 test('view endpoints map BridgeError without leaking host paths', async () => {
   const bridge = createBridgeStub(async () => {
     throw new BridgeError('DEPENDENCY_UNAVAILABLE', 'engine at C:\\Users\\admin\\python.exe failed')
@@ -1147,6 +1254,8 @@ test('view endpoints map BridgeError without leaking host paths', async () => {
     ['view.interfaces', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
     ['view.summary', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
     ['view.summary', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: ENTRY }],
+    ['view.firstScreen', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
+    ['view.firstScreen', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, view: 'tree' }],
   ]
   for (const [endpoint, payload] of calls) {
     const result = await invoke(route, { endpoint, payload })
@@ -1258,7 +1367,7 @@ test('plugin mounts the /code-view prefix route when host services are available
   // The nested route's whitelist covers the S2a/S2b view endpoints and the S3a
   // scenario endpoints: an invalid payload is rejected before the bridge (no
   // engine spawn) and the method list is accepted by the carrier.
-  for (const endpoint of ['view.coupling', 'view.tree', 'view.endToEnd', 'view.fileTree', 'view.fileRead', 'view.sequence', 'view.interfaces', 'view.summary']) {
+  for (const endpoint of ['view.coupling', 'view.tree', 'view.endToEnd', 'view.fileTree', 'view.fileRead', 'view.sequence', 'view.interfaces', 'view.summary', 'view.firstScreen']) {
     const rejected = await invoke(route, {
       endpoint,
       payload: { workspace: 'NOT A WORKSPACE', snapshot: SNAPSHOT_ID, entry: 'bad entry', mode: 'observed' },

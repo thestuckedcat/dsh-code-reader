@@ -4533,7 +4533,7 @@ var content=activeTab==='subflow'?subflowContent:activeTab==='resources'?resourc
 body=el('div',{className:'dcr-details-body'},tabs,content,el(AISummarySection,{summary:props.summary,subject:props.summarySubject}));
 }
 }
-return el('section',{className:'dcr-details','data-code-view':'details','aria-label':TEXT.detailsTitle,'data-cache':props.cacheHit===true?'hit':undefined},
+return el('section',{className:'dcr-details','data-code-view':'details','aria-label':TEXT.detailsTitle,'data-cache':props.cacheHit===true?'hit':undefined,'data-first-screen':props.firstScreen===null||props.firstScreen===undefined?undefined:props.firstScreen},
 el('div',{className:'dcr-details-head'},
 el('h3',{className:'dcr-heading'},title),
 el('div',{className:'dcr-header-actions'},
@@ -4571,6 +4571,7 @@ if(record[key]!==undefined&&record[key]!==null)extras.push(key+'='+String(record
 }
 return String(copyNullableString(record.workspace)||'')+'|'+String(copyNullableString(record.snapshot)||'')+'|'+String(copyNullableString(record.entry)||'')+'|'+String(endpoint)+'|'+String(copyNullableString(record.mode)||'')+'|'+extras.join('&');
 }
+function cacheHas(key){return viewCache.has(key);}
 function cacheGet(key){
 var value=viewCache.get(key);
 if(value===undefined)return null;
@@ -4823,6 +4824,7 @@ entrySelection:null,
 entryLoading:false,
 entryError:null,
 entryCached:false,
+firstScreen:null,
 selectedFunctionId:null,
 selectedFunctionName:null,
 data:{},
@@ -4940,6 +4942,7 @@ readPromise.then(function(){viewPending.delete(cacheKey);},function(){viewPendin
 return readPromise;
 }
 var prefetchTimerRef=useRef(null);
+var firstScreenRef=useRef({controller:null,token:0,unsupported:false});
 function cancelPrefetchTimer(){
 if(prefetchTimerRef.current!==null){
 clearTimeout(prefetchTimerRef.current);
@@ -5096,6 +5099,7 @@ sessionUi.callId=currentUi.focus_call_id;
 }
 function openPanel(){
 cancelPrefetchTimer();
+cancelFirstScreen();
 clearViewCache();
 patchView(createInitialPanelView());
 patchUi(function(previous){return{rail:'resources',subflow:{key:null,state:'idle',payload:null,error:null,entryId:null,rootId:null},summaryEpoch:(previous.summaryEpoch||0)+1};});
@@ -5148,6 +5152,7 @@ function chooseSnapshotRow(row,options){
 var opts=options||{};
 var restore=opts.restore===true;
 cancelPrefetchTimer();
+cancelFirstScreen();
 clearViewCache();
 if(restore!==true)resetRememberedEntryState();
 rememberSnapshot(row);
@@ -5219,6 +5224,7 @@ function chooseEntryRow(row,options){
 var opts=options||{};
 var restore=opts.restore===true;
 cancelPrefetchTimer();
+cancelFirstScreen();
 var snapshot=currentSnapshot();
 var entryId=copyNullableString(row.entry_id);
 if(snapshot===null||entryId===null)return;
@@ -5239,6 +5245,7 @@ entrySelection:null,
 entryLoading:true,
 entryError:null,
 entryCached:false,
+firstScreen:null,
 data:{},
 interfaces:{key:null,state:'loading',payload:null,error:null},
 actionError:null,
@@ -5263,11 +5270,22 @@ remembered.resource_id=null;
 remembered.callsite_id=null;
 remembered.file=null;
 }
-// Independent read-only RPCs for this selection are fired in parallel;
-// each branch owns its error/loading state so one failure cannot mask another.
-var parallelReads=[loadEntryData(focusFunctionId),loadData('coupling'),loadInterfaces()];
-loadActiveView();
-if(parallelReads.length>0&&typeof Promise.allSettled==='function')Promise.allSettled(parallelReads).catch(function(){});
+// Prefer one batch first-screen RPC for entry+interfaces+current view.
+// When it fails (engine gap/error, LIMIT_EXCEEDED, old host) fall back to the
+// existing parallel individual reads; cache-hot selections skip the batch.
+var batchView=firstScreenBatchView(getUiState().view);
+var batchTargets=firstScreenTargets(snapshot,focusFunctionId,batchView);
+if(focusFunctionId!==entryId){
+// Restore with an explicitly focused function: the batch entry and the view
+// scope differ, so keep the separate requests that preserve both semantics.
+runEntryIndividualReads(focusFunctionId);
+}else if(firstScreenAllCached(batchTargets,batchView)){
+runEntryIndividualReads(focusFunctionId);
+}else if(firstScreenRef.current.unsupported===true){
+runEntryFallback(focusFunctionId);
+}else if(!startFirstScreen(focusFunctionId,batchView)){
+runEntryFallback(focusFunctionId);
+}
 if(getUiState().detailsTab==='subflow'){
 setSubflow({key:null,state:'idle',payload:null,error:null,entryId:focusFunctionId,rootId:getUiState().subflowRootId});
 loadSubflow();
@@ -5288,10 +5306,16 @@ patchView({entryLoading:false,entryError:result});
 return result;
 }
 var payload=result.value;
-var detail=isRecord(payload.entry)?payload.entry:null;
+var applied=applyEntrySuccess(payload,result.cached===true,functionId);
+if(!applied)return result;
+return result;
+});
+}
+function applyEntrySuccess(payload,cached,functionId){
+var detail=isRecord(payload)&&isRecord(payload.entry)?payload.entry:null;
 if(detail===null){
-patchView({entryLoading:false,entryData:payload,entryError:{kind:'error',code:'PROTOCOL_ERROR',message:'view.getEntry 响应缺少 entry 字段。'}});
-return;
+patchView({entryLoading:false,entryData:payload,entryDetail:null,entryError:{kind:'error',code:'PROTOCOL_ERROR',message:'view.getEntry/view.firstScreen 响应缺少 entry 字段。'}});
+return false;
 }
 var name=copyNullableString(detail.name);
 if(name!==null){
@@ -5300,10 +5324,9 @@ return{selectedFunctionName:previous.selectedFunctionId===functionId?name:previo
 });
 if(remembered.focus!==null&&remembered.focus.function_id===functionId)remembered.focus.name=name;
 }
-patchView({entryLoading:false,entryData:payload,entryDetail:detail,entrySelection:isRecord(payload.selection)?payload.selection:null,entryError:null,entryCached:result.cached===true});
+patchView({entryLoading:false,entryData:payload,entryDetail:detail,entrySelection:isRecord(payload.selection)?payload.selection:null,entryError:null,entryCached:cached===true});
 if(getUiState().detailsTab==='subflow')loadSubflow();
-return result;
-});
+return true;
 }
 function loadData(name){
 if(name==='file'){
@@ -5339,10 +5362,14 @@ if(result.kind==='error'){
 setData(name,{state:'error',payload:null,error:result,cached:false});
 return result;
 }
-setData(name,{state:viewPayloadState(name,result.value),payload:result.value,error:null,cached:result.cached===true});
-if(name==='end_to_end')initializeGroupDefaults(result.value);
+applyViewSuccess(name,result.value,result.cached===true);
 return result;
 });
+}
+function applyViewSuccess(name,payload,cached){
+setData(name,{state:viewPayloadState(name,payload),payload:payload,error:null,cached:cached===true});
+if(name==='end_to_end')initializeGroupDefaults(payload);
+return true;
 }
 function initializeGroupDefaults(payload){
 var groups=normalizeEndToEnd(payload).groups;
@@ -5376,10 +5403,134 @@ if(result.kind==='error'){
 patchView({interfaces:{key:key,state:'error',payload:null,error:result}});
 return result;
 }
-var normalized=normalizeInterfaces(result.value);
-patchView({interfaces:{key:key,state:normalized.candidates.length>0?'ready':'empty',payload:result.value,error:null,cached:result.cached===true}});
+applyInterfacesSuccess(result.value,key,result.cached===true);
 return result;
 });
+}
+function applyInterfacesSuccess(payload,key,cached){
+var normalized=normalizeInterfaces(payload);
+patchView({interfaces:{key:key,state:normalized.candidates.length>0?'ready':'empty',payload:payload,error:null,cached:cached===true}});
+return true;
+}
+function cancelFirstScreen(){
+var state=firstScreenRef.current;
+if(state.controller!==null){try{state.controller.abort();}catch(error){}state.controller=null;}
+state.token+=1;
+}
+function firstScreenBatchView(uiView){
+return VIEW_KEYS.indexOf(uiView)>=0?uiView:'coupling';
+}
+function firstScreenViewSpec(viewName,base,entryId){
+var payload=assign({},base);
+if(viewName!=='file')payload.entry=entryId;
+if(viewName==='sequence')payload.mode='static';
+return{endpoint:viewName==='file'?'view.fileTree':VIEW_ENDPOINTS[viewName],payload:payload,view:viewName};
+}
+function isFileTreeProjection(value){
+return isRecord(value)&&(Array.isArray(value.repos)||Array.isArray(value.nodes)||isRecord(value.tree));
+}
+function firstScreenTargets(snapshot,entryId,batchView){
+var base={workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id};
+var entryPayload=assign({},base,{entry:entryId});
+var interfacesPayload=assign({},base,{entry:entryId});
+var viewSpec=firstScreenViewSpec(batchView,base,entryId);
+return{
+entryPayload:entryPayload,
+interfacesPayload:interfacesPayload,
+entryKey:cacheKeyFor('view.getEntry',entryPayload),
+interfacesKey:cacheKeyFor('view.interfaces',interfacesPayload),
+viewSpec:viewSpec,
+viewKey:cacheKeyFor(viewSpec.endpoint,viewSpec.payload),
+};
+}
+function firstScreenAllCached(targets,batchView){
+if(!cacheHas(targets.entryKey)||!cacheHas(targets.interfacesKey))return false;
+if(batchView==='file')return true;
+return cacheHas(targets.viewKey);
+}
+function runEntryIndividualReads(focusFunctionId){
+var reads=[loadEntryData(focusFunctionId),loadData('coupling'),loadInterfaces()];
+loadActiveView();
+if(reads.length>0&&typeof Promise.allSettled==='function')Promise.allSettled(reads).catch(function(){});
+}
+function runEntryFallback(focusFunctionId){
+patchView({firstScreen:'fallback'});
+runEntryIndividualReads(focusFunctionId);
+}
+function isCouplingProjection(value){
+return isRecord(value)&&(Array.isArray(value.resources)||Array.isArray(value.functions));
+}
+function couplingCacheKeyFor(snapshot,entryId){
+return cacheKeyFor('view.coupling',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,entry:entryId});
+}
+function applyFirstScreenSuccess(value,meta){
+if(meta.token!==firstScreenRef.current.token)return false;
+if(viewCacheGeneration!==meta.generation)return false;
+var snapshot=currentSnapshot();
+if(snapshot===null||snapshot.snapshot_id!==meta.snapshotId)return false;
+if(copyNullableString(getViewState().selectedFunctionId)!==meta.entryId)return false;
+var entryPayload=isRecord(value.entry)?value.entry:null;
+var interfacesPayload=isRecord(value.interfaces)?value.interfaces:null;
+var viewPayload=isRecord(value.view_payload)?value.view_payload:null;
+if(entryPayload===null||interfacesPayload===null||viewPayload===null)return false;
+if(!applyEntrySuccess(entryPayload,false,meta.entryId))return false;
+applyInterfacesSuccess(interfacesPayload,meta.snapshotId+'|'+String(meta.entryId),false);
+var viewCached=false;
+if(meta.batchView==='file'){
+viewCached=isFileTreeProjection(viewPayload);
+}else{
+applyViewSuccess(meta.batchView,viewPayload,false);
+viewCached=true;
+}
+var couplingAux=meta.batchView!=='coupling'&&isCouplingProjection(value.coupling_aux)?value.coupling_aux:null;
+if(couplingAux!==null)applyViewSuccess('coupling',couplingAux,false);
+patchView({firstScreen:'batch'});
+if(viewCacheGeneration===meta.generation){
+cacheSet(meta.targets.entryKey,entryPayload);
+cacheSet(meta.targets.interfacesKey,interfacesPayload);
+if(viewCached)cacheSet(meta.targets.viewKey,viewPayload);
+if(couplingAux!==null)cacheSet(couplingCacheKeyFor(snapshot,meta.entryId),couplingAux);
+}
+if(meta.batchView!=='coupling'&&couplingAux===null)loadData('coupling');
+return true;
+}
+function startFirstScreen(focusFunctionId,batchView){
+var snapshot=currentSnapshot();
+if(snapshot===null)return false;
+var targets=firstScreenTargets(snapshot,focusFunctionId,batchView);
+var state=firstScreenRef.current;
+cancelFirstScreen();
+var token=state.token;
+var controller=null;
+if(typeof AbortController==='function'){
+controller=new AbortController();
+state.controller=controller;
+}
+var generation=viewCacheGeneration;
+var snapshotId=snapshot.snapshot_id;
+request('firstScreen','view.firstScreen',{workspace:snapshot.workspace_id,snapshot:snapshotId,entry:focusFunctionId,view:batchView},controller!==null?controller.signal:undefined).then(function(result){
+if(token!==state.token)return;
+state.controller=null;
+if(result!==null&&result.kind==='aborted')return;
+if(result===null){
+var staleSnapshot=currentSnapshot();
+if(staleSnapshot===null||staleSnapshot.snapshot_id!==snapshotId)return;
+if(copyNullableString(getViewState().selectedFunctionId)!==focusFunctionId)return;
+runEntryFallback(focusFunctionId);
+return;
+}
+if(result.kind==='ok'&&isRecord(result.value)&&!isRecord(result.value.error)){
+if(applyFirstScreenSuccess(result.value,{token:token,generation:generation,snapshotId:snapshotId,entryId:focusFunctionId,batchView:batchView,targets:targets}))return;
+}else if(result.kind==='error'){
+var code=String(result.code||'');
+if(/UNKNOWN|UNIMPLEMENTED|NOT_SUPPORTED|METHOD_NOT_FOUND/.test(code))state.unsupported=true;
+}
+var current=currentSnapshot();
+if(current===null||current.snapshot_id!==snapshotId)return;
+if(copyNullableString(getViewState().selectedFunctionId)!==focusFunctionId)return;
+runEntryFallback(focusFunctionId);
+});
+return true;
 }
 function patchStub(patch){
 patchView(function(previous){
@@ -6208,6 +6359,7 @@ openPanel();
 return function(){
 aliveRef.current=false;
 cancelPrefetchTimer();
+cancelFirstScreen();
 var map=seqRef.current;
 for(var name in map){
 if(Object.prototype.hasOwnProperty.call(map,name))map[name]+=1;
@@ -6330,6 +6482,7 @@ return el('div',{
 className:'dcr-root',
 'data-code-view':'panel',
 'data-cache-size':String(viewCache.size),
+'data-first-screen':view.firstScreen===null||view.firstScreen===undefined?undefined:view.firstScreen,
 lang:'zh-CN',
 role:'region',
 'aria-label':PANEL_LABEL,
@@ -6428,7 +6581,7 @@ if(next==='stub')ensureStubData();
 onSelectResource:function(resource){selectResource(resource,{openDetails:true,ensureCoupling:true});},
 }),
 el('div',{className:'dcr-main'},
-el('section',{className:'dcr-view','data-code-view':'view','data-view':ui.view,'data-state':activeState,'data-cache':activeData&&activeData.cached===true?'hit':undefined},
+el('section',{className:'dcr-view','data-code-view':'view','data-view':ui.view,'data-state':activeState,'data-cache':activeData&&activeData.cached===true?'hit':undefined,'data-first-screen':view.firstScreen===null||view.firstScreen===undefined?undefined:view.firstScreen},
 activeState==='loading'
 ?el('p',{className:'dcr-view-empty',role:'status'},TEXT.viewLoading)
 :activeState==='error'
@@ -6450,6 +6603,7 @@ detailsTab:ui.detailsTab,
 onSelectTab:switchDetailsTab,
 subflow:ui.subflow,
 cacheHit:view.entryCached===true,
+firstScreen:view.firstScreen,
 summary:view.summary,
 summarySubject:activeSummarySubject,
 groupInfo:activeGroupInfo,

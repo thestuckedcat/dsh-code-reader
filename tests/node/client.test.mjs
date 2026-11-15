@@ -32,6 +32,7 @@ import {
   makeEntryPayload,
   makeFileReadPayload,
   makeFileTreePayload,
+  makeFirstScreenPayload,
   makeImportedObservedSequencePayload,
   makeImportedScenarioSummary,
   makeInterfacesPayload,
@@ -57,6 +58,7 @@ import {
   makeScenarioSummary,
   makeTreePayload,
   makeWorkspace,
+  okResult,
   readBundleSource,
 } from './helpers/client-harness.mjs';
 
@@ -103,6 +105,7 @@ function bootHarness(overrides = {}) {
     'view.fileRead': (payload) => makeFileReadPayload({path: payload.path, repo_id: payload.repo}),
     'view.interfaces': () => makeInterfacesPayload(),
     'view.summary': (payload) => makeSummaryGapPayload(),
+    'view.firstScreen': () => failResult('UNKNOWN_ENDPOINT', 'view.firstScreen not available in the fake bridge'),
     ...overrides,
   };
   for (const [endpoint, handler] of Object.entries(handlers)) h.rpc.setResponse(endpoint, handler);
@@ -2703,4 +2706,375 @@ test('an in-flight idle prefetch is shared with the click instead of issuing a d
   assert.equal(viewRoot(h).props['data-state'], 'ready');
   assert.equal(detailsNode(h).props['data-cache'], 'hit');
   assert.equal(h.rpc.callsFor('view.getEntry').length, 1);
+});
+
+// ---------------------------------------------------------------------------
+// 15. S4-prep: batch first-screen endpoint, cache seeding and fallback
+// ---------------------------------------------------------------------------
+
+function firstScreenCalls(h) { return h.rpc.callsFor('view.firstScreen'); }
+function detailErrorCodes(h) {
+  return h.findAll((node) => node.props && node.props['data-error-code'] !== undefined).map((node) => node.props['data-error-code']);
+}
+function batchPayload(h, overrides = {}) {
+  return makeFirstScreenPayload({
+    entry: makeEntryPayload(),
+    interfaces: makeInterfacesPayload(),
+    view_payload: makeCouplingPayload(),
+    ...overrides,
+  });
+}
+
+test('first screen prefers one view.firstScreen batch and marks data-first-screen=batch', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchPayload(h, {view: payload.view}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 1, 'exactly one batch request');
+  assert.deepEqual(h.rpc.lastPayload('view.firstScreen'), {workspace: 'code-view-bus-demo', snapshot: SNAPSHOT_ID, entry: BUS_SEND_ID, view: 'coupling'});
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.equal(detailsNode(h).props['data-first-screen'], 'batch');
+  assert.equal(h.nodeByData('data-code-view', 'panel').props['data-first-screen'], 'batch');
+  assert.equal(h.rpc.callsFor('view.getEntry').length, 0, 'batch provides entry, no single getEntry');
+  assert.equal(h.rpc.callsFor('view.interfaces').filter((call) => call.payload && call.payload.entry === BUS_SEND_ID).length, 0, 'batch provides interfaces');
+  assert.equal(h.rpc.callsFor('view.coupling').filter((call) => call.payload && call.payload.entry !== undefined).length, 0, 'batch provides the current view');
+  assert.ok(h.nodeByData('data-code-view', 'source'), 'details source tab content preserved');
+  assert.equal(h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab').length, 3);
+  assert.equal(selectionJson(h).entry_id, BUS_SEND_ID);
+  assert.ok(h.nodeByData('data-ai-summary-gap') || h.findAll((node) => node.props && node.props['data-ai-summary-loading'] !== undefined).length >= 0);
+  assert.equal(h.text().includes('E:\\'), false);
+});
+
+test('batch success seeds the per-endpoint cache so view switches and re-selection hit it', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchPayload(h, {view: payload.view}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 1);
+  await switchView(h, 'tree');
+  const treeCalls = h.rpc.callsFor('view.tree').length;
+  assert.ok(treeCalls >= 1, 'tree is fetched when first switching to it');
+  await switchView(h, 'coupling');
+  assert.equal(h.rpc.callsFor('view.coupling').filter((call) => call.payload && call.payload.entry !== undefined).length, 0, 'coupling came from the batch cache');
+  assert.equal(viewRoot(h).props['data-cache'], 'hit');
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 1, 'fully cache-hot re-selection skips the batch RPC');
+  assert.equal(h.rpc.callsFor('view.getEntry').length, 0, 'cached getEntry is not requested again');
+  assert.equal(h.rpc.callsFor('view.interfaces').filter((call) => call.payload && call.payload.entry === BUS_SEND_ID).length, 0);
+  assert.equal(viewRoot(h).props['data-cache'], 'hit');
+  assert.equal(selectionJson(h).entry_id, BUS_SEND_ID);
+});
+
+test('batch failure falls back to the parallel individual reads exactly once and marks fallback', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(h.rpc.callsFor('view.getEntry').length, 1);
+  assert.equal(h.rpc.callsFor('view.interfaces').filter((call) => call.payload && call.payload.entry === BUS_SEND_ID).length, 1);
+  assert.equal(h.rpc.callsFor('view.coupling').filter((call) => call.payload && call.payload.entry !== undefined).length, 1);
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'fallback');
+  assert.equal(detailsNode(h).props['data-first-screen'], 'fallback');
+  assert.equal(h.nodeByData('data-code-view', 'panel').props['data-first-screen'], 'fallback');
+  assert.equal(detailErrorCodes(h).includes('UNKNOWN_ENDPOINT'), false, 'batch failure is silent; only individual errors surface');
+  assert.ok(h.nodeByData('data-code-view', 'source'));
+  h.clickData('data-entry-name', 'store_route');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 1, 'unsupported batch endpoint is remembered for the session');
+  assert.ok(h.rpc.callsFor('view.getEntry').some((call) => call.payload.entry === STORE_ROUTE_ID));
+  assert.equal(selectionJson(h).entry_id, STORE_ROUTE_ID);
+  assert.equal(viewRoot(h).props['data-first-screen'], 'fallback');
+});
+
+test('LIMIT_EXCEEDED falls back but is retried for the next selection', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': () => failResult('LIMIT_EXCEEDED', 'batch payload exceeds 480 KiB'),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(viewRoot(h).props['data-first-screen'], 'fallback');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.ok(h.rpc.callsFor('view.getEntry').length >= 1);
+  h.clickData('data-entry-name', 'store_route');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 2, 'LIMIT_EXCEEDED is payload-specific, so the batch is retried');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'fallback');
+  assert.equal(selectionJson(h).entry_id, STORE_ROUTE_ID);
+});
+
+test('a malformed batch payload falls back instead of fabricating first-screen data', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': () => okResult({
+      schema_version: 1,
+      entry: makeEntryPayload(),
+      interfaces: makeInterfacesPayload(),
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(h.rpc.callsFor('view.getEntry').length, 1, 'missing view_payload triggers the individual path');
+  assert.equal(h.rpc.callsFor('view.interfaces').filter((call) => call.payload && call.payload.entry === BUS_SEND_ID).length, 1);
+  assert.equal(viewRoot(h).props['data-first-screen'], 'fallback');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+});
+
+test('snapshot switch aborts the in-flight batch and discards its late response', async (t) => {
+  const batchDeferred = deferred();
+  const secondSnapshot = makeSnapshotRow({snapshot_id: 'b'.repeat(32)});
+  const h = bootHarness({
+    'view.listSnapshots': () => makeSnapshotsPayload({workspaces: [makeWorkspace({snapshots: [makeSnapshotRow(), secondSnapshot]})]}),
+    'view.firstScreen': () => batchDeferred.promise,
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 1);
+  const firstSignal = firstScreenCalls(h)[0].signal;
+  h.clickData('data-snapshot-id', 'b'.repeat(32));
+  await h.settle();
+  assert.equal(firstSignal && firstSignal.aborted, true, 'batch request is aborted on snapshot switch');
+  const baseEntry = makeEntryPayload();
+  batchDeferred.resolve(batchPayload(h, {
+    entry: {...baseEntry, entry: {...baseEntry.entry, name: 'stale_entry_name'}},
+  }));
+  await h.settle();
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  await h.settle();
+  assert.equal(selectionJson(h).entry_id, null, 'stale batch must not restore an entry on the new snapshot');
+  assert.equal(h.text().includes('stale_entry_name'), false);
+  assert.equal(detailsNode(h), null);
+  assert.equal(h.nodeByData('data-code-view', 'view').props['data-first-screen'], undefined);
+});
+
+test('refresh aborts the in-flight batch and a fresh batch fills the restored first screen', async (t) => {
+  const batches = [];
+  const h = bootHarness({
+    'view.firstScreen': () => {
+      const pending = deferred();
+      batches.push(pending);
+      return pending.promise;
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(batches.length, 1);
+  const firstBatchSignal = firstScreenCalls(h)[0].signal;
+  h.clickButton('重新读取');
+  await h.settle();
+  assert.equal(firstBatchSignal && firstBatchSignal.aborted, true, 'refresh aborts the old batch');
+  assert.ok(batches.length >= 2, 'refresh starts a fresh batch after restoring the selection');
+  const staleEntry = makeEntryPayload();
+  batches[0].resolve(batchPayload(h, {entry: {...staleEntry, entry: {...staleEntry.entry, name: 'stale_after_refresh'}}}));
+  await h.settle();
+  assert.equal(h.text().includes('stale_after_refresh'), false);
+  batches[batches.length - 1].resolve(batchPayload(h));
+  await h.settle();
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.ok(detailsNode(h));
+  assert.equal(selectionJson(h).entry_id, BUS_SEND_ID);
+});
+
+test('batch path keeps old DOM hooks, gaps and error semantics intact', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchPayload(h, {view: payload.view}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  for (const hook of ['status', 'panel', 'tabs', 'legend', 'details', 'selection', 'view', 'source', 'resources']) {
+    assert.ok(h.nodeByData('data-code-view', hook), 'hook ' + hook + ' must survive the batch path');
+  }
+  assert.ok(h.findAll((node) => node.props && node.props['data-entry-id'] !== undefined).length >= 2);
+  assert.ok(h.findAll((node) => node.props && node.props['data-snapshot-id'] !== undefined).length >= 1);
+  assert.equal(h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab').length, 3);
+  assert.deepEqual(h.findAll((node) => node.props && node.props['data-error-code'] !== undefined).map((node) => node.props['data-error-code']), []);
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  await h.settle();
+  assert.ok(h.findAll((node) => node.props && node.props['data-ai-summary-gap'] !== undefined).length >= 1, 'AI summary gap hook still works after batch');
+});
+
+// ---------------------------------------------------------------------------
+// 16. S4-prep: batch coupling_aux saves the extra coupling RPC
+// ---------------------------------------------------------------------------
+
+function batchWithAux(h, overrides = {}) {
+  return makeFirstScreenPayload({
+    entry: makeEntryPayload(),
+    interfaces: makeInterfacesPayload(),
+    view_payload: makeCouplingPayload(),
+    coupling_aux: makeCouplingPayload(),
+    ...overrides,
+  });
+}
+function auxEntryCouplingCalls(h) {
+  return h.rpc.callsFor('view.coupling').filter((call) => call.payload && call.payload.entry !== undefined);
+}
+
+async function openNonCouplingViewAndEntry(h, view) {
+  await openSnapshot(h);
+  await switchView(h, view);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+}
+
+test('tree batch coupling_aux fills coupling/rail and skips the separate coupling RPC', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchWithAux(h, {view: payload.view, view_payload: makeTreePayload()}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openNonCouplingViewAndEntry(h, 'tree');
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(h.rpc.lastPayload('view.firstScreen').view, 'tree');
+  assert.equal(auxEntryCouplingCalls(h).length, 0, 'coupling_aux must replace the separate coupling RPC');
+  assert.equal(viewRoot(h).props['data-view'], 'tree');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.equal(detailsNode(h).props['data-first-screen'], 'batch');
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID), 'rail resources come from coupling_aux');
+  assert.ok(h.nodeByData('data-code-view', 'source'));
+  const couplingCacheCalls = auxEntryCouplingCalls(h).length;
+  await switchView(h, 'coupling');
+  assert.equal(auxEntryCouplingCalls(h).length, couplingCacheCalls, 'coupling_aux seeds the coupling cache for the later switch');
+  assert.ok(auxEntryCouplingCalls(h).length === 0);
+  assert.equal(viewRoot(h).props['data-view'], 'coupling');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewRoot(h).props['data-cache'], 'hit');
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID));
+  assert.equal(h.text().includes('E:\\'), false);
+});
+
+test('end_to_end batch coupling_aux skips coupling and keeps graph + rail hooks', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchWithAux(h, {view: payload.view, view_payload: makeEndToEndPayload()}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openNonCouplingViewAndEntry(h, 'end_to_end');
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(h.rpc.lastPayload('view.firstScreen').view, 'end_to_end');
+  assert.equal(auxEntryCouplingCalls(h).length, 0);
+  assert.equal(viewRoot(h).props['data-view'], 'end_to_end');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.ok(h.findAll((node) => node.props && node.props['data-graph-node'] !== undefined).length > 0, 'graph nodes still render');
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID));
+  await switchView(h, 'coupling');
+  assert.equal(auxEntryCouplingCalls(h).length, 0, 'coupling switch is a cache hit');
+  assert.equal(viewRoot(h).props['data-cache'], 'hit');
+});
+
+test('sequence batch coupling_aux skips coupling and keeps sequence + rail hooks', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchWithAux(h, {view: payload.view, view_payload: makeSequencePayload()}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openNonCouplingViewAndEntry(h, 'sequence');
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(h.rpc.lastPayload('view.firstScreen').view, 'sequence');
+  assert.equal(auxEntryCouplingCalls(h).length, 0);
+  assert.equal(viewRoot(h).props['data-view'], 'sequence');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.ok(h.findAll((node) => node.props && node.props['data-sequence-mode'] !== undefined).length >= 1);
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID));
+  await switchView(h, 'coupling');
+  assert.equal(auxEntryCouplingCalls(h).length, 0);
+  assert.equal(viewRoot(h).props['data-cache'], 'hit');
+});
+
+test('file batch coupling_aux skips coupling while the file view keeps its own tree', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchWithAux(h, {view: payload.view, view_payload: makeFileTreePayload()}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  await switchView(h, 'file');
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(h.rpc.lastPayload('view.firstScreen').view, 'file');
+  assert.equal(auxEntryCouplingCalls(h).length, 0, 'file batch coupling_aux also skips the coupling RPC');
+  assert.equal(viewRoot(h).props['data-view'], 'file');
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.equal(detailsNode(h).props['data-first-screen'], 'batch');
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID));
+  assert.ok(h.nodeByData('data-code-view', 'source'));
+  assert.equal(h.text().includes('E:\\'), false);
+});
+
+test('missing coupling_aux keeps the old separate coupling request (batch still applied)', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => makeFirstScreenPayload({
+      view: payload.view,
+      entry: makeEntryPayload(),
+      interfaces: makeInterfacesPayload(),
+      view_payload: makeTreePayload(),
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openNonCouplingViewAndEntry(h, 'tree');
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.equal(auxEntryCouplingCalls(h).length, 1, 'missing coupling_aux falls back to the separate coupling request');
+  assert.equal(h.rpc.lastPayload('view.coupling').entry, BUS_SEND_ID);
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID), 'rail still filled by the fallback coupling request');
+});
+
+test('malformed coupling_aux falls back to the separate coupling request', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchWithAux(h, {
+      view: payload.view,
+      view_payload: makeTreePayload(),
+      coupling_aux: {resources: 'not-an-array', functions: null},
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openNonCouplingViewAndEntry(h, 'tree');
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.equal(auxEntryCouplingCalls(h).length, 1);
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID));
+});
+
+test('coupling view batches ignore coupling_aux and use view_payload (old behaviour)', async (t) => {
+  const h = bootHarness({
+    'view.firstScreen': (payload) => batchWithAux(h, {view: 'coupling', view_payload: makeCouplingPayload()}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  h.clickData('data-entry-name', 'bus_send');
+  await h.settle();
+  assert.equal(firstScreenCalls(h).length, 1);
+  assert.equal(auxEntryCouplingCalls(h).length, 0);
+  assert.equal(viewRoot(h).props['data-first-screen'], 'batch');
+  assert.equal(viewRoot(h).props['data-state'], 'ready');
+  assert.ok(h.nodeByData('data-resource-row', ROUTES_ID));
 });

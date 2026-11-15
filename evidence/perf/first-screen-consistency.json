@@ -1,0 +1,1372 @@
+{
+  "ok": true,
+  "started_at_utc": "2026-11-15T14:40:38.964Z",
+  "workspace_id": "code-view-bus-demo",
+  "entry_name": "bus_send",
+  "checks": {
+    "cli.batch_vs_individual": {
+      "ok": true,
+      "detail": {
+        "views": [
+          "coupling",
+          "tree",
+          "end_to_end",
+          "sequence",
+          "file"
+        ],
+        "imports": {
+          "workspace": 0,
+          "snapshot": 0
+        },
+        "batch": {
+          "coupling": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "coupling",
+            "coupling_aux_present": false,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_match": true,
+            "size_sum": 42149,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "tree": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "tree",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 76186,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "end_to_end": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "end_to_end",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 68320,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "sequence": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "sequence",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 58766,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "file": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "file",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 44674,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          }
+        }
+      }
+    },
+    "cli.coupling_aux_and_sizes": {
+      "ok": true,
+      "detail": {
+        "views": [
+          "coupling",
+          "tree",
+          "end_to_end",
+          "sequence",
+          "file"
+        ],
+        "batch": {
+          "coupling": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "coupling",
+            "coupling_aux_present": false,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_match": true,
+            "size_sum": 42149,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "tree": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "tree",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 76186,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "end_to_end": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "end_to_end",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 68320,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "sequence": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "sequence",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 58766,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "file": {
+            "ok": true,
+            "exit_code": 0,
+            "view": "file",
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 44674,
+            "budget_ok": true,
+            "truncated": false,
+            "limitations": [],
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          }
+        },
+        "note": "coupling_aux present only for view!=coupling and field-equal to view-coupling; sizes include coupling_aux and sum <= 480 KiB (limit not exercised by this real snapshot)"
+      }
+    },
+    "cli.negative_cases": {
+      "ok": true,
+      "detail": {
+        "unknown_view": {
+          "exit_code": 2,
+          "code": "INVALID_ARGUMENT"
+        },
+        "unknown_entry": {
+          "exit_code": 2,
+          "code": "NOT_FOUND"
+        }
+      }
+    },
+    "cli.no_absolute_paths": {
+      "ok": true,
+      "detail": {
+        "views": [
+          "coupling",
+          "tree",
+          "end_to_end",
+          "sequence",
+          "file"
+        ]
+      }
+    },
+    "rpc.batch_vs_individual": {
+      "ok": true,
+      "detail": {
+        "views": [
+          "coupling",
+          "tree",
+          "end_to_end",
+          "sequence",
+          "file"
+        ],
+        "shell": {
+          "status": 200,
+          "cookies": [
+            "dsh-auth-sOSPoL-SQ3YIcHCpHM-hq1WZQTI1qWLT-BVvdsgFz-4"
+          ]
+        },
+        "batch": {
+          "coupling": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": false,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_match": true,
+            "size_sum": 42149,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "tree": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 76186,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "end_to_end": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 68320,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "sequence": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 58766,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "file": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 44674,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          }
+        }
+      }
+    },
+    "rpc.coupling_aux_and_sizes": {
+      "ok": true,
+      "detail": {
+        "views": [
+          "coupling",
+          "tree",
+          "end_to_end",
+          "sequence",
+          "file"
+        ],
+        "batch": {
+          "coupling": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": false,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 13429,
+              "coupling_aux": 0
+            },
+            "sizes_match": true,
+            "size_sum": 42149,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "tree": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 34037,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 76186,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "end_to_end": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 26171,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 68320,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "sequence": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 16617,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 58766,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          },
+          "file": {
+            "ok": true,
+            "status": 200,
+            "envelope_ok": true,
+            "coupling_aux_present": true,
+            "coupling_aux_value_is_null": false,
+            "sizes": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_expected": {
+              "entry": 12866,
+              "interfaces": 15854,
+              "view": 2525,
+              "coupling_aux": 13429
+            },
+            "sizes_match": true,
+            "size_sum": 44674,
+            "budget_ok": true,
+            "entry_diff": [],
+            "interfaces_diff": [],
+            "view_payload_diff": [],
+            "coupling_aux_diff": [],
+            "coupling_aux_ok": true,
+            "absolute_paths": []
+          }
+        },
+        "note": "RPC coupling_aux field-equal to view.coupling for view!=coupling; sizes include coupling_aux; sum <= 480 KiB"
+      }
+    },
+    "rpc.no_absolute_paths": {
+      "ok": true,
+      "detail": {
+        "views": [
+          "coupling",
+          "tree",
+          "end_to_end",
+          "sequence",
+          "file"
+        ]
+      }
+    },
+    "rpc.negative_cases": {
+      "ok": true,
+      "detail": {
+        "bad_view": {
+          "status": 200,
+          "envelope_ok": false,
+          "code": "INVALID_ARGUMENT"
+        },
+        "bad_entry": {
+          "status": 200,
+          "envelope_ok": true,
+          "code": "NOT_FOUND"
+        }
+      }
+    }
+  },
+  "cli": {
+    "individual_exit_codes": {
+      "entry": 0,
+      "interfaces": 0,
+      "coupling": 0,
+      "tree": 0,
+      "end_to_end": 0,
+      "sequence": 0,
+      "file": 0
+    },
+    "batch": {
+      "coupling": {
+        "ok": true,
+        "exit_code": 0,
+        "view": "coupling",
+        "coupling_aux_present": false,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 13429,
+          "coupling_aux": 0
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 13429,
+          "coupling_aux": 0
+        },
+        "sizes_match": true,
+        "size_sum": 42149,
+        "budget_ok": true,
+        "truncated": false,
+        "limitations": [],
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "tree": {
+        "ok": true,
+        "exit_code": 0,
+        "view": "tree",
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 34037,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 34037,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 76186,
+        "budget_ok": true,
+        "truncated": false,
+        "limitations": [],
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "end_to_end": {
+        "ok": true,
+        "exit_code": 0,
+        "view": "end_to_end",
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 26171,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 26171,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 68320,
+        "budget_ok": true,
+        "truncated": false,
+        "limitations": [],
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "sequence": {
+        "ok": true,
+        "exit_code": 0,
+        "view": "sequence",
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 16617,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 16617,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 58766,
+        "budget_ok": true,
+        "truncated": false,
+        "limitations": [],
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "file": {
+        "ok": true,
+        "exit_code": 0,
+        "view": "file",
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 2525,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 2525,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 44674,
+        "budget_ok": true,
+        "truncated": false,
+        "limitations": [],
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      }
+    }
+  },
+  "rpc": {
+    "batch": {
+      "coupling": {
+        "ok": true,
+        "status": 200,
+        "envelope_ok": true,
+        "coupling_aux_present": false,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 13429,
+          "coupling_aux": 0
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 13429,
+          "coupling_aux": 0
+        },
+        "sizes_match": true,
+        "size_sum": 42149,
+        "budget_ok": true,
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "tree": {
+        "ok": true,
+        "status": 200,
+        "envelope_ok": true,
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 34037,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 34037,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 76186,
+        "budget_ok": true,
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "end_to_end": {
+        "ok": true,
+        "status": 200,
+        "envelope_ok": true,
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 26171,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 26171,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 68320,
+        "budget_ok": true,
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "sequence": {
+        "ok": true,
+        "status": 200,
+        "envelope_ok": true,
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 16617,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 16617,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 58766,
+        "budget_ok": true,
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      },
+      "file": {
+        "ok": true,
+        "status": 200,
+        "envelope_ok": true,
+        "coupling_aux_present": true,
+        "coupling_aux_value_is_null": false,
+        "sizes": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 2525,
+          "coupling_aux": 13429
+        },
+        "sizes_expected": {
+          "entry": 12866,
+          "interfaces": 15854,
+          "view": 2525,
+          "coupling_aux": 13429
+        },
+        "sizes_match": true,
+        "size_sum": 44674,
+        "budget_ok": true,
+        "entry_diff": [],
+        "interfaces_diff": [],
+        "view_payload_diff": [],
+        "coupling_aux_diff": [],
+        "coupling_aux_ok": true,
+        "absolute_paths": []
+      }
+    },
+    "shell": {
+      "status": 200,
+      "cookies": [
+        "dsh-auth-sOSPoL-SQ3YIcHCpHM-hq1WZQTI1qWLT-BVvdsgFz-4"
+      ]
+    }
+  },
+  "commands": [
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "workspace-import",
+        "--manifest",
+        "workspace.json",
+        "--expected-revision",
+        "0",
+        "--operation-id",
+        "e4044ca1-56b2-4ab8-9e05-d883a26a016e"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "snapshot-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--snapshot",
+        "snapshot-bus",
+        "--operation-id",
+        "2acc4216-9a93-4e47-b7e1-f3e3be6bace4"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-snapshots"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entries",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entry",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-interfaces",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-coupling",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-tree",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-end-to-end",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-sequence",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--mode",
+        "static"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-file-tree",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-first-screen",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--view",
+        "coupling"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-first-screen",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--view",
+        "tree"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-first-screen",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--view",
+        "end_to_end"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-first-screen",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--view",
+        "sequence"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-first-screen",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--view",
+        "file"
+      ],
+      "exit_code": 0,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-first-screen",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--view",
+        "bogus_view"
+      ],
+      "exit_code": 2,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    },
+    {
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-first-screen",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_unknown_entry_000000000000",
+        "--view",
+        "coupling"
+      ],
+      "exit_code": 2,
+      "cwd": "E:\\dsh\\plugin\\04-code-learning"
+    }
+  ],
+  "not_verified": [],
+  "imports": {
+    "workspace": 0,
+    "snapshot": 0
+  },
+  "entry_id": "f_afa8298f2d197e5fd110e49a",
+  "snapshot_id": "ed326d554334432b907de21297207eb8",
+  "first_screen_budget": {
+    "limit_bytes": 491520,
+    "limit_exceeded_exercised": false,
+    "note": "real bus snapshot payloads are below 480 KiB; LIMIT_EXCEEDED enforcement is covered by engine/Node tests, not triggered by this verifier run"
+  },
+  "signed_ref_normalization": "signed path refs compared by decoded claims, ignoring the per-call issue time t (raw tokens are re-signed per call and legitimately differ)",
+  "finished_at_utc": "2026-11-15T14:40:47.640Z",
+  "duration_ms": 8676
+}

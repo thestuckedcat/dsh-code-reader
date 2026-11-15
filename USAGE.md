@@ -313,8 +313,12 @@ node tools/verify-perf.mjs --with-repo-tests
 - 合成 500 节点/800 边与 2,000 节点/1 万事件 Atlas 0.1 fixture（明确标注 SYNTHETIC，非真实仓库），经真实
   引擎导入与视图投影；真实 dsh-web 测量首屏（点击入口→视图 ready）、跨视图定位（资源→函数高亮）、拖动
   反馈（pointermove→rAF）、大图截断/搜索/事件序列反馈。
-- 当前实测（2026-11-15，i7-13700F/34GB/Win10/Node 26）：跨视图 coupling p95 **3 ms**（预算 120ms）达标；
-  首屏 hot p95 优化后 **704–769 ms**（优化前 1078/1141 ms；两次独立 run；预算 500ms）**仍未达标**，工具如实记录；tree 定位/拖动/冷启动在合成夹具上不可测，
-  记 not_verified 并保留原始样本/失败数；2000/10k 图 e2e 1175 ms 且显示「已截断」，搜索/事件序列 p95 3–4 ms。
-- 证据：`evidence/perf/verification.json`（机器信息/原始样本/p50/p95/预算判定/覆盖/失败数）+ README。
-  合成图只作规模与截断证据，不代表真实仓库或 Linux/Kbuild 证据；性能预算为“拟验收基线，待实测校准”。
+- 当前实测（2026-11-15，i7-13700F/34GB/Win10/Node 26，最终 Lead/verifier 两次独立 run 均 25/25）：跨视图
+  coupling p95 **3–4 ms**（预算 120ms）达标；首屏 hot p95 **382–387 ms**（预算 500ms）**✅ 达标**——三轮
+  优化：1078/1141 → 646–705/704–769（并行/预取/缓存）→ 455/527（批量首屏 `view.firstScreen`）→
+  328–330/382–387（batch+coupling_aux，省 1 次 coupling RPC）；batch 使用 20/20 hot 样本全 `batch`、一致性
+  8/8、coupling p95 3–4 ms；tree 定位/拖动/cold UI/已截断文本在合成夹具/一次性 token 限制下不可测，记
+  not_verified 并保留原始样本/失败数。
+- 证据：`evidence/perf/verification.json`（机器信息/原始样本/p50/p95/预算判定/覆盖/失败数）、
+  `first-screen-consistency.json`、README。合成图只作规模与截断证据，不代表真实仓库或 Linux/Kbuild 证据；
+  首屏达标仅限该合成夹具+本机，跨参考机校准未做。

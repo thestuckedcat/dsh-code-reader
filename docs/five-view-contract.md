@@ -412,3 +412,68 @@ console error=0、无绝对路径。另：引擎 `Ran 267 tests, OK`、Node `96/
 （`verification.json`、`groups.png`/`interfaces.png`/`subflow.png`/`main.png`、S2a 回归截图、
 `host-runtime.json/tap`、`commands.log`、README）。S2b 未实现能力（AI 归纳正文、运行观测、场景执行）继续以
 gaps 显示，未写成已通过。
+
+## 12. 增量：批量首屏端点 `view.firstScreen`（2026-11-15，S4-prep 性能迭代）
+
+设计依据：设计 §5“Host 合并同键只读计算”与首屏预算（500/800 图首屏 p95 ≤ 500 ms）。当前 client 一次新入口
+首屏需 getEntry + coupling + interfaces + 当前视图 4 个 RPC；Host `bridge` 串行执行 Engine CLI，总时长
+≈4×130 ms + 渲染，实测 p95 704–769 ms。本增量把首屏 4 项合并为 1 次 Host→Engine 调用。
+
+### 12.1 DTO / CLI / 端点
+
+- 引擎新增 `view-first-screen --workspace --snapshot --entry [--view coupling|tree|end_to_end|sequence|file]`
+  （默认 `coupling`）：单进程内一次加载并核验快照，返回
+  ```jsonc
+  {"schema_version":1,"workspace_id":"…","snapshot_id":"…","entry_id":"f_…","view":"coupling",
+   "entry":{…同 view.getEntry…},"interfaces":{…同 view.interfaces…},
+   "view_payload":{…同对应视图投影…},
+   "coupling_aux":{…同 view.coupling（entry 同参）…},   // 仅 view!=coupling 时提供，供 rail 复用
+   "sizes":{"entry":123,"interfaces":456,"view":789,"coupling_aux":0},"truncated":false,"limitations":[]}
+  ```
+  - `entry`/`interfaces`/`view_payload`（及 `coupling_aux`，当 view!=coupling 时）必须与单独端点
+    **逐字段一致**（相同参数下），不得因批量改变 certainty/gap/预算/标签；`--view` 只接受 5 个视图枚举；
+    未知 entry → `NOT_FOUND`。`coupling_aux` 计入 480 KiB 总预算；client 可据此跳过单独 coupling RPC
+    （缺失/格式错时回退原路径）。
+  - 响应总大小引擎侧预算 ≤480 KiB；超限返回 `LIMIT_EXCEEDED`（附 `sizes`），**不做静默裁剪**；由
+    Host/Client 回退为单独端点（保证单端点 512 KiB 合同不被破坏）。
+- Host 新端点 `view.firstScreen`：输入 `{workspace,snapshot,entry,view?}`（枚举/有界；未知字段拒绝），映射
+  CLI；engine 错误原样；成功返回引擎 JSON。加入 `VIEW_ENDPOINTS`（13 个）；不做额外缓存。
+- Client：入口选择时优先调用 `view.firstScreen`（1 RPC），成功后把 `entry`/`interfaces`/`view_payload`
+  同时写入对应会话缓存键（后续视图切换命中缓存）；失败（engine gap/`LIMIT_EXCEEDED`/旧宿主 404）时
+  **回退**为现有并行单独请求，行为与错误语义不变；首次渲染带只读调试属性
+  `data-first-screen="batch|fallback"`；首屏 ready 仍由真实 payload 决定。
+
+### 12.2 验收
+
+- 引擎/Node 测试：批量 vs 单独（entry/coupling/endToEnd/tree/sequence/file）逐字段一致、未知 view/entry 拒绝、
+  超限 `LIMIT_EXCEEDED` 且 sizes 正确、无绝对路径；Host 端点校验/argv/JSON 原样；client 批量成功填缓存、
+  批量失败回退、缓存命中不重复请求、既有 DOM/gap 钩子不变。
+- 性能：`node tools/verify-perf.mjs --with-repo-tests` 复测 hot 首屏 p95 目标 ≤500 ms（若仍不达标如实记录，
+  不调预算）；其他指标不得回退（coupling p95 ≤120 ms、引擎 CLI 冷投影不劣化 >20%）；回归包全绿。
+- dsh-web：入口点击→首屏 ready 使用批量端点成功（`data-first-screen="batch"`），console=0、无绝对路径；
+  切视图命中缓存。
+
+### 12.4 验收结果（2026-11-15，T37 最终）
+
+
+ode tools/verify-perf.mjs --with-repo-tests → **25/25 全绿**，layers 全 true，ok=true, verified=true；
+**首屏 hot p50/p95 = 330/387 ms ≤ 500 ms 预算 ✅**（历史：batch 前 646/704、batch 无 aux 455/527）；20/20 hot
+样本采集 [data-first-screen] 共 60 处全部 batch（fallback=0）；coupling_aux 一致性 8/8：view!=coupling
+时 CLI 5/5 视图与单独 view-coupling 逐字段一致、RPC 5/5 一致；view==coupling 省略 aux、sizes.coupling_aux=0；
+sizes 4 键精确且 aux 计入 480 KiB；未知 view→INVALID_ARGUMENT（优先于 entry）、未知 entry→NOT_FOUND；
+CLI/RPC 无绝对路径。回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191 + Demo 8/8
+全绿。证据 evidence/perf/（erification.json、README.md、irst-screen-consistency.json、
+commands.log）。剩余 not_verified：cold UI 20 冷样本（一次性 token，不伪造）、tree→file 行高亮与拖动
+（合成夹具限制）、2000/10k UI「已截断」文本（本轮未显示；加载/搜索/事件已实测）。
+
+### 12.3 文件所有权
+
+| 负责人 | 写入范围 |
+|---|---|
+| engine | `engine/code_learning/views.py`/`five_views.py`、`cli.py`、`engine/tests/test_five_views.py`（或新测试文件） |
+| host | `lib/view-service.mjs`、`tests/node/view-rpc.test.mjs` |
+| client | `bundle/client.js`、`tests/node/client.test.mjs`、`tests/node/helpers/client-harness.mjs` |
+| verifier | `tools/verify-perf.mjs`/`perf-probe.cjs`（如需）、`evidence/perf/`、回归包 |
+| Lead | `docs/`、`source.lock.json`、`evidence/` 汇总、集成与提交 |
+
+跨范围修改先经 Lead；不 git 提交；不联网；不改真实 `~/.dsh`；不重启桌面宿主。

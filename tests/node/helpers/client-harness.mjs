@@ -1805,6 +1805,23 @@ export function makeSummaryStalePayload(overrides = {}) {
   });
 }
 
+export function makeFirstScreenPayload(overrides = {}) {
+  return {
+    schema_version: 1,
+    workspace_id: 'code-view-bus-demo',
+    snapshot_id: SNAPSHOT_ID,
+    entry_id: BUS_SEND_ID,
+    view: 'coupling',
+    entry: makeEntryPayload(),
+    interfaces: makeInterfacesPayload(),
+    view_payload: makeCouplingPayload(),
+    sizes: {entry: 128, interfaces: 256, view: 512},
+    truncated: false,
+    limitations: [],
+    ...overrides,
+  };
+}
+
 export function makeBusFileLines(start, end) {
   const lines = [];
   for (let number = start; number <= end; number += 1) {
