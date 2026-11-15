@@ -15,21 +15,21 @@ DeepSeek Harness（DSH）插件 + `learn-code-workspace` skill + 本地 Python �
 ## 状态（2026-11-15）
 
 - **已实现并自测**：workspace 登记/校验、源码只读查找与引用、Atlas 0.1 快照导入与完整性校验、路径/关系查询（含跨仓 `abi_bridge` 候选）、学习记录 CAS/导出/resume 失效、`learn-code-workspace` skill、6 个 DSH Host 工具、安装后注册验证。
-- **只读代码工作台切片（2026-11-15，CW-T1）**：DSH 插件自带 client 半，侧边栏「代码工作台」keyed 主面板；读模型 `view.status/listSnapshots/listEntries/getEntry`（自有 `/code-view` RPC，连接准入 + 严格输入校验）；显示已核验快照、入口列表、入口源码（行号/高亮）、调用边 exact/may/unknown、Atlas 源码证据、资源对象与字段写/读事实、覆盖与能力缺口；五视图占位，场景执行/打桩/运行观测明确标记未提供。真实快照夹具（Demo `bus.c`/`platform.c` 的真实 Atlas 0.8.0 产物）见 [evidence/code-view-slice/README.md](evidence/code-view-slice/README.md)；隔离 profile 的入口/导航/卸载/二次挂载、旧工具可用与真实 rc.5 宿主运行时证据见 `evidence/readonly-slice/`。
+- **只读代码工作台 S2a 五视图（2026-11-15，CW-T2 首阶段）**：DSH 插件自带 client 半，侧边栏「代码工作台」keyed 主面板；**资源关系图**（三列 writers/resources/readers + 访问线 kind/certainty + 左栏全局资源 + 打桩占位）、**可折叠文字树**（调用点/guard/返回/局限）、**单入口端到端图**（竖排 H/V 正交折线、判断菱形、异常红色实线、外部边界虚线、拖拽/平移/缩放/适应/搜索/一键规整）、**时序图**（S2a 静态预测模式，明确 warning + observed=false）、**文件视图**（快照涉及文件 + 行号 + 联动高亮）；图例/详情/缺口/共享 Selection 跨视图联动。读模型 `view.status/listSnapshots/listEntries/getEntry` + `view.coupling/tree/endToEnd/fileTree/fileRead/sequence`（自有 `/code-view` RPC，连接准入 + 严格输入校验）。真实快照夹具与隔离 dsh-web 证据见 `evidence/code-view-slice/`、`evidence/readonly-slice/`、`evidence/five-views/`。
 - **真实 Atlas 0.8 产物对照（已做，非 Linux 门禁）**：Atlas trusted quickstart + 自建三函数 C 仓库（2026-11-08）与 Demo bus/platform C（2026-11-15）真实 0.1 快照被本适配器导入；真实 function 的 file/line 从 evidence 解析，exact 调用边与 `flow_legacy` 在真实产物上验证；本轮修复真实 `flow_edges.owner=null/sources=[]` 适配缺口（`engine/tests/test_atlas_flow_shape.py`）。见 [evidence/real-atlas/README.md](evidence/real-atlas/README.md)。
-- **未声明通过**（需要目标 Linux/Kbuild/固定 Atlas runtime/强制隔离 runner/native CFG）：真实内核索引与编译、编译探针隔离、真实驱动运行时行为、五视图图形/布局、场景执行与回退。静态证据不证明运行时必达；Demo 的 Wasm 观测只作行为对照（`demo_observed`），不冒充设备行为。
-- 当前测试：240 Python unittest + 56 Node tests + Demo 8/8（另有一次独立隔离 profile 验收，见 evidence/readonly-slice）。
+- **未声明通过**（需要目标 Linux/Kbuild/固定 Atlas runtime/强制隔离 runner/native CFG）：真实内核索引与编译、编译探针隔离、真实驱动运行时行为、组折叠/接口库、场景执行/打桩/回退/运行观测。静态证据不证明运行时必达；Demo 的 Wasm 观测只作行为对照（`demo_observed`），不冒充设备行为。
+- 当前测试：261 Python unittest + 83 Node tests + Demo 8/8；S2a 隔离 dsh-web 验收 `37/37`（`evidence/five-views/verification.json`），CW-T1 验收见 `evidence/readonly-slice/`。
 
 ## 组成
 
 | 层 | 位置 | 作用 |
 |---|---|---|
 | DSH Host bundle | `index.js`、`lib/`、`cordis.patch.yml` | 注册 6 个 `code_*` 工具与 skill provider；固定 argv 调用本地引擎；嵌套 UI 子插件注册 `/code-view` RPC（缺 `connection`/`webServer` 时保持 pending，不影响旧工具） |
-| DSH Client bundle | `bundle/client.js` | rc.5 原生 client 半：侧边栏「代码工作台」、keyed 主面板、快照/入口/源码/证据/资源/缺口、共享 Selection、可注销 |
+| DSH Client bundle | `bundle/client.js` | rc.5 原生 client 半：侧边栏「代码工作台」、keyed 主面板、五视图（资源关系图/文字树/端到端图/时序图/文件视图）、左栏全局资源/打桩占位、图例/详情、共享 Selection、跨视图联动、可注销 |
 | 打包 skill | `skills/learn-code-workspace/` | 阅读顺序、讲解、预测/观察、停止规则；普通问答不强制复盘 |
-| Python 引擎 | `engine/code_learning/` | workspace/source/snapshot/paths/bindings/records/invalidation + 只读 `views` 投影，只用标准库 |
-| 合同与 schema | `engine/schemas/`、`docs/implementation-contract.md`、`docs/readonly-workbench-contract.md` | 自有对象 `schema_version=1`；Atlas 对象保持 `0.1` |
-| 证据 | `engine/tests/`、`tests/node/`、`evidence/`、`tools/readonly-slice/` | 合成 UMD/UAPI/KMD fixture、真实 Atlas 产物、只读工作台隔离 profile 验收 |
+| Python 引擎 | `engine/code_learning/` | workspace/source/snapshot/paths/bindings/records/invalidation + `views`/`five_views` 只读投影，只用标准库 |
+| 合同与 schema | `engine/schemas/`、`docs/implementation-contract.md`、`docs/readonly-workbench-contract.md`、`docs/five-view-contract.md` | 自有对象 `schema_version=1`；Atlas 对象保持 `0.1` |
+| 证据 | `engine/tests/`、`tests/node/`、`evidence/`、`tools/` | 合成 UMD/UAPI/KMD fixture、真实 Atlas 产物、只读工作台与五视图隔离 dsh-web 验收 |
 
 ## 快速开始
 
@@ -62,7 +62,8 @@ python -m unittest discover -s tests -v        # 引擎行为（合成 + 真实 
 cd ..
 node --test tests/node/*.test.mjs              # Host RPC / client / plugin 合同
 node --test demo/code-view/demo.test.cjs       # Demo「登记 → 发送」对照（Wasm 模拟观测）
-node tools/verify-readonly.mjs --with-repo-tests  # 隔离 DSH profile + Chromium + 真实 rc.5 宿主运行时
+node tools/verify-readonly.mjs --with-repo-tests      # CW-T1 只读切片隔离 dsh-web 验收
+node tools/verify-five-views.mjs --with-repo-tests    # CW-T2 S2a 五视图隔离 dsh-web 逐视图验收
 ```
 
 隔离验收只使用独立 `DSH_HOME`、本仓真实快照夹具与本机已装宿主；不访问网络、不改真实 `~/.dsh`、不重启桌面宿主。

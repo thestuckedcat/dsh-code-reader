@@ -210,6 +210,7 @@
     "native_cfg_extractor_present": false,
     "network_used_by_runtime": false,
     "readonly_workbench_slice": "2026-11-15: real 0.1 snapshot fixture imported and projected for the DSH read-only workbench slice; isolated rc.5 web profile + Chromium probe + real Cordis runtime verification recorded in evidence/readonly-slice/verification.json (ok=true, verified=true, 26/26 checks, not_verified=[]).",
+    "readonly_five_view_slice": "2026-11-15: CW-T2 S2a five read-only views (resource relation graph, collapsible text tree, single-entry end-to-end graph, static-prediction sequence, file view) projected from the same real Atlas 0.1 snapshot; isolated rc.5 dsh-web profile + per-view Chromium probe + real Cordis runtime verification recorded in evidence/five-views/verification.json (ok=true, verified=true, 37/37 checks, in_scope_not_verified=[]).",
     "note": "This source lock records read-only provenance only. It is not a redistribution manifest and does not claim the Linux analysis gates passed."
   }
 }

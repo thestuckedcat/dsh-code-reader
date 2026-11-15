@@ -1,0 +1,2702 @@
+{
+  "schema_version": 1,
+  "stage": "S2a",
+  "contract": "docs/five-view-contract.md (CL-VIEW-T2-CONTRACT)",
+  "started_at_utc": "2026-11-15T06:57:17.747Z",
+  "purpose": "Independent black-box acceptance of the S2a read-only five views: isolated rc.5 dsh web boot graph, /code-view old+new endpoints, Chromium per-view DOM assertions + screenshots, S1 regression and real Cordis mount/dispose/remount runtime.",
+  "host": {
+    "executable_path": "E:/dsh/DeepSeek Harness.exe",
+    "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+    "archive_path": "E:/dsh/resources/app.asar",
+    "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+    "dsh_version": "0.2.1-rc.5",
+    "embedded_node": "24.21.0",
+    "electron": "44.7.0"
+  },
+  "layers": {
+    "demo_observed": true,
+    "atlas_snapshot": true,
+    "dsh_host": true
+  },
+  "checks": {
+    "host.pinned_baseline": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "executable": {
+          "path": "E:/dsh/DeepSeek Harness.exe",
+          "sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+        },
+        "archive": {
+          "path": "E:/dsh/resources/app.asar",
+          "sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "dsh_version": "0.2.1-rc.5"
+        },
+        "completed_checks": 12,
+        "failed_checks": []
+      }
+    },
+    "host.client_five_view_contract": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "ok": true,
+        "package": {
+          "name": "@local/dsh-code-reader",
+          "version": "0.1.0",
+          "main": "index.js",
+          "dsh": {
+            "bundle": {
+              "patch": "./cordis.patch.yml"
+            },
+            "client": {
+              "inject": [
+                "@deepseek-ai/dsh-client-connection",
+                "@deepseek-ai/dsh-client-ui-layout",
+                "@deepseek-ai/dsh-client-ui-renderer"
+              ],
+              "platform": "web"
+            }
+          }
+        },
+        "client_bundle": {
+          "path": "bundle/client.js",
+          "bytes": 162105,
+          "sha256": "3fd27d1423d7256b630a2b76705e7704a39952c8ea08055a4594649fb02fc656"
+        },
+        "checks": {
+          "name": true,
+          "client_platform": true,
+          "client_inject": true,
+          "client_export": true,
+          "client_bundle_exists": true,
+          "client_bundle_bytes": true,
+          "client_loader_facade": true,
+          "client_loader_id": true,
+          "client_five_view_labels": true,
+          "client_five_view_hooks": true
+        }
+      }
+    },
+    "host.isolated_profile": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "home": "scratch/readonly-home/home",
+        "home_is_isolated_from_user_profile": true,
+        "profile": {
+          "dir": "scratch/readonly-home/home/profiles/web",
+          "bundles": [
+            "@deepseek-ai/dsh-base",
+            "@deepseek-ai/dsh-web-app",
+            "@local/dsh-code-reader"
+          ],
+          "junction": "node_modules/@local/dsh-code-reader -> repository",
+          "cordis_patch": "[]"
+        },
+        "bootstrap": {
+          "path": "scratch/readonly-home/home/code-reader/bootstrap.json",
+          "candidate_roots": [
+            {
+              "root_ref": "slice-root",
+              "absolute_path": "evidence/code-view-slice",
+              "read_grant_ref": "grant-slice"
+            }
+          ]
+        },
+        "python": {
+          "command": "E:/Anaconda-main/python.exe",
+          "version": "3.11.4",
+          "directory": "E:\\Anaconda-main"
+        },
+        "imports": {
+          "workspace": 0,
+          "snapshot": 0,
+          "skipped": null
+        },
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "entry_count": 19,
+          "target": {
+            "entry_id": "f_afa8298f2d197e5fd110e49a",
+            "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+            "name": "bus_send",
+            "display_name": "bus_send(unsigned int, unsigned int)",
+            "signature": "int (unsigned int, unsigned int)",
+            "file": "bus.c",
+            "line": 152,
+            "byte_start": 4086,
+            "byte_end": 4743
+          }
+        }
+      }
+    },
+    "atlas.view_coupling": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-coupling",
+        "scope": {
+          "mode": "entry_neighborhood",
+          "entry_id": "f_afa8298f2d197e5fd110e49a"
+        },
+        "resource_count": 1,
+        "routes": {
+          "resource_id": "s_0860e6738eaa8c95f37d0d03",
+          "file": "bus.c",
+          "line": 26
+        },
+        "write_exact_max_len_46": [
+          {
+            "access_id": "field_4a5beba32f2b4e170fabb37f",
+            "access": "write",
+            "certainty": "exact",
+            "function_id": "f_dfb9aead445405de7aafbbfa",
+            "function_name": "store_route",
+            "function_file": "bus.c",
+            "function_line": 43,
+            "location": {
+              "file": "bus.c",
+              "line": 46
+            },
+            "field_name": "max_len",
+            "expression": "routes[channel].max_len",
+            "object_ids": [
+              "s_0860e6738eaa8c95f37d0d03"
+            ],
+            "evidence_ids": [
+              "e_e2c45180048a647378048a46"
+            ],
+            "limitations": []
+          }
+        ],
+        "read_may_lines": [
+          92,
+          93,
+          98,
+          99
+        ],
+        "function_count": 5,
+        "edge_count": 11,
+        "external_nodes": [
+          {
+            "name": "trace",
+            "kind": "external",
+            "reason": "implementation_not_found"
+          },
+          {
+            "name": "trace",
+            "kind": "external",
+            "reason": "implementation_not_found"
+          },
+          {
+            "name": "trace",
+            "kind": "external",
+            "reason": "implementation_not_found"
+          },
+          {
+            "name": "trace",
+            "kind": "external",
+            "reason": "implementation_not_found"
+          }
+        ],
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.view_tree": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-tree",
+        "entry": {
+          "entry_id": "f_afa8298f2d197e5fd110e49a",
+          "name": "bus_send",
+          "file": "bus.c",
+          "line": 152,
+          "signature": "int (unsigned int, unsigned int)"
+        },
+        "node_count": 35,
+        "max_depth": 8,
+        "check_length_guards": [
+          {
+            "branch_polarity": "not_solved",
+            "expression": "if (!check_length(route, length))\n        return -90",
+            "kind": "IF_STMT"
+          }
+        ],
+        "kinds": [
+          "entry",
+          "external",
+          "call"
+        ],
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.view_end_to_end": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-end-to-end",
+        "node_count": 19,
+        "node_kinds": [
+          "entry",
+          "process",
+          "external",
+          "decision",
+          "exit"
+        ],
+        "decision_count": 3,
+        "error_exit": {
+          "node_id": "exit:f_afa8298f2d197e5fd110e49a:return:flow_fd7aac30e376bee2e6f1985f",
+          "label": "返回 -90",
+          "expression": "-90",
+          "role": "error",
+          "certainty": "may"
+        },
+        "external_nodes": [
+          "trace",
+          "platform_write"
+        ],
+        "external_edges": [
+          {
+            "kind": "external",
+            "style": {
+              "line": "dashed",
+              "color": "normal"
+            },
+            "label": "TRACE(REQUEST, channel, length, 0)"
+          },
+          {
+            "kind": "external",
+            "style": {
+              "line": "dashed",
+              "color": "normal"
+            },
+            "label": "TRACE(INVALID, channel, length, 0)"
+          },
+          {
+            "kind": "external",
+            "style": {
+              "line": "dashed",
+              "color": "normal"
+            },
+            "label": "TRACE(LOCK, transfer_lock, 0, 0)"
+          },
+          {
+            "kind": "external",
+            "style": {
+              "line": "dashed",
+              "color": "normal"
+            },
+            "label": "TRACE(LOCK, transfer_lock, 0, 0)"
+          }
+        ],
+        "legend": [
+          {
+            "key": "exact",
+            "label": "静态确定"
+          },
+          {
+            "key": "may",
+            "label": "候选"
+          },
+          {
+            "key": "unknown",
+            "label": "未知"
+          },
+          {
+            "key": "error",
+            "label": "异常返回"
+          },
+          {
+            "key": "boundary",
+            "label": "分析域边界"
+          }
+        ],
+        "layout": {
+          "direction": "DOWN",
+          "edge_routing": "ORTHOGONAL"
+        },
+        "gaps": [
+          {
+            "code": "group_collapse",
+            "status": "unavailable",
+            "reason": "S2b：组折叠/展开（CW-06）未实现；本切片只展示完整调用结构"
+          },
+          {
+            "code": "ai_summary",
+            "status": "unavailable",
+            "reason": "S2b：AI 归纳（≤500 字）未实现；本切片不伪造说明文本"
+          },
+          {
+            "code": "run_observation",
+            "status": "unavailable",
+            "reason": "S2a 无运行观测；场景执行/轨迹导入在 CW-T3"
+          },
+          {
+            "code": "callee_returns_summarized",
+            "status": "degraded",
+            "reason": "非入口函数共 10 条 return 汇总到 process 节点 returns_count，未单独展开"
+          },
+          {
+            "code": "domain_boundary_heuristic",
+            "status": "degraded",
+            "reason": "跨文件且无已解析出边的函数按分析域边界（设备/库）显示；这是读模型启发式，不是 Atlas 事实"
+          },
+          {
+            "code": "branch_conditions_partial",
+            "status": "degraded",
+            "reason": "分支条件仅来自带调用点的 callsite guard；无调用点的源码分支未建模（需 CFG，CW-T4）"
+          }
+        ],
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.view_file_tree": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-file-tree",
+        "repos": [
+          {
+            "repo_id": "bus",
+            "files": [
+              "bus.c",
+              "platform.c"
+            ]
+          }
+        ],
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.view_file_read": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-file-read",
+        "path": "bus.c",
+        "total_lines": 174,
+        "lines": 174,
+        "sha256": "b2ec232896c2680d4eb3e68e3c34681d2ceb9f0fe5fa17a1d32be9ea77f1c6cf",
+        "expected_sha256": "b2ec232896c2680d4eb3e68e3c34681d2ceb9f0fe5fa17a1d32be9ea77f1c6cf",
+        "line_46": {
+          "n": 46,
+          "text": "    routes[channel].max_len = max_len;"
+        },
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.view_sequence": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-sequence",
+        "mode": "static",
+        "observed": false,
+        "warning": "静态预测：无运行观测，不表示实际执行顺序或取值",
+        "message_count": 38,
+        "message_kinds": [
+          "call",
+          "external",
+          "access"
+        ],
+        "participants": [
+          {
+            "participant_id": "caller",
+            "label": "调用方"
+          },
+          {
+            "participant_id": "driver",
+            "label": "驱动"
+          },
+          {
+            "participant_id": "resource",
+            "label": "全局资源"
+          },
+          {
+            "participant_id": "platform",
+            "label": "设备/库边界"
+          },
+          {
+            "participant_id": "external",
+            "label": "未解析外部边界"
+          }
+        ],
+        "gaps": [
+          {
+            "code": "run_observation",
+            "status": "unavailable",
+            "reason": "S2a 无运行观测；场景/轨迹导入在 CW-T3"
+          },
+          {
+            "code": "scenario_execution",
+            "status": "unavailable",
+            "reason": "S2a 未提供场景执行/打桩/回退（CW-T3）"
+          }
+        ],
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "host.entry_line_hints": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "source": "engine view-entries projection",
+        "lines": {
+          "reset": 31,
+          "bus_register": 50,
+          "stub_route": 62,
+          "bus_unregister": 73,
+          "bus_irq": 82,
+          "bus_send": 152,
+          "set_platform_stub": 14,
+          "store_route": 43,
+          "lookup_route": 89,
+          "check_length": 96,
+          "encode_doorbell": 103,
+          "write_doorbell": 110,
+          "commit_transfer": 116,
+          "stage_payload": 123,
+          "submit_direct": 130,
+          "submit_buffered": 136,
+          "dispatch_transfer": 143,
+          "platform_reset": 8,
+          "platform_write": 19
+        },
+        "fallback_used": false
+      }
+    },
+    "host.web_shell": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "final_url": "http://127.0.0.1:8836/",
+        "redirects": 1,
+        "bytes": 38241,
+        "cookies_issued_by_host": [
+          "dsh-auth-4-64LDLFGcu4oAzD9l__NYfM7wENPVN4YJwZ9TGLZDY"
+        ]
+      }
+    },
+    "host.boot_release": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "release": {
+          "version": "0.2.1-rc.5",
+          "commit": "d4db512"
+        },
+        "entries": 71
+      }
+    },
+    "host.boot_graph_entry": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "entry": {
+          "id": "@local/dsh-code-reader",
+          "url": "plugins/??@local/dsh-code-reader/client.js&rev=45f1489a2e65",
+          "rev": "45f1489a2e65",
+          "inject": [
+            "@deepseek-ai/dsh-client-connection",
+            "@deepseek-ai/dsh-client-ui-layout",
+            "@deepseek-ai/dsh-client-ui-renderer"
+          ]
+        },
+        "plugin_entries": 71
+      }
+    },
+    "host.boot_graph_inject": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "boot_graph_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ],
+        "package_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ]
+      }
+    },
+    "host.client_bundle_bytes": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "fetched": true,
+        "url": "http://127.0.0.1:8836/plugins/??@local/dsh-code-reader/client.js&rev=45f1489a2e65",
+        "status": 200,
+        "bytes": 162185,
+        "sha256": "dee8f9614e73cd70cab81db7101eebc7d29804efbabc757e256632d655abe11c",
+        "repo_bytes": 162105,
+        "exact_prefix": true,
+        "suffix": "\n;\n//# sourceMappingURL=??@local/dsh-code-reader/client.js.map&rev=45f1489a2e65\n"
+      }
+    },
+    "host.rpc_admission": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 401,
+        "body_head": "unauthorized",
+        "interpretation": "connection admission refused the cookie-less request (seam active)"
+      }
+    },
+    "host.rpc_view_status": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "host": {
+          "plugin": "dsh-code-reader",
+          "package": "@local/dsh-code-reader",
+          "version": "0.1.0",
+          "panel_key": "dsh-code-reader",
+          "rpc_channel": "/code-view",
+          "node": "24.21.0",
+          "platform": "win32"
+        },
+        "engine": {
+          "python": "available",
+          "bootstrap": {
+            "configured": true,
+            "exists": true
+          }
+        },
+        "gap_codes": [
+          "scenario_execution",
+          "run_observation",
+          "group_collapse",
+          "interface_library",
+          "ai_summary"
+        ]
+      }
+    },
+    "host.rpc_list_snapshots": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "manifest_sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6",
+          "tool_version": "0.8.0",
+          "status": "verified",
+          "freshness": "fresh",
+          "atlas_schema": "0.1",
+          "imported_at": "2026-11-15T06:57:18Z",
+          "entry_count": 19,
+          "coverage": {
+            "failed_count": 0,
+            "pending_count": 0,
+            "whole_program_complete": false
+          },
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "limitations": [],
+          "error": null
+        }
+      }
+    },
+    "host.rpc_get_entry": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "source": {
+          "status": "ok",
+          "path": "bus.c",
+          "sha256": "b2ec232896c2680d4eb3e68e3c34681d2ceb9f0fe5fa17a1d32be9ea77f1c6cf",
+          "path_ref": "v1.eyJnIjoxLCJraW5kIjoicGF0aCIsInAiOiJidXMuYyIsInIiOiJidXMiLCJzIjoiYjJlYzIzMjg5NmMyNjgwZDRlYjNlNjhlM2MzNDY4MWQyY2ViOWYwZmU1ZmExN2ExZDMyYmU5ZWE3N2YxYzZjZiIsInciOiJjb2RlLXZpZXctYnVzLWRlbW8ifQ.ydYRSVarkvjexUyDFKOsRGOg2CWyq6Z3x4x24InxP9Y",
+          "evidence_ref": "v1.eyJiIjo0MDg2LCJlIjo0NzQzLCJnIjoxLCJraW5kIjoic291cmNlIiwibGUiOjE3NCwibHMiOjE1MiwicCI6ImJ1cy5jIiwiciI6ImJ1cyIsInMiOiJiMmVjMjMyODk2YzI2ODBkNGViM2U2OGUzYzM0NjgxZDJjZWI5ZjBmZTVmYTE3YTFkMzJiZTllYTc3ZjFjNmNmIiwidCI6IjIwMjYtMTEtMTVUMDY6NTc6MjRaIiwidiI6InNlbWFudGljLXg4Nl82NCIsInciOiJjb2RlLXZpZXctYnVzLWRlbW8ifQ.FzlWY1MBUvZ61umEbvi8Y0kIdp3fAl02ECy_FQYAHss",
+          "byte_start": 4086,
+          "byte_end": 4743,
+          "line_start": 152,
+          "line_end": 174,
+          "lines": [
+            {
+              "n": 152,
+              "text": "int bus_send(unsigned channel, unsigned length)"
+            },
+            {
+              "n": 153,
+              "text": "{"
+            },
+            {
+              "n": 154,
+              "text": "    TRACE(REQUEST, channel, length, 0);"
+            },
+            {
+              "n": 155,
+              "text": "    if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) {"
+            },
+            {
+              "n": 156,
+              "text": "        TRACE(INVALID, channel, length, 0);"
+            },
+            {
+              "n": 157,
+              "text": "        return -22;"
+            },
+            {
+              "n": 158,
+              "text": "    }"
+            },
+            {
+              "n": 159,
+              "text": ""
+            },
+            {
+              "n": 160,
+              "text": "    const struct Route *route = lookup_route(channel);"
+            },
+            {
+              "n": 161,
+              "text": "    if (!route)"
+            },
+            {
+              "n": 162,
+              "text": "        return -2;"
+            },
+            {
+              "n": 163,
+              "text": ""
+            },
+            {
+              "n": 164,
+              "text": "    if (!check_length(route, length))"
+            },
+            {
+              "n": 165,
+              "text": "        return -90;"
+            },
+            {
+              "n": 166,
+              "text": ""
+            },
+            {
+              "n": 167,
+              "text": "    /* Serial simulator: this flag records the protected scope, without threads. */"
+            },
+            {
+              "n": 168,
+              "text": "    transfer_lock = 1;"
+            },
+            {
+              "n": 169,
+              "text": "    TRACE(LOCK, transfer_lock, 0, 0);"
+            },
+            {
+              "n": 170,
+              "text": "    int status = dispatch_transfer(route, length);"
+            },
+            {
+              "n": 171,
+              "text": "    transfer_lock = 0;"
+            },
+            {
+              "n": 172,
+              "text": "    TRACE(LOCK, transfer_lock, 0, 0);"
+            },
+            {
+              "n": 173,
+              "text": "    return status;"
+            },
+            {
+              "n": 174,
+              "text": "}"
+            }
+          ],
+          "highlight": {
+            "line_start": 152,
+            "line_end": 174
+          },
+          "truncated": false,
+          "reason": null
+        },
+        "calls": 3
+      }
+    },
+    "host.rpc_five_view_endpoints": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "view.coupling": {
+          "ok": true,
+          "http_status": 200,
+          "error": null,
+          "keys": [
+            "schema_version",
+            "snapshot",
+            "selection",
+            "scope",
+            "resources",
+            "functions",
+            "edges",
+            "external_nodes",
+            "gaps",
+            "truncated"
+          ],
+          "error_text": null
+        },
+        "view.tree": {
+          "ok": true,
+          "http_status": 200,
+          "error": null,
+          "keys": [
+            "schema_version",
+            "snapshot",
+            "selection",
+            "entry",
+            "nodes",
+            "max_depth",
+            "gaps",
+            "truncated"
+          ],
+          "error_text": null
+        },
+        "view.endToEnd": {
+          "ok": true,
+          "http_status": 200,
+          "error": null,
+          "keys": [
+            "schema_version",
+            "snapshot",
+            "selection",
+            "entry",
+            "nodes",
+            "edges",
+            "exits",
+            "legend",
+            "layout",
+            "gaps",
+            "truncated"
+          ],
+          "error_text": null
+        },
+        "view.fileTree": {
+          "ok": true,
+          "http_status": 200,
+          "error": null,
+          "keys": [
+            "schema_version",
+            "snapshot",
+            "selection",
+            "repos",
+            "gaps",
+            "truncated"
+          ],
+          "error_text": null
+        },
+        "view.fileRead": {
+          "ok": true,
+          "http_status": 200,
+          "error": null,
+          "keys": [
+            "schema_version",
+            "snapshot",
+            "selection",
+            "repo_id",
+            "path",
+            "sha256",
+            "bytes",
+            "total_lines",
+            "line_start",
+            "line_end",
+            "lines",
+            "evidence_ref",
+            "evidence_refs",
+            "status",
+            "reason",
+            "gaps",
+            "truncated"
+          ],
+          "error_text": null
+        },
+        "view.sequence": {
+          "ok": true,
+          "http_status": 200,
+          "error": null,
+          "keys": [
+            "schema_version",
+            "snapshot",
+            "selection",
+            "mode",
+            "observed",
+            "warning",
+            "participants",
+            "messages",
+            "gaps",
+            "truncated"
+          ],
+          "error_text": null
+        }
+      }
+    },
+    "host.rpc_input_validation": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "error": {
+          "code": "INVALID_ARGUMENT",
+          "message": "path must not contain empty, \".\" or \"..\" segments",
+          "details": {}
+        }
+      }
+    },
+    "host.five_views_screenshots": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "required": [
+          "coupling",
+          "tree",
+          "end_to_end",
+          "sequence",
+          "file",
+          "main"
+        ],
+        "copied": {
+          "coupling": {
+            "path": "evidence/five-views/coupling.png",
+            "bytes": 152889,
+            "sha256": "19107fa241d76ff2d0cf6625b98a9ce30170dc2eea251bf7b4f40cafcdcd4805",
+            "source_record": {
+              "bytes": 152889,
+              "sha256": "19107fa241d76ff2d0cf6625b98a9ce30170dc2eea251bf7b4f40cafcdcd4805"
+            }
+          },
+          "tree": {
+            "path": "evidence/five-views/tree.png",
+            "bytes": 294409,
+            "sha256": "d757d65fd892061a1547bdec930baaef45ec365eed863d12142b50478a2e1d08",
+            "source_record": {
+              "bytes": 294409,
+              "sha256": "d757d65fd892061a1547bdec930baaef45ec365eed863d12142b50478a2e1d08"
+            }
+          },
+          "end_to_end": {
+            "path": "evidence/five-views/end_to_end.png",
+            "bytes": 198163,
+            "sha256": "9ef8a256ddcb0b0657e5fb941648696cd08f471841e84872378cb13b6f3c3cb0",
+            "source_record": {
+              "bytes": 198163,
+              "sha256": "9ef8a256ddcb0b0657e5fb941648696cd08f471841e84872378cb13b6f3c3cb0"
+            }
+          },
+          "sequence": {
+            "path": "evidence/five-views/sequence.png",
+            "bytes": 374135,
+            "sha256": "80d4f5d11ce33c0b55111fd61037fd6096fe2b7078eb6cb34107367bb21f3da7",
+            "source_record": {
+              "bytes": 374135,
+              "sha256": "80d4f5d11ce33c0b55111fd61037fd6096fe2b7078eb6cb34107367bb21f3da7"
+            }
+          },
+          "file": {
+            "path": "evidence/five-views/file.png",
+            "bytes": 219935,
+            "sha256": "ab62966196878cbfb3e633f8076e59e5e298e875b8a872de3f8de1b5b85011df",
+            "source_record": {
+              "bytes": 219935,
+              "sha256": "ab62966196878cbfb3e633f8076e59e5e298e875b8a872de3f8de1b5b85011df"
+            }
+          },
+          "main": {
+            "path": "evidence/five-views/main.png",
+            "bytes": 197460,
+            "sha256": "d0e6935e8c454f735515c2c3664b7ff904dd5a28fe4a1a68408ebe64941dc11c",
+            "source_record": {
+              "bytes": 197460,
+              "sha256": "d0e6935e8c454f735515c2c3664b7ff904dd5a28fe4a1a68408ebe64941dc11c"
+            }
+          }
+        },
+        "missing": []
+      }
+    },
+    "host.five_views_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "duration_ms": 23268,
+        "failed_steps": [],
+        "view_states": {
+          "coupling": {
+            "click": {
+              "ok": true,
+              "view": "coupling",
+              "text": "资源关系图"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "tree": {
+            "click": {
+              "ok": true,
+              "view": "tree",
+              "text": "文字树"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "end_to_end": {
+            "click": {
+              "ok": true,
+              "view": "end_to_end",
+              "text": "端到端图"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "sequence": {
+            "click": {
+              "ok": true,
+              "view": "sequence",
+              "text": "时序图"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "file": {
+            "click": {
+              "ok": true,
+              "view": "file",
+              "text": "文件视图"
+            },
+            "state": "ready",
+            "ready": true
+          }
+        },
+        "console_error_count": 0,
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "screenshots": {
+          "coupling": {
+            "path": "evidence/five-views/coupling.png",
+            "bytes": 152889,
+            "sha256": "19107fa241d76ff2d0cf6625b98a9ce30170dc2eea251bf7b4f40cafcdcd4805",
+            "source_record": {
+              "bytes": 152889,
+              "sha256": "19107fa241d76ff2d0cf6625b98a9ce30170dc2eea251bf7b4f40cafcdcd4805"
+            }
+          },
+          "tree": {
+            "path": "evidence/five-views/tree.png",
+            "bytes": 294409,
+            "sha256": "d757d65fd892061a1547bdec930baaef45ec365eed863d12142b50478a2e1d08",
+            "source_record": {
+              "bytes": 294409,
+              "sha256": "d757d65fd892061a1547bdec930baaef45ec365eed863d12142b50478a2e1d08"
+            }
+          },
+          "end_to_end": {
+            "path": "evidence/five-views/end_to_end.png",
+            "bytes": 198163,
+            "sha256": "9ef8a256ddcb0b0657e5fb941648696cd08f471841e84872378cb13b6f3c3cb0",
+            "source_record": {
+              "bytes": 198163,
+              "sha256": "9ef8a256ddcb0b0657e5fb941648696cd08f471841e84872378cb13b6f3c3cb0"
+            }
+          },
+          "sequence": {
+            "path": "evidence/five-views/sequence.png",
+            "bytes": 374135,
+            "sha256": "80d4f5d11ce33c0b55111fd61037fd6096fe2b7078eb6cb34107367bb21f3da7",
+            "source_record": {
+              "bytes": 374135,
+              "sha256": "80d4f5d11ce33c0b55111fd61037fd6096fe2b7078eb6cb34107367bb21f3da7"
+            }
+          },
+          "file": {
+            "path": "evidence/five-views/file.png",
+            "bytes": 219935,
+            "sha256": "ab62966196878cbfb3e633f8076e59e5e298e875b8a872de3f8de1b5b85011df",
+            "source_record": {
+              "bytes": 219935,
+              "sha256": "ab62966196878cbfb3e633f8076e59e5e298e875b8a872de3f8de1b5b85011df"
+            }
+          },
+          "main": {
+            "path": "evidence/five-views/main.png",
+            "bytes": 197460,
+            "sha256": "d0e6935e8c454f735515c2c3664b7ff904dd5a28fe4a1a68408ebe64941dc11c",
+            "source_record": {
+              "bytes": 197460,
+              "sha256": "d0e6935e8c454f735515c2c3664b7ff904dd5a28fe4a1a68408ebe64941dc11c"
+            }
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "host.view_coupling": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "state": "ready",
+        "steps": {
+          "columns": true,
+          "resourceNodeRoutes": true,
+          "functionNodes": true,
+          "writeExactMaxLen46": true,
+          "readMay929398": true,
+          "railResources": true,
+          "stubPanel": true,
+          "railClickHighlights": true,
+          "gapsOriginal": true
+        },
+        "detail": {
+          "columns": [
+            "writer",
+            "resource",
+            "reader"
+          ],
+          "routesNode": {
+            "resource_id": "s_0860e6738eaa8c95f37d0d03",
+            "text": "routesstruct Route[4] · STATIC字段：lane、max_len写 4 / 读 7"
+          },
+          "writeExact": [
+            {
+              "access": "write",
+              "certainty": "exact",
+              "text": "写入 / 修改 max_len @ bus.c:46"
+            }
+          ],
+          "readLines": [
+            92,
+            93,
+            98,
+            99
+          ],
+          "railHighlight": {
+            "before": {
+              "attributes": {
+                "class": "dcr-coupling-node dcr-resource-node dcr-dim",
+                "data-resource-node": "s_0860e6738eaa8c95f37d0d03",
+                "data-resource-id": "s_0860e6738eaa8c95f37d0d03",
+                "tabindex": "0",
+                "role": "button",
+                "aria-label": "资源 routes",
+                "style": "left: 326px; top: 56px; width: 236px; height: 86px;"
+              },
+              "className": "dcr-coupling-node dcr-resource-node dcr-dim",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0
+              },
+              "stroke": "none"
+            },
+            "after": {
+              "attributes": {
+                "class": "dcr-coupling-node dcr-resource-node dcr-selected dcr-highlight",
+                "data-resource-node": "s_0860e6738eaa8c95f37d0d03",
+                "data-resource-id": "s_0860e6738eaa8c95f37d0d03",
+                "tabindex": "0",
+                "role": "button",
+                "aria-label": "资源 routes",
+                "style": "left: 326px; top: 56px; width: 236px; height: 86px;"
+              },
+              "className": "dcr-coupling-node dcr-resource-node dcr-selected dcr-highlight",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0
+              },
+              "stroke": "none"
+            },
+            "matched": true
+          },
+          "lines": null
+        }
+      }
+    },
+    "host.view_tree": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "state": "ready",
+        "steps": {
+          "root": true,
+          "expanded": true,
+          "guardText": true,
+          "treeClickLocatesFile": true,
+          "treeClickFileLine": true
+        },
+        "detail": {
+          "rootNodes": [
+            {
+              "node_id": "n:f_afa8298f2d197e5fd110e49a",
+              "text": "− bus_send() 入口 返回 -22 返回 -2 返回 -90 返回 status"
+            }
+          ],
+          "checkLengthNode": {
+            "node_id": "n:f_afa8298f2d197e5fd110e49a/c_2d6e6d665c1e95aca9ac14b8>f_b19a05b7a8457000a4562e91",
+            "depth": 1,
+            "text": "− check_length() 调用点 bus.c:164 · check_length(route, length) 条件：if (!check_length(route, length)) return -90 返回 allowed",
+            "visible": true,
+            "toggles": 1
+          },
+          "lookupNode": {
+            "node_id": "n:f_afa8298f2d197e5fd110e49a/c_793310e79f208f7e1368c437>f_144ee14b1f297d19f8bdab78",
+            "depth": 1,
+            "text": "− lookup_route() 调用点 bus.c:160 · lookup_route(channel) 返回 route->max_len ? route : 0",
+            "visible": true,
+            "toggles": 1
+          },
+          "fileAfterTreeClick": {
+            "ready": true,
+            "state": "ready",
+            "text_length": 5426
+          },
+          "selectedLines": [
+            89
+          ],
+          "lines": null
+        }
+      }
+    },
+    "host.view_end_to_end": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "state": "ready",
+        "steps": {
+          "entryNode": true,
+          "decisionNode": true,
+          "errorExit": true,
+          "errorEdgeColor": true,
+          "externalPlatformWrite": true,
+          "externalEdgeDashed": true,
+          "guardEdge": true,
+          "noAbsolutePathNode": true,
+          "orthogonalEdges": true,
+          "orthogonalOnlyHV": true,
+          "directionDown": true,
+          "fitControl": true,
+          "relayoutControl": true,
+          "dragMoved": true,
+          "relayoutRestored": true
+        },
+        "detail": {
+          "entryNode": {
+            "node_id": "entry:f_afa8298f2d197e5fd110e49a",
+            "kind": "entry",
+            "shape": "ellipse",
+            "role": "normal",
+            "text": "bus_send bus.c:152",
+            "rect": {
+              "x": 629,
+              "y": 119,
+              "width": 48,
+              "height": 20
+            }
+          },
+          "decisionNodes": [
+            {
+              "node_id": "decision:c_2d6e6d665c1e95aca9ac14b8",
+              "kind": "decision",
+              "shape": "diamond",
+              "role": "normal",
+              "text": "if (!check_length(route, length)) re… bus.c:164 判断菱形",
+              "rect": {
+                "x": 419,
+                "y": 150,
+                "width": 48,
+                "height": 48
+              }
+            },
+            {
+              "node_id": "decision:c_2d1d3363a37ca597c959cee5",
+              "kind": "decision",
+              "shape": "diamond",
+              "role": "normal",
+              "text": "if (channel >= CHANNEL_COUNT || leng… bus.c:156 判断菱形",
+              "rect": {
+                "x": 479,
+                "y": 150,
+                "width": 48,
+                "height": 48
+              }
+            },
+            {
+              "node_id": "decision:c_c6dcf3a12d388ef2e68f444a",
+              "kind": "decision",
+              "shape": "diamond",
+              "role": "normal",
+              "text": "if (buffered) return submit_buffered… bus.c:148 判断菱形",
+              "rect": {
+                "x": 569,
+                "y": 195,
+                "width": 48,
+                "height": 48
+              }
+            }
+          ],
+          "errorExit": {
+            "node_id": "exit:f_afa8298f2d197e5fd110e49a:return:flow_fd7aac30e376bee2e6f1985f",
+            "kind": "exit",
+            "shape": "ellipse",
+            "role": "error",
+            "text": "返回 -90 bus.c:165 异常出口",
+            "rect": {
+              "x": 906,
+              "y": 164,
+              "width": 48,
+              "height": 20
+            }
+          },
+          "errorEdge": {
+            "edge_id": "return:flow_fd7aac30e376bee2e6f1985f",
+            "kind": "return",
+            "certainty": "may",
+            "color": "exception",
+            "line": "",
+            "className": "dcr-graph-edge dcr-graph-edge-exception",
+            "dashArray": "none",
+            "stroke": "rgb(15, 17, 21)",
+            "text": "return · may · 返回 -90"
+          },
+          "externalEdge": {
+            "edge_id": "external:edge_52135ed254668a54b2a863f6",
+            "kind": "external",
+            "certainty": "exact",
+            "color": "normal",
+            "line": "",
+            "className": "dcr-graph-edge dcr-graph-edge-dashed",
+            "dashArray": "5px, 4px",
+            "stroke": "rgb(15, 17, 21)",
+            "text": "external · exact · platform_write(TX_DOORBELL, value)"
+          },
+          "geometry": {
+            "segments": 93,
+            "orthogonal": 93,
+            "diagonal": 0,
+            "curves": 0,
+            "edge_sources": 31
+          },
+          "controls": {
+            "fit": true,
+            "relayout": true,
+            "search": true,
+            "buttons": [
+              {
+                "text": "",
+                "aria": "打开侧边栏",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "新建会话",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "插件",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "自动化任务",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "代码工作台",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "更多",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "添加工作区",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "搜索会话",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "",
+                "aria": "账号菜单",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "返回聊天",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "重新读取",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "code-view-bus-demo → semantic-x86_64 → e",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "reset（入口）bus.c:31 · void (void)",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "bus_register（入口）bus.c:50 · int (unsigned",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "stub_route（入口）bus.c:62 · int (unsigned i",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "bus_unregister（入口）bus.c:73 · int (unsign",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "bus_irq（入口）bus.c:82 · int (void)",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "bus_send（入口）bus.c:152 · int (unsigned in",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "set_platform_stub（入口）platform.c:14 · voi",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "store_routebus.c:43 · void (unsigned int",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "lookup_routebus.c:89 · const struct Rout",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "check_lengthbus.c:96 · int (const struct",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "encode_doorbellbus.c:103 · unsigned int ",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "write_doorbellbus.c:110 · int (unsigned ",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "commit_transferbus.c:116 · int (unsigned",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "stage_payloadbus.c:123 · unsigned int (u",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "submit_directbus.c:130 · int (unsigned i",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "submit_bufferedbus.c:136 · int (unsigned",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "dispatch_transferbus.c:143 · int (const ",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "platform_resetplatform.c:8 · void (void)",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "platform_writeplatform.c:19 · int (unsig",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "资源关系图",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "文字树",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "端到端图",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "时序图",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "文件视图",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "?",
+                "aria": "颜色图例",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "全局资源",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "打桩模拟",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              },
+              {
+                "text": "routesstruct Route[4] · STATIC · bus.c:2",
+                "aria": "",
+                "fit": false,
+                "relayout": false,
+                "search": false
+              }
+            ]
+          },
+          "drag": {
+            "ok": true,
+            "method": "pointer-events",
+            "primary": {
+              "down": true,
+              "move_0.2": true,
+              "move_0.4": true,
+              "move_0.6": true,
+              "move_0.8": true,
+              "move_1": true,
+              "up": true
+            },
+            "before": {
+              "x": 539,
+              "y": 319
+            },
+            "moved": {
+              "x": 679,
+              "y": 409
+            }
+          },
+          "relayoutRecord": {
+            "restored": true,
+            "after": {
+              "x": 539,
+              "y": 319
+            },
+            "before": {
+              "x": 539,
+              "y": 319
+            }
+          },
+          "lines": null
+        }
+      }
+    },
+    "host.view_sequence": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "state": "ready",
+        "steps": {
+          "staticWarning": true,
+          "observedFalse": true,
+          "messages": true,
+          "kinds": true,
+          "externalKinds": true
+        },
+        "detail": {
+          "warning": "静态预测：无运行观测，不表示实际执行顺序或取值 · observed=false（S2a 无运行观测）",
+          "observed": {
+            "value": "false",
+            "source": "attribute"
+          },
+          "messages": [
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#1 调用方 → 驱动 bus_send(unsigned int, unsigned int) 调用 静态确定 证据 e_231505a73a485bc1d8c9249d"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#2 驱动 → 未解析外部边界 TRACE(REQUEST, channel, length, 0) 分析域边界 候选 证据 e_b6364b1d90515046123ba5fb 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#3 驱动 → 未解析外部边界 TRACE(INVALID, channel, length, 0) 分析域边界 候选 证据 e_a23a3b12f015712c9558c2cd 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#4 驱动 → 驱动 lookup_route(channel) 调用 静态确定 证据 e_6e7ed1a1416660c0e7c22f95"
+            },
+            {
+              "message_id": null,
+              "kind": "access",
+              "text": "#5 驱动 → 全局资源 读取 routes.max_len 资源访问 候选 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "message_id": null,
+              "kind": "access",
+              "text": "#6 驱动 → 全局资源 读取 routes.lane 资源访问 候选 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "message_id": null,
+              "kind": "access",
+              "text": "#7 驱动 → 全局资源 读取 route->max_len 资源访问 候选 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#8 驱动 → 未解析外部边界 TRACE(LOOKUP, channel, route->lane, route->max_len) 分析域边界 候选 证据 e_624785e38fd851f19eb69574 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#9 驱动 → 驱动 check_length(route, length) 调用 静态确定 证据 e_314adfee6301351a2dca9553"
+            },
+            {
+              "message_id": null,
+              "kind": "access",
+              "text": "#10 驱动 → 全局资源 读取 route->max_len 资源访问 候选 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "message_id": null,
+              "kind": "access",
+              "text": "#11 驱动 → 全局资源 读取 max_len 资源访问 候选 证据 e_6d7e9e05d76acac948324a8a 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#12 驱动 → 未解析外部边界 TRACE(CHECK_LENGTH, length, route->max_len, allowed) 分析域边界 候选 证据 e_1b72a79a5554de3537ecfc69 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#13 驱动 → 未解析外部边界 TRACE(LOCK, transfer_lock, 0, 0) 分析域边界 候选 证据 e_3e86b6694b96df132a37cfbb 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#14 驱动 → 驱动 dispatch_transfer(route, length) 调用 静态确定 证据 e_cd995d62f666bac251ce1ecf"
+            },
+            {
+              "message_id": null,
+              "kind": "access",
+              "text": "#15 驱动 → 全局资源 读取 route->lane 资源访问 候选 证据 e_6689b07acd5985af8e0604e8 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "message_id": null,
+              "kind": "access",
+              "text": "#16 驱动 → 全局资源 读取 route->lane 资源访问 候选 证据 e_ca4511d50de099afd258bfb7 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#17 驱动 → 未解析外部边界 TRACE(TRANSFER, length, buffered, DIRECT_LIMIT) 分析域边界 候选 证据 e_b4d8e9a88317af92e64c5093 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#18 驱动 → 驱动 submit_buffered(route->lane, length) 调用 静态确定 证据 e_2a739920b12448800f207340"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#19 驱动 → 未解析外部边界 TRACE(BUFFERED, lane, length, 0) 分析域边界 候选 证据 e_dd45facb1dbc752e8b0d42b0 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#20 驱动 → 驱动 stage_payload(lane, length) 调用 静态确定 证据 e_6249ce9120ca4c0dc0e5c2b4"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#21 驱动 → 未解析外部边界 TRACE(STAGE, lane, staged_lengths[lane], 0) 分析域边界 候选 证据 e_d127c15bbe281437dfb3a0e0 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#22 驱动 → 驱动 commit_transfer(lane, staged) 调用 静态确定 证据 e_6e4cf243127574ae87b9b437"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#23 驱动 → 未解析外部边界 TRACE(COMMIT, lane, length, 0) 分析域边界 候选 证据 e_133e4740b18b14c2607b21a5 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#24 驱动 → 驱动 encode_doorbell(lane, length) 调用 静态确定 证据 e_e38d72ce331b4b952d02ac5c"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#25 驱动 → 未解析外部边界 TRACE(ENCODE, lane, length, value) 分析域边界 候选 证据 e_a671a73f94444480be256c99 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#26 驱动 → 驱动 write_doorbell(value) 调用 静态确定 证据 e_0ac06fd72d4339b07acbffca"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#27 驱动 → 未解析外部边界 TRACE(DOORBELL, TX_DOORBELL, value, 0) 分析域边界 候选 证据 e_6de0a50d84003eb061aa8761 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#28 驱动 → 设备/库边界 platform_write(TX_DOORBELL, value) 分析域边界 静态确定 证据 e_252a2a3225edb071708a7d86"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#29 驱动 → 驱动 submit_direct(route->lane, length) 调用 静态确定 证据 e_0cf51c1c326a2a5a108b1522"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#30 驱动 → 未解析外部边界 TRACE(DIRECT, lane, length, 0) 分析域边界 候选 证据 e_b0d1f21c5cb30b230f491ec1 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#31 驱动 → 驱动 commit_transfer(lane, length) 调用 静态确定 证据 e_271431007e4065e2c55f15de"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#32 驱动 → 未解析外部边界 TRACE(COMMIT, lane, length, 0) 分析域边界 候选 证据 e_133e4740b18b14c2607b21a5 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#33 驱动 → 驱动 encode_doorbell(lane, length) 调用 静态确定 证据 e_e38d72ce331b4b952d02ac5c"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#34 驱动 → 未解析外部边界 TRACE(ENCODE, lane, length, value) 分析域边界 候选 证据 e_a671a73f94444480be256c99 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "call",
+              "text": "#35 驱动 → 驱动 write_doorbell(value) 调用 静态确定 证据 e_0ac06fd72d4339b07acbffca"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#36 驱动 → 未解析外部边界 TRACE(DOORBELL, TX_DOORBELL, value, 0) 分析域边界 候选 证据 e_6de0a50d84003eb061aa8761 限制 implementation_not_found、external_boundary"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#37 驱动 → 设备/库边界 platform_write(TX_DOORBELL, value) 分析域边界 静态确定 证据 e_252a2a3225edb071708a7d86"
+            },
+            {
+              "message_id": null,
+              "kind": "external",
+              "text": "#38 驱动 → 未解析外部边界 TRACE(LOCK, transfer_lock, 0, 0) 分析域边界 候选 证据 e_4862123f5b00353e59d0fcd7 限制 implementation_not_found、external_boundary"
+            }
+          ],
+          "messageKinds": [
+            "call",
+            "external",
+            "access"
+          ],
+          "lines": null
+        }
+      }
+    },
+    "host.view_file": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "state": "ready",
+        "steps": {
+          "fileTree": true,
+          "lineCount": true,
+          "line46": true,
+          "line46Text": true,
+          "lineRange": true,
+          "fileLine46Hook": true,
+          "line46Highlight": true,
+          "resourceJump": true
+        },
+        "detail": {
+          "fileTree": [
+            {
+              "path": "bus.c",
+              "text": "bus.c"
+            },
+            {
+              "path": "platform.c",
+              "text": "platform.c"
+            }
+          ],
+          "lines": {
+            "count": 174,
+            "first": {
+              "line": 1,
+              "file_line_attr": "1",
+              "text": "1 enum Event {",
+              "selected": false
+            },
+            "last": {
+              "line": 174,
+              "file_line_attr": "174",
+              "text": "174 }",
+              "selected": false
+            },
+            "line46": {
+              "line": 46,
+              "file_line_attr": "46",
+              "text": "46 routes[channel].max_len = max_len;",
+              "selected": false
+            }
+          },
+          "line46Highlight": {
+            "selected": true,
+            "className": "dcr-line dcr-line-hit",
+            "dataHighlight": "true"
+          },
+          "resourceJumpLine": {
+            "target_present": true,
+            "marked": true,
+            "in_viewport": false,
+            "attrs": [
+              [
+                "class",
+                "dcr-line dcr-line-hit"
+              ],
+              [
+                "role",
+                "listitem"
+              ],
+              [
+                "tabindex",
+                "0"
+              ],
+              [
+                "data-file-line",
+                "26"
+              ],
+              [
+                "data-line",
+                "26"
+              ],
+              [
+                "data-highlight",
+                "true"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "host.five_views_tabs": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "tabs": [
+          {
+            "view": "coupling",
+            "text": "资源关系图",
+            "selected": true,
+            "visible": true
+          },
+          {
+            "view": "tree",
+            "text": "文字树",
+            "selected": false,
+            "visible": true
+          },
+          {
+            "view": "end_to_end",
+            "text": "端到端图",
+            "selected": false,
+            "visible": true
+          },
+          {
+            "view": "sequence",
+            "text": "时序图",
+            "selected": false,
+            "visible": true
+          },
+          {
+            "view": "file",
+            "text": "文件视图",
+            "selected": false,
+            "visible": true
+          }
+        ],
+        "view_states": {
+          "coupling": {
+            "click": {
+              "ok": true,
+              "view": "coupling",
+              "text": "资源关系图"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "tree": {
+            "click": {
+              "ok": true,
+              "view": "tree",
+              "text": "文字树"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "end_to_end": {
+            "click": {
+              "ok": true,
+              "view": "end_to_end",
+              "text": "端到端图"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "sequence": {
+            "click": {
+              "ok": true,
+              "view": "sequence",
+              "text": "时序图"
+            },
+            "state": "ready",
+            "ready": true
+          },
+          "file": {
+            "click": {
+              "ok": true,
+              "view": "file",
+              "text": "文件视图"
+            },
+            "state": "ready",
+            "ready": true
+          }
+        }
+      }
+    },
+    "host.five_views_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_error_count": 0,
+        "console_errors": []
+      }
+    },
+    "host.five_views_no_absolute_paths": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "leak": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "host.five_views_chrome": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "details": true,
+          "legend": true,
+          "gapsVerbatim": true,
+          "noAbsolutePaths": true,
+          "selectionFocusFields": true
+        },
+        "legend": {
+          "present": true,
+          "hidden": false,
+          "visible": true,
+          "text": "图例与标记\n\n颜色/形状/证据分级；继承宿主配色。\n\n证据分级\n静态确定\nexact\n候选\nmay\n未知\nunknown\n运行观测\nobserved\n源码证据\nsource_text（源码证据，仅证明文本存在）\n资源访问方向\n读取（read）\n写入 / 修改（write）\n读改写（rmw）\n初始化（init）\n去初始化（deinit）\n分配（alloc）\n释放（free）\n加锁（acquire）\n解锁（release）\n\n实线 = exact，虚线 = may，点线 = unknown；异常出口统一红色实线。\n\n图形形状\n椭圆端点（ellipse）\n矩形处理（rect）\n菱形判断（diamond）\n平行四边形输入 / 输出（parallelogram）\n矩形（rectangle）\n边界与异常\n外部边界：虚线框 / 虚线边\n异常返回：红色实线\nAI 归纳（S2b 后置）：AI 归纳在 S2b 后置：S2a 不伪造归纳正文。"
+        },
+        "details": {
+          "text": "资源详情：routes\n定位源码\n关闭详情\n\n点空白关闭；拖动/平移保留选择。\n\n类型 struct Route[4] · 存储 STATIC · 位置 bus.c:26\n\n字段：lane、max_len\n\n访问：读取 7 · 写入 / 修改 4\n\n候选\n写入 / 修改\nowner reset（bus.c:31）\n位置 bus.c:34\n字段 lane（routes[channel].lane）\n限制 unresolved_or_multiple_base_objects\n候选\n写入 / 修改\nowner reset（bus.c:31）\n位置 bus.c:35\n字段 max_len（routes[channel].max_len）\n限制 unresolved_or_multiple_base_objects\n静态确定\n写入 / 修改\nowner store_route（bus.c:43）\n位置 bus.c:45\n字段 lane（routes[channel].lane）\n静态确定\n写入 / 修改\nowner store_route（bus.c:43）\n位置 bus.c:46\n字段 max_len（routes[channel].max_len）\n候选\n读取\nowner lookup_route（bus.c:89）\n位置 bus.c:92\n字段 max_len\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner lookup_route（bus.c:89）\n位置 bus.c:92\n字段 lane\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner lookup_route（bus.c:89）\n位置 bus.c:93\n字段 max_len（route->max_len）\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner check_length（bus.c:96）\n位置 bus.c:98\n字段 max_len（route->max_len）\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner check_length（bus.c:96）\n位置 bus.c:99\n字段 max_len\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner dispatch_transfer（bus.c:143）\n位置 bus.c:148\n字段 lane（route->lane）\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner dispatch_transfer（bus.c:143）\n位置 bus.c:149\n字段 lane（route->lane）\n限制 unresolved_or_multiple_base_objects\n\nAI 归纳在 S2b 后置：S2a 不伪造归纳正文。"
+        },
+        "gaps": [
+          {
+            "code": "",
+            "text": "scenario_execution"
+          },
+          {
+            "code": "",
+            "text": "run_observation"
+          },
+          {
+            "code": "",
+            "text": "group_collapse"
+          },
+          {
+            "code": "",
+            "text": "interface_library"
+          },
+          {
+            "code": "",
+            "text": "ai_summary"
+          },
+          {
+            "code": "",
+            "text": "resource_object_unresolved"
+          },
+          {
+            "code": "",
+            "text": "callee_returns_summarized"
+          },
+          {
+            "code": "",
+            "text": "domain_boundary_heuristic"
+          },
+          {
+            "code": "",
+            "text": "branch_conditions_partial"
+          },
+          {
+            "code": "scenario_execution",
+            "text": "scenario_execution\n状态 unavailable\n本轮只读切片；场景执行/打桩/回退未实现"
+          },
+          {
+            "code": "run_observation",
+            "text": "run_observation\n状态 unavailable\n本切片无运行观测；运行记录/事件未接入"
+          },
+          {
+            "code": "group_collapse",
+            "text": "group_collapse\n状态 unavailable\nS2a 不提供组折叠/展开；CW-06 组折叠在 S2b 实现"
+          },
+          {
+            "code": "interface_library",
+            "text": "interface_library\n状态 unavailable\nS2a 不提供基础接口库；CW-07 接口库在 S2b 实现"
+          },
+          {
+            "code": "ai_summary",
+            "text": "ai_summary\n状态 unavailable\n无模型出口，仅占位；AI 归纳正文未实现"
+          },
+          {
+            "code": "resource_object_unresolved",
+            "text": "resource_object_unresolved\n状态 degraded\n1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+          },
+          {
+            "code": "interface_library",
+            "text": "interface_library\n状态 unavailable\nS2b：基础接口库识别（CW-07）未实现"
+          },
+          {
+            "code": "group_collapse",
+            "text": "group_collapse\n状态 unavailable\nS2b：组折叠/展开（CW-06）未实现；本切片只展示完整调用结构"
+          },
+          {
+            "code": "ai_summary",
+            "text": "ai_summary\n状态 unavailable\nS2b：AI 归纳（≤500 字）未实现；本切片不伪造说明文本"
+          },
+          {
+            "code": "run_observation",
+            "text": "run_observation\n状态 unavailable\nS2a 无运行观测；场景执行/轨迹导入在 CW-T3"
+          },
+          {
+            "code": "callee_returns_summarized",
+            "text": "callee_returns_summarized\n状态 degraded\n非入口函数共 10 条 return 汇总到 process 节点 returns_count，未单独展开"
+          },
+          {
+            "code": "domain_boundary_heuristic",
+            "text": "domain_boundary_heuristic\n状态 degraded\n跨文件且无已解析出边的函数按分析域边界（设备/库）显示；这是读模型启发式，不是 Atlas 事实"
+          },
+          {
+            "code": "branch_conditions_partial",
+            "text": "branch_conditions_partial\n状态 degraded\n分支条件仅来自带调用点的 callsite guard；无调用点的源码分支未建模（需 CFG，CW-T4）"
+          },
+          {
+            "code": "run_observation",
+            "text": "run_observation\n状态 unavailable\nS2a 无运行观测；场景/轨迹导入在 CW-T3"
+          },
+          {
+            "code": "scenario_execution",
+            "text": "scenario_execution\n状态 unavailable\nS2a 未提供场景执行/打桩/回退（CW-T3）"
+          }
+        ]
+      }
+    },
+    "host.five_views_s1_panel_regression": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "s1SourceLine": {
+          "line": 152,
+          "text": "152 int bus_send(unsigned channel, unsigned length)"
+        },
+        "selectionOpen": {
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "repo_id": "bus",
+          "entry_id": "f_afa8298f2d197e5fd110e49a",
+          "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+          "callsite_ids": [],
+          "callsite_path": [],
+          "resource_ids": [
+            "s_0860e6738eaa8c95f37d0d03"
+          ],
+          "resource_status": "partial",
+          "evidence_ids": [
+            "e_231505a73a485bc1d8c9249d"
+          ],
+          "run_id": null,
+          "event_id": null,
+          "focus_resource_id": null,
+          "focus_callsite_id": null
+        }
+      }
+    },
+    "dsh_host.s1_regression_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 1,
+        "note": "The S1 probe exit code may be non-zero only because its pre-S2a five-view placeholder assertion is superseded by the S2a tabs hook; the required S1 subset is evaluated here.",
+        "required_steps": [
+          "pageLoaded",
+          "sidebarEntry",
+          "panelOpened",
+          "snapshotClicked",
+          "entryListed",
+          "entryClicked",
+          "sourceLineOk",
+          "sourceBoundsOk",
+          "evidenceClassesPresent",
+          "resourcesReadPresent",
+          "selectionEntrySelected",
+          "selectionMatchesClickedEntry",
+          "returnToChat",
+          "chatRestored",
+          "panelReopened",
+          "reopenedSourceKept",
+          "reopenSelectionKept",
+          "writeEntryClicked",
+          "writeSourceLineOk",
+          "writeExactResource",
+          "writeSelectionEntry",
+          "noConsoleErrors",
+          "screenshotCaptured"
+        ],
+        "failed_steps": [],
+        "ignored_steps": [
+          "fiveViewPlaceholders"
+        ],
+        "console_error_count": 0,
+        "screenshot": {
+          "path": "evidence/five-views/regression-readonly-slice.png",
+          "bytes": 206452,
+          "sha256": "8d12d99508a1e8d6556de27030246f42cce34bfc1e5948ff09277fc7947817f7"
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "dsh_host.five_view_host_runtime": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "tap_summary": {
+          "tests": 1,
+          "pass": 1,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "duration_ms": 2726,
+        "evidence": "evidence/five-views/host-runtime.json",
+        "tap": "evidence/five-views/host-runtime.tap",
+        "stdout_tail": "",
+        "stderr_tail": ""
+      }
+    },
+    "demo.code_view_demo_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "demo_observed",
+      "detail": {
+        "command": "node --test demo/code-view/demo.test.cjs",
+        "status": 0,
+        "summary": {
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "TAP version 13\n# Subtest: interface registration selects the default route and observes the C write\nok 1 - interface registration selects the default route and observes the C write\n  ---\n  duration_ms: 4.3489\n  type: 'test'\n  ...\n# Subtest: a stub route changes the write and resetting discards the previous state\nok 2 - a stub route changes the write and resetting discards the previous state\n  ---\n  duration_ms: 0.6988\n  type: 'test'\n  ...\n# Subtest: unregistered keys, invalid input and long payloads return without a write\nok 3 - unregistered keys, invalid input and long payloads return without a write\n  ---\n  duration_ms: 0.8005\n  type: 'test'\n  ...\n# Subtest: call graph and embedded code map to fixture source\nok 4 - call graph and embedded code map to fixture source\n  ---\n  duration_ms: 0.2944\n  type: 'test'\n  ...\n# Subtest: 48 bytes take the direct branch and 49 bytes stage before encoding\nok 5 - 48 bytes take the direct branch and 49 bytes stage before encoding\n  ---\n  duration_ms: 1.213\n  type: 'test'\n  ...\n# Subtest: nested folding reconnects edges and merges duplicate boundary links\nok 6 - nested folding reconnects edges and merges duplicate boundary links\n  ---\n  duration_ms: 0.6657\n  type: 'test'\n  ...\n# Subtest: a shared implementation does not borrow observations from the other caller\nok 7 - a shared implementation does not borrow observations from the other caller\n  ---\n  duration_ms: 0.1988\n  type: 'test'\n  ...\n# Subtest: platform return stubs propagate to the entry and release the transfer lock\nok 8 - platform return stubs propagate to the entry and release the transfer lock\n  ---\n  duration_ms: 0.6902\n  type: 'test'\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 164.2564\n\n"
+      }
+    },
+    "dsh_host.repo_node_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "files": [
+          "tests/node/bridge.test.mjs",
+          "tests/node/client.test.mjs",
+          "tests/node/plugin.test.mjs",
+          "tests/node/view-rpc.test.mjs"
+        ],
+        "status": 0,
+        "summary": {
+          "tests": 83,
+          "pass": 83,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "ror maps to stable path-free codes\nok 69 - BridgeError maps to stable path-free codes\n  ---\n  duration_ms: 0.9315\n  type: 'test'\n  ...\n# Subtest: bridge failures without engine JSON are mapped by exit code\nok 70 - bridge failures without engine JSON are mapped by exit code\n  ---\n  duration_ms: 0.9964\n  type: 'test'\n  ...\n# Subtest: responses above 512 KiB are refused with a fixed small envelope\nok 71 - responses above 512 KiB are refused with a fixed small envelope\n  ---\n  duration_ms: 2.8253\n  type: 'test'\n  ...\n# Subtest: createViewDispatch fails closed for unknown endpoints\nok 72 - createViewDispatch fails closed for unknown endpoints\n  ---\n  duration_ms: 0.4352\n  type: 'test'\n  ...\n# Subtest: VIEW_ENDPOINTS keeps the read-only endpoints and appends the six five-view endpoints\nok 73 - VIEW_ENDPOINTS keeps the read-only endpoints and appends the six five-view endpoints\n  ---\n  duration_ms: 0.2838\n  type: 'test'\n  ...\n# Subtest: view.coupling maps to the fixed argv with an optional entry\nok 74 - view.coupling maps to the fixed argv with an optional entry\n  ---\n  duration_ms: 0.991\n  type: 'test'\n  ...\n# Subtest: view.tree maps to the fixed argv and requires a bounded entry\nok 75 - view.tree maps to the fixed argv and requires a bounded entry\n  ---\n  duration_ms: 0.9365\n  type: 'test'\n  ...\n# Subtest: view.endToEnd maps to the fixed argv\nok 76 - view.endToEnd maps to the fixed argv\n  ---\n  duration_ms: 0.6495\n  type: 'test'\n  ...\n# Subtest: view.fileTree maps to the fixed argv and rejects entry input\nok 77 - view.fileTree maps to the fixed argv and rejects entry input\n  ---\n  duration_ms: 0.6592\n  type: 'test'\n  ...\n# Subtest: view.fileRead validates the repository path and maps to the fixed argv\nok 78 - view.fileRead validates the repository path and maps to the fixed argv\n  ---\n  duration_ms: 2.5222\n  type: 'test'\n  ...\n# Subtest: view.sequence maps to the fixed static argv and rejects other modes\nok 79 - view.sequence maps to the fixed static argv and rejects other modes\n  ---\n  duration_ms: 0.658\n  type: 'test'\n  ...\n# Subtest: five-view endpoints map BridgeError without leaking host paths\nok 80 - five-view endpoints map BridgeError without leaking host paths\n  ---\n  duration_ms: 0.7101\n  type: 'test'\n  ...\n# Subtest: the 512 KiB response cap still applies to five-view responses\nok 81 - the 512 KiB response cap still applies to five-view responses\n  ---\n  duration_ms: 1.0981\n  type: 'test'\n  ...\n# Subtest: plugin identity is unchanged and the UI fiber stays pending without host services\nok 82 - plugin identity is unchanged and the UI fiber stays pending without host services\n  ---\n  duration_ms: 1.4335\n  type: 'test'\n  ...\n# Subtest: plugin mounts the /code-view prefix route when host services are available\nok 83 - plugin mounts the /code-view prefix route when host services are available\n  ---\n  duration_ms: 1.3957\n  type: 'test'\n  ...\n1..83\n# tests 83\n# suites 0\n# pass 83\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1659.7606\n\n"
+      }
+    }
+  },
+  "not_verified": [
+    {
+      "item": "group folding / interface library / AI summary (S2b)",
+      "reason": "S2a only; shown as gaps in the UI",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "sequence observed mode / run observation / scenario execution / stub / rollback (S3)",
+      "reason": "CW-T3 scope; S2a sequence is static-prediction only",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+      "reason": "CW-T4 scope; snapshot-only read model in this slice",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "OS-wide egress certification",
+      "reason": "verifier only performs loopback HTTP and local process observation",
+      "layer": null,
+      "out_of_scope": true
+    }
+  ],
+  "commands": [
+    {
+      "at": "2026-11-15T06:57:17.750Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\tools\\verify-five-views.mjs",
+        "--with-repo-tests"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "note": "self (S2a verifier entry point)",
+      "display": "C:\\Program Files\\nodejs\\node.exe E:\\dsh\\plugin\\04-code-learning\\tools\\verify-five-views.mjs --with-repo-tests"
+    },
+    {
+      "at": "2026-11-15T06:57:18.675Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "workspace-import",
+        "--manifest",
+        "workspace.json",
+        "--expected-revision",
+        "0",
+        "--operation-id",
+        "046bcec8-18e9-4e5e-b3b2-f58e38ba31d2"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json workspace-import --manifest workspace.json --expected-revision 0 --operation-id 046bcec8-18e9-4e5e-b3b2-f58e38ba31d2 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:18.675Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "snapshot-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--snapshot",
+        "snapshot-bus",
+        "--operation-id",
+        "87fb3ff1-a5fb-4348-b7d1-2afe2764be05"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json snapshot-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --snapshot snapshot-bus --operation-id 87fb3ff1-a5fb-4348-b7d1-2afe2764be05 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:18.865Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-coupling",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-coupling --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_afa8298f2d197e5fd110e49a [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:19.057Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-tree",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-tree --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_afa8298f2d197e5fd110e49a [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:19.227Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-end-to-end",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-end-to-end --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_afa8298f2d197e5fd110e49a [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:19.448Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-file-tree",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-file-tree --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:19.657Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-file-read",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--repo",
+        "bus",
+        "--path",
+        "bus.c"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-file-read --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --repo bus --path bus.c [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:19.835Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-sequence",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a",
+        "--mode",
+        "static"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-sequence --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_afa8298f2d197e5fd110e49a --mode static [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:20.018Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entries",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-entries --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:22.933Z",
+      "executable": "E:/dsh/DeepSeek Harness.exe",
+      "args": [
+        "E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js",
+        "web",
+        "--no-open",
+        "--port",
+        "0"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\scratch",
+      "note": "isolated dsh web boot (one-time URL token redacted)",
+      "display": "E:/dsh/DeepSeek Harness.exe E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js web --no-open --port 0"
+    },
+    {
+      "at": "2026-11-15T06:57:49.748Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\five-views\\probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\five-views\\probe-app --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:56.203Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 1,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\probe-app --no-sandbox --disable-gpu [exit 1]"
+    },
+    {
+      "at": "2026-11-15T06:57:58.936Z",
+      "executable": "E:/dsh/DeepSeek Harness.exe",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\five-views\\host-runtime.tap",
+        "tools/five-views-host-runtime.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "E:/dsh/DeepSeek Harness.exe --test --test-concurrency=1 --test-reporter=tap --test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\five-views\\host-runtime.tap tools/five-views-host-runtime.test.mjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:57:59.282Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "demo/code-view/demo.test.cjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 demo/code-view/demo.test.cjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T06:58:01.100Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "tests/node/bridge.test.mjs",
+        "tests/node/client.test.mjs",
+        "tests/node/plugin.test.mjs",
+        "tests/node/view-rpc.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 tests/node/bridge.test.mjs tests/node/client.test.mjs tests/node/plugin.test.mjs tests/node/view-rpc.test.mjs [exit 0]"
+    }
+  ],
+  "environment": {
+    "node": "26.13.0",
+    "platform": "win32",
+    "workspace": "E:\\dsh\\plugin\\04-code-learning"
+  },
+  "limitations": [
+    "Uses the locally installed generic Electron binary only as the Chromium test instrument; it is not a shipped dependency.",
+    "The isolated fresh DSH_HOME may show the host first-run overlay in screenshots; the five-view DOM assertions are recorded independently of that host UI.",
+    "No OS-wide egress certification; this is a local read-only slice check (loopback HTTP only).",
+    "DEMO layer is the Wasm/JS demo model, ATLAS is the real imported snapshot read model, DSH_HOST is the pinned local rc.5; the three are never mixed.",
+    "Group folding, interface library, AI summary, run observation, scenario execution/stub/rollback, real Linux/Kbuild and CFG/locks/aliases are S2b/S3/S4 scope and are listed under not_verified as out_of_scope."
+  ],
+  "in_scope_not_verified": [],
+  "out_of_scope_not_verified": [
+    {
+      "item": "group folding / interface library / AI summary (S2b)",
+      "reason": "S2a only; shown as gaps in the UI",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "sequence observed mode / run observation / scenario execution / stub / rollback (S3)",
+      "reason": "CW-T3 scope; S2a sequence is static-prediction only",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+      "reason": "CW-T4 scope; snapshot-only read model in this slice",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "OS-wide egress certification",
+      "reason": "verifier only performs loopback HTTP and local process observation",
+      "layer": null,
+      "out_of_scope": true
+    }
+  ],
+  "checks_summary": {
+    "total": 37,
+    "passed": 37,
+    "failed": 0,
+    "in_scope_not_verified": 0,
+    "out_of_scope_not_verified": 4
+  },
+  "ok": true,
+  "verified": true,
+  "finished_at_utc": "2026-11-15T06:58:01.552Z",
+  "duration_ms": 43805
+}

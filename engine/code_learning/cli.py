@@ -138,6 +138,55 @@ def build_parser() -> argparse.ArgumentParser:
     view_entry.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
     view_entry.add_argument("--entry", dest="entry_ref", required=True, metavar="ENTRY")
 
+    # -- read-only five views (S2a) ------------------------------------------
+    view_coupling = subparsers.add_parser(
+        "view-coupling", help="Resource relationship graph and the global resource rail."
+    )
+    view_coupling.add_argument("--workspace", required=True, metavar="WID")
+    view_coupling.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_coupling.add_argument("--entry", dest="entry_ref", default=None, metavar="ENTRY")
+
+    view_tree = subparsers.add_parser(
+        "view-tree", help="Collapsible entry call tree of one verified snapshot."
+    )
+    view_tree.add_argument("--workspace", required=True, metavar="WID")
+    view_tree.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_tree.add_argument("--entry", dest="entry_ref", required=True, metavar="ENTRY")
+
+    view_end_to_end = subparsers.add_parser(
+        "view-end-to-end", help="Deterministic single-entry end-to-end graph."
+    )
+    view_end_to_end.add_argument("--workspace", required=True, metavar="WID")
+    view_end_to_end.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_end_to_end.add_argument("--entry", dest="entry_ref", required=True, metavar="ENTRY")
+
+    view_file_tree = subparsers.add_parser(
+        "view-file-tree", help="Files referenced by the snapshot evidence."
+    )
+    view_file_tree.add_argument("--workspace", required=True, metavar="WID")
+    view_file_tree.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+
+    view_file_read = subparsers.add_parser(
+        "view-file-read", help="Bounded read-only source window with line numbers."
+    )
+    view_file_read.add_argument("--workspace", required=True, metavar="WID")
+    view_file_read.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_file_read.add_argument("--repo", dest="repo_id", required=True, metavar="RID")
+    view_file_read.add_argument("--path", dest="path_ref", required=True, metavar="PATH")
+    view_file_read.add_argument(
+        "--max-lines", dest="max_lines", type=int, default=2000, metavar="N"
+    )
+
+    view_sequence = subparsers.add_parser(
+        "view-sequence", help="Static predicted sequence for one entry (S2a only mode)."
+    )
+    view_sequence.add_argument("--workspace", required=True, metavar="WID")
+    view_sequence.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_sequence.add_argument("--entry", dest="entry_ref", required=True, metavar="ENTRY")
+    view_sequence.add_argument(
+        "--mode", choices=("static",), default="static", metavar="MODE"
+    )
+
     # -- paths and relations -------------------------------------------------
     query_path = subparsers.add_parser("path", help="Bounded call-path query inside one variant.")
     query_path.add_argument("--workspace", required=True, metavar="WID")
@@ -285,6 +334,46 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
 
         return views.entry_detail(
             state, args.workspace, args.snapshot_ref, args.entry_ref
+        )
+    if command in (
+        "view-coupling",
+        "view-tree",
+        "view-end-to-end",
+        "view-file-tree",
+        "view-file-read",
+        "view-sequence",
+    ):
+        from . import five_views
+
+        if command == "view-coupling":
+            return five_views.coupling(
+                state, args.workspace, args.snapshot_ref, args.entry_ref
+            )
+        if command == "view-tree":
+            return five_views.tree(
+                state, args.workspace, args.snapshot_ref, args.entry_ref
+            )
+        if command == "view-end-to-end":
+            return five_views.end_to_end(
+                state, args.workspace, args.snapshot_ref, args.entry_ref
+            )
+        if command == "view-file-tree":
+            return five_views.file_tree(state, args.workspace, args.snapshot_ref)
+        if command == "view-file-read":
+            return five_views.file_read(
+                state,
+                args.workspace,
+                args.snapshot_ref,
+                args.repo_id,
+                args.path_ref,
+                max_lines=args.max_lines,
+            )
+        return five_views.sequence_static(
+            state,
+            args.workspace,
+            args.snapshot_ref,
+            args.entry_ref,
+            mode=args.mode,
         )
     if command == "path":
         return service.query_path(

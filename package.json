@@ -26,6 +26,7 @@
     "docs/mechanisms.md",
     "docs/implementation-contract.md",
     "docs/readonly-workbench-contract.md",
+    "docs/five-view-contract.md",
     "docs/interactive-code-view-software-design.md",
     "USAGE.md",
     "README.md",

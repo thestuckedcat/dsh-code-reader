@@ -24,6 +24,13 @@ export const PANEL_KEY = 'dsh-code-reader';
 export const PANEL_LABEL = '代码工作台';
 export const CHANNEL = '/code-view';
 export const SNAPSHOT_ID = 'a'.repeat(32);
+export const BUS_SEND_ID = 'f_afa8298f2d197e5fd110e49a';
+export const STORE_ROUTE_ID = 'f_dfb9aead445405de7aafbbfa';
+export const LOOKUP_ROUTE_ID = 'f_144ee14b1f297d19f8bdab78';
+export const CHECK_LENGTH_ID = 'f_b19a05b7a8457000a4562e91';
+export const DISPATCH_TRANSFER_ID = 'f_ccdd7df856dd459e2934ea77';
+export const ROUTES_ID = 's_0860e6738eaa8c95f37d0d03';
+export const BUS_C_SHA256 = 'd'.repeat(64);
 
 export function readBundleSource() {
   return readFileSync(BUNDLE_FILE, 'utf8');
@@ -259,10 +266,36 @@ export function createReactRuntime() {
       };
     }
     const children = renderNode(props.children, `${path}$`);
+    let refNode = null;
+    if (props.ref && typeof props.ref === 'object') {
+      refNode = {
+        tagName: typeof type === 'string' ? String(type).toUpperCase() : 'DIV',
+        clientWidth: 960,
+        clientHeight: 560,
+        scrollWidth: 960,
+        scrollHeight: 560,
+        style: {},
+        isConnected: true,
+        getBoundingClientRect() {
+          return {left: 0, top: 0, width: this.clientWidth, height: this.clientHeight, right: this.clientWidth, bottom: this.clientHeight};
+        },
+        setPointerCapture() {},
+        releasePointerCapture() {},
+        addEventListener() {},
+        removeEventListener() {},
+        focus() {},
+      };
+      try {
+        props.ref.current = refNode;
+      } catch {
+        refNode = null;
+      }
+    }
     return {
       tag: typeof type === 'string' ? type : '#unknown',
       props,
       children: children === null ? [] : Array.isArray(children) ? children : [children],
+      refNode,
     };
   }
 
@@ -669,8 +702,8 @@ export function makeSnapshotsPayload(options = {}) {
 
 export function makeEntryRow(overrides = {}) {
   return {
-    entry_id: 'f_bus_send',
-    symbol_id: 's_bus_send',
+    entry_id: BUS_SEND_ID,
+    symbol_id: 's_9a99bb2c95e28f92052a6d4b',
     name: 'bus_send',
     display_name: 'bus_send(unsigned, unsigned)',
     kind: 'function',
@@ -702,8 +735,8 @@ export function makeSourceLines(start, end) {
 export function makeEntriesPayload(overrides = {}) {
   const entries = overrides.entries ?? [
     makeEntryRow({
-      entry_id: 'f_store_route',
-      symbol_id: 's_store_route',
+      entry_id: STORE_ROUTE_ID,
+      symbol_id: 's_dfb9aead445405de7aafbbfa',
       name: 'store_route',
       display_name: 'store_route(unsigned, unsigned, unsigned)',
       file: 'bus.c',
@@ -794,7 +827,7 @@ function makeDefaultResources(overrides = {}) {
         expression: 'routes[channel].max_len',
         access: 'read',
         certainty: 'may',
-        owner: {entry_id: 'f_bus_send', name: 'bus_send', file: 'bus.c', line: 152},
+        owner: {entry_id: BUS_SEND_ID, name: 'bus_send', file: 'bus.c', line: 152},
         location: {file: 'bus.c', line: 161},
         evidence_ids: ['e_read_max_len'],
         limitations: ['unresolved_or_multiple_base_objects'],
@@ -810,8 +843,8 @@ export function makeEntryPayload(overrides = {}) {
   const defaultSource = makeDefaultSource(overrides.source);
   const defaultResources = makeDefaultResources(overrides.resources);
   const defaultSelection = makeSelection({
-    entry_id: 'f_bus_send',
-    symbol_id: 's_bus_send',
+    entry_id: BUS_SEND_ID,
+    symbol_id: 's_9a99bb2c95e28f92052a6d4b',
     callsite_ids: [],
     resource_ids: ['s_routes'],
     resource_status: 'partial',
@@ -832,8 +865,8 @@ export function makeEntryPayload(overrides = {}) {
     },
     selection: defaultSelection,
     entry: {
-      entry_id: 'f_bus_send',
-      symbol_id: 's_bus_send',
+      entry_id: BUS_SEND_ID,
+      symbol_id: 's_9a99bb2c95e28f92052a6d4b',
       name: 'bus_send',
       display_name: 'bus_send(unsigned, unsigned)',
       kind: 'function',
@@ -913,6 +946,357 @@ export function makeEntryPayload(overrides = {}) {
     resources: defaultResources,
     selection: defaultSelection,
   };
+}
+
+// ---------------------------------------------------------------------------
+// S2a five-view fixtures (docs/five-view-contract.md §3)
+// ---------------------------------------------------------------------------
+
+export function makeSnapshotBlock(overrides = {}) {
+  return {
+    workspace_id: 'code-view-bus-demo',
+    snapshot_id: SNAPSHOT_ID,
+    variant_id: 'semantic-x86_64',
+    repo_id: 'bus',
+    freshness: 'fresh',
+    coverage: {failed_count: 0, pending_count: 0, whole_program_complete: false},
+    capabilities: {direct_calls: 'ready', cfg: 'unsupported'},
+    limitations: ['whole_program_incomplete'],
+    ...overrides,
+  };
+}
+
+export function makeCouplingPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    snapshot: makeSnapshotBlock(),
+    selection: makeSelection({
+      entry_id: BUS_SEND_ID,
+      symbol_id: 's_9a99bb2c95e28f92052a6d4b',
+      resource_ids: [ROUTES_ID],
+      resource_status: 'partial',
+      evidence_ids: ['e_write_max_len', 'e_read_max_len'],
+    }),
+    scope: {mode: 'entry_neighborhood', entry_id: BUS_SEND_ID},
+    resources: [
+      {
+        resource_id: ROUTES_ID,
+        name: 'routes',
+        type: 'struct Route[4]',
+        storage: 'STATIC',
+        lifetime: 'static',
+        file: 'bus.c',
+        line: 26,
+        evidence_ids: ['e_obj_routes'],
+        fields: [
+          {field_id: ROUTES_ID, field_name: 'lane', field_path: ['lane']},
+          {field_id: ROUTES_ID, field_name: 'max_len', field_path: ['max_len']},
+        ],
+        write_count: 2,
+        read_count: 5,
+        related_function_ids: [STORE_ROUTE_ID, BUS_SEND_ID, LOOKUP_ROUTE_ID, CHECK_LENGTH_ID],
+        accesses: [
+          {
+            access_id: 'field_routes_max_len_write',
+            access: 'write',
+            certainty: 'exact',
+            function_id: STORE_ROUTE_ID,
+            function_name: 'store_route',
+            function_file: 'bus.c',
+            function_line: 43,
+            location: {file: 'bus.c', line: 46},
+            field_name: 'max_len',
+            expression: 'routes[channel].max_len',
+            evidence_ids: ['e_write_max_len'],
+            limitations: [],
+          },
+          {
+            access_id: 'field_routes_max_len_read',
+            access: 'read',
+            certainty: 'may',
+            function_id: BUS_SEND_ID,
+            function_name: 'bus_send',
+            function_file: 'bus.c',
+            function_line: 152,
+            location: {file: 'bus.c', line: 92},
+            field_name: 'max_len',
+            expression: 'route->max_len',
+            evidence_ids: ['e_read_max_len'],
+            limitations: ['unresolved_or_multiple_base_objects'],
+          },
+        ],
+      },
+    ],
+    functions: [
+      {function_id: STORE_ROUTE_ID, name: 'store_route', file: 'bus.c', line: 43, role: 'writer', is_entry: false, access_summary: {exact: 2, may: 0}},
+      {function_id: BUS_SEND_ID, name: 'bus_send', file: 'bus.c', line: 152, role: 'reader', is_entry: true, access_summary: {exact: 0, may: 5}},
+      {function_id: LOOKUP_ROUTE_ID, name: 'lookup_route', file: 'bus.c', line: 89, role: 'reader', is_entry: false, access_summary: {exact: 0, may: 2}},
+      {function_id: CHECK_LENGTH_ID, name: 'check_length', file: 'bus.c', line: 96, role: 'reader', is_entry: false, access_summary: {exact: 0, may: 2}},
+    ],
+    edges: [
+      {
+        edge_id: 'access:field_routes_max_len_write',
+        from_function: STORE_ROUTE_ID,
+        to_resource: ROUTES_ID,
+        access: 'write',
+        certainty: 'exact',
+        field_name: 'max_len',
+        location: {file: 'bus.c', line: 46},
+        evidence_ids: ['e_write_max_len'],
+        limitations: [],
+      },
+      {
+        edge_id: 'access:field_routes_max_len_read_92',
+        from_function: BUS_SEND_ID,
+        to_resource: ROUTES_ID,
+        access: 'read',
+        certainty: 'may',
+        field_name: 'max_len',
+        location: {file: 'bus.c', line: 92},
+        evidence_ids: ['e_read_max_len'],
+        limitations: ['unresolved_or_multiple_base_objects'],
+      },
+      {
+        edge_id: 'access:field_routes_max_len_read_98',
+        from_function: CHECK_LENGTH_ID,
+        to_resource: ROUTES_ID,
+        access: 'read',
+        certainty: 'may',
+        field_name: 'max_len',
+        location: {file: 'bus.c', line: 98},
+        evidence_ids: ['e_read_check'],
+        limitations: ['unresolved_or_multiple_base_objects'],
+      },
+    ],
+    external_nodes: [
+      {
+        function_id: null,
+        name: 'platform_write',
+        kind: 'external',
+        callsite_id: 'c_platform',
+        file: 'bus.c',
+        line: 113,
+        certainty: 'may',
+        reason: 'implementation_not_found',
+      },
+    ],
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeTreePayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    snapshot: makeSnapshotBlock(),
+    selection: makeSelection({entry_id: BUS_SEND_ID, symbol_id: 's_9a99bb2c95e28f92052a6d4b'}),
+    entry: {entry_id: BUS_SEND_ID, name: 'bus_send', file: 'bus.c', line: 152, signature: 'int bus_send(unsigned channel, unsigned length)'},
+    nodes: [
+      {
+        node_id: 'n_1',
+        parent_node_id: null,
+        depth: 0,
+        kind: 'entry',
+        symbol: {function_id: BUS_SEND_ID, name: 'bus_send', file: 'bus.c', line: 152, signature: 'int bus_send(unsigned channel, unsigned length)', storage: 'NONE'},
+        callsite: null,
+        guards: [],
+        returns: [],
+        children_count: 3,
+        expandable: true,
+        cycle: false,
+        limitations: [],
+      },
+      {
+        node_id: 'n_2',
+        parent_node_id: 'n_1',
+        depth: 1,
+        kind: 'call',
+        symbol: {function_id: LOOKUP_ROUTE_ID, name: 'lookup_route', file: 'bus.c', line: 89, signature: 'struct Route *lookup_route(unsigned)'},
+        callsite: {callsite_id: 'c_lookup', file: 'bus.c', line: 160, expression: 'lookup_route(channel)'},
+        guards: [],
+        returns: [],
+        children_count: 0,
+        expandable: false,
+        cycle: false,
+        limitations: [],
+      },
+      {
+        node_id: 'n_3',
+        parent_node_id: 'n_1',
+        depth: 1,
+        kind: 'call',
+        symbol: {function_id: CHECK_LENGTH_ID, name: 'check_length', file: 'bus.c', line: 96, signature: 'int check_length(const struct Route *, unsigned)'},
+        callsite: {callsite_id: 'c_check', file: 'bus.c', line: 164, expression: 'check_length(route, length)'},
+        guards: [{kind: 'IF_STMT', expression: 'if (!check_length(route, length))'}],
+        returns: [{expression: '-90', certainty: 'may', limitations: ['path_insensitive', 'alias_not_solved']}],
+        children_count: 0,
+        expandable: false,
+        cycle: false,
+        limitations: [],
+      },
+      {
+        node_id: 'n_4',
+        parent_node_id: 'n_1',
+        depth: 1,
+        kind: 'call',
+        symbol: {function_id: DISPATCH_TRANSFER_ID, name: 'dispatch_transfer', file: 'bus.c', line: 143, signature: 'int dispatch_transfer(unsigned, unsigned)'},
+        callsite: {callsite_id: 'c_dispatch', file: 'bus.c', line: 170, expression: 'dispatch_transfer(route, channel, length)'},
+        guards: [],
+        returns: [],
+        children_count: 1,
+        expandable: true,
+        cycle: false,
+        limitations: [],
+      },
+      {
+        node_id: 'n_5',
+        parent_node_id: 'n_4',
+        depth: 2,
+        kind: 'external',
+        symbol: {function_id: null, name: 'platform_write', file: 'bus.c', line: 113, signature: 'int platform_write(unsigned, unsigned)'},
+        callsite: {callsite_id: 'c_platform', file: 'bus.c', line: 113, expression: 'platform_write(TX_DOORBELL, encoded)'},
+        guards: [],
+        returns: [],
+        children_count: 0,
+        expandable: false,
+        cycle: false,
+        limitations: ['implementation_not_found'],
+      },
+    ],
+    max_depth: 2,
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeEndToEndPayload(overrides = {}) {
+  const errorExitId = 'exit:' + BUS_SEND_ID + ':return:-90';
+  const normalExitId = 'exit:' + BUS_SEND_ID + ':return:0';
+  const base = {
+    schema_version: 1,
+    snapshot: makeSnapshotBlock(),
+    selection: makeSelection({entry_id: BUS_SEND_ID, symbol_id: 's_9a99bb2c95e28f92052a6d4b'}),
+    entry: {entry_id: BUS_SEND_ID, name: 'bus_send', file: 'bus.c', line: 152, signature: 'int bus_send(unsigned channel, unsigned length)'},
+    nodes: [
+      {node_id: 'entry:' + BUS_SEND_ID, kind: 'entry', label: 'bus_send', sublabel: 'bus.c:152', file: 'bus.c', line: 152, function_id: BUS_SEND_ID, callsite_id: null, shape: 'ellipse', role: 'normal', certainty: 'exact', evidence_ids: ['e_entry']},
+      {node_id: 'fn:' + LOOKUP_ROUTE_ID, kind: 'process', label: 'lookup_route', sublabel: 'bus.c:89', file: 'bus.c', line: 89, function_id: LOOKUP_ROUTE_ID, callsite_id: null, shape: 'rect', role: 'normal', certainty: 'exact', evidence_ids: ['e_lookup']},
+      {node_id: 'decision:c_check', kind: 'decision', label: 'if (!check_length(route, length))', sublabel: 'bus.c:164', file: 'bus.c', line: 164, function_id: null, callsite_id: 'c_check', shape: 'diamond', role: 'normal', certainty: 'exact', evidence_ids: ['e_check']},
+      {node_id: 'fn:' + CHECK_LENGTH_ID, kind: 'process', label: 'check_length', sublabel: 'bus.c:96', file: 'bus.c', line: 96, function_id: CHECK_LENGTH_ID, callsite_id: null, shape: 'rect', role: 'normal', certainty: 'exact', evidence_ids: ['e_check2']},
+      {node_id: 'external:callee:platform_write', kind: 'external', label: 'platform_write', sublabel: 'bus.c:113', file: 'bus.c', line: 113, function_id: null, callsite_id: 'c_platform', shape: 'rectangle', role: 'boundary', certainty: 'may', evidence_ids: [], callsite_count: 1, caller_function_ids: [CHECK_LENGTH_ID]},
+      {node_id: errorExitId, kind: 'exit', label: '返回 -90', sublabel: '异常返回', file: 'bus.c', line: 92, function_id: null, callsite_id: null, shape: 'rect', role: 'error', certainty: 'may', evidence_ids: ['e_ret']},
+      {node_id: normalExitId, kind: 'exit', label: '返回 0', sublabel: '正常返回', file: 'bus.c', line: 174, function_id: null, callsite_id: null, shape: 'rect', role: 'normal', certainty: 'may', evidence_ids: ['e_ret2']},
+    ],
+    edges: [
+      {edge_id: 'call:lookup', from: 'entry:' + BUS_SEND_ID, to: 'fn:' + LOOKUP_ROUTE_ID, kind: 'call', label: 'lookup_route(channel)', certainty: 'exact', origin: 'deterministic_analysis', callsite_id: 'c_lookup', evidence_ids: ['e_lookup'], limitations: [], style: {line: 'solid', color: 'normal'}},
+      {edge_id: 'call:check', from: 'fn:' + LOOKUP_ROUTE_ID, to: 'decision:c_check', kind: 'guard', label: 'lookup_route(channel)', certainty: 'exact', origin: 'deterministic_analysis', callsite_id: 'c_check', evidence_ids: ['e_check'], limitations: [], style: {line: 'solid', color: 'normal'}},
+      {edge_id: 'call:check2', from: 'decision:c_check', to: 'fn:' + CHECK_LENGTH_ID, kind: 'call', label: 'check_length(route, length)', certainty: 'exact', origin: 'deterministic_analysis', callsite_id: 'c_check', evidence_ids: ['e_check'], limitations: [], style: {line: 'solid', color: 'normal'}},
+      {edge_id: 'external:callee:platform_write', from: 'fn:' + CHECK_LENGTH_ID, to: 'external:callee:platform_write', kind: 'external', label: 'platform_write(TX_DOORBELL, encoded)', certainty: 'may', origin: 'callsite_boundary', callsite_id: 'c_platform', evidence_ids: [], limitations: ['implementation_not_found'], style: {line: 'dashed', color: 'normal'}},
+      {edge_id: 'return:-90', from: 'fn:' + CHECK_LENGTH_ID, to: errorExitId, kind: 'return', label: '返回 -90', certainty: 'may', origin: 'flow_edge', callsite_id: null, evidence_ids: ['e_ret'], limitations: ['path_insensitive', 'alias_not_solved'], style: {line: 'solid', color: 'exception'}},
+      {edge_id: 'return:0', from: 'entry:' + BUS_SEND_ID, to: normalExitId, kind: 'return', label: '返回 0', certainty: 'may', origin: 'flow_edge', callsite_id: null, evidence_ids: ['e_ret2'], limitations: ['path_insensitive'], style: {line: 'solid', color: 'normal'}},
+    ],
+    exits: [
+      {node_id: errorExitId, label: '返回 -90', expression: '-90', role: 'error', certainty: 'may'},
+      {node_id: normalExitId, label: '返回 0', expression: '0', role: 'normal', certainty: 'may'},
+    ],
+    legend: [
+      {key: 'exact', label: '静态确定'},
+      {key: 'may', label: '候选'},
+      {key: 'unknown', label: '未知'},
+      {key: 'error', label: '异常返回'},
+      {key: 'boundary', label: '分析域边界'},
+    ],
+    layout: {direction: 'DOWN', edge_routing: 'ORTHOGONAL'},
+    gaps: [],
+    truncated: false,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeFileTreePayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    snapshot: makeSnapshotBlock(),
+    selection: makeSelection(),
+    repos: [
+      {
+        repo_id: 'bus',
+        role: 'other',
+        files: [
+          {path: 'bus.c', bytes: 4744, sha256: BUS_C_SHA256, has_evidence: true},
+          {path: 'platform.c', bytes: 751, sha256: 'e'.repeat(64), has_evidence: true},
+        ],
+        truncated: false,
+      },
+    ],
+    gaps: [],
+  };
+  return {...base, ...overrides};
+}
+
+export function makeBusFileLines(start, end) {
+  const lines = [];
+  for (let number = start; number <= end; number += 1) {
+    let text = `    /* bus.c line ${number} */`;
+    if (number === 46) text = '    routes[channel].max_len = max_len;';
+    if (number === 92) text = '    unsigned max_len = route->max_len;';
+    if (number === 152) text = 'int bus_send(unsigned channel, unsigned length)';
+    if (number === 160) text = '    struct Route *route = lookup_route(channel);';
+    if (number === 164) text = '    if (!check_length(route, length)) return -90;';
+    lines.push({n: number, text});
+  }
+  return lines;
+}
+
+export function makeFileReadPayload(overrides = {}) {
+  const lines = overrides.lines ?? makeBusFileLines(1, 174);
+  const base = {
+    schema_version: 1,
+    snapshot: makeSnapshotBlock(),
+    selection: makeSelection(),
+    repo_id: 'bus',
+    path: 'bus.c',
+    sha256: BUS_C_SHA256,
+    bytes: 4744,
+    total_lines: 174,
+    line_start: 1,
+    line_end: 174,
+    truncated: false,
+    lines,
+    evidence_ref: 'evidence:bus.c:1-174',
+    gaps: [],
+  };
+  return {...base, ...overrides, lines};
+}
+
+export function makeSequencePayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    snapshot: makeSnapshotBlock(),
+    selection: makeSelection({entry_id: BUS_SEND_ID, symbol_id: 's_9a99bb2c95e28f92052a6d4b'}),
+    mode: 'static',
+    observed: false,
+    warning: '静态预测：无运行观测，不表示实际执行顺序或取值',
+    participants: [
+      {participant_id: 'caller', label: '调用方'},
+      {participant_id: 'driver', label: '驱动'},
+      {participant_id: 'resource', label: '资源'},
+      {participant_id: 'external', label: '设备 / 库边界'},
+    ],
+    messages: [
+      {message_id: 'm_1', index: 1, kind: 'call', from: 'caller', to: 'driver', label: 'bus_send(channel, length)', function_id: BUS_SEND_ID, callsite_id: null, entry_id: BUS_SEND_ID, depth: 0, certainty: 'exact', evidence_ids: ['e_entry'], limitations: []},
+      {message_id: 'm_2', index: 2, kind: 'call', from: 'driver', to: 'resource', label: 'lookup_route(channel)', function_id: LOOKUP_ROUTE_ID, callsite_id: 'c_lookup', entry_id: BUS_SEND_ID, depth: 1, certainty: 'exact', evidence_ids: ['e_lookup'], limitations: []},
+      {message_id: 'm_3', index: 3, kind: 'call', from: 'driver', to: 'driver', label: 'check_length(route, length)', function_id: CHECK_LENGTH_ID, callsite_id: 'c_check', entry_id: BUS_SEND_ID, depth: 1, certainty: 'exact', evidence_ids: ['e_check'], limitations: []},
+      {message_id: 'm_4', index: 4, kind: 'access', from: 'driver', to: 'resource', label: 'routes[channel].max_len ← max_len', function_id: BUS_SEND_ID, callsite_id: null, entry_id: BUS_SEND_ID, depth: 2, certainty: 'may', evidence_ids: ['e_read'], limitations: ['alias_not_solved']},
+      {message_id: 'm_5', index: 5, kind: 'external', from: 'driver', to: 'external', label: 'platform_write(TX_DOORBELL, encoded)', function_id: null, callsite_id: 'c_platform', entry_id: BUS_SEND_ID, depth: 2, certainty: 'may', evidence_ids: [], limitations: ['implementation_not_found']},
+      {message_id: 'm_6', index: 6, kind: 'return', from: 'external', to: 'driver', label: '平台返回 0', function_id: null, callsite_id: null, entry_id: BUS_SEND_ID, depth: 2, certainty: 'may', evidence_ids: [], limitations: []},
+      {message_id: 'm_7', index: 7, kind: 'error', from: 'driver', to: 'caller', label: '返回 -90', function_id: BUS_SEND_ID, callsite_id: null, entry_id: BUS_SEND_ID, depth: 0, certainty: 'may', evidence_ids: ['e_ret'], limitations: ['path_insensitive']},
+    ],
+    gaps: [{code: 'run_observation', status: 'unavailable', reason: 'S2a 无运行观测；场景 / 轨迹导入在 CW-T3'}],
+    truncated: false,
+  };
+  return {...base, ...overrides};
 }
 
 // ---------------------------------------------------------------------------

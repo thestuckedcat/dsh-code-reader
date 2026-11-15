@@ -329,14 +329,22 @@ test('view.status reports host/engine facts and slice gaps without starting the 
   assert.deepEqual(value.engine, { python: 'available', bootstrap: { configured: true, exists: true } })
   assert.deepEqual(value.capabilities, {
     readonly_workbench: true,
-    five_views: false,
-    resource_graph: false,
+    five_views: true,
+    resource_graph: true,
     scenario_execution: false,
     run_observation: false,
+    group_collapse: false,
+    interface_library: false,
+    ai_summary: false,
   })
   assert.deepEqual(
     value.gaps.map((gap) => gap.code),
-    ['five_views', 'resource_graph', 'scenario_execution', 'run_observation'],
+    ['scenario_execution', 'run_observation', 'group_collapse', 'interface_library', 'ai_summary'],
+  )
+  // S2a implements the five views/resource graph: they must not remain gaps.
+  assert.equal(
+    value.gaps.some((gap) => gap.code === 'five_views' || gap.code === 'resource_graph'),
+    false,
   )
   for (const gap of value.gaps) {
     assert.equal(gap.status, 'unavailable')
@@ -371,11 +379,11 @@ test('view.status stays ok:true with explicit gaps when Python and bootstrap are
   assert.equal(result.json.result.ok, true)
   const value = result.json.result.value
   assert.deepEqual(value.engine, { python: 'missing', bootstrap: { configured: true, exists: false } })
-  // Availability is carried by `engine`; `gaps` stays the fixed slice capability
-  // list so the UI does not render duplicate engine/bootstrap rows.
+  // Availability is carried by `engine`; `gaps` stays the fixed capability list
+  // (S2a views are implemented) so the UI does not render duplicate rows.
   assert.deepEqual(
     value.gaps.map((gap) => gap.code),
-    ['five_views', 'resource_graph', 'scenario_execution', 'run_observation'],
+    ['scenario_execution', 'run_observation', 'group_collapse', 'interface_library', 'ai_summary'],
   )
   // The degraded status must not leak the interpreter/bootstrap paths.
   assert.equal(result.response.body.includes('python.exe'), false)
@@ -604,6 +612,321 @@ test('createViewDispatch fails closed for unknown endpoints', async () => {
 })
 
 // ---------------------------------------------------------------------------
+// S2a five-view endpoints (docs/five-view-contract.md §2)
+// ---------------------------------------------------------------------------
+const WORKSPACE = 'code-view-bus-demo'
+const ENTRY = 'f_afa8298f2d197e5fd110e49a'
+
+test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the six five-view endpoints', () => {
+  assert.deepEqual(VIEW_ENDPOINTS, [
+    'view.status',
+    'view.listSnapshots',
+    'view.listEntries',
+    'view.getEntry',
+    'view.coupling',
+    'view.tree',
+    'view.endToEnd',
+    'view.fileTree',
+    'view.fileRead',
+    'view.sequence',
+  ])
+  const service = createViewService({ bridge: createBridgeStub(), settings: testSettings() })
+  assert.deepEqual(Object.keys(service), [...VIEW_ENDPOINTS])
+})
+
+test('view.coupling maps to the fixed argv with an optional entry', async () => {
+  const engineJson = {
+    schema_version: 1,
+    scope: { mode: 'entry_neighborhood', entry_id: ENTRY },
+    resources: [],
+    functions: [],
+    edges: [],
+    external_nodes: [],
+    gaps: [],
+    truncated: false,
+  }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.coupling',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY },
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  assert.deepEqual(bridge.calls.map((call) => call.argv), [
+    ['view-coupling', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY],
+  ])
+
+  // entry omitted or null → snapshot scope without --entry.
+  const omitted = await invoke(route, { endpoint: 'view.coupling', payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID } })
+  assert.equal(omitted.json.result.ok, true)
+  assert.deepEqual(bridge.calls.at(-1).argv, ['view-coupling', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID])
+  await invoke(route, { endpoint: 'view.coupling', payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: null } })
+  assert.deepEqual(bridge.calls.at(-1).argv, ['view-coupling', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID])
+
+  const before = bridge.calls.length
+  const rejected = [
+    [{}, /workspace is required/],
+    [{ workspace: WORKSPACE }, /snapshot is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 42 }, /entry must be a string/],
+    [{ workspace: 'Code-View', snapshot: SNAPSHOT_ID }, /workspace must match/],
+    [{ workspace: 'a'.repeat(129), snapshot: SNAPSHOT_ID }, /at most 128 characters/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, extra: true }, /unknown payload field: extra/],
+  ]
+  for (const [payload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.coupling', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
+})
+
+test('view.tree maps to the fixed argv and requires a bounded entry', async () => {
+  const engineJson = { schema_version: 1, entry: { entry_id: ENTRY, name: 'bus_send' }, nodes: [], max_depth: 8, gaps: [], truncated: false }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.tree',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY },
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  assert.deepEqual(bridge.calls.map((call) => call.argv), [
+    ['view-tree', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY],
+  ])
+
+  const before = bridge.calls.length
+  const rejected = [
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID }, /entry is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: '' }, /entry must be a non-empty string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 'f'.repeat(513) }, /at most 512 characters/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 'bad/entry' }, /entry must match/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, depth: 2 }, /unknown payload field: depth/],
+  ]
+  for (const [payload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.tree', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
+})
+
+test('view.endToEnd maps to the fixed argv', async () => {
+  const engineJson = {
+    schema_version: 1,
+    entry: { entry_id: ENTRY, name: 'bus_send' },
+    nodes: [],
+    edges: [],
+    exits: [],
+    legend: [],
+    layout: { direction: 'DOWN', edge_routing: 'ORTHOGONAL' },
+    gaps: [],
+    truncated: false,
+  }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.endToEnd',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY },
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  assert.deepEqual(bridge.calls.map((call) => call.argv), [
+    ['view-end-to-end', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY],
+  ])
+
+  const before = bridge.calls.length
+  for (const payload of [
+    { workspace: WORKSPACE, snapshot: SNAPSHOT_ID },
+    { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, mode: 'static' },
+  ]) {
+    const bad = await invoke(route, { endpoint: 'view.endToEnd', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+  }
+  assert.equal(bridge.calls.length, before)
+})
+
+test('view.fileTree maps to the fixed argv and rejects entry input', async () => {
+  const engineJson = { schema_version: 1, repos: [], gaps: [], truncated: false }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.fileTree',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID },
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  assert.deepEqual(bridge.calls.map((call) => call.argv), [
+    ['view-file-tree', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID],
+  ])
+
+  const before = bridge.calls.length
+  const rejected = [
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }, /unknown payload field: entry/],
+    [{ workspace: WORKSPACE }, /snapshot is required/],
+    [{ snapshot: SNAPSHOT_ID }, /workspace is required/],
+  ]
+  for (const [payload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.fileTree', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before)
+})
+
+test('view.fileRead validates the repository path and maps to the fixed argv', async () => {
+  const engineJson = { schema_version: 1, repo_id: 'bus', path: 'bus.c', lines: [], gaps: [], truncated: false }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const base = { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, repo: 'bus' }
+
+  const result = await invoke(route, { endpoint: 'view.fileRead', payload: { ...base, path: 'bus.c' } })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-file-read', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--repo', 'bus', '--path', 'bus.c',
+  ])
+
+  // Nested repository-relative path and explicit 1..2000 window.
+  await invoke(route, { endpoint: 'view.fileRead', payload: { ...base, path: 'include/routes.h', max_lines: 174 } })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-file-read', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--repo', 'bus', '--path', 'include/routes.h', '--max-lines', '174',
+  ])
+  await invoke(route, { endpoint: 'view.fileRead', payload: { ...base, path: 'bus.c', max_lines: 1 } })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-file-read', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--repo', 'bus', '--path', 'bus.c', '--max-lines', '1',
+  ])
+  await invoke(route, { endpoint: 'view.fileRead', payload: { ...base, path: 'bus.c', max_lines: 2000 } })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-file-read', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--repo', 'bus', '--path', 'bus.c', '--max-lines', '2000',
+  ])
+  // null max_lines means the engine default (flag omitted).
+  await invoke(route, { endpoint: 'view.fileRead', payload: { ...base, path: 'bus.c', max_lines: null } })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-file-read', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--repo', 'bus', '--path', 'bus.c',
+  ])
+
+  const before = bridge.calls.length
+  const badPaths = [
+    ['../bus.c', /path must not contain/],
+    ['a/../b.c', /path must not contain/],
+    ['./bus.c', /path must not contain/],
+    ['a/./b.c', /path must not contain/],
+    ['/etc/passwd', /absolute paths are not allowed/],
+    ['C:/boot.c', /absolute paths are not allowed/],
+    ['C:\\boot.c', /must use POSIX separators/],
+    ['a\\b.c', /must use POSIX separators/],
+    ['a//b.c', /path must not contain/],
+    ['a/b.c/', /path must not contain/],
+    ['bus\u0000.c', /control characters/],
+  ]
+  for (const [badPath, message] of badPaths) {
+    const bad = await invoke(route, { endpoint: 'view.fileRead', payload: { ...base, path: badPath } })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT', `path ${JSON.stringify(badPath)} must be rejected`)
+    assert.match(bad.json.result.error.message, message)
+  }
+  const rejected = [
+    [{ ...base, path: 'a'.repeat(513) }, /at most 512 characters/],
+    [{ ...base, path: 42 }, /path must be a string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, repo: 'bus' }, /path is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, repo: 'Bus', path: 'bus.c' }, /repo must match/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, path: 'bus.c' }, /repo is required/],
+    [{ ...base, path: 'bus.c', max_lines: 0 }, /max_lines must be an integer in 1\.\.2000/],
+    [{ ...base, path: 'bus.c', max_lines: 2001 }, /max_lines must be an integer in 1\.\.2000/],
+    [{ ...base, path: 'bus.c', max_lines: 1.5 }, /max_lines must be an integer/],
+    [{ ...base, path: 'bus.c', max_lines: '10' }, /max_lines must be an integer/],
+    [{ ...base, path: 'bus.c', maxLines: 10 }, /unknown payload field: maxLines/],
+  ]
+  for (const [payload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.fileRead', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
+})
+
+test('view.sequence maps to the fixed static argv and rejects other modes', async () => {
+  const engineJson = {
+    schema_version: 1,
+    mode: 'static',
+    observed: false,
+    warning: '静态预测：无运行观测，不表示实际执行顺序或取值',
+    participants: [],
+    messages: [],
+    gaps: [{ code: 'run_observation', status: 'unavailable', reason: 'S2a 无运行观测；场景/轨迹导入在 CW-T3' }],
+  }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const payload = { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }
+  const result = await invoke(route, { endpoint: 'view.sequence', payload: { ...payload, mode: 'static' } })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  const staticArgv = ['view-sequence', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY, '--mode', 'static']
+  assert.deepEqual(bridge.calls.at(-1).argv, staticArgv)
+
+  // Omitted/null mode defaults to static; the argv is always fully fixed.
+  await invoke(route, { endpoint: 'view.sequence', payload })
+  assert.deepEqual(bridge.calls.at(-1).argv, staticArgv)
+  await invoke(route, { endpoint: 'view.sequence', payload: { ...payload, mode: null } })
+  assert.deepEqual(bridge.calls.at(-1).argv, staticArgv)
+
+  const before = bridge.calls.length
+  const rejected = [
+    [{ ...payload, mode: 'observed' }, /mode must be 'static'/],
+    [{ ...payload, mode: 42 }, /mode must be 'static'/],
+    [{ ...payload, mode: 'Static' }, /mode must be 'static'/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, mode: 'static' }, /entry is required/],
+    [{ ...payload, max_messages: 10 }, /unknown payload field: max_messages/],
+  ]
+  for (const [badPayload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.sequence', payload: badPayload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
+})
+
+test('five-view endpoints map BridgeError without leaking host paths', async () => {
+  const bridge = createBridgeStub(async () => {
+    throw new BridgeError('DEPENDENCY_UNAVAILABLE', 'engine at C:\\Users\\admin\\python.exe failed')
+  })
+  const { route } = mount({ bridge })
+  const calls = [
+    ['view.coupling', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
+    ['view.tree', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
+    ['view.endToEnd', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
+    ['view.fileTree', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
+    ['view.fileRead', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, repo: 'bus', path: 'bus.c' }],
+    ['view.sequence', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
+  ]
+  for (const [endpoint, payload] of calls) {
+    const result = await invoke(route, { endpoint, payload })
+    assert.equal(result.response.statusCode, 200, endpoint)
+    assert.equal(result.json.result.ok, false, endpoint)
+    assert.equal(result.json.result.error.code, 'BRIDGE_UNAVAILABLE', endpoint)
+    assert.deepEqual(result.json.result.error.details, {})
+    assert.equal(result.response.body.includes('Users'), false, endpoint)
+    assert.equal(result.response.body.includes('python.exe'), false, endpoint)
+  }
+})
+
+test('the 512 KiB response cap still applies to five-view responses', async () => {
+  const huge = { schema_version: 1, resources: 'x'.repeat(MAX_RESPONSE_BYTES) }
+  const bridge = createBridgeStub(async () => engineOk(huge))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.coupling',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID },
+  })
+  assert.equal(result.response.statusCode, 200)
+  assert.equal(result.json.result.ok, false)
+  assert.equal(result.json.result.error.code, 'gateway/internal')
+  assert.equal(result.json.result.error.message, 'internal failure')
+  assert.ok(Buffer.byteLength(result.response.body, 'utf8') < 1024)
+  assert.equal(result.response.body.includes('xxxx'), false)
+})
+
+// ---------------------------------------------------------------------------
 // plugin wiring: the UI half is a nested plugin with its own hard injects
 // ---------------------------------------------------------------------------
 function createPluginHost({ services = false } = {}) {
@@ -672,7 +995,7 @@ test('plugin identity is unchanged and the UI fiber stays pending without host s
   assert.equal(state.routes.size, 0)
 })
 
-test('plugin mounts the /code-view prefix route when host services are available', () => {
+test('plugin mounts the /code-view prefix route when host services are available', async () => {
   const { ctx, state } = createPluginHost({ services: true })
   apply(ctx, {})
   assert.deepEqual(state.activated, ['dsh-code-reader-view'])
@@ -681,6 +1004,18 @@ test('plugin mounts the /code-view prefix route when host services are available
   assert.equal(route.kind, 'prefix')
   assert.equal(route.path, '/code-view')
   assert.equal(typeof route.handler, 'function')
+
+  // The nested route's whitelist covers the S2a endpoints too: an invalid
+  // payload is rejected by the read model before the bridge (no engine spawn).
+  for (const endpoint of ['view.coupling', 'view.tree', 'view.endToEnd', 'view.fileTree', 'view.fileRead', 'view.sequence']) {
+    const rejected = await invoke(route, {
+      endpoint,
+      payload: { workspace: 'NOT A WORKSPACE', snapshot: SNAPSHOT_ID, entry: 'bad entry', mode: 'observed' },
+    })
+    assert.equal(rejected.response.statusCode, 200, endpoint)
+    assert.equal(rejected.json.result.error.code, 'INVALID_ARGUMENT', endpoint)
+  }
+
   // The route is effect-scoped: disposing that effect removes it.
   const routeEffect = state.effects.find((effect) => /\/code-view http rpc route/.test(effect.label))
   assert.ok(routeEffect, 'route effect must be registered on the nested fiber')

@@ -183,10 +183,10 @@ find 返回示例（节选）：
 | `STATE_CONFLICT` | revision/generation/锁冲突；先 `status`/`resume` 取当前值再重试 |
 | 工具不存在 | 插件未激活：检查 `plugin_manager` 安装结果与 `inspect` 诊断 |
 
-## 7. 代码工作台（DSH 侧边栏，只读切片）
+## 7. 代码工作台（DSH 侧边栏，只读五视图 S2a）
 
 产品以 DSH 插件交付。安装/更新 bundle 并**重启宿主进程**后，侧边栏出现「代码工作台」；点击打开 keyed 主面板
-（与宿主聊天面板互斥，面板内「返回聊天」回到会话）。面板关闭/返回不丢失当前 workspace/snapshot/入口选择，
+（与宿主聊天面板互斥，面板内「返回聊天」回到会话）。面板关闭/返回不丢失当前 workspace/snapshot/入口/视图/选择，
 再次打开会恢复并重新拉取数据。
 
 前置：已完成 §2.1 bootstrap 与 §3.1 workspace 登记，并用 `code_snapshot action=import` 导入过至少一个
@@ -197,29 +197,35 @@ find 返回示例（节选）：
 | 区域 | 内容 | 证据口径 |
 |---|---|---|
 | 快照 | 已登记 workspace → variant → 快照；显示 `verified/invalid`、`freshness`、coverage（failed/pending/whole_program_complete）、`entry_count`、限制/错误 | 快照逐次重核 graph/manifest 哈希；损坏只标该条 invalid，不隐藏其他快照 |
-| 入口 | 该快照内函数按「入口优先」排序；`bus_send` 等入口可点击 | `is_entry` = 快照调用边无入边 |
-| 源码 | 定义行起带行号源码 + 高亮区间；位置为仓库相对 `file:line` | Atlas 定义 evidence 的字节区间经签名读取；文本只证明该段存在 |
-| 调用 | 出边/入边、`callsite` 位置、`origin`、`certainty` | 徽标：静态确定（exact）/候选（may）/未知（unknown）/源码证据（source_text）/运行观测（本轮无） |
-| 资源 | 资源对象（如 `routes`）与字段访问（`read/write/...` + certainty + owner + `file:line`） | 来自真实快照 `objects`/`field_accesses`；`resource_status=partial` 时如实显示 may 限制 |
-| 缺口 | 资源图/五视图/场景执行/运行观测等未提供能力，或引擎/引导/Python 不可用、快照过期、源码不可读 | 原样显示 `code/status/reason` |
-| 共享选择 | 面板底部 `Selection` JSON：workspace/variant/snapshot/repo/entry/symbol/callsite/resource/evidence/run/event | 后续五视图复用的稳定标识；运行观测字段本轮为 null |
+| 入口/源码 | 该快照内函数按「入口优先」排序；定义行起带行号源码 + 高亮区间；位置为仓库相对 `file:line` | Atlas 定义 evidence 的字节区间经签名读取；文本只证明该段存在 |
+| 资源关系图 | 三列（左 writers / 中 resources / 右 readers）；访问线区分 read/write/rmw/init/deinit/alloc/free/acquire/release，标字段名；点击资源高亮相关函数、点函数打开详情 | 来自快照 `objects`/`field_accesses`；`exact`=静态确定、`may`=候选（保留 `unresolved_or_multiple_base_objects` 等限制） |
+| 可折叠文字树 | 入口 → 逐层调用；节点显示调用点 `file:line`、guard 条件、返回表达式、局限徽标；点击联动文件视图 | 调用边 `call_targets`、`callsites.guards`、`flow_edges(relation=return)`；未知/外部为边界叶子 |
+| 端到端图 | 单入口竖排图：椭圆入口/出口、矩形处理、菱形判断（条件在线上）、外部边界虚线框；正常实线、异常红色实线；拖拽/平移/缩放/适应/搜索/一键规整 | 调用边 exact/may；判断来自带调用点的 guard；入口返回来自 `flow_edges(return)`（多为 may，不升级）；无调用点的分支未建模（gap `branch_conditions_partial`，需 CFG） |
+| 时序图 | S2a 只有**静态预测**模式：明确 warning + `observed=false`；参与者生命线、call/access/external 分色；点击消息定位源码 | 按源码调用顺序的 DFS 前序，不是运行观测；实际执行/轨迹在 CW-T3 |
+| 文件视图 | 快照涉及文件的文件树（只列参与分析的文件）+ 完整只读源码与行号；与选择/树/资源联动定位 | 文件集合来自快照 evidence；读取核对文件 sha256 与 evidence hash |
+| 左栏 | 「全局资源」：名称/类型/用途/字段来源、相关置顶高亮、初始化/修改/释放/Read 浅色栏；「打桩模拟」S2a 占位（CW-T3） | 资源行来自 coupling 投影；打桩占位显示禁用按钮与原因 |
+| 缺口/图例/详情 | 组折叠、接口库、AI 归纳、运行观测、场景执行等未实现能力原样显示；右上角 `?` 图例说明颜色/形状/证据分级；详情面板含源码/资源分析/证据徽标 | gaps 的 `code/status/reason` 原样；AI 归纳正文只在有模型出口时生成，S2a 仅占位 |
+| 共享选择 | 面板底部 `Selection` JSON：workspace/variant/snapshot/repo/entry/symbol/callsite/resource/evidence/run/event + `focus_resource_id/focus_callsite_id` | 五视图共用；运行观测字段本轮为 null |
 
 ### 7.2 用 Demo 对照核对 `routes[channel].max_len`
 
 真实快照夹具 `evidence/code-view-slice/`（Demo `bus.c`/`platform.c` 字节级复制 + Atlas 0.8.0 产物）：
 
-- 入口 `bus_register`：`store_route` 一跳内出现 write **exact** `routes[channel].max_len`（`bus.c:46`）；
-- 入口 `bus_send`：源码 `bus.c:152–174`，`lookup_route`/`check_length` 的 read **may**（`bus.c:92/93/98/99`），
+- 资源关系图（真实浏览器 dsh-web 已验）：`routes` 资源；`store_route` 的 write **exact** `routes[channel].max_len`
+  （`bus.c:46`）；`lookup_route`/`check_length` 的 read **may**（`bus.c:92/93/98`）。
+- 入口 `bus_register`：`store_route` 一跳内出现 write exact；入口 `bus_send`：源码 `bus.c:152–174`，
   超限返回 `-90` 在 `bus.c:164–165`（源码事实，不是运行证明）；三条调用边均 exact（`bus.c:160/164/170`）。
+- 端到端图：`bus_send` 入口、3 个判断（错参/长度/直发-暂存）、`-22/-2/-90` 异常出口红色实线、`返回 status`
+  正常出口、`platform_write` 外部边界虚线；时序图为静态预测（38 条消息，含平台写边界）。
 - Demo `node --test demo/code-view/demo.test.cjs`（Wasm 模拟观测）8/8：登记后发送写 `0x20030`，超限返回
   `-90`，非法 `-22`，未登记 `-2`；平台失败 `-5` 透传且锁 1→0。Demo 观测与 Atlas 静态事实分属不同证据类，
   不得互相冒充。
 
 ### 7.3 权限与失败
 
-- 浏览器只发 `workspace/snapshot/entry` 标识到 `POST /code-view/<endpoint>`；Host 重核长度/字符集并经
-  `connection.admit` 准入；引擎不接受路径/argv；RPC/UI 不输出绝对路径、bootstrap/state 路径。
+- 浏览器只发 `workspace/snapshot/entry/repo/path` 等有界标识到 `POST /code-view/<endpoint>`；Host 重核长度/
+  字符集并经 `connection.admit` 准入；引擎不接受绝对路径/argv；RPC/UI 不输出绝对路径、bootstrap/state 路径。
 - Python 缺失、bootstrap 缺失、未登记、快照无效/过期、源码不可读等情况**不隐藏面板**，在缺口区显示原因；
   引擎逻辑错误以 `value.error.code`（如 `NOT_FOUND`、`STALE_SNAPSHOT`）显示。
-- 本轮不提供：五视图图形（资源关系图/文字树/端到端图/时序图/文件视图）、场景执行/打桩/回退、运行观测。
-  这些在面板内以占位 + 原因说明；升级为 CW-T2/T3 后另行验收。
+- S2a 不提供：组折叠/展开、基础接口库、AI 归纳正文、运行观测、场景执行/打桩/回退、图内源码写回。这些以
+  缺口/占位显示，按 S2b/S3/S4 继续验收；S2a dsh-web 验收见 `evidence/five-views/`。
