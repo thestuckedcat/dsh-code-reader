@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: 04 plugin mounts into the real pinned rc.5 Cordis, serves /code-view, disposes and re-mounts
+ok 1 - 04 plugin mounts into the real pinned rc.5 Cordis, serves /code-view, disposes and re-mounts
+  ---
+  duration_ms: 733.9695
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 826.6652

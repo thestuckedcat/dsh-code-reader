@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "started_at_utc": "2026-11-15T05:38:56.075Z",
+  "layer": "dsh_host",
+  "purpose": "Real pinned rc.5 Cordis Context mounts/serves/disposes/re-mounts the 04 plugin; one real Python tool call and the /code-view read-model endpoints succeed",
+  "host": {
+    "executable_path": "E:/dsh/DeepSeek Harness.exe",
+    "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+    "archive_path": "E:/dsh/resources/app.asar",
+    "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+    "dsh_version": "0.2.1-rc.5",
+    "embedded_node": "24.21.0",
+    "electron": "44.7.0"
+  },
+  "mode": "parent-prepared isolated home",
+  "isolated_home": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home",
+  "command": {
+    "executable": "E:/dsh/DeepSeek Harness.exe",
+    "args": [
+      "--test",
+      "--test-concurrency=1",
+      "--test-reporter=tap",
+      "--test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\readonly-slice\\host-runtime.tap",
+      "tools/readonly-slice/host-runtime.test.mjs"
+    ],
+    "cwd": "E:\\dsh\\plugin\\04-code-learning",
+    "env_subset": {
+      "ELECTRON_RUN_AS_NODE": "1",
+      "DSH_HOME": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home",
+      "CODE_READER_BOOTSTRAP": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+      "DSH_TELEMETRY_DISABLED": "1"
+    }
+  },
+  "tap_path": "evidence/readonly-slice/host-runtime.tap",
+  "checks": {
+    "host_digest": true,
+    "tap_completed": true,
+    "tap_all_passed": true,
+    "process_exit_zero": true
+  },
+  "gates": {
+    "ok": true,
+    "baseline": {
+      "executable_path": "E:/dsh/DeepSeek Harness.exe",
+      "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+      "archive_path": "E:/dsh/resources/app.asar",
+      "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+      "dsh_version": "0.2.1-rc.5",
+      "embedded_node": "24.21.0",
+      "electron": "44.7.0"
+    },
+    "executable": {
+      "path": "E:/dsh/DeepSeek Harness.exe",
+      "sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+    },
+    "archive": {
+      "path": "E:/dsh/resources/app.asar",
+      "sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+      "dsh_version": "0.2.1-rc.5"
+    },
+    "checks": [
+      {
+        "name": "executable.exists",
+        "ok": true,
+        "detail": {
+          "path": "E:/dsh/DeepSeek Harness.exe"
+        }
+      },
+      {
+        "name": "executable.sha256",
+        "ok": true,
+        "detail": {
+          "expected": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+          "actual": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+        }
+      },
+      {
+        "name": "archive.exists",
+        "ok": true,
+        "detail": {
+          "path": "E:/dsh/resources/app.asar"
+        }
+      },
+      {
+        "name": "archive.sha256",
+        "ok": true,
+        "detail": {
+          "expected": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "actual": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915"
+        }
+      },
+      {
+        "name": "archive.header",
+        "ok": true,
+        "detail": {
+          "header_size": 4760404,
+          "archive_size": 182766714
+        }
+      },
+      {
+        "name": "archive.dsh_version",
+        "ok": true,
+        "detail": {
+          "expected": "0.2.1-rc.5",
+          "actual": "0.2.1-rc.5",
+          "name": "@deepseek-ai/dsh"
+        }
+      },
+      {
+        "name": "seam:dsh/node_modules/@deepseek-ai/dsh-client-modules/lib/client.js",
+        "ok": true,
+        "detail": {
+          "why": "client loader facade used by bundle/client.js",
+          "bytes": 46292,
+          "sha256": "426084f8672c26a469566a3f43c91a9b0d1dd73d0834028e553a6d0fa9cffa44",
+          "missing_markers": []
+        }
+      },
+      {
+        "name": "seam:dsh/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js",
+        "ok": true,
+        "detail": {
+          "why": "Host half that scans dsh.client and builds __DSH_BOOT__",
+          "bytes": 42376,
+          "sha256": "a2a33e32f13fdc9598b4751c4c22fb72789190bf5ba7337cd5a3d0cb4b4417ec",
+          "missing_markers": []
+        }
+      },
+      {
+        "name": "seam:dsh/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js",
+        "ok": true,
+        "detail": {
+          "why": "keyed main panel + layout.selectPanel(null) return-to-chat seam",
+          "bytes": 32834,
+          "sha256": "eb011a7b5699fac7f3ad0aa15408f46a6cf47f79b8cc15db1f81739e81e70587",
+          "missing_markers": []
+        }
+      },
+      {
+        "name": "seam:dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js",
+        "ok": true,
+        "detail": {
+          "why": "sidebar.panellist row registration seam",
+          "bytes": 36895,
+          "sha256": "f5cd3c44c4d2f42d017bc3f133758a54af2f0fcafce7173a983045c1f2976a4b",
+          "missing_markers": []
+        }
+      },
+      {
+        "name": "seam:dsh/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js",
+        "ok": true,
+        "detail": {
+          "why": "connection.admit(request) browser-session admission seam",
+          "bytes": 44434,
+          "sha256": "0ebcca7583e082716f79b0b55bc1749d48269cc8db2989b043b321b57abd3684",
+          "missing_markers": []
+        }
+      },
+      {
+        "name": "seam:dsh/node_modules/@deepseek-ai/dsh-host-webserver/lib/index.js",
+        "ok": true,
+        "detail": {
+          "why": "webServer.register({kind,path,handler}) route seam",
+          "bytes": 21436,
+          "sha256": "08907285802f0edd3aeb68c91fb443be2804879ab3d41104c4600424be06f3ab",
+          "missing_markers": []
+        }
+      }
+    ]
+  },
+  "snapshot": {
+    "snapshot_id": "ed326d554334432b907de21297207eb8",
+    "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+    "entry_count": 19,
+    "target": {
+      "entry_id": "f_afa8298f2d197e5fd110e49a",
+      "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+      "name": "bus_send",
+      "display_name": "bus_send(unsigned int, unsigned int)",
+      "signature": "int (unsigned int, unsigned int)",
+      "file": "bus.c",
+      "line": 152,
+      "byte_start": 4086,
+      "byte_end": 4743
+    }
+  },
+  "duration_ms": 1219,
+  "exit_code": 0,
+  "timed_out": false,
+  "tap_summary": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "tap_sha256": "2af3a4a849b8ab92902aa737666be7742efb2b65d08fa8d92254ca1ee558c142",
+  "stdout_tail": "",
+  "stderr_tail": "",
+  "ok": true,
+  "verified": true,
+  "generated_at": "2026-11-15T05:38:57.297Z"
+}

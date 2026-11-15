@@ -1,0 +1,69 @@
+# 04 read-only slice (CL-VIEW-T1) — Node contract tests, Lead final run
+# generated: 2026-11-15T13:39:58+08:00
+# command: node --test tests/node/*.test.mjs
+# node: v26.13.0
+
+鉁?config: default bootstrap path follows DSH_HOME and rejects unknown fields (0.7948ms)
+鉁?bridgeEnv drops credential variables from the Python child environment (0.1276ms)
+鉁?parseCliDocument only accepts one JSON document (0.442ms)
+鉁?bridge resolves a python probe then runs the fixed CLI argv (0.3662ms)
+鉁?bridge reports missing interpreter and non-JSON failures as tool values (0.591ms)
+鉁?tool argv mapping is fixed and does not shell-interpolate (0.6943ms)
+鉁?bridge rejects Python versions older than 3.11 (0.3123ms)
+鉁?tool output renderer returns one text content block (0.168ms)
+鉁?rc.5 loader wrapper: id, first executable statement, only react, plugin shape (3.4776ms)
+鉁?registers keyed main + sidebar panellist, injects one style, dispose cleans, second apply works (0.8568ms)
+鉁?open flow: status -> listSnapshots, then snapshot -> listEntries -> entry -> getEntry (18.599ms)
+鉁?loading / empty / gap / error states are exposed through data-state (9.4947ms)
+鉁?entry renders the bounded source window with line numbers and highlighted definition lines (7.5598ms)
+鉁?highlight only marks the highlight interval when the window has context lines (6.3456ms)
+鉁?call edges render exact/may/unknown badges with their fixed labels (6.6791ms)
+鉁?observed evidence renders the 杩愯瑙傛祴 badge and drops the run-observation gap (6.1427ms)
+鉁?resources block shows objects and write/read field accesses with certainty badges (5.3665ms)
+鉁?unavailable resources keep their reason in the gaps, never an empty "no resources" list (4.6348ms)
+鉁?gaps region keeps the original code/status/reason and covers resource graph, five views and run observation (2.5353ms)
+鉁?invalid snapshot is listed with its verification error and a gap, without failing the page (1.593ms)
+鉁?engine errors show data-error-code + message and never absolute paths or stacks (1.9419ms)
+鉁?getEntry failure shows the engine error code and keeps the panel usable (3.8737ms)
+鉁?engine CLI error document (success envelope whose value has no top-level ok) surfaces data-error-code (1.4325ms)
+鉁?return-to-chat calls layout.selectPanel(null) (1.7977ms)
+鉁?Selection JSON carries every 搂2 field including the preserved resource fields (5.1248ms)
+鉁?five views are explicit placeholders with per-view reasons (5.2185ms)
+鉁?re-opening the panel restores the last snapshot/entry and refetches data (7.3994ms)
+鉁?a fresh module instance does not inherit another harness remembered selection (6.0317ms)
+鉁?snapshot-only selection keeps RPC payloads within the contract channel and bounds (3.2257ms)
+鉁?plugin exports the expected Cordis identity and services (0.6644ms)
+鉁?apply registers exactly the six code tools plus one skill provider (3.2945ms)
+鉁?apply mounts the read-only view as a nested UI plugin with its own injects (0.6254ms)
+鉁?apply mounts the /code-view route when the UI host services are present (1.0074ms)
+鉁?apply rejects malformed row config and returns disposable effects (0.5735ms)
+鉁?display metadata and icon satisfy bundle packaging facts (0.5995ms)
+鉁?carrier registers one prefix route on /code-view and removes it on dispose (1.1051ms)
+鉁?carrier refuses to mount without the reviewed host seams (0.2708ms)
+鉁?non-POST requests are answered 405 before the body is read (0.4876ms)
+鉁?admission failures terminate with 401/403 and never read the body (0.7788ms)
+鉁?malformed envelopes answer the fixed gateway/bad-request envelope (0.9093ms)
+鉁?request bodies above 16 KiB are rejected before dispatch (0.4099ms)
+鉁?handler throws and malformed handler results become fixed gateway/internal (0.5577ms)
+鉁?success responses echo rpcId, freeze the envelope type and pass an AbortSignal (0.3235ms)
+鉁?view.status reports host/engine facts and slice gaps without starting the engine (0.8296ms)
+鉁?view.status stays ok:true with explicit gaps when Python and bootstrap are missing (1.2297ms)
+鉁?view.status rejects unknown payload fields with INVALID_ARGUMENT (0.3233ms)
+鉁?view.listSnapshots maps to the fixed argv and returns engine JSON verbatim (0.355ms)
+鉁?view.listEntries validates the payload and maps to the fixed argv (0.9537ms)
+鉁?view.getEntry validates the payload and maps to the fixed argv (0.6457ms)
+鉁?engine error JSON (ok:false) is passed through as a successful RPC value (0.2642ms)
+鉁?BridgeError maps to stable path-free codes (0.6754ms)
+鉁?bridge failures without engine JSON are mapped by exit code (1.3073ms)
+鉁?responses above 512 KiB are refused with a fixed small envelope (1.8493ms)
+鉁?createViewDispatch fails closed for unknown endpoints (0.2536ms)
+鉁?plugin identity is unchanged and the UI fiber stays pending without host services (0.6988ms)
+鉁?plugin mounts the /code-view prefix route when host services are available (0.3853ms)
+鈩?tests 56
+鈩?suites 0
+鈩?pass 56
+鈩?fail 0
+鈩?cancelled 0
+鈩?skipped 0
+鈩?todo 0
+鈩?duration_ms 265.607

@@ -208,18 +208,27 @@ def validate_graph_payload(payload: Any, label: str = "graph payload") -> Dict[s
             where = f"{label}.flow_edges[{index}]"
             if not isinstance(edge, dict):
                 fail("UNSUPPORTED_SCHEMA", f"{where} must be an object")
-            for field in ("id", "owner", "target", "relation", "origin"):
+            # Real Atlas 0.8 emits flow edges for file-scope initializers whose
+            # owner is null and whose sources array is empty (literal/global
+            # initialization). Only require the identity fields as strings;
+            # every other field is validated below with its real optionality.
+            for field in ("id", "target", "relation", "origin"):
                 value = edge.get(field)
                 if not isinstance(value, str) or not value or len(value) > _MAX_ID:
                     fail("UNSUPPORTED_SCHEMA", f"{where}.{field} must be a bounded non-empty string")
+            owner = edge.get("owner")
+            if owner is not None and (
+                not isinstance(owner, str) or not owner or len(owner) > _MAX_ID
+            ):
+                fail("UNSUPPORTED_SCHEMA", f"{where}.owner must be null or a bounded non-empty string")
             if edge["id"] in seen_flow_ids:
                 fail("UNSUPPORTED_SCHEMA", f"{label}.flow_edges contains a duplicate id")
             seen_flow_ids.add(edge["id"])
             sources = edge.get("sources")
-            if not isinstance(sources, list) or not sources or not all(
-                isinstance(item, str) and item for item in sources
+            if not isinstance(sources, list) or not all(
+                isinstance(item, str) and item and len(item) <= _MAX_ID for item in sources
             ):
-                fail("UNSUPPORTED_SCHEMA", f"{where}.sources must be a non-empty array of ids")
+                fail("UNSUPPORTED_SCHEMA", f"{where}.sources must be an array of ids")
             if edge.get("certainty") not in FLOW_CERTAINTIES:
                 fail("UNSUPPORTED_SCHEMA", f"{where}.certainty is not a supported value")
             edge_evidence = edge.get("evidence_ids", [])

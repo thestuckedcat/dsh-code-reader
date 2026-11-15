@@ -1,6 +1,6 @@
 # 04 实施路线与来源（dsh-code-reader 首版）
 
-更新：2026-11-07。状态：**本轮正式实现**。依据：[CL-DESIGN-2 软件设计](software-design.md)、[产品形态](product-form.md)、[开发合同](../../docs/development-contract.md)、[机制说明合同](../../docs/mechanism-document-contract.md)。
+更新：2026-11-15（新增 §CL-VIEW-D2 只读工作台开工说明）；首版实现记录 2026-11-07。依据：[CL-DESIGN-2 软件设计](software-design.md)、[产品形态](product-form.md)、[开发合同](../../docs/development-contract.md)、[机制说明合同](../../docs/mechanism-document-contract.md)。
 
 用户 2026-11-07 指示：按 04 设计文档完成 plugin 并自调试，完成后同步到 `https://github.com/thestuckedcat/dsh-code-reader.git`。本文件是该指示下的开工说明与实施路线，本轮据此开始编码。
 
@@ -58,3 +58,120 @@ Serena/clangd、codegraph MCP、ops-codegraph 只作调查对照；本版未集�
 - 每次实现任务：真实行为测试先失败 → 最小实现 → 同命令复测通过 → 记录命令与输出摘要到 `evidence/`。
 - 完整交付：各验收 ID（CL-001..CL-009 子集映射见 [实施契约](implementation-contract.md)）有测试、Node 插件桥接测试、安装后注册验证与一次实际工具旅程。
 - 按机制说明合同在 `docs/mechanisms.md` 记录稳定机制 ID、参数、硬边界与证据；机制说明不早于实现。
+
+## CL-VIEW-D2 只读代码工作台开工说明（2026-11-15，本轮开工）
+
+依据用户 2026-11-15 指示与[详细设计 CL-VIEW-D2](interactive-code-view-software-design.md) §10：本轮只做
+**只读切片 CW-T1**（DSH 插件侧边栏「代码工作台」+ 已核验 Atlas 快照读取 + 入口到真实 C 源码）。用户已给
+正式开工授权，本节即为开工说明，实施与验收契约见[只读工作台契约](readonly-workbench-contract.md)。
+
+### 实施顺序
+
+1. **固定来源与本机基线**（本节）：复核本机 DSH 可执行/归档 SHA、Atlas 源码提交与 runtime、Python/clang
+   实际版本，写入 `source.lock.json`。
+2. **真实快照夹具**：用 Atlas 0.8.0 自带 Windows runtime 分析本仓 Demo 的合成 C（`bus.c`/`platform.c`
+   字节级复制到 `evidence/code-view-slice/repo/`），生成真实 0.1 快照对（graph + manifest），记录哈希。
+   这是「已登记且已核验」验收快照，不是手写 fixture。
+3. **引擎只读投影**（`engine/code_learning/views.py` + CLI 3 命令）：快照清单/入口列表/入口详情，仓库
+   相对路径、函数位置、调用边 certainty/origin、签名源码证据、覆盖与缺口；复用现有 `load_snapshot_bundle`
+   哈希核验与 `scope`/`source` 签名证据，不新增解析器。
+4. **Host UI 服务**：自有 `webServer` prefix `/code-view` + `connection.admit` 载波（沿用 08 已核接缝形态，
+   本插件独立实现），4 个严格校验端点；UI 通过 Cordis 嵌套插件声明 `connection/webServer`，缺失时不拖垮
+   旧工具。
+5. **Client 侧边栏入口与面板**：rc.5 原生 `__ModuleLoader__` bundle，keyed main + `sidebar.panellist`
+   注册、`代码工作台` 入口、快照/入口/源码/证据/缺口、返回聊天、可注销；共享 `Selection` 与五视图占位。
+6. **隔离 profile 验收 + 独立复核**：独立 `DSH_HOME` 与 web profile 启动真实 `dsh web`，boot graph 与
+   浏览器渲染验收入口/导航/卸载/二次挂载；真实 rc.5 Cordis 宿主运行时验证旧工具注册与一次真实工具调用；
+   Demo 对照单独运行。证据按 Demo / 真实 Atlas 快照 / DSH 宿主分层记录。
+7. **交付**：契约、证据、`source.lock.json`、README/USAGE 修订；机制说明在五视图与场景实现后再按合同补，
+   本轮不把切片进度写成完整机制说明。
+
+### 首个可验收交付
+
+在独立 DSH profile 中：侧边栏「代码工作台」→ 选中已登记且已核验的 `code-view-bus-demo` 真实 Atlas 快照 →
+入口列表出现 `bus_register`/`bus_send` → 点 `bus_send` 显示 `bus.c:152` 起的真实 C 源码、调用边
+（`lookup_route`/`check_length`/`dispatch_transfer`，exact/may 分级）与源码证据 → 缺口栏显示资源图/五视图/
+运行观测未提供 → 返回聊天后二次打开保留选择。对照验收：Demo「登记 → 发送」8 项通过；`routes[channel].max_len`
+的写入行（`bus.c:46`）、读取行（`bus.c:93`、`98`）、超限返回行（`bus.c:165`）可从 UI/证据定位；旧
+`code_*` 六工具在更新后的插件上仍注册并可真实调用。
+
+### 来源固定版本与借鉴机制
+
+| 来源（本机固定值/提交） | 借鉴机制 | 采用方式与边界 |
+|---|---|---|
+| 本仓 04 `d884bd4`（2026-11-08 real-atlas 轮） | workspace/快照/源码证据/学习记录/CLI 合同与验收 ID | **直接复用**本仓现有引擎模块与 CLI 合同；本轮只加只读投影，不重写解析器。 |
+| SDK Code Atlas `H:/VSCODE_READER`：git `c33320a98face14c5f6e5e817beaccf52b9bbb93`、TOOL_VERSION `0.8.0`、SCHEMA `0.1`、Windows runtime `runtime/windows-x86_64/venv/Scripts/python.exe`（3.11.4） | 0.1 envelope、`graph_hash` 逐字节校验、coverage（failed/pending/whole_program_complete=false）、函数位置在 evidence 实体、call_targets certainty/origin、`objects/field_accesses/locks` 等可选层 | **直接消费**已核验快照 + **本仓薄适配**读模型；Atlas 只对合成 Demo C 执行一次，不分析用户仓库/Linux Kbuild，不联网，不运行 H 盘 launcher。 |
+| 本机 DSH Harness `0.2.1-rc.5`，build `d4db512a969fccf0c5cc7ec8fe38e9c1d27af916`；`DeepSeek Harness.exe` SHA256 `7ae939b5…dd0cc4`；`resources/app.asar` SHA256 `e1b6f25f…32c6915`（2026-11-15 本机复核一致） | rc.5 loader、`ctx.slots` 侧栏/main、`layout.selectPanel`、`connection.admit` + `webServer.register` 载波、client 静态种子、disposer/effect 生命周期 | **直接依赖已核宿主接口**并按本机实际签名实现；客户端 bundle 只 `require('react')`。 |
+| 08 工作台 `bundle/client.js` / `src/http-rpc.mjs` / `tools/isolated-profile-verify.mjs`（本机已自测 rc.5） | 原生 client bundle 包装、sidebar.panellist+keyed main 注册形态、连接准入信封、隔离 profile 启动与 Chromium 探针方法 | **借鉴机制 + 薄适配**到 04 的包名/通道/DOM 钩子；不依赖 08 包，不同时运行 08。 |
+| 本仓 Demo `demo/code-view/`（`bus.c`/`platform.c`/wasm bundle/`demo.test.cjs`，clang 16.0.4 mingw 构建产物） | `routes[channel].max_len` 登记/发送/超限语义、事件 trace、五种视图的样例交互 | **对照与夹具**：Demo 只提供 Wasm 模拟观测，不当作真实设备行为；本轮以它为行为对照并复制 C 源进真实快照夹具。 |
+| clang `C:\mingw64\bin\clang.exe` 16.0.4（mingw build） | compdb 预检 | 仅用于生成/复核合成 C 的 `compile_commands.json`；Atlas 用自带 libclang 18.1.1 解析。 |
+
+ELK/elkjs、React Flow、Monaco、Perfetto/UML 等（设计 §8）仍为**待实施验证**的技术候选，本轮不引入、
+不声称合入；五视图的图形与布局实现后置。
+
+### 源码范围、运行状态与权限边界
+
+- **源码范围**：只读取 bootstrap 候选根内、已登记仓库的常规文件；Atlas 证据路径映射为仓库相对路径后
+  才出 Host，绝对路径、bootstrap/state 路径不进入 UI/RPC/证据 JSON。
+- **运行状态**：本轮不执行仓库构建、不跑用户代码、不启动场景/打桩/回退、不写回源码；Demo 的 Wasm 执行
+  仅在本仓 fixture 上作为对照观测（`demo_observed`）。Atlas 只对合成 Demo C 执行一次（既有授权范围）。
+- **权限边界**：RPC 只接受 workspace/snapshot/entry 标识，不接受路径/argv；Host 重核输入长度/字符集，
+  引擎按已登记状态解析；模型不能指定 Python、工作目录或 bootstrap。UI 服务经 `connection.admit` 准入，
+  浏览器会话为 owner；缺失服务时只显示缺口。
+- **本轮补足的边界**：① 插件包内新增自有 `/code-view` prefix 路由，不共用 `/api`，不依赖 08；② UI 子插件
+  与工具子插件解耦，UI 服务缺失时旧工具合同不变；③ 读模型统一 `file:line` 与 `Selection` 共享标识，后续
+  五视图直接复用；④ 缺口/证据分级字段化，防止把静态 exact 或 Demo 观测写成运行事实。
+- **首个验收动作**：见契约 §9 六层命令；先跑引擎单测与 Demo 对照，再跑 Node/Host 与隔离 profile 浏览器验收。
+
+### 待验证（本轮不声明通过）
+
+真实 Linux/Kbuild 与生成头索引、CFG/locks/aliases 深分析、五视图图形/布局与交互、场景执行与回退、真实设备
+行为、跨仓真实快照、性能预算实测，以及 DSH 桌面宿主热更新（本机运行中的桌面 profile 未重启，验收用独立
+profile）。这些按设计 §10 的 CW-T2/T3/T4 继续。
+
+### 本轮实施结果（2026-11-15，只读切片交付）
+
+**实际改动**（04 仓库，`d884bd4` 之后）：`engine/code_learning/views.py` 只读读模型 + `cli.py` 3 个 `view-*`
+命令；`lib/http-rpc.mjs`（自有 `/code-view` prefix carrier：`webServer.register` + `connection.admit`）+
+`lib/view-service.mjs`（4 端点严格校验）；`index.js` 嵌套 UI 子插件、`package.json` client 声明；
+`bundle/client.js`（rc.5 原生 client 半：侧边栏「代码工作台」、keyed main、快照/入口/源码/证据/资源/缺口）；
+`engine/code_learning/atlas.py` 真实 Atlas `flow_edges.owner=null/sources=[]` 适配修复 + 回归
+`engine/tests/test_atlas_flow_shape.py`；真实快照夹具 `evidence/code-view-slice/`（Demo `bus.c`/`platform.c`
+字节级复制，Atlas 0.8.0 产物 snapshot `ed326d554334432b907de21297207eb8`）；独立验收工具与证据
+`tools/readonly-slice/`、`tools/verify-readonly.mjs`、`evidence/readonly-slice/`；契约
+[只读工作台契约](readonly-workbench-contract.md) 与本文开工说明。
+
+**验证命令与结果**（本机 Windows，2026-11-15）：
+
+| 命令 | 结果 | 证据 |
+|---|---|---|
+| `cd engine && python -m unittest discover -s tests -v` | Ran 240 tests, OK（新增 test_views 18、test_atlas_flow_shape 4） | `evidence/readonly-slice/engine-tests.txt` |
+| `node --test tests/node/*.test.mjs` | 56/56 pass（bridge/plugin/view-rpc/client） | `evidence/readonly-slice/node-tests.txt` |
+| `node --test demo/code-view/demo.test.cjs` | 8/8 pass（登记→发送、max_len 超限 -90、非法 -22、未登记 -2、平台失败 -5、锁 1→0） | `evidence/readonly-slice/verification.json → demo_comparison` |
+| `node tools/verify-readonly.mjs --with-repo-tests` | `ok=true, verified=true`，26/26 检查、`not_verified=[]`，三层全 true（verifier 与 Lead 各独立跑一次） | `evidence/readonly-slice/verification.json`、`render.png`、`render-resources.png`、`host-runtime.json/tap`、`commands.log` |
+
+**各层结论与来源**：
+
+- **Demo（`demo_observed`，Wasm 模拟观测）**：`bus_register(1)` → `bus_send(1,48)` 平台侧观测写 `0x20030`；
+  `bus_send(1,65)` 返回 `-90`（max_len 64 超限）、`bus_send(1,0)` `-22`、未登记 `-2`；48/49 分支；平台失败
+  `-5` 透传且锁 1→0。**不证明**真实设备或静态边运行时必达。
+- **真实 Atlas 快照（`atlas_snapshot`，静态 + 源码证据）**：快照 `verified/fresh`、19 入口；`bus_send`
+  源码 `bus.c:152–174`（首行含函数签名、164/165 行含 `if (!check_length(...))` / `return -90;`），三条
+  `exact` 调用边（`lookup_route` 160、`check_length` 164、`dispatch_transfer` 170）；资源层真实可用：
+  `routes` 对象 `bus.c:26`；`bus_register→store_route` 路径的 `routes[channel].max_len` **write exact**
+  `bus.c:46`；`bus_send→lookup_route/check_length` 的 `max_len` **read may** `bus.c:92/93/98/99`
+  （`unresolved_or_multiple_base_objects` 如实保留，`resource_status=partial`）。全程仓库相对路径、无绝对路径。
+- **DSH 宿主（`dsh_host`，pinned rc.5 隔离 profile 实测）**：`__DSH_BOOT__` 71 条 client 条目含
+  `@local/dsh-code-reader`，inject 与 package.json 一致；服务端 bundle 字节为仓库 `bundle/client.js` 精确前缀；
+  无 cookie 直连 `/code-view` → 401（准入真实生效），宿主 self-signed session cookie 下四端点 200 + 冻结信封 +
+  真实 Python；Chromium 32 步全 true：侧栏「代码工作台」（aria-label）→ 面板 → verified 快照 → `bus_send`
+  `[data-line="152"]` + 164/165 行 → `[data-evidence-class]` exact/may/source_text → 资源 read may 与
+  `bus_register` 的 write exact `bus.c:46` → gaps 5 项 → 返回聊天 → 二次打开 `selection.entry_id` 保留；
+  console error=0；`decode`/卸载后二次挂载：真实 Cordis 4.0.5 Context 下 6 个 `code_*` 工具注册、一次真实
+  Python 工具调用成功、`/code-view` 注册、dispose 注销、二次 apply 再注册再调用成功（host-runtime TAP 1/1）。
+
+**本轮未验证（不得写成已通过）**：真实 Linux/Kbuild、生成头与目标 ABI 索引；native CFG/locks/aliases 深分析
+（快照 `cfg=unsupported`、`data_flow=partial_path_insensitive`）；五视图图形/布局、场景执行/打桩/回退、运行
+观测；真实设备行为；跨仓真实快照；性能预算实测；桌面宿主热更新（验收用独立 profile，未重启用户桌面宿主）；
+OS 出口认证。机制说明按合同在 CW-T2/T3 完整交付时补。
+

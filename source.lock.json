@@ -122,7 +122,7 @@
       "location": "E:/dsh/resources/app.asar/dsh (implementation checkout) and the running desktop profile",
       "license": "Host-provided",
       "redistributed": false,
-      "used_as": "ctx.tools.register(ToolDefinition), ctx.skills.registerProvider, ctx.effect lifecycle; exact signatures read through cordis_inspect_query/Service on 2026-11-07.",
+      "used_as": "ctx.tools.register(ToolDefinition), ctx.skills.registerProvider, ctx.effect lifecycle; exact signatures read through cordis_inspect_query/Service on 2026-11-07. 2026-11-15 read-only slice also uses the reviewed client seams (rc.5 __ModuleLoader__ bundle, sidebar.panellist + keyed main, layout.selectPanel, connection.rpc.call, webServer.register + connection.admit) and was verified in an isolated web profile by tools/verify-readonly.mjs; evidence in evidence/readonly-slice/verification.json.",
       "files": []
     }
   ],
@@ -150,16 +150,66 @@
       ],
       "evidence": "evidence/real-atlas/README.md, evidence/real-atlas/verification.json",
       "limits": "No Linux kernel/Kbuild, no generated headers, no target ABI, no user repository; H drive read-only; no launcher, no network."
+    },
+    {
+      "date": "2026-11-15",
+      "kind": "real Atlas 0.8.0 read-only workbench fixture (synthetic Demo C only)",
+      "atlas_root": "H:/VSCODE_READER",
+      "atlas_git_commit": "c33320a98face14c5f6e5e817beaccf52b9bbb93",
+      "invocation": "H:/VSCODE_READER/runtime/windows-x86_64/venv/Scripts/python.exe H:/VSCODE_READER/scripts/sdk_atlas.py run --repo <slice>/repo --compdb <slice>/repo/compile_commands.json --out <slice>/atlas-run --max-tu 8 --tu-timeout 60 --dataflow off",
+      "compiler_for_compdb_probe": "C:/mingw64/bin/clang.exe (clang 16.0.4 mingw build)",
+      "analyzed_sources": {
+        "repo": "evidence/code-view-slice/repo (byte-identical copies of demo/code-view/bus.c and platform.c)",
+        "bus_c_sha256": "b2ec232896c2680d4eb3e68e3c34681d2ceb9f0fe5fa17a1d32be9ea77f1c6cf",
+        "platform_c_sha256": "6bfe0b0be3246dca1e344b965fb9acca2bc9df7b57d4a1dbb7339e25e7773162",
+        "compile_commands_sha256": "8cb56ee1b4fc310ffdc294990915360066b2b89bd8f2b891484cdf3a4cf01f27"
+      },
+      "snapshots": [
+        {
+          "name": "code-view-slice (Demo bus.c/platform.c, whole-repository scope)",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "manifest_sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6",
+          "functions": 19,
+          "call_targets": 15,
+          "coverage": {
+            "parsed": 2,
+            "failed": [],
+            "pending_units": [],
+            "whole_program_complete": false
+          },
+          "resource_layer": {
+            "objects": 18,
+            "field_accesses": 15,
+            "routes_object_id": "s_0860e6738eaa8c95f37d0d03",
+            "max_len_write_exact": "field_4a5beba32f2b4e170fabb37f (store_route, bus.c:46)",
+            "max_len_read_may": [
+              "field_0cd71f83a2f771a91f2dd939 (lookup_route, bus.c:92)",
+              "field_200c5e486931ded49e62166a (lookup_route, bus.c:93)",
+              "field_0574079c4daf7fd7ca66a33d (check_length, bus.c:98)"
+            ]
+          }
+        }
+      ],
+      "consumer_checks": {
+        "workspace_import": "workspace_revision=1, freshness=fresh",
+        "snapshot_import": "snapshot_ref=ed326d554334432b907de21297207eb8, graph_hash verified against raw bytes, freshness=fresh",
+        "existing_tools": "snapshot/path (bus_send->platform_write) exercised on the imported snapshot",
+        "adapter_fix": "atlas.validate_graph_payload now accepts real flow_edges with owner=null and sources=[] (file-scope initializers); regression engine/tests/test_atlas_flow_shape.py"
+      },
+      "evidence": "evidence/code-view-slice/README.md, evidence/code-view-slice/verification.json",
+      "limits": "Synthetic Demo C only; no Linux/Kbuild, no generated headers, no target ABI, no user repository, no hardware behavior; H drive read-only; no network; Atlas runtime used directly, no H launcher."
     }
   ],
   "boundaries": {
     "atlas_executed": true,
-    "atlas_executed_scope": "Atlas 0.8.0 CLI was executed with its bundled Windows runtime against the bundled trusted quickstart example and a synthetic three-function C repository only; no kernel/Kbuild analysis and no user repository.",
+    "atlas_executed_scope": "Atlas 0.8.0 CLI executed with its bundled Windows runtime against the bundled trusted quickstart example, a synthetic three-function C repository (2026-11-08) and the in-repo Demo bus.c/platform.c copies (2026-11-15); no kernel/Kbuild analysis, no generated headers and no user repository.",
     "atlas_full_package_vendored": false,
     "linux_kbuild_compdb_verified": false,
     "forced_isolation_runner_provisioned": false,
     "native_cfg_extractor_present": false,
     "network_used_by_runtime": false,
+    "readonly_workbench_slice": "2026-11-15: real 0.1 snapshot fixture imported and projected for the DSH read-only workbench slice; isolated rc.5 web profile + Chromium probe + real Cordis runtime verification recorded in evidence/readonly-slice/verification.json (ok=true, verified=true, 26/26 checks, not_verified=[]).",
     "note": "This source lock records read-only provenance only. It is not a redistribution manifest and does not claim the Linux analysis gates passed."
   }
 }

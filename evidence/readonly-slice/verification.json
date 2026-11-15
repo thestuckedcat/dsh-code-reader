@@ -1,0 +1,1610 @@
+{
+  "schema_version": 1,
+  "started_at_utc": "2026-11-15T05:38:46.146Z",
+  "purpose": "Independent black-box acceptance of the 04 read-only code workbench slice: pinned rc.5 isolated profile boot graph, /code-view admission+read model, real Chromium render/navigation, real Cordis mount/dispose/re-mount, real Atlas snapshot read model and the Demo observed behaviour.",
+  "host": {
+    "executable_path": "E:/dsh/DeepSeek Harness.exe",
+    "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+    "archive_path": "E:/dsh/resources/app.asar",
+    "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+    "dsh_version": "0.2.1-rc.5",
+    "embedded_node": "24.21.0",
+    "electron": "44.7.0"
+  },
+  "layers": {
+    "demo_observed": true,
+    "atlas_snapshot": true,
+    "dsh_host": true
+  },
+  "checks": {
+    "host.pinned_baseline": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "executable": {
+          "path": "E:/dsh/DeepSeek Harness.exe",
+          "sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+        },
+        "archive": {
+          "path": "E:/dsh/resources/app.asar",
+          "sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "dsh_version": "0.2.1-rc.5"
+        },
+        "completed_checks": 12,
+        "failed_checks": []
+      }
+    },
+    "host.plugin_package_contract": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "ok": true,
+        "package": {
+          "name": "@local/dsh-code-reader",
+          "version": "0.1.0",
+          "main": "index.js",
+          "dsh": {
+            "bundle": {
+              "patch": "./cordis.patch.yml"
+            },
+            "client": {
+              "inject": [
+                "@deepseek-ai/dsh-client-connection",
+                "@deepseek-ai/dsh-client-ui-layout",
+                "@deepseek-ai/dsh-client-ui-renderer"
+              ],
+              "platform": "web"
+            }
+          }
+        },
+        "client_bundle": {
+          "path": "bundle/client.js",
+          "bytes": 64090,
+          "sha256": "849cc0297de115536af289010664d50588bff8f1b96a85283843bcfa0d4b2c19"
+        },
+        "checks": {
+          "name": true,
+          "main": true,
+          "client_platform": true,
+          "client_inject": true,
+          "client_export": true,
+          "bundle_patch": true,
+          "patch_row": true,
+          "client_bundle_exists": true,
+          "client_bundle_bytes": true,
+          "client_loader_facade": true,
+          "client_loader_id": true
+        }
+      }
+    },
+    "host.isolated_profile": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "home": "scratch/readonly-home/home",
+        "home_is_isolated_from_user_profile": true,
+        "profile": {
+          "dir": "scratch/readonly-home/home/profiles/web",
+          "bundles": [
+            "@deepseek-ai/dsh-base",
+            "@deepseek-ai/dsh-web-app",
+            "@local/dsh-code-reader"
+          ],
+          "junction": "scratch/readonly-home/home/profiles/web/node_modules/@local/dsh-code-reader -> repository",
+          "cordis_patch": "[]"
+        },
+        "bootstrap": {
+          "path": "scratch/readonly-home/home/code-reader/bootstrap.json",
+          "candidate_roots": [
+            {
+              "root_ref": "slice-root",
+              "absolute_path": "evidence/code-view-slice",
+              "read_grant_ref": "grant-slice"
+            }
+          ]
+        },
+        "python": {
+          "command": "E:/Anaconda-main/python.exe",
+          "version": "3.11.4",
+          "directory": "E:\\Anaconda-main"
+        },
+        "imports": {
+          "workspace": 0,
+          "snapshot": 0,
+          "skipped": null
+        },
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "entry_count": 19,
+          "target": {
+            "entry_id": "f_afa8298f2d197e5fd110e49a",
+            "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+            "name": "bus_send",
+            "display_name": "bus_send(unsigned int, unsigned int)",
+            "signature": "int (unsigned int, unsigned int)",
+            "file": "bus.c",
+            "line": 152,
+            "byte_start": 4086,
+            "byte_end": 4743
+          }
+        }
+      }
+    },
+    "atlas.view_snapshots": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "source": "evidence/code-view-slice/inbox",
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "manifest_sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6",
+          "tool_version": "0.8.0",
+          "status": "verified",
+          "freshness": "fresh",
+          "atlas_schema": "0.1",
+          "imported_at": "2026-11-15T05:38:46Z",
+          "entry_count": 19,
+          "coverage": {
+            "failed_count": 0,
+            "pending_count": 0,
+            "whole_program_complete": false
+          },
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "limitations": [],
+          "error": null
+        }
+      }
+    },
+    "atlas.view_entries": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "entry": {
+          "entry_id": "f_afa8298f2d197e5fd110e49a",
+          "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+          "name": "bus_send",
+          "display_name": "bus_send(unsigned int, unsigned int)",
+          "kind": "function",
+          "storage": "NONE",
+          "signature": "int (unsigned int, unsigned int)",
+          "file": "bus.c",
+          "line": 152,
+          "is_entry": true,
+          "callers": 0,
+          "callees": 3,
+          "file_status": "ok"
+        },
+        "entry_count": 19
+      }
+    },
+    "atlas.view_entry": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "source": {
+          "status": "ok",
+          "path": "bus.c",
+          "lines": 23,
+          "byte_start": 4086,
+          "byte_end": 4743
+        },
+        "definition_line": {
+          "n": 152,
+          "text": "int bus_send(unsigned channel, unsigned length)"
+        },
+        "calls": [
+          {
+            "callsite": {
+              "file": "bus.c",
+              "line": 160,
+              "expression": "lookup_route(channel)"
+            },
+            "target": {
+              "entry_id": "f_144ee14b1f297d19f8bdab78",
+              "name": "lookup_route",
+              "file": "bus.c",
+              "line": 89
+            },
+            "certainty": "exact"
+          },
+          {
+            "callsite": {
+              "file": "bus.c",
+              "line": 164,
+              "expression": "check_length(route, length)"
+            },
+            "target": {
+              "entry_id": "f_b19a05b7a8457000a4562e91",
+              "name": "check_length",
+              "file": "bus.c",
+              "line": 96
+            },
+            "certainty": "exact"
+          },
+          {
+            "callsite": {
+              "file": "bus.c",
+              "line": 170,
+              "expression": "dispatch_transfer(route, length)"
+            },
+            "target": {
+              "entry_id": "f_ccdd7df856dd459e2934ea77",
+              "name": "dispatch_transfer",
+              "file": "bus.c",
+              "line": 143
+            },
+            "certainty": "exact"
+          }
+        ],
+        "evidence_classes": [
+          "exact"
+        ],
+        "gaps": [
+          {
+            "code": "resource_object_unresolved",
+            "status": "degraded",
+            "reason": "1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+          }
+        ],
+        "absolute_path_leak": false
+      }
+    },
+    "atlas.view_entry_resources": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "bus_send": {
+          "resources_status": "partial",
+          "objects": [
+            {
+              "name": "routes",
+              "file": "bus.c",
+              "line": 26
+            }
+          ],
+          "read_max_len": {
+            "access_id": "field_0cd71f83a2f771a91f2dd939",
+            "object_ids": [
+              "s_0860e6738eaa8c95f37d0d03",
+              "s_94384493ae9333256ae051c1"
+            ],
+            "object_names": [
+              "routes"
+            ],
+            "field_name": "max_len",
+            "field_path": [
+              "max_len"
+            ],
+            "expression": null,
+            "access": "read",
+            "certainty": "may",
+            "owner": {
+              "entry_id": "f_144ee14b1f297d19f8bdab78",
+              "name": "lookup_route",
+              "file": "bus.c",
+              "line": 89
+            },
+            "location": {
+              "file": "bus.c",
+              "line": 92
+            },
+            "evidence_ids": [
+              "e_a8a7e31073f7bc6bde44bdaf"
+            ],
+            "limitations": [
+              "unresolved_or_multiple_base_objects"
+            ]
+          }
+        },
+        "bus_register": {
+          "entry_id": "f_5aad5c091d5772eb2dada479",
+          "write_max_len": {
+            "access_id": "field_4a5beba32f2b4e170fabb37f",
+            "object_ids": [
+              "s_0860e6738eaa8c95f37d0d03"
+            ],
+            "object_names": [
+              "routes"
+            ],
+            "field_name": "max_len",
+            "field_path": [
+              "max_len"
+            ],
+            "expression": "routes[channel].max_len",
+            "access": "write",
+            "certainty": "exact",
+            "owner": {
+              "entry_id": "f_dfb9aead445405de7aafbbfa",
+              "name": "store_route",
+              "file": "bus.c",
+              "line": 43
+            },
+            "location": {
+              "file": "bus.c",
+              "line": 46
+            },
+            "evidence_ids": [
+              "e_e2c45180048a647378048a46"
+            ],
+            "limitations": []
+          }
+        }
+      }
+    },
+    "host.web_shell": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 200,
+        "final_url": "http://127.0.0.1:8567/",
+        "redirects": 1,
+        "bytes": 38241,
+        "cookies_issued_by_host": [
+          "dsh-auth-zssxxu9zxI-EyIYrYpiPwwcFkTEy_bR8lZhxvaEwlyU"
+        ]
+      }
+    },
+    "host.boot_release": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "release": {
+          "version": "0.2.1-rc.5",
+          "commit": "d4db512"
+        },
+        "expected": "0.2.1-rc.5",
+        "rev": "abc6e7f680ea",
+        "entries": 71
+      }
+    },
+    "host.boot_graph_entry": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "entry": {
+          "id": "@local/dsh-code-reader",
+          "url": "plugins/??@local/dsh-code-reader/client.js&rev=f02283e6df28",
+          "rev": "f02283e6df28",
+          "inject": [
+            "@deepseek-ai/dsh-client-connection",
+            "@deepseek-ai/dsh-client-ui-layout",
+            "@deepseek-ai/dsh-client-ui-renderer"
+          ]
+        },
+        "plugin_entries": 71
+      }
+    },
+    "host.boot_graph_inject": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "boot_graph_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ],
+        "package_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ]
+      }
+    },
+    "host.boot_graph_platform": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "platform": null
+      }
+    },
+    "host.client_bundle_bytes": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "fetched": true,
+        "url": "http://127.0.0.1:8567/plugins/??@local/dsh-code-reader/client.js&rev=f02283e6df28",
+        "status": 200,
+        "bytes": 64169,
+        "sha256": "ab95ae67395ffb0c8f471b0b5bfa43372feee74c6794b65ae8126f9ce0e415f6",
+        "repo_bytes": 64090,
+        "repo_sha256": "849cc0297de115536af289010664d50588bff8f1b96a85283843bcfa0d4b2c19",
+        "exact_prefix": true,
+        "served_suffix": ";\n//# sourceMappingURL=??@local/dsh-code-reader/client.js.map&rev=f02283e6df28\n",
+        "suffix_is_sourcemap_ref": true,
+        "loader_facade": true,
+        "loader_id": true,
+        "content_type": "text/javascript; charset=utf-8"
+      }
+    },
+    "host.rpc_admission": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 401,
+        "content_type": "text/plain; charset=utf-8",
+        "body_head": "unauthorized",
+        "interpretation": "connection admission refused the cookie-less direct request (seam active)"
+      }
+    },
+    "host.rpc_view_status": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 200,
+        "host": {
+          "plugin": "dsh-code-reader",
+          "package": "@local/dsh-code-reader",
+          "version": "0.1.0",
+          "panel_key": "dsh-code-reader",
+          "rpc_channel": "/code-view",
+          "node": "24.21.0",
+          "platform": "win32"
+        },
+        "engine": {
+          "python": "available",
+          "bootstrap": {
+            "configured": true,
+            "exists": true
+          }
+        },
+        "capabilities": {
+          "readonly_workbench": true,
+          "five_views": false,
+          "resource_graph": false,
+          "scenario_execution": false,
+          "run_observation": false
+        },
+        "gap_codes": [
+          "five_views",
+          "resource_graph",
+          "scenario_execution",
+          "run_observation"
+        ]
+      }
+    },
+    "host.rpc_list_snapshots": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 200,
+        "workspace": {
+          "workspace_id": "code-view-bus-demo",
+          "revision": 1,
+          "semantic_status": "semantic"
+        },
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "manifest_sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6",
+          "tool_version": "0.8.0",
+          "status": "verified",
+          "freshness": "fresh",
+          "atlas_schema": "0.1",
+          "imported_at": "2026-11-15T05:38:46Z",
+          "entry_count": 19,
+          "coverage": {
+            "failed_count": 0,
+            "pending_count": 0,
+            "whole_program_complete": false
+          },
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "limitations": [],
+          "error": null
+        }
+      }
+    },
+    "host.rpc_list_entries": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 200,
+        "entries": 19,
+        "bus_send": {
+          "entry_id": "f_afa8298f2d197e5fd110e49a",
+          "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+          "name": "bus_send",
+          "display_name": "bus_send(unsigned int, unsigned int)",
+          "kind": "function",
+          "storage": "NONE",
+          "signature": "int (unsigned int, unsigned int)",
+          "file": "bus.c",
+          "line": 152,
+          "is_entry": true,
+          "callers": 0,
+          "callees": 3,
+          "file_status": "ok"
+        }
+      }
+    },
+    "host.rpc_get_entry": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 200,
+        "source": {
+          "status": "ok",
+          "path": "bus.c",
+          "line_start": 152,
+          "line_end": 174
+        },
+        "definition_line": {
+          "n": 152,
+          "text": "int bus_send(unsigned channel, unsigned length)"
+        },
+        "calls": [
+          {
+            "callsite": {
+              "file": "bus.c",
+              "line": 160,
+              "expression": "lookup_route(channel)"
+            },
+            "target": {
+              "entry_id": "f_144ee14b1f297d19f8bdab78",
+              "name": "lookup_route",
+              "file": "bus.c",
+              "line": 89
+            },
+            "certainty": "exact"
+          },
+          {
+            "callsite": {
+              "file": "bus.c",
+              "line": 164,
+              "expression": "check_length(route, length)"
+            },
+            "target": {
+              "entry_id": "f_b19a05b7a8457000a4562e91",
+              "name": "check_length",
+              "file": "bus.c",
+              "line": 96
+            },
+            "certainty": "exact"
+          },
+          {
+            "callsite": {
+              "file": "bus.c",
+              "line": 170,
+              "expression": "dispatch_transfer(route, length)"
+            },
+            "target": {
+              "entry_id": "f_ccdd7df856dd459e2934ea77",
+              "name": "dispatch_transfer",
+              "file": "bus.c",
+              "line": 143
+            },
+            "certainty": "exact"
+          }
+        ],
+        "gaps": [
+          {
+            "code": "resource_object_unresolved",
+            "status": "degraded",
+            "reason": "1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+          }
+        ],
+        "absolute_path_leak": false
+      }
+    },
+    "host.rpc_input_validation": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 200,
+        "error": {
+          "code": "INVALID_ARGUMENT",
+          "message": "workspace must match ^[a-z0-9][a-z0-9._-]{0,63}$",
+          "details": {}
+        }
+      }
+    },
+    "host.rpc_bad_request_envelope": {
+      "ok": true,
+      "required": true,
+      "detail": {
+        "status": 200,
+        "body_head": "{\"type\":\"server-response\",\"rpcId\":\"invalid-request\",\"result\":{\"ok\":false,\"error\":{\"code\":\"gateway/bad-request\",\"message\":\"invalid client-request message\",\"details\":{}}}}"
+      }
+    },
+    "host.render_flow": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "ok": true,
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "sidebarEntry": true,
+          "hostOverlaysDismissedBeforeOpen": true,
+          "panelOpened": true,
+          "statusState": "ready",
+          "snapshotCandidatesFound": true,
+          "snapshotClicked": true,
+          "entryListed": true,
+          "entryClicked": true,
+          "sourceLineOk": true,
+          "sourceBoundsOk": true,
+          "evidenceClassesPresent": true,
+          "resourcesReadPresent": true,
+          "gapsPresent": true,
+          "fiveViewPlaceholders": true,
+          "selectionEntrySelected": true,
+          "selectionMatchesClickedEntry": true,
+          "returnToChat": true,
+          "chatRestored": true,
+          "panelReopened": true,
+          "reopenedSourceLine": {
+            "ok": true,
+            "target": {
+              "line": 152,
+              "text": "152 int bus_send(unsigned channel, unsigned length)",
+              "highlight": true
+            },
+            "target_contains_entry": true,
+            "line_count": 23,
+            "lines": [
+              {
+                "line": 152,
+                "text": "152 int bus_send(unsigned channel, unsigned length)",
+                "highlight": true
+              },
+              {
+                "line": 153,
+                "text": "153 {",
+                "highlight": true
+              },
+              {
+                "line": 154,
+                "text": "154 TRACE(REQUEST, channel, length, 0);",
+                "highlight": true
+              },
+              {
+                "line": 155,
+                "text": "155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) {",
+                "highlight": true
+              },
+              {
+                "line": 156,
+                "text": "156 TRACE(INVALID, channel, length, 0);",
+                "highlight": true
+              },
+              {
+                "line": 157,
+                "text": "157 return -22;",
+                "highlight": true
+              },
+              {
+                "line": 158,
+                "text": "158 }",
+                "highlight": true
+              },
+              {
+                "line": 159,
+                "text": "159",
+                "highlight": true
+              },
+              {
+                "line": 160,
+                "text": "160 const struct Route *route = lookup_route(channel);",
+                "highlight": true
+              },
+              {
+                "line": 161,
+                "text": "161 if (!route)",
+                "highlight": true
+              },
+              {
+                "line": 162,
+                "text": "162 return -2;",
+                "highlight": true
+              },
+              {
+                "line": 163,
+                "text": "163",
+                "highlight": true
+              },
+              {
+                "line": 164,
+                "text": "164 if (!check_length(route, length))",
+                "highlight": true
+              },
+              {
+                "line": 165,
+                "text": "165 return -90;",
+                "highlight": true
+              },
+              {
+                "line": 166,
+                "text": "166",
+                "highlight": true
+              },
+              {
+                "line": 167,
+                "text": "167 /* Serial simulator: this flag records the protected scope, without threads. */",
+                "highlight": true
+              },
+              {
+                "line": 168,
+                "text": "168 transfer_lock = 1;",
+                "highlight": true
+              },
+              {
+                "line": 169,
+                "text": "169 TRACE(LOCK, transfer_lock, 0, 0);",
+                "highlight": true
+              },
+              {
+                "line": 170,
+                "text": "170 int status = dispatch_transfer(route, length);",
+                "highlight": true
+              },
+              {
+                "line": 171,
+                "text": "171 transfer_lock = 0;",
+                "highlight": true
+              },
+              {
+                "line": 172,
+                "text": "172 TRACE(LOCK, transfer_lock, 0, 0);",
+                "highlight": true
+              },
+              {
+                "line": 173,
+                "text": "173 return status;",
+                "highlight": true
+              },
+              {
+                "line": 174,
+                "text": "174 }",
+                "highlight": true
+              }
+            ],
+            "line_164": {
+              "line": 164,
+              "text": "164 if (!check_length(route, length))",
+              "highlight": true
+            },
+            "line_165": {
+              "line": 165,
+              "text": "165 return -90;",
+              "highlight": true
+            },
+            "source_path_text": "源码 源码证据 bus.c:152–174"
+          },
+          "reopenedSourceKept": true,
+          "reopenSelectionKept": true,
+          "writeEntryClicked": true,
+          "writeSourceLineOk": true,
+          "writeExactResource": true,
+          "writeSelectionEntry": true,
+          "hostOverlaysDismissedBeforeCapture": true,
+          "screenshotCaptured": true,
+          "screenshotResourcesCaptured": true,
+          "noConsoleErrors": true
+        },
+        "snapshot_candidates": [
+          {
+            "snapshot_id": "ed326d554334432b907de21297207eb8",
+            "status": "verified",
+            "text": "code-view-bus-demo → semantic-x86_64 → ed326d554334432b907de21297207eb8 状态 已核验（verified） 新鲜度 最新（fresh） 入口 19 failed 0 pending 0 whole_program_complete false",
+            "visible": true
+          }
+        ],
+        "chosen_snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "status": "verified",
+          "text": "code-view-bus-demo → semantic-x86_64 → ed326d554334432b907de21297207eb8 状态 已核验（verified） 新鲜度 最新（fresh） 入口 19 failed 0 pending 0 whole_program_complete false",
+          "visible": true
+        },
+        "source_view": {
+          "ok": true,
+          "target": {
+            "line": 152,
+            "text": "152 int bus_send(unsigned channel, unsigned length)",
+            "highlight": true
+          },
+          "target_contains_entry": true,
+          "line_count": 23,
+          "lines": [
+            {
+              "line": 152,
+              "text": "152 int bus_send(unsigned channel, unsigned length)",
+              "highlight": true
+            },
+            {
+              "line": 153,
+              "text": "153 {",
+              "highlight": true
+            },
+            {
+              "line": 154,
+              "text": "154 TRACE(REQUEST, channel, length, 0);",
+              "highlight": true
+            },
+            {
+              "line": 155,
+              "text": "155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) {",
+              "highlight": true
+            },
+            {
+              "line": 156,
+              "text": "156 TRACE(INVALID, channel, length, 0);",
+              "highlight": true
+            },
+            {
+              "line": 157,
+              "text": "157 return -22;",
+              "highlight": true
+            },
+            {
+              "line": 158,
+              "text": "158 }",
+              "highlight": true
+            },
+            {
+              "line": 159,
+              "text": "159",
+              "highlight": true
+            },
+            {
+              "line": 160,
+              "text": "160 const struct Route *route = lookup_route(channel);",
+              "highlight": true
+            },
+            {
+              "line": 161,
+              "text": "161 if (!route)",
+              "highlight": true
+            },
+            {
+              "line": 162,
+              "text": "162 return -2;",
+              "highlight": true
+            },
+            {
+              "line": 163,
+              "text": "163",
+              "highlight": true
+            },
+            {
+              "line": 164,
+              "text": "164 if (!check_length(route, length))",
+              "highlight": true
+            },
+            {
+              "line": 165,
+              "text": "165 return -90;",
+              "highlight": true
+            },
+            {
+              "line": 166,
+              "text": "166",
+              "highlight": true
+            },
+            {
+              "line": 167,
+              "text": "167 /* Serial simulator: this flag records the protected scope, without threads. */",
+              "highlight": true
+            },
+            {
+              "line": 168,
+              "text": "168 transfer_lock = 1;",
+              "highlight": true
+            },
+            {
+              "line": 169,
+              "text": "169 TRACE(LOCK, transfer_lock, 0, 0);",
+              "highlight": true
+            },
+            {
+              "line": 170,
+              "text": "170 int status = dispatch_transfer(route, length);",
+              "highlight": true
+            },
+            {
+              "line": 171,
+              "text": "171 transfer_lock = 0;",
+              "highlight": true
+            },
+            {
+              "line": 172,
+              "text": "172 TRACE(LOCK, transfer_lock, 0, 0);",
+              "highlight": true
+            },
+            {
+              "line": 173,
+              "text": "173 return status;",
+              "highlight": true
+            },
+            {
+              "line": 174,
+              "text": "174 }",
+              "highlight": true
+            }
+          ],
+          "line_164": {
+            "line": 164,
+            "text": "164 if (!check_length(route, length))",
+            "highlight": true
+          },
+          "line_165": {
+            "line": 165,
+            "text": "165 return -90;",
+            "highlight": true
+          },
+          "source_path_text": "源码 源码证据 bus.c:152–174"
+        },
+        "evidence_classes": [
+          "source_text",
+          "exact",
+          "may"
+        ],
+        "resources": {
+          "present": true,
+          "status_text": "资源标识 状态 partial",
+          "objects": [
+            {
+              "resource_id": "s_0860e6738eaa8c95f37d0d03",
+              "text": "routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26"
+            }
+          ],
+          "accesses": [
+            {
+              "access_id": "field_0cd71f83a2f771a91f2dd939",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_200c5e486931ded49e62166a",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_99cc1933d347e4812d51d8c0",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_0574079c4daf7fd7ca66a33d",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_82c087ffda6cefc30d3ada85",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证据 e_6d7e9e05d76acac948324a8a 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_3cafb0d7f28379e640bd0120",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:148 字段 lane（route->lane） 证据 e_6689b07acd5985af8e0604e8 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_f343e8149b7729921a2635da",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:149 字段 lane（route->lane） 证据 e_ca4511d50de099afd258bfb7 限制 unresolved_or_multiple_base_objects"
+            }
+          ],
+          "text": "资源标识 状态 partial 对象（1） routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（7） 候选 方向 读（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证据 e_6d7e9e05d76acac948324a8a 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:148 字段 lane（route->lane） 证据 e_6689b07acd5985af8e0604e8 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:149 字段 lane（route->lane） 证据 e_ca4511d50de099afd258bfb7 限制 unresolved_or_multiple_base_objects"
+        },
+        "write_view": {
+          "ok": true,
+          "target": {
+            "line": 50,
+            "text": "50 int bus_register(unsigned channel)",
+            "highlight": true
+          },
+          "target_contains_entry": true,
+          "line_count": 11,
+          "lines": [
+            {
+              "line": 50,
+              "text": "50 int bus_register(unsigned channel)",
+              "highlight": true
+            },
+            {
+              "line": 51,
+              "text": "51 {",
+              "highlight": true
+            },
+            {
+              "line": 52,
+              "text": "52 if (channel >= CHANNEL_COUNT) {",
+              "highlight": true
+            },
+            {
+              "line": 53,
+              "text": "53 TRACE(INVALID, channel, 0, 0);",
+              "highlight": true
+            },
+            {
+              "line": 54,
+              "text": "54 return -22;",
+              "highlight": true
+            },
+            {
+              "line": 55,
+              "text": "55 }",
+              "highlight": true
+            },
+            {
+              "line": 56,
+              "text": "56 const struct Route *route = &route_defaults[channel];",
+              "highlight": true
+            },
+            {
+              "line": 57,
+              "text": "57 TRACE(DEFAULT_ROUTE, channel, route->lane, route->max_len);",
+              "highlight": true
+            },
+            {
+              "line": 58,
+              "text": "58 store_route(channel, route->lane, route->max_len);",
+              "highlight": true
+            },
+            {
+              "line": 59,
+              "text": "59 return 0;",
+              "highlight": true
+            },
+            {
+              "line": 60,
+              "text": "60 }",
+              "highlight": true
+            }
+          ],
+          "line_164": null,
+          "line_165": null,
+          "source_path_text": "源码 源码证据 bus.c:50–60"
+        },
+        "write_resources": {
+          "present": true,
+          "status_text": "资源标识 状态 partial",
+          "objects": [
+            {
+              "resource_id": "s_df7e9ea6246145b01953fcaa",
+              "text": "route_defaults 类型 const struct Route[4] · 存储 STATIC 位置 bus.c:21"
+            },
+            {
+              "resource_id": "s_0860e6738eaa8c95f37d0d03",
+              "text": "routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26"
+            }
+          ],
+          "accesses": [
+            {
+              "access_id": "field_307f22ee579fe22d7713b62f",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:57 字段 lane 对象 route_defaults 证据 e_64b1228871e64f798a4dfedc 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_5fc4d8c993d31d23d77c7b10",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:57 字段 max_len 对象 route_defaults 证据 e_64b1228871e64f798a4dfedc 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_7b3671a85bc59b144015ab16",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:58 字段 lane（route->lane） 对象 route_defaults 证据 e_59e1693c7fe62f072be06033 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_c9847213f941252520a22173",
+              "access": "read",
+              "certainty": "may",
+              "text": "候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:58 字段 max_len（route->max_len） 对象 route_defaults 证据 e_b97c333b4b8f9dd3d1d60d4e 限制 unresolved_or_multiple_base_objects"
+            },
+            {
+              "access_id": "field_203cc1a39dd0331dcf8e06ba",
+              "access": "write",
+              "certainty": "exact",
+              "text": "静态确定 方向 写（write） owner store_route（bus.c:43） 位置 bus.c:45 字段 lane（routes[channel].lane） 对象 routes 证据 e_f05404542ed3314560ab4592"
+            },
+            {
+              "access_id": "field_4a5beba32f2b4e170fabb37f",
+              "access": "write",
+              "certainty": "exact",
+              "text": "静态确定 方向 写（write） owner store_route（bus.c:43） 位置 bus.c:46 字段 max_len（routes[channel].max_len） 对象 routes 证据 e_e2c45180048a647378048a46"
+            }
+          ],
+          "text": "资源标识 状态 partial 对象（2） route_defaults 类型 const struct Route[4] · 存储 STATIC 位置 bus.c:21 routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（6） 候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:57 字段 lane 对象 route_defaults 证据 e_64b1228871e64f798a4dfedc 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:57 字段 max_len 对象 route_defaults 证据 e_64b1228871e64f798a4dfedc 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:58 字段 lane（route->lane） 对象 route_defaults 证据 e_59e1693c7fe62f072be06033 限制 unresolved_or_multiple_base_objects 候选 方向 读（read） owner bus_register（bus.c:50） 位置 bus.c:58 字段 max_len（route->max_len） 对象 route_defaults 证据 e_b97c333b4b8f9dd3d1d60d4e 限制 unresolved_or_multiple_base_objects 静态确定 方向 写（write） owner store_route（bus.c:43） 位置 bus.c:45 字段 lane（routes[channel].lane） 对象 routes 证据 e_f05404542ed3314560ab4592 静态确定 方向 写（write） owner store_route（bus.c:43） 位置 bus.c:46 字段 max_len（routes[channel].max_len） 对象 routes 证据 e_e2c45180048a647378048a46"
+        },
+        "write_access": {
+          "access_id": "field_4a5beba32f2b4e170fabb37f",
+          "access": "write",
+          "certainty": "exact",
+          "text": "静态确定 方向 写（write） owner store_route（bus.c:43） 位置 bus.c:46 字段 max_len（routes[channel].max_len） 对象 routes 证据 e_e2c45180048a647378048a46"
+        },
+        "write_selection": {
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "repo_id": "bus",
+          "entry_id": "f_5aad5c091d5772eb2dada479",
+          "symbol_id": "s_75d9e1293f21ca64f08c84f7",
+          "callsite_ids": [],
+          "callsite_path": [],
+          "resource_ids": [
+            "s_df7e9ea6246145b01953fcaa",
+            "s_0860e6738eaa8c95f37d0d03"
+          ],
+          "resource_status": "partial",
+          "evidence_ids": [
+            "e_5a986ad91b06b1143fd7fb96"
+          ],
+          "run_id": null,
+          "event_id": null
+        },
+        "gaps": {
+          "present": true,
+          "non_empty": true,
+          "codes": [
+            "five_views",
+            "resource_graph",
+            "scenario_execution",
+            "run_observation",
+            "resource_object_unresolved"
+          ],
+          "text": "five_views 状态 unavailable 本轮只读切片；耦合/树/端到端/时序/文件五视图正式投影未实现 resource_graph 状态 unavailable 本轮只读切片；资源关系图/文字树/端到端图/时序图/文件视图未实现 scenario_execution 状态 unavailable 本轮只读切片；场景执行/打桩/回退未实现 run_observation 状态 unavailable 本切片无运行观测；运行记录/事件未接入 resource_object_unresolved 状态 degraded 1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+        },
+        "five_views": [
+          {
+            "view": "coupling",
+            "state": "not_available_in_readonly_slice"
+          },
+          {
+            "view": "tree",
+            "state": "not_available_in_readonly_slice"
+          },
+          {
+            "view": "end_to_end",
+            "state": "not_available_in_readonly_slice"
+          },
+          {
+            "view": "sequence",
+            "state": "not_available_in_readonly_slice"
+          },
+          {
+            "view": "file",
+            "state": "not_available_in_readonly_slice"
+          }
+        ],
+        "selection": {
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "repo_id": "bus",
+          "entry_id": "f_afa8298f2d197e5fd110e49a",
+          "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+          "callsite_ids": [],
+          "callsite_path": [],
+          "resource_ids": [
+            "s_0860e6738eaa8c95f37d0d03"
+          ],
+          "resource_status": "partial",
+          "evidence_ids": [
+            "e_231505a73a485bc1d8c9249d"
+          ],
+          "run_id": null,
+          "event_id": null
+        },
+        "reopen_selection": {
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "repo_id": "bus",
+          "entry_id": "f_afa8298f2d197e5fd110e49a",
+          "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+          "callsite_ids": [],
+          "callsite_path": [],
+          "resource_ids": [
+            "s_0860e6738eaa8c95f37d0d03"
+          ],
+          "resource_status": "partial",
+          "evidence_ids": [
+            "e_231505a73a485bc1d8c9249d"
+          ],
+          "run_id": null,
+          "event_id": null
+        },
+        "panel_dom": {
+          "panel_present": true,
+          "panel_title": "代码工作台",
+          "status_state": "ready",
+          "snapshot_count": 1,
+          "entry_count": 19,
+          "source_line_count": 23,
+          "evidence_classes": [
+            "source_text",
+            "exact",
+            "may"
+          ],
+          "field_access_count": 7,
+          "resource_id_count": 1,
+          "gap_codes": [
+            "five_views",
+            "resource_graph",
+            "scenario_execution",
+            "run_observation",
+            "resource_object_unresolved"
+          ],
+          "error_code": null,
+          "return_button": true
+        },
+        "final_overlay": {
+          "dialog_count": 0,
+          "dialog_texts": [],
+          "onboardingVisible": false,
+          "previewVisible": false,
+          "url": "http://127.0.0.1:8567/",
+          "title": "DeepSeek Harness"
+        },
+        "console_errors": [],
+        "screenshot": "evidence/readonly-slice/render.png",
+        "screenshot_bytes": 231722,
+        "screenshot_sha256": "22a9a028837317fb4ae227660c923c1d8b7e03106cefdeb0e7e200e1fd62a77a",
+        "screenshot_method": "capturePage",
+        "resources_screenshot": "evidence/readonly-slice/render-resources.png",
+        "resources_screenshot_sha256": "70134e95ed962ce6260bb2ddf6d34d5cf1a51d391fbf23afb52d65ca8107dcce",
+        "window_shown_invisible": true,
+        "debug": null
+      }
+    },
+    "host.render_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "duration_ms": 5497,
+        "screenshot": "evidence/readonly-slice/render.png",
+        "screenshot_bytes": 231722,
+        "screenshot_sha256": "22a9a028837317fb4ae227660c923c1d8b7e03106cefdeb0e7e200e1fd62a77a",
+        "screenshot_error": null,
+        "console_error_count": 0,
+        "console_lines": [],
+        "result_json": "scratch/readonly-home/render.json",
+        "probe_log": "scratch/readonly-home/probe.log",
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n",
+        "error": null
+      }
+    },
+    "host.render_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_lines": [],
+        "console_error_count": 0
+      }
+    },
+    "dsh_host.cordis_runtime": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "tap_summary": {
+          "tests": 1,
+          "pass": 1,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "gates_ok": true,
+        "host": {
+          "executable_path": "E:/dsh/DeepSeek Harness.exe",
+          "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+          "archive_path": "E:/dsh/resources/app.asar",
+          "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "dsh_version": "0.2.1-rc.5",
+          "embedded_node": "24.21.0",
+          "electron": "44.7.0"
+        },
+        "evidence": "evidence/readonly-slice/host-runtime.json",
+        "tap": "evidence/readonly-slice/host-runtime.tap",
+        "stdout_tail": "{\n  \"ok\": true,\n  \"exit_code\": 0,\n  \"tap_summary\": {\n    \"tests\": 1,\n    \"pass\": 1,\n    \"fail\": 0,\n    \"cancelled\": 0,\n    \"skipped\": 0,\n    \"todo\": 0\n  },\n  \"duration_ms\": 1219,\n  \"evidence\": \"evidence/readonly-slice/host-runtime.json\"\n}\n",
+        "stderr_tail": ""
+      }
+    },
+    "demo.code_view_demo_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "demo_observed",
+      "detail": {
+        "command": "node --test demo/code-view/demo.test.cjs",
+        "status": 0,
+        "summary": {
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "TAP version 13\n# Subtest: interface registration selects the default route and observes the C write\nok 1 - interface registration selects the default route and observes the C write\n  ---\n  duration_ms: 2.7525\n  type: 'test'\n  ...\n# Subtest: a stub route changes the write and resetting discards the previous state\nok 2 - a stub route changes the write and resetting discards the previous state\n  ---\n  duration_ms: 0.5827\n  type: 'test'\n  ...\n# Subtest: unregistered keys, invalid input and long payloads return without a write\nok 3 - unregistered keys, invalid input and long payloads return without a write\n  ---\n  duration_ms: 0.4264\n  type: 'test'\n  ...\n# Subtest: call graph and embedded code map to fixture source\nok 4 - call graph and embedded code map to fixture source\n  ---\n  duration_ms: 0.1722\n  type: 'test'\n  ...\n# Subtest: 48 bytes take the direct branch and 49 bytes stage before encoding\nok 5 - 48 bytes take the direct branch and 49 bytes stage before encoding\n  ---\n  duration_ms: 1.0085\n  type: 'test'\n  ...\n# Subtest: nested folding reconnects edges and merges duplicate boundary links\nok 6 - nested folding reconnects edges and merges duplicate boundary links\n  ---\n  duration_ms: 0.3289\n  type: 'test'\n  ...\n# Subtest: a shared implementation does not borrow observations from the other caller\nok 7 - a shared implementation does not borrow observations from the other caller\n  ---\n  duration_ms: 0.0705\n  type: 'test'\n  ...\n# Subtest: platform return stubs propagate to the entry and release the transfer lock\nok 8 - platform return stubs propagate to the entry and release the transfer lock\n  ---\n  duration_ms: 0.44\n  type: 'test'\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 115.2643\n\n"
+      }
+    },
+    "dsh_host.repo_node_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "files": [
+          "tests/node/bridge.test.mjs",
+          "tests/node/client.test.mjs",
+          "tests/node/plugin.test.mjs",
+          "tests/node/view-rpc.test.mjs"
+        ],
+        "status": 0,
+        "summary": {
+          "tests": 56,
+          "pass": 56,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "pe: 'test'\n  ...\n# Subtest: success responses echo rpcId, freeze the envelope type and pass an AbortSignal\nok 43 - success responses echo rpcId, freeze the envelope type and pass an AbortSignal\n  ---\n  duration_ms: 0.3144\n  type: 'test'\n  ...\n# Subtest: view.status reports host/engine facts and slice gaps without starting the engine\nok 44 - view.status reports host/engine facts and slice gaps without starting the engine\n  ---\n  duration_ms: 0.8087\n  type: 'test'\n  ...\n# Subtest: view.status stays ok:true with explicit gaps when Python and bootstrap are missing\nok 45 - view.status stays ok:true with explicit gaps when Python and bootstrap are missing\n  ---\n  duration_ms: 1.3519\n  type: 'test'\n  ...\n# Subtest: view.status rejects unknown payload fields with INVALID_ARGUMENT\nok 46 - view.status rejects unknown payload fields with INVALID_ARGUMENT\n  ---\n  duration_ms: 0.3613\n  type: 'test'\n  ...\n# Subtest: view.listSnapshots maps to the fixed argv and returns engine JSON verbatim\nok 47 - view.listSnapshots maps to the fixed argv and returns engine JSON verbatim\n  ---\n  duration_ms: 0.3662\n  type: 'test'\n  ...\n# Subtest: view.listEntries validates the payload and maps to the fixed argv\nok 48 - view.listEntries validates the payload and maps to the fixed argv\n  ---\n  duration_ms: 1.0241\n  type: 'test'\n  ...\n# Subtest: view.getEntry validates the payload and maps to the fixed argv\nok 49 - view.getEntry validates the payload and maps to the fixed argv\n  ---\n  duration_ms: 0.6736\n  type: 'test'\n  ...\n# Subtest: engine error JSON (ok:false) is passed through as a successful RPC value\nok 50 - engine error JSON (ok:false) is passed through as a successful RPC value\n  ---\n  duration_ms: 0.2583\n  type: 'test'\n  ...\n# Subtest: BridgeError maps to stable path-free codes\nok 51 - BridgeError maps to stable path-free codes\n  ---\n  duration_ms: 0.6657\n  type: 'test'\n  ...\n# Subtest: bridge failures without engine JSON are mapped by exit code\nok 52 - bridge failures without engine JSON are mapped by exit code\n  ---\n  duration_ms: 0.7467\n  type: 'test'\n  ...\n# Subtest: responses above 512 KiB are refused with a fixed small envelope\nok 53 - responses above 512 KiB are refused with a fixed small envelope\n  ---\n  duration_ms: 2.0128\n  type: 'test'\n  ...\n# Subtest: createViewDispatch fails closed for unknown endpoints\nok 54 - createViewDispatch fails closed for unknown endpoints\n  ---\n  duration_ms: 0.3198\n  type: 'test'\n  ...\n# Subtest: plugin identity is unchanged and the UI fiber stays pending without host services\nok 55 - plugin identity is unchanged and the UI fiber stays pending without host services\n  ---\n  duration_ms: 0.7004\n  type: 'test'\n  ...\n# Subtest: plugin mounts the /code-view prefix route when host services are available\nok 56 - plugin mounts the /code-view prefix route when host services are available\n  ---\n  duration_ms: 0.3915\n  type: 'test'\n  ...\n1..56\n# tests 56\n# suites 0\n# pass 56\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 597.894\n\n"
+      }
+    }
+  },
+  "not_verified": [],
+  "commands": [
+    {
+      "at": "2026-11-15T05:38:46.148Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\tools\\verify-readonly.mjs",
+        "--with-repo-tests"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "note": "self (verifier entry point)",
+      "display": "C:\\Program Files\\nodejs\\node.exe E:\\dsh\\plugin\\04-code-learning\\tools\\verify-readonly.mjs --with-repo-tests"
+    },
+    {
+      "at": "2026-11-15T05:38:46.862Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "workspace-import",
+        "--manifest",
+        "workspace.json",
+        "--expected-revision",
+        "0",
+        "--operation-id",
+        "2e27c8a3-276b-4f89-b118-f448b9c6efea"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json workspace-import --manifest workspace.json --expected-revision 0 --operation-id 2e27c8a3-276b-4f89-b118-f448b9c6efea [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:46.862Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "snapshot-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--snapshot",
+        "snapshot-bus",
+        "--operation-id",
+        "50a20ca0-5e88-4821-adcf-ccf6105b61cd"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json snapshot-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --snapshot snapshot-bus --operation-id 50a20ca0-5e88-4821-adcf-ccf6105b61cd [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:46.983Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-snapshots"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-snapshots [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:47.104Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entries",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-entries --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:47.232Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entry",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-entry --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_afa8298f2d197e5fd110e49a [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:47.353Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entry",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_5aad5c091d5772eb2dada479"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-entry --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_5aad5c091d5772eb2dada479 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:49.164Z",
+      "executable": "E:/dsh/DeepSeek Harness.exe",
+      "args": [
+        "E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js",
+        "web",
+        "--no-open",
+        "--port",
+        "0"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home",
+      "note": "isolated dsh web boot (one-time URL token redacted)",
+      "display": "E:/dsh/DeepSeek Harness.exe E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js web --no-open --port 0"
+    },
+    {
+      "at": "2026-11-15T05:38:55.953Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\probe-app --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:57.307Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\tools\\verify-host-runtime.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe E:\\dsh\\plugin\\04-code-learning\\tools\\verify-host-runtime.mjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:57.542Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "demo/code-view/demo.test.cjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap demo/code-view/demo.test.cjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T05:38:58.248Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "tests/node/bridge.test.mjs",
+        "tests/node/client.test.mjs",
+        "tests/node/plugin.test.mjs",
+        "tests/node/view-rpc.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap tests/node/bridge.test.mjs tests/node/client.test.mjs tests/node/plugin.test.mjs tests/node/view-rpc.test.mjs [exit 0]"
+    }
+  ],
+  "environment": {
+    "node": "26.13.0",
+    "platform": "win32",
+    "workspace": "E:\\dsh\\plugin\\04-code-learning"
+  },
+  "limitations": [
+    "Uses a locally installed generic Electron binary only as the Chromium test instrument; it is not a shipped dependency.",
+    "The isolated fresh DSH_HOME may show the product host first-run preview/onboarding overlay in the screenshot; the workbench DOM assertions are recorded independently of that host UI.",
+    "No OS-wide egress certification is performed here; this acceptance is a local, read-only slice check.",
+    "DEMO layer is the Wasm/JS behaviour model, not the real DSH host; ATLAS layer is the real imported snapshot; DSH_HOST is the pinned local rc.5. The three are kept separate."
+  ],
+  "checks_summary": {
+    "total": 26,
+    "passed": 26,
+    "failed": 0,
+    "not_verified": 0
+  },
+  "ok": true,
+  "verified": true,
+  "finished_at_utc": "2026-11-15T05:38:58.472Z",
+  "duration_ms": 12326
+}

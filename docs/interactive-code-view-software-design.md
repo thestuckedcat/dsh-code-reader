@@ -1,0 +1,180 @@
+# 04 交互式代码工作台软件设计
+
+`CL-VIEW-D2` · 2026-11-15 · 开发设计，待实现与验收。适用于 Linux 驱动、用户态库及跨仓 C/C++ 阅读、证据导航和本地模拟。**状态（2026-11-15）**：CW-T1 只读切片开工，开工说明见[实施路线](implementation-route.md)，实施/验收契约见[只读工作台契约](readonly-workbench-contract.md)；本节五视图、场景与完整验收仍待 CW-T2/T3/T4。
+
+[产品基线与待确认范围](product-form.md) · [04 基线软件设计](software-design.md) · [Demo 历次修订](interactive-code-view-draft.md) · [可运行 Demo](../demo/code-view/index.html) · [DSH 侧边栏指导 skill 草案](dsh-code-view-ui/SKILL.md)
+
+## 1. 当前证据与交付范围
+
+04 已有 workspace 登记、范围内源码读取、Atlas 快照、关系查询、学习记录和 DSH 工具。当前 Demo 用固定的 `bus.c` / `platform.c`、Clang AST、显式 C 事件及 Wasm 演示五种视图。资源语义、分支归纳和布局含样例配置。业务仓库导入、完整 Kbuild/CFG 分析、真实设备行为及这个 GUI 的宿主接入各有独立验收。04 基线和过去的运行证据继续按原合同解释。[实施契约](implementation-contract.md) · [实施路线](implementation-route.md) · [Demo 源码目录](../demo/code-view/)
+
+建议依次交付只读工作台、按需深分析和受控场景执行。第一阶段先让用户从真实快照进入入口、资源和源码。场景功能先消费已有轨迹，再启用已登记且可重放的模拟。真实设备下发和图内源码写回是待定的高层产品选择。本文提供开发路线、待验证的相容方案和验收标准。
+
+## 2. 用户约束与验收映射
+
+下表汇总历次纠正。每条保留稳定编号，后续局部修订时更新相应视图投影、合同与用例。历史 `CL-VIEW-01..19` 指回 Demo 文档。[局部修订规则](../../docs/design-change-policy.md)
+
+| ID | 实现要求 | 章节、验收 |
+|---|---|---|
+| CW-01 分层阅读 | 先从源码提炼业务主线，说明触发、关键决策和状态变化、交接、完成或失败。第二层按文件列出主要函数及职责，第三层突出目标函数、上下游和受影响结构体，第四层提供实现细节与证据。问单个函数时先给一句作用，再给足以定位它的局部框架和相关分支。 | §§3–4，A01/A06 |
+| CW-02 资源关系图 | 左右是函数、中央是全局资源；同一函数或资源各一个框。双向访问共用节点。箭头方向、线色和注释区分读、写、读改写、初始化、去初始化、分配、释放和锁操作，并标出字段。外部自定义函数/库调用到当前分析域边界为止。 | §§3、6，A02/A05 |
+| CW-03 资源定义 | 区分全局/共享/静态变量、静态常量表、运行时注册状态、每设备对象、内存、寄存器/位段、锁、钩子和硬件标志。每项独立配色、有简介。点击看原始 C 定义、初始化或结构体，每个已识别字段有注释和推断依据。 | §§3–4，A02/A03 |
+| CW-04 文字树与文件 | 树包含当前范围内所有已知入口，按控制顺序展开具体分支、数据、回滚和函数调用，折叠并可跳源码。文件视图只呈现目录树、完整只读代码与行号。 | §3，A03/A06 |
+| CW-05 端到端图 | 一次只选一个入口。默认竖向正交实线，判断用菱形、条件放在线上。显式入口与返回、设备和库交接处，异常边红色且带原因。支持拖拽、平移、缩放、适应、搜索和一键规整，画布随内容扩展。 | §§3、6，A01/A04 |
+| CW-06 组与子流程 | 原图按抽象职责展开或折叠嵌套组，自动归纳名称/描述并可修订。折叠后成为一个矩形处理框，进出边接组端口。复杂函数详情可切换源码/子流程，面包屑指回入口及调用路径。入口详情回同一张图，公共函数只维护一份实现，按调用点保留上下文。 | §§3–4、6，A04/A06 |
+| CW-07 基础接口库 | 自动识别有稳定契约且与业务流程解耦的候选，可手动加入/移出。复杂接口可连同内部组收作黑盒，默认看入参、出参、功能简介、实现简介、入参校验与相关副作用。移出后可展开原有步骤。 | §§3–4，A06/A07 |
+| CW-08 模拟与时序 | 前置操作可选接口和入参，逐次记录出参、执行事件及对后续链路的影响。允许受控打桩注入已注册状态或为外部边界设结果。入口按调用处理。仅回退末尾 N 次。时序视图可重排、重复接口并现场生成。 | §7，A08/A09 |
+| CW-09 选择与详情 | 跨视图按入口、函数、调用路径及资源同步选中。资源相关函数只定位高亮，详情保持收起；点画布空白收起详情，拖动保持。详情含源码、子流程图、资源分析和不超过 500 字的 AI 归纳。 | §§3–4、9，A02/A06 |
+| CW-10 UI 与资源分析 | 左栏「打桩模拟／全局资源」，相关资源高亮置顶。初始化、修改、释放、Read 各有淡色栏和函数跳转。函数资源页展示锁上下文、申请/释放、临界字段。用户态与内核态异色，IRQ 等机制独立形状或配色，右上角 `?` 说明所有特殊颜色。 | §§3、6、9，[UI skill](dsh-code-view-ui/SKILL.md)，A03/A04/A10 |
+| CW-11 通用性与质量 | 支持单仓/多仓、多个入口、不同构建变体、重名符号和库/异步边界。包含源码可追溯、能力降级、增量生成、运行证据校验、复核和性能验收。 | §§4–10，A05/A07/A11/A12 |
+
+## 3. 五个视图与交互
+
+| 视图 | 首屏 | 下钻与停止边界 |
+|---|---|---|
+| 资源关系图 | 按当前组件域和入口范围生成三列。左侧通常是写者，右侧通常是读者，读写兼有的函数择一落位，线的方向代表访问操作。字段与索引可展开。 | 库/外部自定义函数作为交接终点，可切换到库自己的范围。监控线程、进程、IRQ 或工作队列需用已证启动点、执行上下文、监控目标和停止机制呈现。跨进程通过显式通道/事件或已证共享内存关联。 |
+| 可折叠文字树 | 折叠列出全部已知入口，展开所选入口。按源码条件组织调用、分支、数据流、失败和同步。 | 逐层按调用点定位。共享函数跳到同一源码定义，调用参数与上下文分别保留。递归出现回引用。源代码始终带来源。 |
+| 单入口端到端图 | 用一张图显示所选入口、业务处理、关键决策、跨域交接、正常和错误出口。 | 原图展开嵌套组。函数详情下钻转为对应子流程，有面包屑返回；根入口复用原图。异步完成单独显示事件触发，提交返回有自己的边界。 |
+| 时序图 | 选择接口、入参及执行顺序。执行或导入轨迹后显示调用、出参、资源读写、异步事件和设备边界。 | 消息定位源调用点、运行证据和入口。大轨迹按步骤、上下文和关联 ID 剪裁，展开原始事件。 |
+| 文件视图 | 文件树与完整只读源码。 | 可用当前函数或资源的源位置联动，保留所选文件、滚动和目录状态。 |
+
+共享选择和详情开关是两类状态。用户点空白关闭详情，拖动保留当前选择。侧栏资源按直接读写、当前调用链可证间接读写、其他分区排序。与当前调用链无直接节点的函数可定位为明确的链路外参考。对一个资源的初始化、读、更新、释放指向对应源码。临界字段按调用路径和上下文显示，作用范围欠证据时标未知。
+
+基础接口自动识别采用可审核规则。候选需有签名、输入/返回合同及可说明的状态边界。纯计算、转发、内核包装可优先建议归入；只有副作用和依赖可追溯时才将复杂职责归为黑盒。实际影响业务结果的写寄存器、同步、所有权、错误或回调在相关图中展开。人工加入/移出是展示覆盖，可保留并在源码变化后标待复核。组名和 AI 归纳保存对应事实引用、生成版本和推断标签，归纳最多 500 字。公共函数的独立契约/小图可复用。
+
+## 4. CodeGraph、准确性和通用性
+
+### 4.1 总体架构
+
+推荐 **复用已有 Atlas 快照作为 CodeGraph 底座，补充按需索引及独立复核**。链路为：登记 workspace/variant → 现有 04 Adapter 导入并核验 → 事实索引/关系查询 → 视图投影与校验 → 布局 worker → DSH 面板。场景事件另入台账，与对应的源码版本、调用点和接口统一标识。初版采用本地 SQLite/不可变快照做轻量读投影，无需第二套全仓解析器或单独图数据库。现有 Atlas 对照已覆盖真实位置、调用和 legacy flow 导入。CFG、锁、别名与目标 Linux/Kbuild 能力分别验收。[04 真实 Atlas 对照](../evidence/real-atlas/README.md) · [机制说明](mechanisms.md)
+
+| 层 | 数据与责任 |
+|---|---|
+| 身份层 | workspace、repo、源码摘要和快照、构建变体、TU、编译器、架构、CONFIG、生成头、已分析与缺失覆盖。多仓绑定需匹配各端快照和构建语义。同名 `static` 独立。 |
+| 代码事实层 | 函数/调用点、声明、类型和字段、宏声明/展开区间、对象、控制转移、返回及直接调用。无编译证据的发现标 source-only。 |
+| 关系层 | `direct_call`、`indirect_candidate`、`cfg_successor`、`registers`、`dispatches`、`event_handoff`、`abi_bridge`，及 `read/write/rmw/init/deinit/alloc/free/acquire/release`。每边携带来源、条件和限制。 |
+| 资源身份与上下文 | 区分对象、`fieldPath`、常量/符号索引与位区间。共享表依赖要核对键、字段、归属及生命周期。沿路径传递锁/上下文与所有权，受别名、调用不透明和线程并发影响时降置信度。 |
+| 运行与解释层 | `runId/eventId/callId/parentCallId/correlationId` 区分真实事件与静态候选。归纳、字段说明及设备机制作为有依赖的 annotation 版本化，AI 可解释已有证据并提出待查问题。 |
+
+通用 C/C++ 核心只建模语言事实、访问、执行上下文和已声明的边界。Linux 适配以版本化规则识别 fops/UAPI、注册和分派、`request_irq`、workqueue、kthread、MMIO/DMA 及同步原语。按实际签名、定义与可核上下文绑定私有包装。资源图通过规则和证据建立对象关系。设备规格缺失时保留寄存器操作事实与未知位义；同名 API、宏、常量、静态表注册和地址引用各自保留其证据强度。跨 UMD/KMD 的同名 ioctl、回调装载、动态符号需结合 ABI、对象和运行配置。[基线软件设计 §§4–8](software-design.md)
+
+### 4.2 复核流水线
+
+1. 提取时固定构建身份及语言/规则包版本。现有快照优先，用户选择某个入口才按需补充 CFG、指针目标、资源操作与锁。他处 TU 未覆盖和生成头缺失以明确状态返回。
+2. 确定性机器校验检查节点身份、源跨度/摘要、编译变体、边方向、出入口、分支条件、折叠后的映射及关系所需证据。`exact` 表示可核定的静态关系，`may` 表示约束还不足，`unknown` 显示原因；`observed` 单独指向运行记录。已注册、可分派、实际触发保留不同边。
+3. 对 ABI 桥、别名写、错误清理、锁、IRQ/DMA、设备位段做独立源码抽查或第二分析路径对照。复核拿源区间、编译输入和固定断言。同一产物的运行轨迹可确认本次路径，无法观察的候选保留。模型只生成带引用的解释或待核问题，缺证据与冲突按事实层处理。
+4. 使用人工标注的小范围正反例做差分。按类别输出 `missing / extra / conflicting / uncovered`，同时记录 precision、recall、覆盖和未知率。复核通过的范围限定在对应样本、变体与证据。发生冲突时先显示局部已有事实，再重算。
+
+### 4.3 数据合同草案
+
+~~~ts
+type EvidenceRef = { id: string; repoId: string; snapshotId: string; variantId: string;
+  pathRef: string; startByte: number; endByte: number; sourceHash: string;
+  origin: 'compiler' | 'source' | 'rule' | 'model_inference' | 'trace';
+  macroRole?: 'spelling' | 'expansion' };
+type Relation = { id: string; kind: string; from: string; to: string;
+  callsiteId?: string; fieldPath?: string[]; guardId?: string; contextId?: string;
+  confidence: 'exact' | 'may' | 'unknown'; evidenceIds: string[];
+  limitations: string[]; observationRefs?: string[] };
+type Selection = { workspaceId: string; snapshotId: string; variantId: string; entryId?: string;
+  symbolId?: string; callsitePath: string[]; resourceId?: string; sourceRef?: string;
+  runId?: string; eventId?: string };
+type ViewPage = { revision: number; viewKey: string; nodes: object[]; edges: object[];
+  coverage: object; evidenceIds: string[]; truncated: boolean; nextCursor?: string };
+~~~
+
+先匹配 `symbolId + callsitePath`，其次定位可见所属组、宿主入口或资源边，并展示上下文。多候选显式选择。重复分析结果根据 `revision` 合并，过期结果留作历史。不同快照或变体通过显式切换或差分查看。自有 schema 加版本并保持 Atlas 原合同和既有学习记录可读。
+
+## 5. 生成速度
+
+按入口生成首屏，先交付已核事实、折叠主线、覆盖与缺口。新仓库从已登记源码或现成快照给出入口，后台优先补用户当前选择和依赖。CFG、别名、锁和跨仓数据流按需扩展。AI 归纳与复核异步补充，主图可先用符号与确定性标签显示。
+
+| 阶段 | 缓存键 | 增量策略 |
+|---|---|---|
+| 解析 | TU 源摘要＋构建命令、目标、宏、工具链与依赖摘要＋抽取器版本 | 用反向依赖重算受影响 TU；生成头、CONFIG、ABI 或未知依赖变化时保守扩大范围，旧图标记 stale。 |
+| 查询 | snapshot、variant、入口/符号、关系层版本、方向及预算 | 先取直接调用、局部读写，再按需跑深查询。返回覆盖、截断和继续游标。 |
+| 投影 | 事实代次＋视图、关系过滤、组策略与展开路径 | 五视图共享索引；首屏折叠公共函数和组，长树、源码和事件按可见窗加载。 |
+| 布局 | 可见拓扑、节点/标签尺寸、折叠集、端口约束、布局器版本 | 放在离线 worker。拖动只重算相邻边，放开后局部避障。选中、颜色和观测高亮单独更新。 |
+| 说明 | 证据摘要、符号身份、规则/提示/模型版本 | 同一说明跨视图复用。人工覆盖单独版本化。 |
+
+Host 合并同键只读计算，用户取消只撤销其订阅，无订阅者即回收计算。前端通过 `requestId/generation` 丢弃过期响应。超预算返回有覆盖率和明确原因的局部图。按可见坐标裁剪，节点可超出初始范围。导出按真实内容边界计算。
+
+**拟验收预算，待实测校准**。在记录版本的 DSH 参考机对已索引的 500 节点/800 边图测冷、热各 20 次。目标为缓存首屏 p95 ≤ 500 ms，跨视图定位 p95 ≤ 120 ms，拖动反馈 p95 ≤ 32 ms。无索引时约 1 s 内给出已知入口或后台状态，首次索引单记 TU/s、解析和布局耗时、峰值内存、命中率。以 2,000 节点/1 万时序事件测试分片、搜索和截断反馈。记录每组样例的真实覆盖和失败数。
+
+## 6. 规范、竖排与可读性
+
+| 元素 | 约定 |
+|---|---|
+| 端点 | 椭圆。入口在顶部、正常出口在底部、失败出口走侧面，标出角色与返回。 |
+| 分析域交接 | 调用或交接用独立的带标签边界框，显示目标域、调用点和返回关系。词条区分库调用、设备访问、用户态／内核态转换与异步提交。 |
+| 普通处理与折叠组 | 矩形。折叠时跨组边映射至组端口，保留原边 ID、条件和证据。只有语义相同、后续相同的边可汇总；展开恢复合流和标签。 |
+| 分支 | 菱形。每条出边标条件或枚举，主流向下，错误或替代走侧面；不同失败原因与返回码可追到原调用点。 |
+| I/O 与特殊域 | 平行四边形显示数据输入输出。用户态/内核态异色，IRQ、监控线程、库与设备按角色标签、块或泳道区分。 |
+| 普通连线 | **从上到下，带箭头的实线正交折线**。异常用红色实线和文本。回边走外侧，交叉与真正合流有明确区分。 |
+| 特殊连线 | 异步通知、候选或参考跨界可以用虚线并说明语义。已解析但本次未走的边仍按普通实线显示。时序返回虚线单独约定。 |
+
+资源图保持左右函数、中央资源的三列。资源节点色彩独立于读写关系线颜色，始终配名称、用途、方向和动作文字。布局前提取入口、压缩组与递归 SCC，为主线/异常/回边分配端口。计划用 ELK `layered`、`direction=DOWN`、`edgeRouting=ORTHOGONAL` 在 worker 生成坐标和拐点；组合组启用跨层端口。长标签先计量再布局，优先增加间距或分组。布局失败降级为简化的确定性分层，保留可读结果。规整、适应与手拖位置独立；选择或运行高亮不触发全图布局。[ELK Layered](https://eclipse.dev/elk/reference/algorithms/org-eclipse-elk-layered.html) · [方向](https://eclipse.dev/elk/reference/options/org-eclipse-elk-direction.html) · [布线](https://eclipse.dev/elk/reference/options/org-eclipse-elk-edgeRouting.html) · [形状参考](https://support.microsoft.com/en-us/visio/create-a-basic-flowchart-in-visio)
+
+几何断言校验横竖线段、端口命中、关键标签避节点、折叠前后外部可达性及原边证据。截图覆盖长中文符号、两种主题、窄屏和高 DPI。读者应能在单图指出入口、两类判断、错误出口和设备交接。大图保持可缩放完整范围，同时可选按深度、域或资源聚焦。
+
+## 7. 场景、打桩与时序
+
+`Scenario` 固定快照/变体、运行 profile、有序接口、结构化实参、初始状态和边界 stub。每步生成 `RunRecord` 项，带调用 ID、实际出参、变更摘要、执行事件、结果及影响下游的资源。可走接口登记，也可在隔离环境注入状态，标清对象、键/字段、绕过的前置步骤和已知副作用。用户态入口用于调用，外部库/设备边界可在适用的模拟 profile 中指定返回码、输出及允许的副作用。
+
+按顺序执行，默认逐步保留结果继续，提供遇错停止。回退末尾 N 条，重放保留前缀并核状态摘要后发布新 generation。不可逆外部效果或无重放前提时保留只读历史。操作带预期版本及幂等 `operationId`。取消、超时、部分执行分别提供可证结果或 unknown 与诊断。先支持导入已有轨迹及隔离模拟，真实设备需单独授权和运行验证。
+
+时序图按可见参与者显示调用、返回、资源访问和异步事件，时间轴为事件顺序或已验证时钟域。同步由 `callId/parentCallId` 配对，异步由 `correlationId`、队列 token 或对象身份关联。跨线程时钟不明时保留局部顺序和关联证据。静态预测与实际观察有独立模式。IRQ 与监控任务只有证据支持才画因果箭头。缺事件和丢包保留缺口，重复片段可摘要展开。[Perfetto Track Events](https://perfetto.dev/docs/instrumentation/track-events) · [UML 2.5.1](https://www.omg.org/spec/UML/2.5.1/About-UML)
+
+## 8. 调研来源与采用方式
+
+外部版本为对照点。正式引入前固定包、SHA、许可证、worker 资产和宿主兼容证据。以下技术选型均待实施验证。
+
+| 来源 | 采用方式、借鉴机制 | 取舍与来源 |
+|---|---|---|
+| 本地 SDK Code Atlas 0.8.0 / schema 0.1，提交 `c33320a98face14c5f6e5e817beaccf52b9bbb93`；04 `d884bd4` | 直接消费已校验快照、coverage、源码证据和调用边，薄适配成读索引。 | 复用权限、版本和缺口语义。真实 Linux/Kbuild、原生 CFG 与锁独立验证。[来源锁](../source.lock.json) · [真实产物对照](../evidence/real-atlas/README.md) |
+| clangd 官方架构文档 | 借鉴构建命令、后台文件级索引与活跃内容覆盖。 | 用于导航与增量策略对照。04 的物料另沿用 Atlas 声明的 `libclang 18.1.1` 和 `llvmorg-18.1.8` 内建头，CFG 提取器版本单独验收。[clangd 架构](https://clangd.llvm.org/design/) · [实现导读](https://clangd.llvm.org/design/code) |
+| Joern CPG 1.1、CodeQL C/C++ 数据流 | 借鉴有版本的 AST/CFG/依赖分层、局部优先的源点/汇点查询。仅作复核候选。 | 首版用 Atlas＋轻量索引。规模测试或特定缺口显示必要性后，比较额外引擎的覆盖、运行成本和许可。[CPG 1.1](https://cpg.joern.io/) · [CodeQL](https://codeql.github.com/docs/codeql-language-guides/analyzing-data-flow-in-cpp/) |
+| ELK / elkjs 0.11.0 | 拟直接依赖并薄适配布局 worker。利用分层、端口、嵌套组和正交折线。 | 独立验收冻结版本、跨层边和 worker/取消生命周期。故障回退简单分层。[ELK 0.11.0](https://eclipse.dev/elk/downloads/releasenotes/release-0.11.0.html) · [elkjs 0.11.0](https://github.com/kieler/elkjs/releases/tag/0.11.0) · [Worker API](https://github.com/kieler/elkjs#api) |
+| React Flow 12.10.0 | 画布候选，借鉴稳定节点 ID、自定义端口、折叠和独立选中状态。 | 先核同实例宿主 React、离线包和渲染预算。备选用自有 SVG/Canvas，关系合同一致。[版本](https://github.com/xyflow/xyflow/releases/tag/%40xyflow%2Freact%4012.10.0) · [性能指南](https://reactflow.dev/learn/advanced-use/performance) |
+| Monaco Editor 0.52.2 | 只读源码候选，借鉴文件 model、行号和源跨度高亮。 | 第一切片可先用只读代码行验证导航；再评估体积、worker 和主题。[Monaco](https://github.com/microsoft/monaco-editor/tree/v0.52.2) |
+| Perfetto v49.0、Mermaid Sequence 文档 12.3.0、OMG UML 2.5.1 | 仅借鉴轨道、关联 ID、生命线和调用／返回／并行等图示机制。 | 自行从结构化事件渲染时序，文本导出另行转义。[Perfetto v49.0](https://github.com/google/perfetto/releases/tag/v49.0) · [轨迹机制](https://perfetto.dev/docs/instrumentation/track-events) · [Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html) · [UML](https://www.omg.org/spec/UML/2.5.1/About-UML) |
+| 本机 DSH `0.2.1-rc.5` / build `d4db512a969fccf0c5cc7ec8fe38e9c1d27af916` 及 08 工作台 | 直接依赖经核宿主接口，借鉴 loader、keyed main、sidebar 注册、连接准入及 disposer。 | 04 隔离 profile 独立验收。08 无需同时运行，其他 Host 兼容性分开验证。[08 矩阵](../../08-workbench-ui/docs/compatibility-matrix.md) · [08 实施路线](../../08-workbench-ui/docs/implementation-route.md) |
+
+## 9. DSH 插件与侧边栏生成
+
+**产品是 DSH 插件。** 插件负责 Client 界面、Host 分析、事件、状态、兼容与权限。配套 skill 只指导 DSH 生成和验收侧边栏。它覆盖独立面板入口、工作台左栏、「打桩模拟／全局资源」和联动。草案放在设计目录，便于实施时引用。[DSH 侧边栏生成 skill](dsh-code-view-ui/SKILL.md)
+
+- Client 采用宿主 runtime，独立 keyed main、侧边入口和 disposer。主题继承宿主。面板状态包含 workspace/repo/snapshot/variant、入口、视图及共享选中。画布、详情和场景状态分开。卸载撤销面板注册、监听与 worker。
+- Host 沿用 04 已有源码范围、构建身份及证据校验。拟接口 `view.listEntries/getPage/getEvidence/getRunTrace/cancel` 和 `scenario.preview/run/undoTail`；其他旧工具合同原样可用。前端提交 scope ref、锚点、预算、游标和预期 revision，Host 重核会话、权限、路径、版本与能力，返回 `{ok,value}` 或 `{ok,error}`。
+- 实作 rc.5 接缝时先核本机 renderer、slot、layout、loader 和 connection。08 记录直接 consumer `rpc.handle` 的注册失败，已验证独立前缀 `ctx.webServer.register`、`ctx.connection.admit(req)` 和 client `rpc.call`。验证失配标 `needs_verification`，回到原工具与本地报告。[08 兼容矩阵](../../08-workbench-ui/docs/compatibility-matrix.md)
+- 源码和轨迹按 Host 校验交付。前端把源文本、事件和生成标签按普通文本渲染，离线依赖带固定散列。布局 worker 只拿当前投影。执行由隔离 runner 与 scope 门禁负责，模型依赖只用已批准路径。新 UI 数据按 schema 迁移，旧记录保留，停用 GUI 后仍可用 04 工具和报告。各插件独立部署，联动经显式授权接口。[共同开发合同](../../docs/development-contract.md)
+
+## 10. 实施顺序、验收合同和修订
+
+| 阶段 | 改动区域 | 首个可验交付 |
+|---|---|---|
+| CW-T1 宿主与事实 | 04 snapshot 适配、读模型及 keyed panel | 在隔离 profile 从侧边栏打开一个已核快照，选入口并回源码。验收源跨度、版本、面板卸载和权限。 |
+| CW-T2 只读五视图 | 项目索引、关系投影、布局 worker、跨视图选中、轨迹导入 | 以合成三仓与真实 Atlas 片段核 A01–A07、A10、A11。 |
+| CW-T3 受控场景 | 模拟 runner、stub DTO、轨迹/操作台账 | 固定登记→发送和反序，核寄存器事件、错误和回退。A08/A09/A12。 |
+| CW-T4 目标验证 | Linux/Kbuild/生成头、真实布局规模、ABI/锁/IRQ | 用明确目标构建输入和独立观察复核 A05/A07。完成时补版本与机制证据。[机制说明合同](../../docs/mechanism-document-contract.md) |
+
+| ID | 可观察通过条件 |
+|---|---|
+| A01 单入口 | `bus_send` 只有一张端到端主图，错参、未注册、长度超限、短包/长包、汇合和设备/软件出口均可追。 |
+| A02 耦合 | 一个 `routes` 节点，登记写、发送读、注销清零到正确字段；资源相关函数跳转只定位高亮。 |
+| A03 定义 | 静态初始化、C 字段和字段依据可打开；门铃位段有编码依据。全文件带行号，空白点关闭，拖动保留详情。 |
+| A04 流程图 | 形状、图例、竖向实线正交、标签及端口几何可验证；折叠原边可复查；拖出布局后适应/规整可恢复。 |
+| A05 多仓 | 重名 static、不同 CONFIG、C 宏、弱符号、指针及 ABI 误绑定正反例不串用。缺生成头/注册目标必须显示覆盖不足。 |
+| A06 联动 | 登记/注销选同名共享 `store_route`，三视图保留原调用点；基础接口加/移、组折叠及返回入口保持一致。 |
+| A07 复核 | 对人工标注样本按调用、分支、资源、ABI、锁和 IRQ 统计 precision/recall、未知与覆盖。关键确定边逐条有依据，静态与观测分别验证。 |
+| A08 时序 | 比较登记→发送和反序，核返回及门铃事件；平台失败 stub 可核锁退出和错误传播；缺轨迹显示丢失，IRQ 只以证据连起。 |
+| A09 回退 | 回退末尾 N 个后，重放前缀得到同一资源摘要；取消、冲突或外部效果不确定时可看历史与恢复线索。 |
+| A10 宿主 | 隔离 profile 挂载、卸载、二次挂载。侧栏焦点、资源置顶、窄屏、主题与失败/停用有宿主证据。拒绝过期会话或越界访问。 |
+| A11 速度 | 记录 §5 的样本和实测，改一处函数只失效依赖范围。老请求不覆盖新选择，大图、长代码和长事件仍可搜。 |
+| A12 门禁 | 源证据、旧记录、授权和执行不可混写；真实 Linux、隔离、出口与目标行为分别有证据或明确缺口。 |
+
+首个验收切片是「登记写 `routes[channel].max_len` → 发送读取与判断 → 模拟设备写入 → 返回」，用同一组记录验证静态三视图和动态时序。先做宿主与源码范围核验，再做增量索引和受控运行。当前属于 K1/F/Q 的工程设计与待验证问题。真实性能、CFG、真实设备及 Host GUI 接入均待实测。
+
+| 修订 | 来源与影响 | 状态 |
+|---|---|---|
+| `CL-VIEW-D2` / 2026-11-15 | 汇总 Demo 历次纠正，增加速度、规范、准确性、竖排实线与 DSH 侧边栏生成指导，覆盖 CW-01..11 | 文档设计，待实现、独立复核和实测 |

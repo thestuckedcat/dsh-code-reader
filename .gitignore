@@ -12,6 +12,7 @@ __pycache__/
 Thumbs.db
 tmp/
 .tmp/
+scratch/
 # A local trusted bootstrap file references machine paths.
 bootstrap.json
 local/

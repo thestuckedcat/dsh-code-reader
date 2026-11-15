@@ -1,3 +1,8 @@
 # Keep repository contents LF on every platform; this project has no binaries
 # except the optional plugin icon (SVG is text) and generated caches (ignored).
 * text=auto eol=lf
+*.png binary
+# Real Atlas 0.1 snapshot fixtures are byte-pinned: graph_hash/graph_sha256 and
+# prepare-time file hashes are computed over the exact bytes, so git must never
+# normalise line endings inside this evidence tree.
+evidence/code-view-slice/** -text

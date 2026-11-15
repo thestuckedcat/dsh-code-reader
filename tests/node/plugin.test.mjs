@@ -7,8 +7,8 @@ import plugin, { apply, name, inject } from '../../index.js'
 import { resolveSettings } from '../../lib/config.mjs'
 import { PACKAGE_ROOT } from '../../lib/config.mjs'
 
-function fakeContext() {
-  const state = { tools: [], disposers: [], providers: [] }
+function fakeContext({ withUiServices = false } = {}) {
+  const state = { tools: [], disposers: [], providers: [], plugins: [], activated: [], pending: [] }
   const ctx = {
     tools: {
       register(definition) {
@@ -27,6 +27,28 @@ function fakeContext() {
       state.disposers.push({ label, disposer })
       return disposer
     },
+    // Minimal Cordis stand-in: a plugin object whose `inject` cannot be
+    // satisfied stays pending (its apply never runs), exactly like rc.5.
+    plugin(definition) {
+      state.plugins.push(definition)
+      const required = Array.isArray(definition.inject) ? definition.inject : []
+      const missing = required.filter((serviceName) => ctx[serviceName] === undefined)
+      if (missing.length > 0) {
+        state.pending.push({ name: definition.name, missing })
+        return { dispose() {} }
+      }
+      state.activated.push(definition.name)
+      definition.apply(Object.create(ctx))
+      return { dispose() {} }
+    },
+  }
+  if (withUiServices) {
+    ctx.connection = { admit: () => ({ peer: { principal: { kind: 'owner' } } }) }
+    ctx.webServer = {
+      register() {
+        return () => {}
+      },
+    }
   }
   return { ctx, state }
 }
@@ -69,9 +91,37 @@ test('apply registers exactly the six code tools plus one skill provider', async
   assert.equal(definition.resourceBase.kind, 'directory')
 })
 
+test('apply mounts the read-only view as a nested UI plugin with its own injects', () => {
+  const { ctx, state } = fakeContext()
+  apply(ctx, {})
+  assert.equal(state.plugins.length, 1)
+  const viewPlugin = state.plugins[0]
+  assert.equal(viewPlugin.name, 'dsh-code-reader-view')
+  assert.deepEqual(viewPlugin.inject, ['connection', 'webServer'])
+  assert.equal(typeof viewPlugin.apply, 'function')
+  // Host UI services are absent: the nested fiber stays pending, old tools work.
+  assert.deepEqual(state.pending, [{ name: 'dsh-code-reader-view', missing: ['connection', 'webServer'] }])
+  assert.deepEqual(state.activated, [])
+  assert.equal(state.tools.length, 6)
+})
+
+test('apply mounts the /code-view route when the UI host services are present', () => {
+  const { ctx, state } = fakeContext({ withUiServices: true })
+  apply(ctx, {})
+  assert.deepEqual(state.activated, ['dsh-code-reader-view'])
+  assert.equal(state.tools.length, 6)
+  assert.equal(state.providers.length, 1)
+  // tools + skill + one route effect, all disposable.
+  assert.equal(state.disposers.length, 8)
+  const routeEffect = state.disposers.find((entry) => /\/code-view http rpc route/.test(entry.label))
+  assert.ok(routeEffect, 'route effect must be registered')
+  assert.doesNotThrow(() => routeEffect.disposer())
+})
+
 test('apply rejects malformed row config and returns disposable effects', () => {
   const { ctx } = fakeContext()
   assert.throws(() => apply(ctx, { typo: true }), /unknown config field/)
+  assert.throws(() => apply(ctx, { timeoutMs: 10 }), /timeoutMs/)
   const { ctx: ctx2, state } = fakeContext()
   apply(ctx2, {})
   assert.equal(state.disposers.length, 7)
@@ -84,6 +134,21 @@ test('apply rejects malformed row config and returns disposable effects', () => 
 test('display metadata and icon satisfy bundle packaging facts', () => {
   const pkg = JSON.parse(readFileSync(join(PACKAGE_ROOT, 'package.json'), 'utf8'))
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
+  // Client half wiring is part of the load contract (readonly-workbench-contract §1).
+  assert.equal(pkg.main, 'index.js')
+  assert.equal(pkg.exports['.'], './index.js')
+  assert.equal(pkg.exports['./client'], './bundle/client.js')
+  assert.ok(pkg.files.includes('bundle/'), 'bundle/ must ship in the package files')
+  assert.deepEqual(pkg.dsh.client, {
+    inject: [
+      '@deepseek-ai/dsh-client-connection',
+      '@deepseek-ai/dsh-client-ui-layout',
+      '@deepseek-ai/dsh-client-ui-renderer',
+    ],
+    platform: 'web',
+  })
+  assert.equal(typeof pkg.scripts.test, 'string')
+  assert.match(pkg.scripts['test:node'], /tests\/node\/view-rpc\.test\.mjs/)
   for (const localeName of ['en', 'zh']) {
     const locale = JSON.parse(readFileSync(join(PACKAGE_ROOT, 'locale', `${localeName}.json`), 'utf8'))
     assert.equal(typeof locale.meta.title, 'string')

@@ -1,8 +1,8 @@
 # dsh-code-reader 使用说明
 
-版本 0.1.0（`CL-IMPL-1`，2026-11-07）。本文件面向使用者与后续 skill 维护者：怎样安装、怎样登记 workspace、六个工具怎么用、返回的 JSON 怎么读、哪些边界不允许越过。
+版本 0.1.0（`CL-IMPL-1` 2026-11-07；只读代码工作台切片 2026-11-15）。本文件面向使用者与后续 skill 维护者：怎样安装、怎样登记 workspace、六个工具怎么用、代码工作台怎么打开、返回的 JSON 怎么读、哪些边界不允许越过。
 
-设计背景：[软件设计](docs/software-design.md)、[实施契约](docs/implementation-contract.md)、[机制说明](docs/mechanisms.md)。
+设计背景：[软件设计](docs/software-design.md)、[实施契约](docs/implementation-contract.md)、[只读工作台契约](docs/readonly-workbench-contract.md)、[机制说明](docs/mechanisms.md)。
 
 ## 1. 前置条件
 
@@ -182,3 +182,44 @@ find 返回示例（节选）：
 | `STALE_SNAPSHOT` / `UNSUPPORTED_SCHEMA` | 快照不是已核验的 Atlas 0.1 对，或 hash 不匹配；重新导入 |
 | `STATE_CONFLICT` | revision/generation/锁冲突；先 `status`/`resume` 取当前值再重试 |
 | 工具不存在 | 插件未激活：检查 `plugin_manager` 安装结果与 `inspect` 诊断 |
+
+## 7. 代码工作台（DSH 侧边栏，只读切片）
+
+产品以 DSH 插件交付。安装/更新 bundle 并**重启宿主进程**后，侧边栏出现「代码工作台」；点击打开 keyed 主面板
+（与宿主聊天面板互斥，面板内「返回聊天」回到会话）。面板关闭/返回不丢失当前 workspace/snapshot/入口选择，
+再次打开会恢复并重新拉取数据。
+
+前置：已完成 §2.1 bootstrap 与 §3.1 workspace 登记，并用 `code_snapshot action=import` 导入过至少一个
+已核验 Atlas 0.1 快照（也可先在 Host 侧用工具完成）。工作台只读，不执行场景/打桩/回退、不写回源码。
+
+### 7.1 看到什么
+
+| 区域 | 内容 | 证据口径 |
+|---|---|---|
+| 快照 | 已登记 workspace → variant → 快照；显示 `verified/invalid`、`freshness`、coverage（failed/pending/whole_program_complete）、`entry_count`、限制/错误 | 快照逐次重核 graph/manifest 哈希；损坏只标该条 invalid，不隐藏其他快照 |
+| 入口 | 该快照内函数按「入口优先」排序；`bus_send` 等入口可点击 | `is_entry` = 快照调用边无入边 |
+| 源码 | 定义行起带行号源码 + 高亮区间；位置为仓库相对 `file:line` | Atlas 定义 evidence 的字节区间经签名读取；文本只证明该段存在 |
+| 调用 | 出边/入边、`callsite` 位置、`origin`、`certainty` | 徽标：静态确定（exact）/候选（may）/未知（unknown）/源码证据（source_text）/运行观测（本轮无） |
+| 资源 | 资源对象（如 `routes`）与字段访问（`read/write/...` + certainty + owner + `file:line`） | 来自真实快照 `objects`/`field_accesses`；`resource_status=partial` 时如实显示 may 限制 |
+| 缺口 | 资源图/五视图/场景执行/运行观测等未提供能力，或引擎/引导/Python 不可用、快照过期、源码不可读 | 原样显示 `code/status/reason` |
+| 共享选择 | 面板底部 `Selection` JSON：workspace/variant/snapshot/repo/entry/symbol/callsite/resource/evidence/run/event | 后续五视图复用的稳定标识；运行观测字段本轮为 null |
+
+### 7.2 用 Demo 对照核对 `routes[channel].max_len`
+
+真实快照夹具 `evidence/code-view-slice/`（Demo `bus.c`/`platform.c` 字节级复制 + Atlas 0.8.0 产物）：
+
+- 入口 `bus_register`：`store_route` 一跳内出现 write **exact** `routes[channel].max_len`（`bus.c:46`）；
+- 入口 `bus_send`：源码 `bus.c:152–174`，`lookup_route`/`check_length` 的 read **may**（`bus.c:92/93/98/99`），
+  超限返回 `-90` 在 `bus.c:164–165`（源码事实，不是运行证明）；三条调用边均 exact（`bus.c:160/164/170`）。
+- Demo `node --test demo/code-view/demo.test.cjs`（Wasm 模拟观测）8/8：登记后发送写 `0x20030`，超限返回
+  `-90`，非法 `-22`，未登记 `-2`；平台失败 `-5` 透传且锁 1→0。Demo 观测与 Atlas 静态事实分属不同证据类，
+  不得互相冒充。
+
+### 7.3 权限与失败
+
+- 浏览器只发 `workspace/snapshot/entry` 标识到 `POST /code-view/<endpoint>`；Host 重核长度/字符集并经
+  `connection.admit` 准入；引擎不接受路径/argv；RPC/UI 不输出绝对路径、bootstrap/state 路径。
+- Python 缺失、bootstrap 缺失、未登记、快照无效/过期、源码不可读等情况**不隐藏面板**，在缺口区显示原因；
+  引擎逻辑错误以 `value.error.code`（如 `NOT_FOUND`、`STALE_SNAPSHOT`）显示。
+- 本轮不提供：五视图图形（资源关系图/文字树/端到端图/时序图/文件视图）、场景执行/打桩/回退、运行观测。
+  这些在面板内以占位 + 原因说明；升级为 CW-T2/T3 后另行验收。

@@ -1,0 +1,1614 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C 代码视图 · 通信驱动</title>
+<style>
+  :root{color-scheme:dark;--bg:#10141b;--surface:#171d26;--line:#303b49;--text:#edf1f7;--muted:#aab6c6;--accent:#80e5bb;--dim:#233a34;--warn:#ffc28c;font-family:Inter,"Microsoft YaHei",system-ui,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+  button,input,select{font:inherit} button,select{cursor:pointer} button,a,input,select{outline-offset:4px} :focus-visible{outline:2px solid var(--accent)}
+  code,pre,.value,.node-symbol{font-family:"IBM Plex Mono",Consolas,monospace}
+  a{color:var(--accent);text-underline-offset:4px}
+  h1,h2,h3,p{margin:0} h1{font-size:22px;line-height:1.25;font-weight:650} h2{font-size:16px} h3{font-size:13px;font-weight:600}
+  .top{border-bottom:1px solid var(--line);background:#141921}
+  .top-inner,.workspace{max-width:1420px;margin:auto;padding:18px 28px}
+  .top-inner{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .identity{display:flex;align-items:center;gap:12px}.mark{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;color:var(--accent);background:var(--dim);font:700 22px Consolas,monospace}
+  .muted,.sub{color:var(--muted)} .sub{font-size:12px}.top-links{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .workspace{display:grid;grid-template-columns:268px minmax(0,1fr);gap:20px;align-items:start;padding-top:24px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+  .controls{padding:18px}.controls fieldset{margin:0;padding:0;border:0;min-width:0}.controls fieldset+fieldset{margin-top:19px;padding-top:15px;border-top:1px solid var(--line)}
+  .controls legend{font-weight:650;padding:0;margin-bottom:10px}.controls label{display:grid;gap:5px;margin-bottom:10px;color:var(--muted)}
+  .controls input,.controls select{min-height:36px;width:100%;padding:6px 9px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:7px}
+  .control-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.control-row[hidden],[hidden]{display:none!important}
+  .run{width:100%;min-height:40px;margin-top:9px;background:var(--accent);color:#142620;border:0;border-radius:7px;font-weight:700}.run:hover{background:#a6f4d4}.run:disabled{opacity:.65;cursor:wait}
+  .main{min-width:0;display:grid;gap:15px}.overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .metric{padding:13px 15px;min-height:96px}.metric .value{display:block;font-size:18px;margin:4px 0;overflow-wrap:anywhere}.positive{color:var(--accent)}.warning{color:var(--warn)}
+  .sample{padding:12px}.sample>summary{cursor:pointer;font-weight:650}.sample .overview{margin-top:12px}
+  :root{--user-bg:#183b53;--user-border:#81c9fc;--kernel-bg:#163a35;--kernel-border:#69ccac;--irq-bg:#392852;--irq-border:#bb9cf4;--library-bg:#382c21;--library-border:#c29f61;--device-bg:#272039;--device-border:#967db8;--error-bg:#422b35;--error-border:#f3a8a3;--group-bg:#25344e;--group-border:#9db9f4;--decision-ink:#ffcc94}
+  .legend{position:relative;z-index:8}.legend-trigger{width:30px;height:30px;border:1px solid #65768b;border-radius:50%;background:#202a37;color:var(--text);font-weight:bold}.legend-panel{position:absolute;right:0;top:100%;width:min(295px,calc(100vw - 32px));padding:12px;background:#1b2531;border:1px solid #536579;border-radius:9px;box-shadow:0 12px 32px #0008}.legend-panel dl{display:grid;gap:6px;margin:6px 0 0}.legend-panel dt{display:flex;align-items:center;gap:8px}.legend-panel dd{margin:0 0 1px 23px;font-size:12px;color:var(--muted)}.swatch{width:15px;height:12px;border:1px solid var(--swatch-border);border-radius:3px;background:var(--swatch-bg)}
+  .resource-bars{display:grid;gap:5px;margin-top:8px}.resource-bar{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;padding:4px 7px;border-radius:5px;font-size:12px;color:#dce8f6}.resource-bar[data-kind=init]{background:#25405a}.resource-bar[data-kind=write]{background:#493a28}.resource-bar[data-kind=release]{background:#492f40}.resource-bar[data-kind=read]{background:#254336}.resource-bar strong{min-width:3em}.resource-code{max-height:150px;margin-top:6px;padding:7px;font-size:11px;border:1px solid #43515f;border-radius:6px;white-space:pre;overflow:auto}.resource-about{margin:5px 0;color:var(--muted);font-size:12px}
+  .controls .switch{margin:10px 0 14px}.controls h2{margin-bottom:8px}.side-list{display:grid;gap:8px;margin-top:10px;max-height:470px;overflow:auto}.side-item{padding:8px;border:1px solid var(--line);border-radius:7px;overflow-wrap:anywhere}.side-item.related{border-color:var(--accent);background:#20332f}.side-item summary{cursor:pointer}.side-item p{margin:5px 0}.inline-action{background:none;border:0;padding:0;color:#add6ff;text-decoration:underline;text-align:left}.side-actions{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:8px}.side-actions button,.search input,.search button{color:var(--text);background:#202a37;border:1px solid #43515f;border-radius:6px;padding:5px 8px}.side-actions input{width:66px}.search{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.search input{max-width:190px}.search select{max-width:220px;background:var(--surface);color:var(--text)}.detail-data{padding:0 16px 15px}.detail-data dt{color:var(--accent);margin-top:8px}.detail-data dd{margin:1px 0 0}.world .mechanism{border-color:#bb9cf4;background:#392852}.world .library-node{border-color:#c29f61;background:#382c21}.edge.error{stroke:#a46067}.edge.error.active{stroke:#ff968d}.edge-label.error{fill:#ffa9a1}
+  .graph{min-width:0}.graph-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .entry-nav{margin:0 12px;padding:9px 4px 0;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+  .entry-nav button{padding:4px 9px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px}
+  .entry-nav button[aria-current=true]{color:var(--text);border-color:#748da9;background:#233447}.entry-nav button code{font-size:12px}
+  .switch{display:flex;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px}
+  .switch button{padding:4px 10px;color:var(--muted);border:0;border-radius:5px;background:none}.switch button[aria-pressed=true]{color:var(--text);background:#303b49}
+  .graph-body{display:grid;gap:12px;padding:12px}.stage{display:grid;gap:8px}.stage-title{color:var(--muted);font-size:12px}
+  .flow{display:flex;flex-wrap:wrap;gap:8px}.flow .node{flex:0 1 250px}
+  .canvas-shell{min-width:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .canvas-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:#141a22}
+  .zoom-buttons{display:flex;align-items:center;gap:5px}.zoom-buttons button{min-width:33px;padding:3px 8px;border:1px solid #43515f;border-radius:5px;background:#222b36;color:var(--text)}
+  .viewport{position:relative;overflow:hidden;height:clamp(480px,67vh,720px);touch-action:none;cursor:grab;background:#111820 radial-gradient(#2c3948 1px,transparent 1px) 0 0/18px 18px}
+  .viewport.dragging,.viewport.dragging .node{cursor:grabbing}.world{position:absolute;inset:0 auto auto 0;transform-origin:top left;width:1060px;height:737px;user-select:none}
+  .canvas-links{position:absolute;inset:0;overflow:visible;pointer-events:none}.edge{fill:none;stroke:#627183;stroke-width:1.5;stroke-dasharray:5 4}.edge.active{stroke:#80e5bb;stroke-width:2.4;stroke-dasharray:none}
+  .edge-label{font:12px Inter,"Microsoft YaHei",sans-serif;fill:#c7d2df;paint-order:stroke;stroke:#111820;stroke-width:5;stroke-linejoin:round;text-anchor:middle}
+  .world .node{position:absolute;width:174px;height:77px;min-height:0;padding:7px 9px;gap:0;align-content:center;background:#1a2430;cursor:grab}
+  .world .node-symbol{font-size:14px}.world .node-label{font-size:12.5px}.world .node.observed{border-color:#539a80;background:#1a302d}.world .node[aria-expanded=true]{outline:2px solid var(--accent);outline-offset:1px}
+  .world .decision{border-style:solid;border-color:#9a754a;background:#2a251f}.world .decision .node-symbol{color:#ffcc94}.decision-tag{font-size:11px;color:#ffcc94}
+  .world .group-node{background:#202941;border-color:#758ac3}.world .group-node.observed{background:#25344e;border-color:#9db9f4}.group-node .node-symbol{font-family:inherit;color:#e2edff!important}
+  .group-frame{position:absolute;border:1px dashed #687ca6;border-radius:12px;background:#7e9fea0a;pointer-events:none}
+  .world .group-handle{height:28px;padding:2px 9px;display:block;color:#dce8ff;background:#283750;border-color:#758ac3;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin:4px 0}.crumbs button{padding:0;border:0;background:none;color:#add6ff;text-decoration:underline;text-underline-offset:3px}.crumbs span{color:var(--muted)}
+  .detail-tabs{margin:0 16px 10px;width:max-content}.subflow{padding:16px;min-height:300px;background:#111820 radial-gradient(#2c3948 1px,transparent 1px) 0 0/18px 18px}
+  .subflow .sub-root{width:min(300px,100%);margin:auto;padding:12px;background:#20332f;border:1px solid #539a80;border-radius:8px}.subflow .sub-root .node{width:100%}.subflow .branches{display:grid;grid-template-columns:repeat(var(--children),minmax(0,1fr));gap:8px;position:relative;padding-top:25px}.subflow .branches::before{content:"";position:absolute;left:50%;height:17px;border-left:1px solid #96a6bc}.subflow .branch{position:relative;min-width:0;text-align:center}.subflow .branch::before{content:"";position:absolute;top:-8px;width:calc(100% + 8px);left:50%;border-top:1px solid #96a6bc}.subflow .branch:last-child::before{display:none}.subflow .branch>.node{width:100%;margin-top:11px}.subflow .branch::after{content:"↓";position:absolute;left:calc(50% - 4px);top:-12px;color:#b8c5d5}.subflow .sub-note{margin-top:14px}
+  .world .boundary{display:grid;align-content:center;border:2px solid #7292cc;border-radius:23px;background:#192943;color:#ebf2ff;cursor:grab}.boundary strong{font-size:15px}.boundary small{font-size:12px;color:#cad9ef}
+  .world .boundary.observed{border-color:#a5c6ff;background:#203859}.world .boundary.reject{border-color:#8b6471;background:#28202a}.world .boundary.reject.observed{border-color:#f3a8a3;background:#422b35}.world .boundary.device{border-color:#967db8;background:#272039}.world .boundary.device.observed{border-color:#c6aaf0;background:#3a2b54}
+  .world .node[data-domain=user]{background:var(--user-bg);border-color:var(--user-border)}.world .node[data-domain=kernel]:not(.mechanism):not(.library-node):not([data-shape=decision]){background:var(--kernel-bg);border-color:var(--kernel-border)}.world .node.mechanism{background:var(--irq-bg);border-color:var(--irq-border)}.world .node.library-node{background:var(--library-bg);border-color:var(--library-border)}.world .node.located{outline:3px solid #ffe079;outline-offset:3px;z-index:2}.world .node.reference{border-style:dashed}
+  .node{position:relative;min-width:0;text-align:left;display:grid;gap:2px;padding:8px 10px;min-height:68px;color:var(--text);background:#1c2631;border:1px solid #43515f;border-radius:8px}
+  .node:hover,.node[aria-expanded=true]{border-color:var(--accent)} .node[aria-expanded=true]{background:#20332f}
+  .node-symbol{font-size:12px;overflow-wrap:anywhere}.node-label{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.node.observed .node-symbol{color:var(--accent)}
+  .tree,.tree ul{list-style:none;padding:0;margin:0;display:grid;gap:7px}.tree ul{margin:7px 0 0 13px;padding-left:15px;border-left:1px solid #43515f}.tree .node{width:100%;max-width:430px;min-height:52px}
+  .code-panel{position:fixed;z-index:5;right:18px;bottom:18px;width:min(670px,calc(100vw - 36px));min-width:0;max-height:70vh;overflow:auto;background:var(--surface);border:1px solid #536579;border-radius:10px;box-shadow:0 12px 40px #0008}.code-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 16px}.code-head button{padding:4px 9px;border:1px solid #43515f;border-radius:5px;background:#222b36;color:var(--text)}
+  pre{overflow:auto;margin:0;background:#101820;padding:8px 0 12px;color:#dbe8f5;font-size:13px;line-height:1.65;max-height:340px}
+  .line{display:block;min-width:max-content;padding-right:20px}.line.hit{background:#213930;color:#d2fae8}.line-no{display:inline-block;color:#a1aec1;text-align:right;width:45px;margin-right:13px;user-select:none}
+  .observations{padding:0 16px 12px;color:var(--muted)} .observations p+p{margin-top:3px}
+  .empty{color:var(--muted);font-size:13px}.status{margin:0 0 8px;color:var(--warn)}
+  .view-switch{flex-shrink:0}.file-workspace{gap:0;align-items:stretch;grid-template-columns:230px minmax(0,1fr)}
+  .file-tree{min-width:0;padding:12px 8px;background:var(--surface);border:1px solid var(--line);border-radius:10px 0 0 10px}
+  .file-tree h2{padding:0 10px 9px;font-size:13px}.file-tree summary{cursor:pointer;padding:4px 10px;color:var(--muted)}
+  .file-tree button{display:block;width:calc(100% - 15px);margin-left:15px;padding:4px 10px;border:0;border-radius:4px;text-align:left;background:none;color:var(--text);overflow-wrap:anywhere}
+  .file-tree button:hover{background:#222d3b}.file-tree button[aria-current=true]{background:#263d52;color:#cbeaff}
+  .file-viewer{min-width:0;overflow:hidden;border:1px solid var(--line);border-left:0;border-radius:0 10px 10px 0;background:#101820}
+  .file-path{margin:0;padding:9px 14px;border-bottom:1px solid var(--line);background:#1b2531;color:#c2d0df;font-size:13px}
+  .file-viewer pre{max-height:none;height:calc(100vh - 168px);min-height:360px;padding-top:10px;tab-size:4}
+  .file-viewer .line-no{width:3em;color:#899aaf}
+  .analysis-workspace{display:block}.analysis-panel{min-width:0;padding:16px}.analysis-head{display:flex;align-items:start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}.selection-crumb{font-size:12px;color:#ffe079;overflow-wrap:anywhere}
+  .symbol-button{width:max-content;max-width:100%;padding:1px 4px;border:1px solid transparent;border-radius:4px;background:none;color:#cde8ff;text-align:left;font-family:Consolas,monospace;overflow-wrap:anywhere}.symbol-button:hover{background:#2d4054}.symbol-button[aria-current=true],.reading-node>summary[aria-current=true]{color:#ffe490;border-color:#ad904e;background:#3c3424}
+  .coupling-canvas .viewport{height:clamp(480px,72vh,780px)}.coupling-canvas .world .node{width:220px;height:82px}.coupling-canvas .resource-node{background:#1c3042;border-color:#7396b3}.coupling-canvas .resource-node[aria-expanded=true]{outline:2px solid #acd9fb}.coupling-canvas .actor-node[aria-current=true]{outline:2px solid #ffe079}.coupling-canvas .actor-node .node-label,.coupling-canvas .resource-node .node-label{font-size:12px}.coupling-canvas .edge{stroke:var(--relation-color);stroke-dasharray:none}.coupling-canvas .edge[data-kind=external]{stroke-dasharray:6 5}.coupling-canvas .edge-label{fill:var(--relation-color);stroke-width:4px}.coupling-canvas .related-edge{stroke-width:2.8}.relation-legend{display:flex;gap:6px 14px;flex-wrap:wrap;margin:0 0 12px;color:var(--muted);font-size:12px}.relation-legend span{display:flex;align-items:center;gap:6px}.relation-legend i{width:18px;border-top:2px solid var(--relation-color)}.resource-definition-body{padding:0 16px 14px}.resource-definition-body .resource-code{max-height:270px}.resource-reference-row{font-size:12px;padding:4px 0;border-top:1px solid #344657}
+  .coupling-canvas .actor-node:not(.library-node):not(.mechanism){border-color:#43515f}.coupling-canvas .edge{pointer-events:stroke}
+  .flow-canvas .world [data-shape=process]{border-radius:2px}.flow-canvas .world [data-shape=terminal]{border-radius:999px;text-align:center}
+  .flow-canvas .world [data-shape=decision],.flow-canvas .world [data-shape=decision][data-domain=kernel],.flow-canvas .world [data-shape=io]{isolation:isolate;background:transparent;border-color:transparent;text-align:center;justify-items:center}
+  .flow-canvas .shape-outline{position:absolute;inset:0;z-index:-1;width:100%;height:100%;overflow:visible;pointer-events:none}
+  .flow-canvas .shape-outline polygon{fill:#2d281f;stroke:#b39262;stroke-width:2;vector-effect:non-scaling-stroke}
+  .flow-canvas .observed .shape-outline polygon{fill:#25382e;stroke:#7ac6a7}.flow-canvas [data-shape=io] .shape-outline polygon{fill:#302445;stroke:#a58ac7}.flow-canvas .node[aria-expanded=true] .shape-outline polygon{stroke:#8aebc3}
+  .flow-canvas .world .node[data-shape=decision].located,.flow-canvas .world .node[data-shape=decision][aria-expanded=true]{outline:none}.flow-canvas .node[data-shape=decision]:is(.located,:focus-visible) .shape-outline polygon{stroke:#ffe079;stroke-width:2.7}
+  .flow-canvas .decision .decision-tag{font-size:12px;font-weight:650}.flow-canvas .decision .node-symbol{font-size:11px;color:#e0d6c5}.flow-notation{padding:7px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px}
+  .sequence-workspace{display:block}.sequence-grid{display:grid;grid-template-columns:305px minmax(0,1fr);gap:16px;align-items:start}.sequence-controls{padding:14px;min-width:0}.sequence-steps{display:grid;gap:8px;margin:12px 0}.sequence-step{border:1px solid var(--line);border-radius:7px;padding:9px}.sequence-step select,.sequence-step input{width:100%;min-width:0;padding:4px 6px;color:var(--text);background:var(--bg);border:1px solid #455261;border-radius:4px}.sequence-step label{display:grid;gap:2px;font-size:12px;color:var(--muted)}.sequence-args{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:6px;margin-top:7px}.sequence-controls button:not(.run){background:#202a37;color:var(--text);border:1px solid #455261;border-radius:5px;padding:3px 7px}.sequence-controls button:disabled{opacity:.45;cursor:default}.sequence-diagram{padding:14px;min-width:0}.sequence-chart{margin-top:10px;overflow:auto;min-height:160px;max-height:75vh;scrollbar-gutter:stable;background:#101821;border:1px solid var(--line);border-radius:7px}.sequence-chart>.empty{padding:14px}.sequence-svg{display:block;width:100%;min-width:850px;height:auto}.sequence-svg text{font-size:13px;fill:#dbe6f3}.sequence-svg .sequence-muted{fill:#a8b8ca;font-size:12px}.sequence-lane{stroke:#465c72;stroke-dasharray:5 5}.sequence-arrow{stroke:#91c6ef;stroke-width:1.5;fill:none}.sequence-arrow.return{stroke:#83ceb0;stroke-dasharray:5 4}.sequence-arrow.error{stroke:#f19a94;stroke-dasharray:5 4}.sequence-svg .error-label{fill:#ffc0b9}
+  .coupling-canvas .world .resource-node{background:var(--resource-bg);border-color:var(--resource-accent);border-left-width:4px}.coupling-canvas .world .resource-node .node-symbol{color:var(--resource-accent)}.coupling-canvas .resource-node .resource-intro{color:#f4f7fb;font-size:12px;line-height:1.45}.coupling-canvas .resource-node .node-label{font-size:11px;line-height:1.35}
+  .resource-fields{margin:10px 0}.field-list{display:grid;gap:6px;margin:5px 0 0}.field-note{padding:5px 8px;border-left:2px solid var(--resource-accent,#7396b3);background:#202a35}.field-note dt{color:var(--resource-accent,#add6ff);font-size:12px}.field-note dd{margin:1px 0;font-size:12px}.field-note small{display:block;color:var(--muted);margin-top:2px}
+  .reading-tree{display:grid;gap:8px}.reading-node{min-width:0}.reading-node>summary{padding:5px 8px;border:1px solid transparent;border-radius:5px;cursor:pointer;overflow-wrap:anywhere}.reading-node>summary:hover{background:#213042}.reading-root{padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:#141d26}.reading-role{margin-left:10px;color:var(--muted);font-size:12px}.reading-body{margin:5px 0 8px 12px;padding-left:12px;border-left:1px solid #40546b;min-width:0}.reading-steps{margin:0;padding-left:22px}.reading-steps>li{margin:9px 0}.reading-step{color:#d6e0ee}.reading-source{margin:8px 0 0}.reading-source summary{color:#add6ff;cursor:pointer;font-size:12px}.reading-source pre{max-height:260px;border:1px solid var(--line);border-radius:6px;overflow:auto}
+  @media (max-width:760px){.workspace{grid-template-columns:minmax(0,1fr);gap:12px}.top-inner,.workspace{padding:13px}.top-links{gap:6px;justify-content:flex-end}.overview{gap:7px}.metric{padding:9px;min-height:0}.metric .value{font-size:14px}.metric h3,.metric .sub{font-size:11px}}
+  @media (max-width:760px){.file-workspace{grid-template-columns:minmax(95px,29%) minmax(0,1fr);gap:0}.file-tree{padding:8px 4px}.file-tree h2,.file-tree summary{padding-left:4px}.file-tree button{margin-left:9px;width:calc(100% - 9px);padding:4px 5px}.file-viewer .line-no{margin-right:8px;width:2.5em}}
+  @media (max-width:760px){.top-inner{flex-wrap:wrap;gap:9px}.view-switch{flex-wrap:wrap;flex-shrink:1}.view-switch button{padding:4px 7px}.analysis-panel{padding:10px}.reading-body{margin-left:4px;padding-left:6px}.reading-steps{padding-left:14px}}
+  @media (max-width:760px){.sequence-grid{grid-template-columns:minmax(0,1fr)}}
+</style>
+<header class="top">
+  <div class="top-inner">
+    <div class="identity"><span class="mark" aria-hidden="true">C</span><div><h1>C 代码视图</h1><p class="sub" id="flow-caption">通信驱动样例 · <code>bus_send()</code></p></div></div>
+    <div class="top-links">
+      <nav class="switch view-switch" aria-label="工作区视图"><button type="button" data-view="coupling" aria-pressed="false" aria-controls="coupling-workspace">资源关系图</button><button type="button" data-view="text" aria-pressed="false" aria-controls="text-workspace">文字树</button><button type="button" data-view="flow" aria-pressed="true" aria-controls="flow-workspace">端到端流程图</button><button type="button" data-view="sequence" aria-pressed="false" aria-controls="sequence-workspace">时序图</button><button type="button" data-view="files" aria-pressed="false" aria-controls="file-workspace">文件视图</button></nav>
+      <div class="legend" id="legend"><button type="button" class="legend-trigger" id="legend-trigger" aria-label="颜色图例" aria-expanded="false" aria-controls="legend-panel">?</button><section id="legend-panel" class="legend-panel" hidden><h3>流程图颜色</h3><dl id="legend-items"></dl></section></div>
+    </div>
+  </div>
+</header>
+<main class="workspace analysis-workspace" id="coupling-workspace" hidden>
+  <section class="panel analysis-panel" aria-labelledby="coupling-heading">
+    <div class="analysis-head"><div><h2 id="coupling-heading">接口与资源</h2><p class="sub">左侧函数 · 全局资源 · 右侧函数</p></div><code class="selection-crumb" id="coupling-selection"></code></div>
+    <div class="relation-legend" id="relation-legend" aria-label="资源关系图例"></div>
+    <div id="coupling-graph"></div>
+    <section class="code-panel" id="resource-definition" aria-labelledby="resource-definition-title" hidden>
+      <div class="code-head"><h2 id="resource-definition-title"></h2><button type="button" id="close-resource" aria-label="关闭资源详情">关闭</button></div>
+      <div class="resource-definition-body" id="resource-definition-body"></div>
+    </section>
+    <p class="sub">样例的 IRQ 由独立入口触发。样例未启动持续监控线程或进程。</p>
+  </section>
+</main>
+<main class="workspace analysis-workspace" id="text-workspace" hidden>
+  <section class="panel analysis-panel" aria-labelledby="text-heading">
+    <div class="analysis-head"><div><h2 id="text-heading">接口流程与分支</h2><p class="sub">展开函数查看分支、调用和源码</p></div><code class="selection-crumb" id="text-selection"></code></div>
+    <div id="text-tree" class="reading-tree"></div>
+  </section>
+</main>
+<main class="workspace" id="flow-workspace">
+  <aside class="controls panel">
+    <h2>通信驱动样例</h2>
+    <div class="switch" aria-label="侧栏"><button type="button" data-side="simulation" aria-pressed="true">打桩模拟</button><button type="button" data-side="resources" aria-pressed="false">全局资源</button></div>
+    <section id="simulation">
+      <form id="scenario">
+        <label>调用接口<select id="interface"></select></label>
+        <div class="control-row" id="parameters"></div>
+        <button class="run" id="run" disabled>执行接口</button>
+      </form>
+      <div class="side-actions"><label>回退条数 <input id="undo-count" type="number" min="1" value="1" step="1"></label><button type="button" id="undo">回退末尾</button></div>
+      <h3>执行记录</h3><div class="side-list" id="history" aria-live="polite"></div>
+      <details class="side-item"><summary>基础接口库</summary><div class="side-list" id="basic-library"></div></details>
+    </section>
+    <section id="resources" hidden><div class="side-list" id="resource-list"></div></section>
+  </aside>
+  <div class="main">
+    <section class="graph panel" aria-label="执行和源码">
+      <div class="graph-head"><div><h2 id="flow-heading">发送请求</h2><nav class="crumbs sub" id="breadcrumb" aria-label="当前流程路径" hidden></nav><p class="sub" id="flow-result">实线为该入口最近一次经过的路径</p></div>
+        <div class="search" aria-label="搜索执行流程"><input id="function-search" type="search" placeholder="搜索函数名" aria-label="搜索函数名"><select id="search-results" aria-label="搜索结果"></select><button type="button" id="locate">定位</button></div>
+      </div>
+      <nav class="entry-nav" id="entry-nav" aria-label="流程入口"><span class="sub">流程入口</span></nav>
+      <div class="graph-body" id="graph"><p class="empty" role="status">正在加载 C 样例…</p></div>
+      <section class="code-panel" id="implementation" hidden aria-label="函数实现">
+        <div class="code-head"><h2 id="symbol"></h2><span class="sub" id="location"></span><button type="button" id="close-code">收起源码</button></div>
+        <div class="switch detail-tabs" id="detail-tabs" aria-label="函数详情"><button type="button" id="contract-tab" aria-pressed="false">基础接口</button><button type="button" id="source-tab" aria-pressed="true">源码</button><button type="button" id="summary-tab" aria-pressed="false">AI 归纳</button><button type="button" id="resource-tab" aria-pressed="false">资源分析</button><button type="button" id="subflow-tab" aria-pressed="false">子流程图</button></div>
+        <div class="observations" id="observations"></div>
+        <pre id="source" tabindex="0" aria-label="C 源码"></pre>
+        <div id="detail-data" class="detail-data" hidden></div>
+        <div class="detail-data"><button class="inline-action" type="button" id="toggle-basic"></button></div>
+      </section>
+    </section>
+    <details class="sample panel"><summary>样例观测 <span class="sub" id="sample-status"></span></summary>
+      <div class="overview" aria-label="本次样例观测" aria-live="polite">
+        <div class="metric panel"><h3>驱动返回</h3><strong class="value" id="result">准备中</strong><div class="sub" id="request-summary"></div></div>
+        <div class="metric panel"><h3>本次注册的路由</h3><strong class="value" id="route">—</strong><div class="sub" id="route-summary"></div></div>
+        <div class="metric panel"><h3>模拟设备写入</h3><strong class="value" id="register">—</strong><div class="sub" id="register-summary"></div></div>
+      </div><div id="setup-observation"></div>
+    </details>
+  </div>
+</main>
+<main class="workspace sequence-workspace" id="sequence-workspace" hidden>
+  <div class="sequence-grid">
+    <form class="panel sequence-controls" id="sequence-form">
+      <h2>接口执行顺序</h2>
+      <div class="sequence-steps" id="sequence-steps"></div>
+      <button type="button" id="sequence-add">添加接口</button>
+      <button type="submit" class="run" id="sequence-run">执行并生成</button>
+    </form>
+    <section class="panel sequence-diagram" aria-labelledby="sequence-heading">
+      <h2 id="sequence-heading">调用时序</h2>
+      <p class="sub" id="sequence-status" role="status">每次从空状态模拟，时间轴按事件顺序显示。</p>
+      <div id="sequence-chart" class="sequence-chart" tabindex="0" aria-label="时序图画布"><p class="empty">选择接口和参数后执行。</p></div>
+    </section>
+  </div>
+</main>
+<main class="workspace file-workspace" id="file-workspace" hidden>
+  <nav class="file-tree" id="file-tree" aria-label="文件树"><h2>文件</h2></nav>
+  <section class="file-viewer" aria-labelledby="file-path">
+    <h2 class="file-path" id="file-path"></h2>
+    <pre tabindex="0" id="file-code" aria-labelledby="file-path"></pre>
+  </section>
+</main>
+<script type="application/json" id="bundle">%%BUNDLE%%</script>
+<script>%%GRAPH_MODEL%%</script>
+<script>%%READING_MODEL%%</script>
+<script>
+  'use strict';
+  const byId = (id) => document.getElementById(id);
+  const { functions, variables, events, source, platform, wasm } = JSON.parse(byId('bundle').textContent);
+  const files = { 'bus.c': source.split('\n'), 'platform.c': platform.split('\n') };
+  const hex = (value, width) => `0x${value.toString(16).toUpperCase().padStart(width, '0')}`;
+  const outcomes = { 0: '提交成功', '-2': '查表未命中', '-90': '长度超限', '-22': '参数无效', '-5': '平台库写入失败' };
+  const roles = {
+    bus_register: '读取静态表', stub_route: '使用注入值', store_route: '写入运行时表',
+    bus_send: '校验请求并提交', lookup_route: '按通道查表', write_doorbell: '写模拟寄存器',
+    check_length: '检查长度上限', dispatch_transfer: '选择传输路径', submit_direct: '短包直发',
+    submit_buffered: '长包暂存', stage_payload: '暂存本次长度', commit_transfer: '提交传输', encode_doorbell: '组装写入值',
+    platform_write: '平台库写入', bus_irq: '模拟中断入口', bus_unregister: '注销路由', set_platform_stub: '设置平台返回',
+  };
+  const describe = {
+    [events.DEFAULT_ROUTE]: ['bus_register', (key, lane, limit) => `读 route_defaults[${key}] → lane ${lane} / max_len ${limit}`],
+    [events.STUB_ROUTE]: ['stub_route', (key, lane, limit) => `注入 key ${key} / lane ${lane} / max_len ${limit}`],
+    [events.STORE_ROUTE]: ['store_route', (key, lane, limit) => `写 routes[${key}] ← {${lane}, ${limit}}`],
+    [events.REQUEST]: ['bus_send', (key, length) => `channel_id ${key} / length ${length}`],
+    [events.LOOKUP]: ['lookup_route', (key, lane, limit) => limit ? `命中 routes[${key}] → lane ${lane}` : `routes[${key}] 未注册`],
+    [events.CHECK_LENGTH]: ['check_length', (length, limit, passes) => `${length} ${passes ? '≤' : '>'} ${limit} · ${passes ? '通过' : '拒绝'}`],
+    [events.TRANSFER]: ['dispatch_transfer', (length, buffered, limit) => `${length} ${buffered ? '>' : '≤'} ${limit} B · ${buffered ? '暂存' : '直发'}`],
+    [events.DIRECT]: ['submit_direct', (lane, length) => `lane ${lane} · ${length} B`],
+    [events.BUFFERED]: ['submit_buffered', (lane, length) => `lane ${lane} · ${length} B`],
+    [events.STAGE]: ['stage_payload', (lane, length) => `staged_lengths[${lane}] ← ${length}`],
+    [events.COMMIT]: ['commit_transfer', (lane, length) => `提交 lane ${lane} · ${length} B`],
+    [events.ENCODE]: ['encode_doorbell', (lane, length, value) => `(${lane} << 16) | ${length} = ${hex(value, 8)}`],
+    [events.WRITE]: ['platform_write', (addr, value, before) => `写 ${hex(addr, 4)} · ${hex(before, 8)} → ${hex(value, 8)}`],
+    [events.DOORBELL]: ['write_doorbell', (addr, value) => `${hex(addr, 4)} ← ${hex(value, 8)}`],
+    [events.LIBRARY]: ['platform_write', (addr, value, status) => `平台库 · ${hex(addr, 4)} ← ${hex(value, 8)} · 返回 ${status}`],
+    [events.LOCK]: ['bus_send', (held) => held ? '进入 transfer_lock 保护区' : '退出 transfer_lock 保护区'],
+    [events.IRQ]: ['bus_irq', (count) => `irq_count = ${count}`],
+    [events.UNREGISTER]: ['bus_unregister', (channel) => `routes[${channel}] 已清除`],
+  };
+  const trace = [];
+  let c;
+  let run;
+  let selected = '';
+  let detailTab = 'source';
+  let selectedPath = [];
+  let subflowPath = [];
+  let focusPath = ['bus_send'];
+  let needsFlowSync = false;
+  let couplingCanvas;
+  let activeResource;
+  const groups = {
+    routeGroup: ['lookup_route', 'check_length'],
+    transferGroup: ['dispatch_transfer', 'submit_direct', 'stagingGroup'],
+    stagingGroup: ['submit_buffered', 'stage_payload'],
+    commitGroup: ['commit_transfer', 'encode_doorbell', 'write_doorbell', 'platform_write'],
+  };
+  const phases = { lookup_route: '路由与校验', dispatch_transfer: '传输准备', submit_buffered: '长包暂存', commit_transfer: '设备提交' };
+  const summaries = Object.fromEntries(Object.keys(groups).map((id) => [id, groupSummary(id, groups, roles, phases)]));
+  const expandedGroups = new Set(['routeGroup', 'transferGroup']);
+  const interfaceFields = {
+    bus_register: [['channel', 1, 0, 3]],
+    stub_route: [['channel', 1, 0, 3], ['lane', 3, 0, 3], ['max_len', 96, 1, 65535]],
+    bus_unregister: [['channel', 1, 0, 3]],
+    bus_send: [['channel', 1, 0, 3], ['length', 48, 0, 65535]],
+    bus_irq: [],
+    set_platform_stub: [['return_code', -5, -4095, 0]],
+    reset: [],
+  };
+  const contracts = {
+    check_length: ['route: 已查到的路由指针；length: 请求长度', '1 表示通过；0 表示超长', '按路由校验长度', '比较 length 与 route->max_len', '调用者先保证 route 非空；length ≤ max_len 才通过'],
+    encode_doorbell: ['lane: 通道号；length: 字节数', 'unsigned 32 位门铃值', '组装门铃寄存器值', '把 lane 左移 16 位并与 length 按位或', '调用者保证 lane ≤ 3，1 ≤ length ≤ 65535；函数体无额外检查'],
+    commit_transfer: ['lane: 通道号；length: 字节数', '平台写入的返回码', '提交一次设备写入', '先调用 encode_doorbell，再经 write_doorbell 调用 platform_write；成功时更新模拟门铃', '沿用发送流程校验后的 lane 和 length；此处直接透传平台返回'],
+  };
+  const basic = new Set(Object.keys(contracts).filter((name) => {
+    const fn = functions[name];
+    return fn.globals.length === 0 && fn.calls.length === 0;
+  }));
+  const resources = {
+    route_defaults: ['静态常量表', 'C 静态初始化', [], [], 'driver', ['bus_register'], '保存各通道默认的 lane 和长度上限，供登记接口复制。'],
+    routes: ['可变静态路由表', ['reset'], ['store_route'], ['bus_unregister'], 'driver', ['lookup_route', 'check_length', 'dispatch_transfer'], '按通道保存已登记的路由，max_len 为 0 表示未登记。'],
+    staged_lengths: ['暂存长度槽', ['reset'], ['stage_payload'], [], 'driver', ['stage_payload'], '按 lane 保存长包长度，供本次设备提交使用。'],
+    transfer_lock: ['串行样例锁标志', ['reset'], ['bus_send'], ['bus_send'], 'driver', ['bus_send'], '记录发送提交阶段的进入与退出，供轨迹显示模拟保护区。'],
+    irq_count: ['模拟中断计数', ['reset'], ['bus_irq'], [], 'driver', ['bus_irq'], '统计样例中断入口累计触发次数。'],
+    simulated_doorbell: ['模拟寄存器', ['platform_reset'], ['platform_write'], [], 'platform', ['platform_write'], '保存模拟门铃的最近写入值，记录写入前后的值。'],
+    platform_status: ['平台返回值打桩状态', ['platform_reset'], ['set_platform_stub'], [], 'platform', ['platform_write'], '控制平台写入返回码，非零时提前返回。'],
+  };
+  const summariesByFunction = {
+    reset: '清空通道路由、暂存长度、传输标志和中断计数，再调用平台侧重置，供场景回退与重放使用。',
+    store_route: '把 lane 和长度上限写入指定的 routes 项，并发送写入事件。通道索引由调用者校验，写入上限 0 可清除该项。',
+    bus_register: '校验通道号，从 route_defaults 读取该通道的默认配置，再调用 store_route 写入运行时路由表。成功返回 0，通道越界返回 -22。',
+    stub_route: '校验通道、lane 和长度上限，再将显式传入的配置写入 routes。它让模拟场景能指定路由参数。',
+    bus_unregister: '校验通道后，将其路由的 lane 和长度上限清零。lookup_route 随后会将该通道视为未登记。',
+    bus_irq: '模拟中断入口。每次调用递增 irq_count 并记录事件，随后返回 0。',
+    lookup_route: '按通道访问 routes 并记录查表值。长度上限非零时返回路由指针，否则返回空指针。',
+    check_length: '读取路由指针的 max_len，比较请求长度，并记录是否通过。返回布尔结果，调用者需先保证指针有效。',
+    encode_doorbell: '把 lane 放到高 16 位，与 length 按位或生成门铃值。输入范围由上游流程保证。',
+    write_doorbell: '记录门铃地址和值，然后调用平台库 platform_write，原样返回库函数的结果。',
+    commit_transfer: '先编码门铃值，再经 write_doorbell 调用平台库。短包和长包都复用此接口，平台错误会沿调用链传回。',
+    stage_payload: '将长包长度写入 lane 对应的暂存槽，再读回并返回给提交路径。此样例暂存的是长度。',
+    submit_direct: '记录短包路径，直接把 lane 和长度传给 commit_transfer，返回设备提交结果。',
+    submit_buffered: '记录长包路径，先调用 stage_payload 写入并读回暂存长度，再把 lane 与读回值交给 commit_transfer。',
+    dispatch_transfer: '长度大于 DIRECT_LIMIT 时选择暂存路径，其余走直发。两条路径都使用路由的 lane 并透传提交结果。',
+    bus_send: '校验通道和基本长度，查运行时路由，并检查请求是否超过该项上限。通过后进入 transfer_lock 模拟保护区，按长度选择直发或暂存，退出保护区后返回提交结果。',
+    platform_reset: '把模拟门铃值和平台打桩返回码清零，恢复平台侧初始状态。',
+    set_platform_stub: '保存后续平台写入要使用的返回码。设置为 0 可恢复正常写入。',
+    platform_write: '读取打桩返回码，非零时直接返回。成功路径读取原门铃值、写入新值并记录前后变化，再返回 0。',
+  };
+  let located = '';
+  const openedResources = new Set();
+  const legendItems = [
+    ['用户态', '调用方和成功返回边界', 'user-bg', 'user-border'],
+    ['内核态', '驱动函数与驱动侧参考节点', 'kernel-bg', 'kernel-border'],
+    ['IRQ', '样例中断事件入口', 'irq-bg', 'irq-border'],
+    ['库边界', '可打桩的平台库调用', 'library-bg', 'library-border'],
+    ['设备出口', '写入模拟门铃寄存器', 'device-bg', 'device-border'],
+    ['异常', '红线标记异常分支，红框标记错误返回', 'error-bg', 'error-border'],
+    ['流程组', '可展开的业务阶段或接口组', 'group-bg', 'group-border'],
+    ['条件', '琥珀色文字标记分支判断', 'library-bg', 'decision-ink'],
+    ['定位', '黄色外框标记当前定位的函数', 'group-bg', 'decision-ink'],
+  ];
+  const history = [];
+  const interfaceLabels = { bus_register: '登记路由', stub_route: '直接注入路由', bus_unregister: '注销路由', bus_send: '调用发送入口', bus_irq: '触发模拟中断', set_platform_stub: '打桩平台库返回', reset: '重置样例状态' };
+  const entryPaths = {
+    bus_send: ['bus_send'], lookup_route: ['bus_send', 'lookup_route'], check_length: ['bus_send', 'check_length'],
+    dispatch_transfer: ['bus_send', 'dispatch_transfer'],
+    submit_direct: ['bus_send', 'dispatch_transfer', 'submit_direct'],
+    submit_buffered: ['bus_send', 'dispatch_transfer', 'submit_buffered'],
+    stage_payload: ['bus_send', 'dispatch_transfer', 'submit_buffered', 'stage_payload'],
+  };
+  const sendLayout = {
+    entry: [24, 156], bus_send: [233, 156], lookup_route: [442, 156], check_length: [651, 156], dispatch_transfer: [860, 156],
+    failed: [442, -24], routeGroup: [442, 156], transferGroup: [860, 156], stagingGroup: [1069, 296], commitGroup: [651, 424],
+    submit_direct: [860, 296], submit_buffered: [1069, 296], stage_payload: [1069, 424], commit_transfer: [651, 530],
+    encode_doorbell: [442, 530], write_doorbell: [233, 530], platform_write: [24, 530], device: [24, 650], done: [233, 650],
+  };
+  const sendEdges = [
+    ['entry', 'bus_send', 'r', 'l'], ['bus_send', 'lookup_route', 'r', 'l', '有效'],
+    ['bus_send', 'failed', 't', 'l', '参数无效 −22', -22], ['lookup_route', 'failed', 't', 'b', '未命中 −2', -2],
+    ['lookup_route', 'check_length', 'r', 'l', '命中'], ['check_length', 'failed', 't', 'r', '超限 −90', -90],
+    ['check_length', 'dispatch_transfer', 'r', 'l', '通过'],
+    ['dispatch_transfer', 'submit_direct', 'b', 't', '≤ 48 B'], ['dispatch_transfer', 'submit_buffered', 'r', 't', '> 48 B'],
+    ['submit_direct', 'commit_transfer', 'b', 't'], ['submit_buffered', 'stage_payload', 'b', 't'],
+    ['stage_payload', 'commit_transfer', 'b', 'r'], ['commit_transfer', 'encode_doorbell', 'l', 'r'],
+    ['encode_doorbell', 'write_doorbell', 'l', 'r'], ['write_doorbell', 'platform_write', 'l', 'r'], ['platform_write', 'device', 'b', 't'],
+    ['platform_write', 'done', 'r', 't'], ['platform_write', 'failed', 't', 'l', '平台库失败', 'platform'],
+  ];
+  const flows = {
+    bus_send: { title: '发送请求', layout: sendLayout, edges: sendEdges },
+    bus_register: {
+      title: '登记路由', rootNote: '校验通道并读取 route_defaults', storeNote: '将默认配置写入 routes',
+      layout: { entry: [24, 156], bus_register: [260, 156], store_route: [496, 156], done: [732, 156], failed: [260, 24] },
+      edges: [['entry', 'bus_register', 'r', 'l'], ['bus_register', 'store_route', 'r', 'l', '有效'],
+        ['store_route', 'done', 'r', 'l'], ['bus_register', 'failed', 't', 'b', '通道无效 · −22', -22]],
+    },
+    bus_unregister: {
+      title: '注销路由', rootNote: '校验需要注销的通道', storeNote: '将 routes 对应项清零',
+      layout: { entry: [24, 156], bus_unregister: [260, 156], store_route: [496, 156], done: [732, 156], failed: [260, 24] },
+      edges: [['entry', 'bus_unregister', 'r', 'l'], ['bus_unregister', 'store_route', 'r', 'l', '有效'],
+        ['store_route', 'done', 'r', 'l'], ['bus_unregister', 'failed', 't', 'b', '通道无效 · −22', -22]],
+    },
+    bus_irq: {
+      title: '模拟 IRQ', rootNote: '递增并记录 irq_count',
+      layout: { entry: [24, 96], bus_irq: [260, 96], done: [496, 96] },
+      edges: [['entry', 'bus_irq', 'r', 'l'], ['bus_irq', 'done', 'r', 'l']],
+    },
+    stub_route: {
+      title: '注入路由', rootNote: '校验通道、lane 与 max_len', storeNote: '把传入配置写入 routes',
+      layout: { entry: [24, 156], stub_route: [260, 156], store_route: [496, 156], done: [732, 156], failed: [260, 24] },
+      edges: [['entry', 'stub_route', 'r', 'l'], ['stub_route', 'store_route', 'r', 'l', '有效'],
+        ['store_route', 'done', 'r', 'l'], ['stub_route', 'failed', 't', 'b', '参数无效 · −22', -22]],
+    },
+    set_platform_stub: {
+      title: '设置平台返回', rootNote: '写入 platform_status',
+      layout: { entry: [24, 96], set_platform_stub: [260, 96], done: [496, 96] },
+      edges: [['entry', 'set_platform_stub', 'r', 'l'], ['set_platform_stub', 'done', 'r', 'l']],
+    },
+    reset: {
+      title: '重置样例状态', rootNote: '清零路由、暂存、锁标志与 IRQ 计数',
+      layout: { entry: [24, 96], reset: [260, 96], platform_reset: [496, 96], done: [732, 96] },
+      edges: [['entry', 'reset', 'r', 'l'], ['reset', 'platform_reset', 'r', 'l'], ['platform_reset', 'done', 'r', 'l']],
+    },
+  };
+  let flowRoot = 'bus_send';
+  const savedCanvases = new Map();
+  let positions = structuredClone(sendLayout);
+  let camera;
+  let canvasSize;
+
+  function referencePosition(name) {
+    if (!Object.hasOwn(flows[flowRoot].layout, name) || (basic.has('commit_transfer') && summaries.commitGroup.members.includes(name))) {
+      return [1284, 156];
+    }
+    return null;
+  }
+
+  function el(tag, className, text) {
+    const element = document.createElement(tag);
+    element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+
+  const reposByFile = new Map(Object.values(functions).map(({file, repo}) => [file, repo]));
+  const fileFolders = new Map();
+  for (const file of Object.keys(files)) {
+    const folder = reposByFile.get(file) ?? '源码';
+    if (!fileFolders.has(folder)) fileFolders.set(folder, []);
+    fileFolders.get(folder).push(file);
+  }
+  const fileButtons = new Map();
+  const filePath = byId('file-path');
+  const fileCode = byId('file-code');
+
+  function showFile(folder, filename) {
+    filePath.textContent = `${folder} / ${filename}`;
+    const code = document.createDocumentFragment();
+    for (const [index, line] of files[filename].entries()) {
+      const row = el('span', 'line');
+      const number = el('span', 'line-no', index + 1);
+      number.setAttribute('aria-hidden', 'true');
+      row.append(number, el('span', 'file-line-text', line), '\n');
+      code.append(row);
+    }
+    fileCode.replaceChildren(code);
+    fileCode.scrollTo(0, 0);
+    for (const [name, button] of fileButtons) button.setAttribute('aria-current', String(name === filename));
+  }
+
+  for (const [folder, filenames] of fileFolders) {
+    const branch = el('details', '');
+    branch.open = true;
+    branch.append(el('summary', '', folder));
+    for (const filename of filenames) {
+      const button = el('button', '', filename);
+      button.type = 'button';
+      button.addEventListener('click', () => showFile(folder, filename));
+      fileButtons.set(filename, button);
+      branch.append(button);
+    }
+    byId('file-tree').append(branch);
+  }
+  fileButtons.values().next().value?.click();
+
+  const viewButtons = document.querySelectorAll('.view-switch button');
+  for (const button of viewButtons) {
+    button.addEventListener('click', () => {
+      const view = button.dataset.view;
+      byId('file-workspace').hidden = view !== 'files';
+      for (const id of ['flow', 'coupling', 'text', 'sequence']) byId(`${id}-workspace`).hidden = view !== id;
+      byId('flow-caption').hidden = view !== 'flow';
+      byId('legend').hidden = view !== 'flow';
+      for (const item of viewButtons) item.setAttribute('aria-pressed', String(item === button));
+      if (view === 'coupling') couplingCanvas.mount();
+      if (view === 'flow' && needsFlowSync && run) {
+        needsFlowSync = false;
+        locateResourceFunction(focusPath.at(-1), focusPath);
+      } else if (view === 'text' || view === 'coupling') {
+        reflectReadingSelection(view, true);
+      }
+    });
+  }
+
+  for (const [title, description, background, border] of legendItems) {
+    const term = el('dt', '');
+    const swatch = el('span', 'swatch');
+    swatch.setAttribute('aria-hidden', 'true');
+    swatch.style.setProperty('--swatch-bg', `var(--${background})`);
+    swatch.style.setProperty('--swatch-border', `var(--${border})`);
+    term.append(swatch, title);
+    byId('legend-items').append(term, el('dd', '', description));
+  }
+  const legend = byId('legend');
+  const legendTrigger = byId('legend-trigger');
+  function showLegend(open) {
+    byId('legend-panel').hidden = !open;
+    legendTrigger.setAttribute('aria-expanded', String(open));
+  }
+  legend.addEventListener('pointerenter', (event) => { if (event.pointerType === 'mouse') showLegend(true); });
+  legend.addEventListener('pointerleave', (event) => {
+    if (event.pointerType === 'mouse' && document.activeElement !== legendTrigger) showLegend(false);
+  });
+  legendTrigger.addEventListener('focus', () => showLegend(true));
+  legendTrigger.addEventListener('blur', () => { if (!legend.matches(':hover')) showLegend(false); });
+  legendTrigger.addEventListener('click', () => showLegend(true));
+  legendTrigger.addEventListener('keydown', (event) => { if (event.key === 'Escape') showLegend(false); });
+  document.addEventListener('pointerdown', (event) => { if (!legend.contains(event.target)) showLegend(false); });
+
+  function defaultPath(name) {
+    if (name === 'store_route' && ['bus_register', 'bus_unregister', 'stub_route'].includes(flowRoot)) return [flowRoot, name];
+    if (name === 'platform_reset') return ['reset', name];
+    const caller = run?.entries.some((item) => item.name === 'submit_buffered') ? 'submit_buffered' : 'submit_direct';
+    const commit = [...entryPaths[caller], 'commit_transfer'];
+    if (name === 'commit_transfer') return commit;
+    if (functions.commit_transfer.calls.includes(name)) return [...commit, name];
+    if (name === 'platform_write') return [...commit, 'write_doorbell', name];
+    return entryPaths[name] ?? [name];
+  }
+
+  function pathFromEntry(entry, name) {
+    const preferred = defaultPath(name);
+    if (!Object.hasOwn(flows, entry) || preferred[0] === entry) return preferred;
+    function find(path) {
+      if (path.at(-1) === name) return path;
+      for (const callee of functions[path.at(-1)]?.calls ?? []) {
+        if (!(callee in functions) || path.includes(callee)) continue;
+        const result = find([...path, callee]);
+        if (result) return result;
+      }
+      return null;
+    }
+    return find([entry]) ?? preferred;
+  }
+
+  function chooseReadingPath(path, view) {
+    focusPath = path;
+    needsFlowSync = true;
+    reflectReadingSelection(view, false);
+  }
+
+  function readingButton(symbol, entry = symbol, label = `${symbol}()`) {
+    const button = el('button', 'symbol-button', label);
+    button.type = 'button';
+    button.dataset.symbol = symbol;
+    button.dataset.owner = entry;
+    button.addEventListener('click', () => chooseReadingPath(pathFromEntry(entry, symbol), 'coupling'));
+    return button;
+  }
+
+  function renderCoupling() {
+    const styles = {
+      init: ['初始化', '#b3a2f2'], read: ['读取', '#81d4ae'], write: ['写入 / 修改', '#80b9f3'],
+      release: ['去初始化', '#f0a29b'], lock: ['进入 / 退出', '#edc27e'], external: ['外部调用', '#b8c4d4'],
+    };
+    const surface = graphSurface('resources', '资源关系画布', Object.entries(styles).map(([id, [, color]]) => [id, color]));
+    surface.shell.classList.add('coupling-canvas');
+    const { world, links, svg } = surface;
+    const width = 220;
+    const height = 82;
+    const nodes = {};
+    const layout = {};
+    const connectors = [];
+
+    function addNode(id, node, x, y) {
+      node.dataset.node = id;
+      nodes[id] = node;
+      layout[id] = [x, y];
+      world.append(node);
+    }
+
+    const columns = [
+      [32, { bus_register: 75, stub_route: 190, bus_unregister: 305, reset: 420, bus_irq: 535, set_platform_stub: 650 }],
+      [952, { bus_send: 254, platform_reset: 492, platform_write: 650 }],
+    ];
+    for (const [x, slots] of columns) {
+      for (const [symbol, y] of Object.entries(slots)) {
+        const button = readingButton(symbol);
+        button.classList.add('node', 'actor-node');
+        if (functions[symbol].repo === 'platform') button.classList.add('library-node');
+        if (symbol === 'bus_irq') button.classList.add('mechanism');
+        button.append(el('span', 'node-label', roles[symbol] ?? interfaceLabels[symbol] ?? '平台侧初始化'),
+          el('span', 'sub', functions[symbol].repo));
+        addNode(symbol, button, x, y);
+      }
+    }
+
+    const resourceOrder = ['route_defaults', 'routes', 'transfer_lock', 'staged_lengths', 'irq_count', 'platform_status', 'simulated_doorbell'];
+    for (const [index, name] of resourceOrder.entries()) {
+      const { field } = resourceLinks[name];
+      const { colors, intro } = resourcePresentation[name];
+      const resource = el('button', 'node resource-node');
+      resource.type = 'button';
+      resource.dataset.couplingResource = name;
+      resource.setAttribute('aria-controls', 'resource-definition');
+      resource.setAttribute('aria-expanded', 'false');
+      resource.style.setProperty('--resource-bg', colors[0]);
+      resource.style.setProperty('--resource-accent', colors[1]);
+      resource.append(el('strong', 'node-symbol', name), el('span', 'resource-intro', intro), el('span', 'node-label', field));
+      resource.addEventListener('click', () => activeResource === name ? closeResourceDefinition() : showResourceDefinition(name));
+      addNode(name, resource, 492, 24 + index * 111);
+    }
+
+    function connect(id, from, to, kind, text, note, owner, via = []) {
+      const color = styles[kind][1];
+      const path = svg('path', { class: 'edge', 'data-edge': id, 'data-kind': kind, 'data-owner': owner,
+        'data-via': via.join(' '), 'marker-end': surface.marker(kind) });
+      path.style.setProperty('--relation-color', color);
+      const title = svg('title', {});
+      title.textContent = note;
+      path.append(title);
+      const label = svg('text', { class: 'edge-label' });
+      label.style.setProperty('--relation-color', color);
+      label.textContent = text;
+      links.append(path, label);
+      const forward = layout[from][0] < layout[to][0];
+      connectors.push({ from, to, start: forward || kind === 'external' ? 'r' : 'l',
+        end: kind === 'external' ? 'r' : forward ? 'l' : 'r', kind, path, label });
+    }
+
+    for (const [name, { writers = [], readers = [] }] of Object.entries(resourceLinks)) {
+      for (const [index, [symbol, verb, note, via]] of writers.entries()) {
+        const kind = verb === '初始化' ? 'init' : verb === '去初始化' ? 'release' : name === 'transfer_lock' ? 'lock' : 'write';
+        connect(name + '-write-' + index, symbol, name, kind, verb, verb + ' · ' + note, symbol, via);
+      }
+      for (const [index, [symbol, verb, note, via]] of readers.entries()) {
+        connect(name + '-read-' + index, name, symbol, 'read', verb, verb + ' · ' + note, symbol, via);
+      }
+    }
+    for (const [entry, description, terminal] of externalTerminals) {
+      connect('external-' + entry, entry, terminal, 'external', description, '外部调用 · ' + description, entry, [terminal]);
+    }
+
+    // Give every connection on a port its own endpoint, including mixed reads and writes.
+    const ports = new Map();
+    for (const connector of connectors) {
+      for (const [key, side, other, offset] of [[connector.from, connector.start, connector.to, 'fromOffset'],
+        [connector.to, connector.end, connector.from, 'toOffset']]) {
+        const id = key + ':' + side;
+        if (!ports.has(id)) ports.set(id, []);
+        ports.get(id).push({ connector, other, offset });
+      }
+    }
+    for (const port of ports.values()) {
+      port.sort((a, b) => layout[a.other][1] - layout[b.other][1]);
+      const step = Math.min(13, 48 / Math.max(1, port.length - 1));
+      for (const [index, { connector, offset }] of port.entries()) {
+        connector[offset] = (index - (port.length - 1) / 2) * step;
+      }
+    }
+
+    function redrawExternal(connector) {
+      const a = canvasPort(positionOf(connector.from), connector.start, width, height);
+      const b = canvasPort(positionOf(connector.to), connector.end, width, height);
+      const ay = a.y + connector.fromOffset;
+      const by = b.y + connector.toOffset;
+      if (connector.from === 'reset') {
+        const y = Math.max(800, ay + 36, by + 36);
+        const top = Math.min(a.x + 42, b.x + 42);
+        connector.path.setAttribute('d', 'M' + a.x + ' ' + ay + ' H' + top + ' V' + y + ' H' + (b.x + 42) + ' V' + by + ' H' + b.x);
+        connector.label.setAttribute('x', (top + b.x) / 2);
+        connector.label.setAttribute('y', y - 6);
+      } else {
+        const x = Math.max(a.x, b.x) + 23;
+        connector.path.setAttribute('d', 'M' + a.x + ' ' + ay + ' H' + x + ' V' + by + ' H' + b.x);
+        connector.label.setAttribute('x', x - 5);
+        connector.label.setAttribute('y', (ay + by) / 2);
+      }
+      connector.label.setAttribute('text-anchor', 'end');
+    }
+
+    let positions = structuredClone(layout);
+    const positionOf = (id) => positions[id];
+    couplingCanvas = bindCanvas(surface, {
+      state: {}, ids: Object.keys(layout), positionOf, nodeWidth: width + 52, nodeHeight: height + 48,
+      move(id, next) { positions[id] = next; },
+      reset() { positions = structuredClone(layout); },
+      onBlank: closeResourceDefinition,
+      redraw() {
+        for (const [id, node] of Object.entries(nodes)) {
+          const [left, top] = positionOf(id);
+          node.style.left = left + 'px';
+          node.style.top = top + 'px';
+        }
+        for (const connector of connectors) {
+          if (connector.kind === 'external') redrawExternal(connector);
+          else redrawConnector(connector, positionOf, width, height);
+        }
+      },
+    });
+    byId('coupling-graph').replaceChildren(couplingCanvas.shell);
+    for (const [label, color] of Object.values(styles)) {
+      const item = el('span', '');
+      const swatch = el('i', '');
+      swatch.setAttribute('aria-hidden', 'true');
+      item.style.setProperty('--relation-color', color);
+      item.append(swatch, label);
+      byId('relation-legend').append(item);
+    }
+  }
+
+  function readingNode(path) {
+    const name = path.at(-1);
+    const fn = functions[name];
+    const node = el('details', path.length === 1 ? 'reading-node reading-root' : 'reading-node');
+    node.dataset.path = path.join('/');
+    const heading = el('summary', '');
+    heading.append(el('code', '', `${name}()`), el('span', 'reading-role', path.length === 1 ? flows[name].title : roles[name] ?? fn.repo));
+    heading.addEventListener('click', () => chooseReadingPath(path, 'text'));
+    node.append(heading);
+    const body = el('div', 'reading-body');
+    const steps = el('ol', 'reading-steps');
+    const notes = readingSteps[name] ?? [summariesByFunction[name]];
+    const annotatedCalls = new Set(notes.filter(Array.isArray).map(([, callee]) => callee));
+    const remainingCalls = fn.calls.filter((callee) => Object.hasOwn(functions, callee) && !annotatedCalls.has(callee));
+    for (const note of [...notes, ...remainingCalls.map((callee) => ['调用', callee])]) {
+      const [description, callee] = Array.isArray(note) ? note : [note];
+      const step = el('li', 'reading-step', description);
+      if (callee) {
+        if (path.includes(callee)) step.append(el('span', 'sub', ` · 递归回到 ${callee}()`));
+        else if (fn.calls.includes(callee)) step.append(readingNode([...path, callee]));
+      }
+      steps.append(step);
+    }
+    const sourceDetails = el('details', 'reading-source');
+    sourceDetails.append(el('summary', '', `源码 · ${fn.file}:${fn.first}–${fn.last}`),
+      el('pre', '', files[fn.file].slice(fn.first - 1, fn.last).join('\n')));
+    body.append(steps, sourceDetails);
+    node.append(body);
+    return node;
+  }
+
+  function reflectReadingSelection(view, reveal) {
+    const symbol = focusPath.at(-1);
+    const entry = focusPath[0];
+    const label = focusPath.map((name) => `${name}()`).join(' › ');
+    if (view === 'coupling') {
+      byId('coupling-selection').textContent = label;
+      const graph = byId('coupling-graph');
+      const graphSymbol = graph.querySelector(`[data-symbol="${symbol}"]`) ? symbol : entry;
+      let target;
+      for (const button of byId('coupling-workspace').querySelectorAll('[data-symbol]')) {
+        const inGraph = graph.contains(button);
+        const current = inGraph ? button.dataset.symbol === graphSymbol
+          : button.dataset.symbol === symbol && [entry, symbol].includes(button.dataset.owner);
+        button.setAttribute('aria-current', String(current));
+        if (current && inGraph) target = button;
+      }
+      for (const edge of graph.querySelectorAll('path[data-edge]')) {
+        const { owner, via } = edge.dataset;
+        const related = owner === symbol || via.split(' ').includes(symbol) && [entry, symbol].includes(owner);
+        edge.classList.toggle('related-edge', related);
+      }
+      const viewport = couplingCanvas.shell.querySelector('.viewport');
+      const node = target?.closest('[data-node]');
+      if (reveal && node) {
+        const viewBounds = viewport.getBoundingClientRect();
+        const bounds = node.getBoundingClientRect();
+        if (bounds.top < viewBounds.top || bounds.bottom > viewBounds.bottom || bounds.left < viewBounds.left || bounds.right > viewBounds.right) {
+          couplingCanvas.shell.dispatchEvent(new CustomEvent('center-node', { detail: node.dataset.node }));
+        }
+      }
+      return;
+    }
+    byId('text-selection').textContent = label;
+    const nodes = [...byId('text-tree').querySelectorAll('[data-path]')];
+    const exact = nodes.find((node) => node.dataset.path === focusPath.join('/'));
+    const current = exact ?? nodes.find((node) => node.dataset.path === entry);
+    for (const node of nodes) node.firstElementChild.setAttribute('aria-current', String(node === current));
+    if (reveal && current) {
+      for (let node = current; node; node = node.parentElement.closest('[data-path]')) node.open = true;
+      current.firstElementChild.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  renderCoupling();
+  byId('text-tree').append(...Object.keys(flows).map((name) => readingNode([name])));
+
+  function card(name, note, observed, path = defaultPath(name)) {
+    const button = el('button', `node${observed ? ' observed' : ''}`);
+    button.type = 'button';
+    button.dataset.function = name;
+    button.dataset.path = path.join('/');
+    button.setAttribute('aria-controls', 'implementation');
+    button.append(el('strong', 'node-symbol', `${name}()`), el('span', 'node-label', basic.has(name) ? `基础接口 · ${roles[name] ?? note}` : note));
+    button.addEventListener('click', () => {
+      focusPath = path;
+      selected = selectedPath.join('/') === path.join('/') && selected ? '' : name;
+      selectedPath = selected ? path : [];
+      detailTab = basic.has(name) ? 'contract' : 'source';
+      renderCode();
+    });
+    return button;
+  }
+
+  function flowStage(title, entries, fallback) {
+    const stage = el('section', 'stage');
+    stage.append(el('h3', 'stage-title', title));
+    if (!entries.length) {
+      stage.append(el('p', 'empty', fallback));
+      return stage;
+    }
+    const row = el('div', 'flow');
+    for (const item of entries) row.append(card(item.name, item.text, true));
+    stage.append(row);
+    return stage;
+  }
+
+  function graphSurface(prefix, label, extraMarkers = []) {
+    const shell = el('section', 'canvas-shell');
+    const toolbar = el('div', 'canvas-tools');
+    toolbar.append(el('span', 'sub', '拖空白平移 · 拖节点调整布局 · 滚轮缩放'));
+    const controls = el('div', 'zoom-buttons');
+    toolbar.append(controls);
+    const viewport = el('div', 'viewport');
+    viewport.tabIndex = 0;
+    viewport.setAttribute('aria-label', `${label}，可用方向键平移`);
+    const world = el('div', 'world');
+    const svg = (tag, attributes) => {
+      const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+      return node;
+    };
+    const links = svg('svg', { class: 'canvas-links', width: 1060, height: 737, 'aria-hidden': 'true' });
+    const defs = svg('defs', {});
+    for (const [id, color] of [['inactive', '#627183'], ['active', '#80e5bb'], ['error', '#a46067'], ['error-active', '#ff968d'], ...extraMarkers]) {
+      const marker = svg('marker', { id: `${prefix}-${id}`, markerWidth: 8, markerHeight: 8, refX: 8, refY: 4, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+      marker.append(svg('path', { d: 'M0 0L8 4L0 8Z', fill: color }));
+      defs.append(marker);
+    }
+    links.append(defs);
+    world.append(links);
+    viewport.append(world);
+    shell.append(toolbar, viewport);
+    return { shell, viewport, world, controls, links, svg, marker: (id) => `url(#${prefix}-${id})` };
+  }
+
+  function canvasPort([x, y], side, width, height) {
+    const [offsetX, offsetY, dx, dy] = {
+      l: [0, height / 2, -1, 0], r: [width, height / 2, 1, 0],
+      t: [width / 2, 0, 0, -1], b: [width / 2, height, 0, 1],
+    }[side];
+    return { x: x + offsetX, y: y + offsetY, dx, dy };
+  }
+
+  function redrawConnector(connector, positionOf, width, height) {
+    const { from, to, start, end, path, label, fromOffset = 0, toOffset = 0, fromInset = 0, toInset = 0 } = connector;
+    const a = canvasPort(positionOf(from), start, width, height);
+    const b = canvasPort(positionOf(to), end, width, height);
+    a.y += fromOffset;
+    b.y += toOffset;
+    a.x -= a.dx * fromInset;
+    b.x -= b.dx * toInset;
+    const bend = Math.min(95, Math.max(14, Math.hypot(b.x - a.x, b.y - a.y) / 2));
+    path.setAttribute('d', `M${a.x} ${a.y} C${a.x + a.dx * bend} ${a.y + a.dy * bend} ${b.x + b.dx * bend} ${b.y + b.dy * bend} ${b.x} ${b.y}`);
+    if (label) {
+      const middle = path.getPointAtLength(path.getTotalLength() / 2);
+      label.setAttribute('x', middle.x + (start === 't' || end === 't' ? 26 : 0));
+      label.setAttribute('y', middle.y - 4);
+    }
+  }
+
+  function bindCanvas(surface, {
+    state, ids, positionOf, move, reset, redraw, onBlank, nodeWidth = 174, nodeHeight = 77,
+    group = (key) => [key], fitWidth = false,
+  }) {
+    const { shell, viewport, world, controls } = surface;
+    const scaleLabel = el('span', 'sub');
+    const showCamera = () => {
+      const { x, y, zoom } = state.camera;
+      world.style.transform = `translate(${x}px, ${y}px) scale(${zoom})`;
+      scaleLabel.textContent = `${Math.round(zoom * 100)}%`;
+    };
+    function fit(resetLayout, widthOnly = false) {
+      if (resetLayout) reset();
+      const points = ids.map(positionOf);
+      const left = Math.min(...points.map(([x]) => x)) - 14;
+      const right = Math.max(...points.map(([x]) => x)) + nodeWidth + 14;
+      const top = Math.min(...points.map(([, y]) => y)) - 14;
+      const bottom = Math.max(...points.map(([, y]) => y)) + nodeHeight + 14;
+      const width = right - left;
+      const zoom = Math.min(1, viewport.clientWidth / width, widthOnly ? 1 : viewport.clientHeight / (bottom - top));
+      state.camera = { x: (viewport.clientWidth - width * zoom) / 2 - left * zoom, y: -top * zoom, zoom };
+      redraw();
+      showCamera();
+    }
+    function zoom(factor, x = viewport.clientWidth / 2, y = viewport.clientHeight / 2) {
+      const current = state.camera;
+      const next = Math.max(Math.min(0.25, current.zoom), Math.min(2, current.zoom * factor));
+      const ratio = next / current.zoom;
+      state.camera = { x: x - (x - current.x) * ratio, y: y - (y - current.y) * ratio, zoom: next };
+      showCamera();
+    }
+    for (const [label, title, action] of [
+      ['−', '缩小', () => zoom(1 / 1.2)], ['+', '放大', () => zoom(1.2)],
+      ['适应', '适应画布', () => fit(false)], ['规整', '规整流程图', () => fit(true, fitWidth)],
+    ]) {
+      const button = el('button', '', label);
+      button.type = 'button';
+      button.setAttribute('aria-label', title);
+      button.addEventListener('click', action);
+      controls.append(button);
+    }
+    controls.append(scaleLabel);
+
+    let drag;
+    let suppressClick = false;
+    viewport.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || drag) return;
+      suppressClick = false;
+      const node = event.target.closest('[data-node]')?.dataset.node;
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY, node,
+        origin: node ? group(node).map((id) => [id, [...positionOf(id)]]) : [state.camera.x, state.camera.y], moved: false };
+    });
+    viewport.addEventListener('pointerleave', () => { if (drag && !drag.moved) drag = null; });
+    viewport.addEventListener('pointermove', (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+      if (!drag.moved) viewport.setPointerCapture(event.pointerId);
+      drag.moved = true;
+      viewport.classList.add('dragging');
+      if (drag.node) {
+        for (const [id, [x, y]] of drag.origin) move(id, [x + dx / state.camera.zoom, y + dy / state.camera.zoom]);
+        redraw();
+      } else {
+        [state.camera.x, state.camera.y] = [drag.origin[0] + dx, drag.origin[1] + dy];
+        showCamera();
+      }
+    });
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+      viewport.addEventListener(type, (event) => {
+        if (!drag || event.pointerId !== drag.id) return;
+        suppressClick = drag.moved;
+        viewport.classList.remove('dragging');
+        drag = null;
+      });
+    }
+    viewport.addEventListener('click', (event) => {
+      if (suppressClick && event.detail) event.stopPropagation();
+      else if (!event.target.closest('[data-node]')) onBlank?.();
+      suppressClick = false;
+    }, true);
+    viewport.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      const rect = viewport.getBoundingClientRect();
+      zoom(event.deltaY > 0 ? 1 / 1.12 : 1.12, event.clientX - rect.left, event.clientY - rect.top);
+    }, { passive: false });
+    viewport.addEventListener('keydown', (event) => {
+      if (event.target !== viewport) return;
+      const step = { ArrowLeft: [45, 0], ArrowRight: [-45, 0], ArrowUp: [0, 45], ArrowDown: [0, -45] }[event.key];
+      if (!step) return;
+      event.preventDefault();
+      state.camera.x += step[0];
+      state.camera.y += step[1];
+      showCamera();
+    });
+    shell.addEventListener('center-node', (event) => {
+      const position = positionOf(event.detail);
+      if (!position) return;
+      const [x, y] = position;
+      const zoom = state.camera.zoom;
+      state.camera = { x: viewport.clientWidth / 2 - (x + nodeWidth / 2) * zoom,
+        y: viewport.clientHeight / 2 - (y + nodeHeight / 2) * zoom, zoom };
+      showCamera();
+    });
+    return { shell, mount() {
+      const size = `${viewport.clientWidth}:${viewport.clientHeight}`;
+      if (!state.camera || size !== state.size) fit(false, fitWidth);
+      else { redraw(); showCamera(); }
+      state.size = size;
+    } };
+  }
+
+  function renderCanvas() {
+    const { layout, edges, rootNote, storeNote } = flows[flowRoot];
+    const latest = run.byEntry.get(flowRoot);
+    const { entries = [], status } = latest ?? {};
+    const surface = graphSurface('flow', '流程画布');
+    surface.shell.classList.add('flow-canvas');
+    const { world, links, svg } = surface;
+    surface.shell.insertBefore(el('div', 'flow-notation', '椭圆端点 · 矩形处理 · 菱形判断 · 平行四边形输入／输出'), surface.viewport);
+
+    const observations = new Map(entries.filter(({ id }) => id !== events.LOCK).map(({ name, text }) => [name, text]));
+    const error = status !== undefined && status !== 0;
+    const errorText = observations.has('platform_write') ? '平台库写入失败' : outcomes[status];
+    const boundaries = {
+      entry: [flowRoot === 'bus_irq' ? '入口 · 模拟中断' : '入口 · 用户态调用方', `调用 ${flowRoot}()`, Boolean(latest), ''],
+      failed: ['出口 · 错误返回', error ? `${errorText} · ${status}` : '见异常分支', error, 'reject'],
+      device: ['出口 · 模拟设备', 'TX_DOORBELL · 0x1040', entries.some((item) => item.id === events.WRITE), 'device'],
+      done: [flowRoot === 'bus_irq' ? '出口 · 中断返回' : '出口 · 返回用户态', ['reset', 'set_platform_stub'].includes(flowRoot) ? '返回 void' : '返回 0', Boolean(latest) && !error, ''],
+    };
+    const decisions = { bus_send: '参数有效？', bus_register: '通道有效？', bus_unregister: '通道有效？', stub_route: '参数有效？',
+      lookup_route: '注册项存在？', check_length: '长度在上限内？', dispatch_transfer: '短包或长包？' };
+    const nodes = {};
+    const observed = new Set();
+    const visible = visibleNodes(groups, expandedGroups);
+    const frames = {};
+    const visibleIds = Object.keys(layout).filter((id) => visible(id) === id);
+    const reference = located ? referencePosition(located) : null;
+    if (reference) visibleIds.push(located);
+    const positionOf = (id) => id === located && reference ? reference : positions[id];
+    for (const key of visibleIds) {
+      if (expandedGroups.has(key)) {
+        frames[key] = el('div', 'group-frame');
+        world.insertBefore(frames[key], links);
+      }
+    }
+    for (const key of visibleIds) {
+      const boundary = boundaries[key];
+      if (boundary) {
+        const [title, subtitle, active, type] = boundary;
+        const box = el(key === 'entry' ? 'button' : 'div', `node boundary ${type}${active ? ' observed' : ''}`);
+        box.dataset.shape = key === 'device' ? 'io' : 'terminal';
+        if (key === 'entry' || key === 'done') {
+          if (flowRoot === 'bus_irq') box.classList.add('mechanism');
+          else box.dataset.domain = 'user';
+        }
+        box.append(el('strong', '', title), el('small', '', subtitle));
+        if (key === 'entry') {
+          box.type = 'button';
+          box.addEventListener('click', () => {
+            document.querySelector('[data-side="simulation"]').click();
+            if (byId('interface').value !== flowRoot) {
+              byId('interface').value = flowRoot;
+              renderFields();
+            }
+            (byId('parameters').querySelector('input') ?? byId('run')).focus();
+          });
+        }
+        if (active) observed.add(key);
+        nodes[key] = box;
+      } else if (groups[key]) {
+        const { title, description, members } = summaries[key];
+        const open = expandedGroups.has(key);
+        const blackBox = key === 'commitGroup' && basic.has('commit_transfer');
+        const active = members.some((member) => observations.has(member));
+        const button = el('button', `node group-node${open ? ' group-handle' : ''}${active ? ' observed' : ''}`);
+        button.type = 'button';
+        button.dataset.group = key;
+        button.dataset.shape = open ? 'group' : 'process';
+        button.setAttribute('aria-expanded', String(open));
+        button.append(el('strong', 'node-symbol', blackBox ? `基础接口 · ${title}` : `${open ? '−' : '+'} ${title}`));
+        if (!open) button.append(el('span', 'node-label', description));
+        button.title = description;
+        button.addEventListener('click', () => {
+          if (blackBox) {
+            openFunction('commit_transfer');
+            return;
+          }
+          if (open) expandedGroups.delete(key);
+          else expandedGroups.add(key);
+          render();
+          byId('graph').querySelector(`[data-group="${key}"]`)?.focus({ preventScroll: true });
+        });
+        nodes[key] = button;
+      } else {
+        const active = observations.has(key) || (key === flowRoot && Boolean(latest));
+        const isReference = key === located && reference;
+        const note = Object.hasOwn(layout, key) ? '基础接口内参考' : '链路外参考';
+        const defaultNote = key === flowRoot ? rootNote : key === 'store_route' ? storeNote : undefined;
+        const path = focusPath[0] === flowRoot && focusPath.at(-1) === key ? focusPath : defaultPath(key);
+        const button = card(key, isReference ? `${functions[key].repo} · ${note}` : observations.get(key) ?? defaultNote ?? roles[key], active, path);
+        button.dataset.shape = decisions[key] && !isReference ? 'decision' : 'process';
+        button.dataset.domain = functions[key].repo === 'driver' ? 'kernel' : 'library';
+        if (isReference) button.classList.add('reference');
+        if (key === 'bus_irq') button.classList.add('mechanism');
+        if (functions[key].repo === 'platform') button.classList.add('library-node');
+        if (key === 'bus_irq') button.prepend(el('span', 'decision-tag', 'IRQ · 模拟事件入口'));
+        if (button.dataset.shape === 'decision') {
+          button.classList.add('decision');
+          const detail = button.querySelector('.node-label');
+          button.title = detail.textContent;
+          detail.hidden = true;
+          button.prepend(el('span', 'decision-tag', decisions[key]));
+        }
+        if (active) observed.add(key);
+        nodes[key] = button;
+      }
+      nodes[key].dataset.node = key;
+      if (['decision', 'io'].includes(nodes[key].dataset.shape)) {
+        const outline = svg('svg', { class: 'shape-outline', viewBox: '0 0 174 77', 'aria-hidden': 'true' });
+        const points = nodes[key].dataset.shape === 'decision' ? '87,1 173,38.5 87,76 1,38.5' : '22,1 173,1 152,76 1,76';
+        outline.append(svg('polygon', { points }));
+        nodes[key].prepend(outline);
+      }
+      if (key === located) nodes[key].classList.add('located');
+      world.append(nodes[key]);
+    }
+
+    for (const key of observations.keys()) observed.add(key);
+    const projected = projectEdges(groups, expandedGroups, edges.map(([from, to, start, end, text, failure]) => ({
+      from, to, start, end, text, error: failure !== undefined,
+      active: observed.has(from) && observed.has(to) && (failure === undefined || (failure === 'platform'
+        ? error : status === failure && !observations.has('platform_write'))),
+    })));
+    const connectors = projected.map(({ from, to, start, end, text, active, error }) => {
+      const marker = error ? (active ? 'error-active' : 'error') : (active ? 'active' : 'inactive');
+      const path = svg('path', { class: `edge${active ? ' active' : ''}${error ? ' error' : ''}`, 'marker-end': surface.marker(marker), 'data-edge': `${from}-${to}` });
+      const label = text ? svg('text', { class: `edge-label${error ? ' error' : ''}` }) : null;
+      links.append(path);
+      if (label) {
+        label.textContent = text;
+        links.append(label);
+      }
+      return { from, to, start, end, path, label, fromInset: from === 'device' ? 11 : 0, toInset: to === 'device' ? 11 : 0 };
+    });
+
+    function redraw() {
+      for (const [key, node] of Object.entries(nodes)) {
+        const [x, y] = positionOf(key);
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+      }
+      // Children come first so a parent frame can include open child frames.
+      const bounds = {};
+      for (const key of ['stagingGroup', 'routeGroup', 'transferGroup', 'commitGroup']) {
+        const frame = frames[key];
+        if (!frame) continue;
+        const boxes = groups[key].map((member) => {
+          if (bounds[member]) return bounds[member];
+          const [x, y] = positions[member];
+          return [x, y, x + 174, y + 77];
+        });
+        const left = Math.min(...boxes.map(([x]) => x)) - 9;
+        const top = Math.max(-8, Math.min(...boxes.map(([, y]) => y)) - 38);
+        const right = Math.max(...boxes.map((box) => box[2])) + 9;
+        const bottom = Math.max(...boxes.map((box) => box[3])) + 9;
+        bounds[key] = [left, top, right, bottom];
+        Object.assign(frame.style, { left: `${left}px`, top: `${top}px`, width: `${right-left}px`, height: `${bottom-top}px` });
+        nodes[key].style.left = `${left + 5}px`;
+        nodes[key].style.top = `${top + 5}px`;
+      }
+      for (const connector of connectors) redrawConnector(connector, positionOf, 174, 77);
+    }
+
+    const state = {
+      get camera() { return camera; },
+      set camera(value) { camera = value; },
+      get size() { return canvasSize; },
+      set size(value) { canvasSize = value; },
+    };
+    return bindCanvas(surface, {
+      state, ids: visibleIds, positionOf, redraw, onBlank: closeCode,
+      group(key) {
+        if (!groups[key]) return [key];
+        return [key, ...summaries[key].members, ...groups[key].filter((id) => groups[id])];
+      },
+      move(id, next) {
+        if (reference && id === located) reference.splice(0, 2, ...next);
+        else positions[id] = next;
+      },
+      reset() {
+        positions = structuredClone(layout);
+        if (reference) reference.splice(0, 2, ...referencePosition(located));
+      },
+    });
+  }
+
+  function closeCode(focus = false) {
+    const trigger = focus ? byId('graph').querySelector('[data-function][aria-expanded="true"]') : null;
+    selected = '';
+    selectedPath = [];
+    renderCode();
+    trigger?.focus({ preventScroll: true });
+  }
+
+  function gotoSubflow(path) {
+    if (Object.hasOwn(flows, path[0])) setFlowRoot(path[0]);
+    subflowPath = path.length === 1 && path[0] === flowRoot ? [] : path;
+    focusPath = path.length ? path : [flowRoot];
+    closeCode();
+    render();
+  }
+
+  function setFlowRoot(name) {
+    if (flowRoot === name) return;
+    savedCanvases.set(flowRoot, { positions, camera, canvasSize });
+    flowRoot = name;
+    const saved = savedCanvases.get(name);
+    positions = saved?.positions ?? structuredClone(flows[name].layout);
+    camera = saved?.camera;
+    canvasSize = saved?.canvasSize;
+    located = '';
+  }
+
+  for (const name of Object.keys(flows)) {
+    const button = el('button', '', `${name}()`);
+    button.type = 'button';
+    button.dataset.entry = name;
+    button.title = flows[name].title;
+    button.addEventListener('click', () => {
+      setFlowRoot(name);
+      gotoSubflow([]);
+      button.focus({ preventScroll: true });
+    });
+    byId('entry-nav').append(button);
+  }
+
+  function renderBreadcrumb() {
+    const nav = byId('breadcrumb');
+    nav.hidden = subflowPath.length === 0;
+    nav.replaceChildren();
+    if (nav.hidden) return;
+    const hasRoot = subflowPath[0] === flowRoot;
+    const home = el('button', '', `${flowRoot}()`);
+    home.addEventListener('click', () => gotoSubflow([]));
+    nav.append(home);
+    const pathGroups = Object.keys(groups).filter((id) => summaries[id].members.some((member) => subflowPath.includes(member)));
+    for (const id of pathGroups) {
+      const jump = el('button', '', summaries[id].title);
+      jump.addEventListener('click', () => {
+        for (const candidate of pathGroups) {
+          if (candidate === id || groups[candidate].includes(id)) expandedGroups.add(candidate);
+        }
+        gotoSubflow([]);
+      });
+      nav.append(el('span', '', '›'), jump);
+    }
+    for (let index = hasRoot ? 1 : 0; index < subflowPath.length; index++) {
+      const name = subflowPath[index];
+      nav.append(el('span', '', '›'));
+      if (index === subflowPath.length - 1) {
+        const current = el('code', '', `${name}()`);
+        current.setAttribute('aria-current', 'page');
+        nav.append(current);
+      } else {
+        const jump = el('button', '', `${name}()`);
+        jump.addEventListener('click', () => gotoSubflow(subflowPath.slice(0, index + 1)));
+        nav.append(jump);
+      }
+    }
+  }
+
+  function renderSubflow() {
+    const name = subflowPath.at(-1);
+    const callees = functions[name].calls.filter((callee) => functions[callee]);
+    const observedNames = new Set(traceForPath(subflowPath).map((entry) => entry.name));
+    const observed = observedInPath(subflowPath, observedNames);
+    const shared = new Map();
+    for (const [caller, definition] of Object.entries(functions)) {
+      for (const callee of definition.calls) {
+        if (!shared.has(callee)) shared.set(callee, []);
+        shared.get(callee).push(caller);
+      }
+    }
+    const panel = el('section', 'subflow');
+    panel.addEventListener('click', (event) => { if (!event.target.closest('button')) closeCode(); });
+    const caller = el('div', 'sub-root');
+    caller.append(card(name, observed ? '当前调用 · 本次执行' : '当前调用 · 本次未执行', observed, subflowPath));
+    panel.append(caller);
+    if (!callees.length) return panel;
+    const branches = el('div', 'branches');
+    branches.style.setProperty('--children', callees.length);
+    for (const child of callees) {
+      const path = [...subflowPath, child];
+      const callers = shared.get(child);
+      const type = functions[child].repo !== functions[name].repo ? `外部库 · ${functions[child].repo}` : functions[child].calls.length ? '业务函数' : '叶子函数';
+      const scope = callers.length > 1 ? `共用实现 · ${callers.length} 个调用方` : type;
+      const branch = el('div', 'branch');
+      const button = card(child, `${roles[child] ?? scope} · ${scope}`, observedInPath(path, observedNames), path);
+      if (callers.length > 1) button.title = callers.join(' / ');
+      branch.append(button);
+      branches.append(branch);
+    }
+    panel.append(branches, el('p', 'sub sub-note', '直接调用（源码顺序） · 点击节点查看实现或继续下钻'));
+    return panel;
+  }
+
+  function traceForPath(path) {
+    if (Object.hasOwn(flows, path[0])) return run.byEntry.get(path[0])?.entries ?? [];
+    return run.entries;
+  }
+
+  function renderCode() {
+    renderResources();
+    for (const node of byId('graph').querySelectorAll('[data-function]')) {
+      node.setAttribute('aria-expanded', String(node.dataset.function === selected));
+      const current = node.dataset.path === focusPath.join('/') || node.dataset.node === located && node.dataset.function === focusPath.at(-1);
+      node.classList.toggle('located', current);
+      node.setAttribute('aria-current', String(current));
+    }
+    byId('implementation').hidden = !selected;
+    if (!selected) return;
+    const { first, last, file, repo } = functions[selected];
+    const traceEntries = traceForPath(selectedPath);
+    const names = new Set(traceEntries.map((item) => item.name));
+    const entries = observedInPath(selectedPath, names) ? traceEntries.filter((item) => item.name === selected) : [];
+    const isEntry = Object.hasOwn(flows, selected);
+    byId('subflow-tab').textContent = isEntry ? '返回入口流程' : '子流程图';
+    byId('subflow-tab').hidden = !isEntry && (basic.has(selected) || !functions[selected].calls.some((name) => functions[name]) || subflowPath.join('/') === selectedPath.join('/'));
+    byId('contract-tab').hidden = !basic.has(selected);
+    byId('source-tab').hidden = basic.has(selected);
+    for (const tab of ['contract', 'source', 'resource', 'summary']) byId(`${tab}-tab`).setAttribute('aria-pressed', String(detailTab === tab));
+    byId('source').hidden = detailTab !== 'source';
+    byId('detail-data').hidden = detailTab === 'source';
+    byId('toggle-basic').textContent = basic.has(selected) ? '移出基础接口库' : '归入基础接口库';
+    byId('symbol').textContent = `${selected}()`;
+    byId('location').textContent = `${repo} / ${file} · ${first}–${last}`;
+    byId('observations').replaceChildren(...entries.map((item) => el('p', '', `L${item.line} · ${item.text}`)));
+    if (!entries.length) byId('observations').append(el('p', '', '本次未观测到这条调用路径'));
+    const code = document.createDocumentFragment();
+    for (let line = first; line <= last; line++) {
+      const observed = entries.some((item) => item.line === line);
+      const row = el('span', `line${observed ? ' hit' : ''}`);
+      row.append(el('span', 'line-no', line), document.createTextNode(files[file][line - 1]));
+      code.append(row);
+    }
+    byId('source').replaceChildren(code);
+    const data = el('dl', '');
+    if (detailTab === 'contract') {
+      const facts = contracts[selected] ?? [functions[selected].signature, functions[selected].signature.split(' (')[0], roles[selected] ?? selected, functions[selected].calls.join(' → ') || '在函数内完成', '当前样例未提供独立的参数校验摘要'];
+      for (const [index, title] of ['入参', '出参', '功能简介', '实现简介', '入参校验'].entries()) data.append(el('dt', '', title), el('dd', '', facts[index]));
+    } else if (detailTab === 'summary') {
+      data.append(el('dt', '', '基于样例源码 · 离线预生成'), el('dd', '', summariesByFunction[selected]));
+    } else if (detailTab === 'resource') {
+      const protectedCalls = ['dispatch_transfer', 'submit_direct', 'submit_buffered', 'stage_payload', 'commit_transfer', 'encode_doorbell', 'write_doorbell', 'platform_write'];
+      const protectedContext = selectedPath[0] === 'bus_send' && protectedCalls.includes(selected);
+      const direct = functions[selected].globals;
+      const frees = Object.entries(resources).filter(([, spec]) => spec[3].includes(selected)).map(([name]) => name);
+      const rows = [
+        ['调用链锁保护', protectedContext ? 'driver / bus_send() 的 transfer_lock 模拟保护区' : selected === 'bus_send' ? '本函数在 dispatch_transfer() 调用前后设置并清除 transfer_lock' : '当前路径没有已知锁保护'],
+        ['资源申请', '样例无动态申请'],
+        ['资源释放 / 清除', frees.join('、') || '无已知释放'],
+        ['直接访问的全局资源', direct.join('、') || '无'],
+        ['临界变量', protectedContext ? (direct.filter((name) => name !== 'platform_status').join('、') || '本函数无直接临界变量') : '本调用位置无已知受保护的直接访问'],
+      ];
+      for (const [title, value] of rows) data.append(el('dt', '', title), el('dd', '', value));
+    }
+    byId('detail-data').replaceChildren(data);
+  }
+
+  function render() {
+    const graph = byId('graph');
+    const flow = flows[flowRoot];
+    const latest = run.byEntry.get(flowRoot);
+    byId('flow-heading').textContent = flow.title;
+    byId('flow-result').textContent = latest ? `最近一次返回 ${latest.status ?? 'void'} · 实线显示执行路径` : '尚未执行 · 显示源码中的路径';
+    for (const button of byId('entry-nav').querySelectorAll('[data-entry]')) {
+      button.setAttribute('aria-current', String(button.dataset.entry === flowRoot));
+    }
+    renderBreadcrumb();
+    if (subflowPath.length) {
+      graph.replaceChildren(renderSubflow());
+    } else {
+      const canvas = renderCanvas();
+      graph.replaceChildren(canvas.shell);
+      canvas.mount();
+    }
+    renderCode();
+  }
+
+  function replay() {
+    c.reset();
+    const log = history.map(({ name, args }) => {
+      trace.length = 0;
+      const status = c[name](...args);
+      const entries = trace.map(([id, a, b, d, line]) => {
+        const [symbol, note] = describe[id] ?? [name, () => '参数校验失败'];
+        return { id, name: symbol, text: note(a, b, d), line, values: [a, b, d] };
+      });
+      return { name, args, status, entries };
+    });
+    const latestSend = log.findLast((item) => item.name === 'bus_send');
+    const recent = log.at(-1);
+    const setup = log.filter((item) => item.name !== 'bus_send').flatMap((item) => item.entries);
+    const entries = [...setup, ...(latestSend?.entries ?? [])];
+    const status = latestSend?.status ?? 0;
+    run = { entries, byEntry: new Map(log.map((item) => [item.name, item])) };
+    const stored = setup.findLast((item) => item.id === events.STORE_ROUTE)?.values;
+    const write = latestSend?.entries.find((item) => item.id === events.WRITE)?.values;
+    byId('setup-observation').replaceChildren(flowStage('接口执行轨迹', recent?.entries ?? [], '本次无 C 事件'));
+    const outcome = status && latestSend?.entries.some((item) => item.id === events.LIBRARY) ? '平台库写入失败' : outcomes[status] ?? `返回 ${status}`;
+    byId('result').textContent = latestSend ? outcome : '等待发送';
+    byId('sample-status').textContent = latestSend ? `· ${outcome}` : '';
+    byId('result').className = `value ${status ? 'warning' : 'positive'}`;
+    byId('request-summary').textContent = latestSend ? `ch ${latestSend.args[0]} · ${latestSend.args[1]} B · return ${status}` : '';
+    byId('route').textContent = stored ? `routes[${stored[0]}]` : '空表';
+    byId('route-summary').textContent = stored ? (stored[2] ? `lane ${stored[1]} · max_len ${stored[2]}` : '最近操作已注销该表项') : '尚无表项写入';
+    byId('register').textContent = write ? hex(write[1], 8) : '无写入';
+    byId('register-summary').textContent = write ? `TX_DOORBELL · ${hex(write[0], 4)}` : '最近一次发送未观测到写入';
+    const rows = log.map((item, index) => {
+      const row = el('details', 'side-item');
+      const result = item.status === undefined ? 'void' : item.status;
+      row.append(el('summary', '', `${index + 1}. ${item.name}(${item.args.join(', ')}) → ${result}`));
+      for (const entry of item.entries) row.append(el('p', 'sub', entry.text));
+      if (item.name === 'set_platform_stub') row.append(el('p', 'sub', `后续 platform_write() 返回 ${item.args[0]}。非零时跳过模拟寄存器写入。`));
+      if (item.name === 'bus_register' || item.name === 'stub_route') row.append(el('p', 'sub', item.status === 0 ? '影响：后续发送从该通道路由获取 lane 和长度上限。' : '影响：路由表没有更新。'));
+      return row;
+    });
+    byId('history').replaceChildren(...rows.reverse());
+    byId('undo').disabled = history.length === 0;
+    render();
+  }
+
+  function openFunction(name) {
+    switchToFunctionFlow(name);
+    subflowPath = [];
+    selected = name;
+    selectedPath = defaultPath(name);
+    focusPath = selectedPath;
+    detailTab = basic.has(name) ? 'contract' : 'source';
+    for (const [group, summary] of Object.entries(summaries)) {
+      if (summary.members.includes(name) && !(group === 'commitGroup' && basic.has('commit_transfer'))) expandedGroups.add(group);
+    }
+    render();
+    const node = byId('graph').querySelector(`[data-function="${name}"]`);
+    node?.focus({ preventScroll: true });
+    if (node) byId('graph').querySelector('.canvas-shell')?.dispatchEvent(new CustomEvent('center-node', { detail: name }));
+  }
+
+  function switchToFunctionFlow(name) {
+    if (Object.hasOwn(flows, name)) setFlowRoot(name);
+    else if (!Object.hasOwn(flows[flowRoot].layout, name)) {
+      const owner = Object.keys(flows).find((entry) => Object.hasOwn(flows[entry].layout, name));
+      if (owner) setFlowRoot(owner);
+    }
+  }
+
+  function functionLink(name) {
+    const button = el('button', 'inline-action', `${name}()`);
+    button.type = 'button';
+    button.addEventListener('click', () => openFunction(name));
+    return button;
+  }
+
+  function locateResourceFunction(name, path) {
+    if (path && Object.hasOwn(flows, path[0])) setFlowRoot(path[0]);
+    else switchToFunctionFlow(name);
+    focusPath = path ?? defaultPath(name);
+    located = name;
+    subflowPath = [];
+    selected = '';
+    selectedPath = [];
+    for (const [group, summary] of Object.entries(summaries)) {
+      if (summary.members.includes(name) && !referencePosition(name)) expandedGroups.add(group);
+    }
+    render();
+    byId('graph').querySelector('.canvas-shell')?.dispatchEvent(new CustomEvent('center-node', { detail: name }));
+  }
+
+  function appendResourceDefinition(parent, name) {
+    const [kind, , , , repo, , description] = resources[name];
+    parent.append(el('p', 'resource-about', description));
+    const declaration = variables[name];
+    if (!declaration) return;
+    const { file, first, last, record } = declaration;
+    parent.append(el('p', 'sub', `${repo} · ${kind} · ${file}:${first}–${last}`));
+    if (record) {
+      parent.append(el('p', 'sub', `结构定义 · ${file}:${record.first}–${record.last}`),
+        el('pre', 'resource-code', files[file].slice(record.first - 1, record.last).join('\n')));
+    }
+    parent.append(el('pre', 'resource-code', files[file].slice(first - 1, last).join('\n')));
+    const presentation = resourcePresentation[name];
+    const fields = record?.fields ?? Object.keys(presentation.bits ?? {});
+    if (!fields.length) return;
+    const notes = el('section', 'resource-fields');
+    notes.style.setProperty('--resource-accent', presentation.colors[1]);
+    notes.append(el('h3', '', record ? '字段注释 · 从访问位置推断' : '位段注释 · 从编码逻辑推断'));
+    const list = el('dl', 'field-list');
+    for (const field of fields) {
+      const comment = (presentation.fields ?? presentation.bits)?.[field];
+      const row = el('div', 'field-note');
+      row.dataset.field = field;
+      const term = el('dt', '');
+      term.append(el('code', '', field));
+      const meaning = el('dd', '', comment?.[0] ?? '作用待核实');
+      if (comment) meaning.append(el('small', '', comment[1]));
+      row.append(term, meaning);
+      list.append(row);
+    }
+    notes.append(list);
+    parent.append(notes);
+  }
+
+  function showResourceDefinition(name) {
+    closeResourceDefinition();
+    activeResource = name;
+    byId('coupling-graph').querySelector(`[data-coupling-resource="${name}"]`).setAttribute('aria-expanded', 'true');
+    byId('resource-definition-title').textContent = name;
+    const body = byId('resource-definition-body');
+    body.replaceChildren();
+    appendResourceDefinition(body, name);
+    const { field, initial, writers = [], readers = [] } = resourceLinks[name];
+    body.append(el('p', 'resource-about', `涉及字段 · ${field}`));
+    if (initial) body.append(el('p', 'resource-reference-row', `初始化 · ${initial}`));
+    for (const [entry, verb, note, via = []] of [...writers, ...readers]) {
+      const row = el('div', 'resource-reference-row');
+      row.append(el('strong', '', `${verb} · `), readingButton(entry), el('span', 'sub', ` ${note} `));
+      row.append(...via.map((symbol) => readingButton(symbol, entry)));
+      body.append(row);
+    }
+    byId('resource-definition').hidden = false;
+  }
+
+  function closeResourceDefinition(restoreFocus = false) {
+    if (activeResource) {
+      const trigger = byId('coupling-graph').querySelector(`[data-coupling-resource="${activeResource}"]`);
+      trigger?.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) trigger?.focus({ preventScroll: true });
+    }
+    activeResource = undefined;
+    byId('resource-definition').hidden = true;
+  }
+
+  byId('close-resource').addEventListener('click', () => closeResourceDefinition(true));
+
+  function renderResources() {
+    const list = byId('resource-list');
+    const scroll = list.scrollTop;
+    const related = new Set(functions[selected]?.globals ?? []);
+    for (const [name, [, initial, writes, releases, , reads]] of Object.entries(resources)) {
+      if ([...(Array.isArray(initial) ? initial : []), ...writes, ...releases, ...reads].includes(selected)) related.add(name);
+    }
+    const rows = Object.entries(resources).sort(([a], [b]) => Number(related.has(b)) - Number(related.has(a))).map(([name, spec]) => {
+      const [, initial, writes, releases, , reads] = spec;
+      const item = el('details', `side-item${related.has(name) ? ' related' : ''}`);
+      item.dataset.resource = name;
+      item.open = openedResources.has(name) || related.has(name);
+      const title = el('summary', '', name);
+      title.addEventListener('click', () => {
+        if (item.open) openedResources.delete(name);
+        else openedResources.add(name);
+      });
+      item.append(title);
+      appendResourceDefinition(item, name);
+      const bars = el('div', 'resource-bars');
+      for (const [type, label, links] of [['init', '初始化', initial], ['write', '修改', writes], ['release', '释放', releases], ['read', 'Read', reads]]) {
+        const row = el('div', 'resource-bar');
+        row.dataset.kind = type;
+        row.append(el('strong', '', label));
+        if (Array.isArray(links) && links.length) {
+          for (const functionName of links) {
+            const link = el('button', 'inline-action', `${functionName}()`);
+            link.type = 'button';
+            link.addEventListener('click', () => locateResourceFunction(functionName));
+            row.append(link);
+          }
+        } else row.append(Array.isArray(links) ? '无' : links);
+        bars.append(row);
+      }
+      item.append(bars);
+      return item;
+    });
+    list.replaceChildren(...rows);
+    list.scrollTop = selected ? 0 : scroll;
+  }
+
+  function renderLibrary() {
+    byId('basic-library').replaceChildren(...[...basic].sort().map(functionLink));
+  }
+
+  function renderFields() {
+    const name = byId('interface').value;
+    byId('parameters').replaceChildren(...interfaceFields[name].map(([field, value, min, max]) => {
+      const label = el('label', '', field);
+      const input = el('input', '');
+      Object.assign(input, { id: `arg-${field}`, type: 'number', min, max, value, required: true });
+      label.append(input);
+      return label;
+    }));
+  }
+
+  function searchFunctions() {
+    const query = byId('function-search').value.trim().toLowerCase();
+    const options = Object.keys(functions).filter((name) => name.toLowerCase().includes(query)).sort();
+    byId('search-results').replaceChildren(...options.map((name) => {
+      const option = el('option', '', `${name} · ${functions[name].repo}`);
+      option.value = name;
+      return option;
+    }));
+    byId('locate').disabled = options.length === 0;
+  }
+
+  for (const [name, label] of Object.entries(interfaceLabels)) {
+    const option = el('option', '', `${label} · ${name}()`);
+    option.value = name;
+    byId('interface').append(option);
+  }
+  byId('interface').addEventListener('change', renderFields);
+  renderFields();
+  renderLibrary();
+  searchFunctions();
+  byId('function-search').addEventListener('input', searchFunctions);
+  byId('function-search').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') byId('locate').click();
+  });
+  byId('locate').addEventListener('click', () => {
+    const name = byId('search-results').value;
+    if (name && run) openFunction(name);
+  });
+
+  for (const button of document.querySelectorAll('[data-side]')) {
+    button.addEventListener('click', () => {
+      for (const peer of document.querySelectorAll('[data-side]')) {
+        peer.setAttribute('aria-pressed', String(peer === button));
+        byId(peer.dataset.side).hidden = peer !== button;
+      }
+    });
+  }
+  byId('scenario').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = byId('interface').value;
+    history.push({ name, args: interfaceFields[name].map(([field]) => byId(`arg-${field}`).valueAsNumber) });
+    replay();
+  });
+  byId('undo').addEventListener('click', () => {
+    const input = byId('undo-count');
+    const count = input.valueAsNumber;
+    input.max = history.length;
+    if (!input.reportValidity() || !Number.isInteger(count)) return;
+    history.splice(-count);
+    replay();
+  });
+  byId('close-code').addEventListener('click', () => closeCode(true));
+  byId('subflow-tab').addEventListener('click', () => gotoSubflow([...selectedPath]));
+  for (const tab of ['source', 'contract', 'resource', 'summary']) {
+    byId(`${tab}-tab`).addEventListener('click', () => {
+      detailTab = tab;
+      renderCode();
+    });
+  }
+  byId('toggle-basic').addEventListener('click', () => {
+    if (basic.has(selected)) {
+      basic.delete(selected);
+      detailTab = 'source';
+    } else {
+      basic.add(selected);
+      if (selected === 'commit_transfer') expandedGroups.delete('commitGroup');
+      detailTab = 'contract';
+    }
+    renderLibrary();
+    render();
+  });
+
+  function instantiateFixture(traceCallback) {
+    return WebAssembly.instantiate(Uint8Array.from(atob(wasm), (byte) => byte.charCodeAt(0)), { env: { trace: traceCallback } });
+  }
+
+  instantiateFixture((...args) => trace.push(args)).then(({ instance }) => {
+    c = instance.exports;
+    byId('run').disabled = false;
+    replay();
+  }).catch((error) => {
+    byId('result').textContent = '加载失败';
+    byId('graph').replaceChildren(el('p', 'status', `C 样例无法执行：${error.message}`));
+  });
+</script>
+<script>%%SEQUENCE_VIEW%%</script>
+</html>

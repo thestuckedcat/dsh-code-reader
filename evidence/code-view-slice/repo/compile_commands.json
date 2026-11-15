@@ -1,0 +1,24 @@
+[
+    {
+        "directory":  "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo",
+        "file":  "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+        "arguments":  [
+                          "C:\\mingw64\\bin\\clang.exe",
+                          "-std=c11",
+                          "-Wall",
+                          "-c",
+                          "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c"
+                      ]
+    },
+    {
+        "directory":  "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo",
+        "file":  "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\platform.c",
+        "arguments":  [
+                          "C:\\mingw64\\bin\\clang.exe",
+                          "-std=c11",
+                          "-Wall",
+                          "-c",
+                          "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\platform.c"
+                      ]
+    }
+]

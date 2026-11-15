@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "workspace_id": "code-view-bus-demo",
+  "scope_ref": "local",
+  "allowed_read_roots": ["slice-root"],
+  "output_root_ref": "slice-root",
+  "repositories": [
+    {"repo_id": "bus", "root_ref": "slice-root", "relative_path": "repo", "role": "other",
+     "vcs": {"kind": "none", "commit": null}}
+  ],
+  "variants": [
+    {"variant_id": "semantic-x86_64", "analysis_mode": "semantic", "architecture": "x86_64",
+     "target_triple": null, "config_refs": [], "compdb_refs": ["bus:compile_commands.json"],
+     "generated_header_sets": [], "toolchain_ref": null, "sysroot_ref": null,
+     "include_root_refs": [], "link_evidence_refs": [], "uapi_revision_refs": [],
+     "execution_profile_ref": null}
+  ],
+  "toolchains": [],
+  "cross_repo_bindings": []
+}

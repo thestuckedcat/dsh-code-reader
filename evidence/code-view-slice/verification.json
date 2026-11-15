@@ -1,0 +1,1387 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-15T05:20:00Z",
+  "purpose": "CL-VIEW-T1 read-only slice: registered+verified real Atlas snapshot fixture for the Demo bus source and the max_len write/read/over-limit comparison",
+  "evidence_classes": {
+    "demo_observed": "demo/code-view/demo.test.cjs (Wasm simulation; fixture semantics, not device behavior)",
+    "atlas_snapshot": "SDK Code Atlas 0.8.0 / schema 0.1 static snapshot of the same C sources",
+    "dsh_host": "recorded separately by the isolated-profile verification (evidence/readonly-slice/verification.json)"
+  },
+  "atlas": {
+    "root": "H:/VSCODE_READER",
+    "git_commit": "c33320a98face14c5f6e5e817beaccf52b9bbb93",
+    "tool_version": "0.8.0",
+    "schema_version": "0.1",
+    "runtime": "H:/VSCODE_READER/runtime/windows-x86_64/venv/Scripts/python.exe (3.11.4)",
+    "compiler_for_compdb": "C:/mingw64/bin/clang.exe clang 16.0.4 (mingw)",
+    "invoked": "scripts/sdk_atlas.py run --repo <slice>/repo --compdb <slice>/repo/compile_commands.json --out <slice>/atlas-run --max-tu 8 --tu-timeout 60 --dataflow off",
+    "scope": "synthetic Demo C only; no Linux/Kbuild, no generated headers, no user repository, no network, no H launcher"
+  },
+  "checks": {
+    "atlas_manifest": {
+      "snapshot_id": "ed326d554334432b907de21297207eb8",
+      "tool_version": "0.8.0",
+      "schema_version": "0.1",
+      "workspace_roots": [
+        "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo"
+      ],
+      "selected_scope": {
+        "direction": "down",
+        "interface": null,
+        "mode": "repository",
+        "target": null
+      },
+      "parsed": 2,
+      "failed": [],
+      "pending_units": [],
+      "whole_program_complete": false,
+      "graph_hash_equals_raw_bytes": true
+    },
+    "fixture_hashes": {
+      "evidence/code-view-slice/repo/bus.c": {
+        "bytes": 4744,
+        "sha256": "b2ec232896c2680d4eb3e68e3c34681d2ceb9f0fe5fa17a1d32be9ea77f1c6cf"
+      },
+      "evidence/code-view-slice/repo/platform.c": {
+        "bytes": 751,
+        "sha256": "6bfe0b0be3246dca1e344b965fb9acca2bc9df7b57d4a1dbb7339e25e7773162"
+      },
+      "evidence/code-view-slice/repo/compile_commands.json": {
+        "bytes": 1057,
+        "sha256": "8cb56ee1b4fc310ffdc294990915360066b2b89bd8f2b891484cdf3a4cf01f27"
+      },
+      "evidence/code-view-slice/snapshot/ed326d554334432b907de21297207eb8/graph.json": {
+        "bytes": 279230,
+        "sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c"
+      },
+      "evidence/code-view-slice/snapshot/ed326d554334432b907de21297207eb8/analysis_manifest.json": {
+        "bytes": 2143,
+        "sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6"
+      },
+      "evidence/code-view-slice/inbox/workspace.json": {
+        "bytes": 778,
+        "sha256": "15993cdcfcd2cc364a3bfc2cee542cf4fc0476649c687d45467cc4bfb0bfd5b4"
+      },
+      "evidence/code-view-slice/inbox/snapshot-bus/graph.json": {
+        "bytes": 279230,
+        "sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c"
+      },
+      "evidence/code-view-slice/inbox/snapshot-bus/analysis_manifest.json": {
+        "bytes": 2143,
+        "sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6"
+      }
+    },
+    "demo_source_byte_identity": {
+      "bus.c_equal": true,
+      "platform.c_equal": true
+    }
+  },
+  "registration_and_import": {
+    "bootstrap": "isolated DSH_HOME copy under tmp/lead-slice-check (trusted local config)",
+    "workspace_import": "workspace_revision=1, repositories=[bus], freshness=fresh",
+    "snapshot_import": "snapshot_ref=ed326d554334432b907de21297207eb8, freshness=fresh, coverage.failed=[], whole_program_complete=false",
+    "verified_by": {
+      "snapshot_load": {
+        "argv": [
+          "--bootstrap",
+          "<isolated>",
+          "snapshot",
+          "--workspace",
+          "code-view-bus-demo",
+          "--snapshot",
+          "ed326d554334432b907de21297207eb8"
+        ],
+        "exit_code": 0,
+        "ok": true,
+        "payload": {
+          "schema_version": 1,
+          "snapshot_ref": "ed326d554334432b907de21297207eb8",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "atlas_schema": "0.1",
+          "tool_version": "0.8.0",
+          "analysis_id": "ed326d554334432b907de21297207eb8",
+          "manifest_sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "build_identity": {
+            "workspace_revision": 1,
+            "variant_id": "semantic-x86_64",
+            "digest": "3eeb0005905147bab48e3721e5556bf8973ed52c26d82b2863fb0ada1a9aee41"
+          },
+          "coverage": {
+            "boundary_policy": {
+              "glibc_roots": [],
+              "linux_roots": []
+            },
+            "candidate_index": {
+              "reused_files": 0,
+              "scanned_files": 2
+            },
+            "capabilities": {
+              "callback_targets": "bounded_same_function_state",
+              "cfg": "unsupported",
+              "data_flow": "partial_path_insensitive",
+              "direct_calls": "ready",
+              "field_alias": "bounded_nested_multi_target",
+              "global_objects": "ready",
+              "kernel_boundary_rules": "not_implemented",
+              "locks": "lexical_and_simple_wrapper_projection",
+              "shared_state_parallelism": "conservative_may",
+              "types": "ready"
+            },
+            "complete_call_chain": false,
+            "completed_requested_search": true,
+            "completeness": "requested_scope_complete_with_open_world_boundaries",
+            "failed": [],
+            "parsed": 2,
+            "pending_units": [],
+            "processed_units": 2,
+            "requested_scope_complete": true,
+            "reused": 0,
+            "selected_scope": {
+              "direction": "down",
+              "interface": null,
+              "mode": "repository",
+              "target": null
+            },
+            "total_available_units": 2,
+            "truncated": false,
+            "whole_program_complete": false,
+            "failed_count": 0
+          },
+          "failed_count": 0,
+          "freshness": "fresh",
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "limitations": [],
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "imported_at": "2026-11-15T05:10:11Z"
+        },
+        "stderr_tail": ""
+      },
+      "path_bus_send_to_platform_write": {
+        "argv": [
+          "--bootstrap",
+          "<isolated>",
+          "path",
+          "--workspace",
+          "code-view-bus-demo",
+          "--variant",
+          "semantic-x86_64",
+          "--from",
+          "bus:bus_send",
+          "--to",
+          "bus:platform_write"
+        ],
+        "exit_code": 0,
+        "ok": true,
+        "payload": {
+          "schema_version": 1,
+          "snapshot_refs": [
+            "ed326d554334432b907de21297207eb8"
+          ],
+          "nodes": [
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_afa8298f2d197e5fd110e49a",
+              "id": "f_afa8298f2d197e5fd110e49a",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "bus_send",
+              "display_name": "bus_send(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 152,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ccdd7df856dd459e2934ea77",
+              "id": "f_ccdd7df856dd459e2934ea77",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "dispatch_transfer",
+              "display_name": "dispatch_transfer(const struct Route *, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 143,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_a6ac5de30cf631400f29d67e",
+              "id": "f_a6ac5de30cf631400f29d67e",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "submit_buffered",
+              "display_name": "submit_buffered(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 136,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ec61140249f393550eb97946",
+              "id": "f_ec61140249f393550eb97946",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "commit_transfer",
+              "display_name": "commit_transfer(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 116,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_f67649a4a3e9dcbcca8b3c1d",
+              "id": "f_f67649a4a3e9dcbcca8b3c1d",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "write_doorbell",
+              "display_name": "write_doorbell(unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 110,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_6c3177a5f9b67214f9855ee8",
+              "id": "f_6c3177a5f9b67214f9855ee8",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "platform_write",
+              "display_name": "platform_write(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\platform.c",
+              "line": 19,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_bc0e6086fe5e9c1faa1eeeb6",
+              "id": "f_bc0e6086fe5e9c1faa1eeeb6",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "submit_direct",
+              "display_name": "submit_direct(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 130,
+              "kind": "function"
+            }
+          ],
+          "edges": [
+            {
+              "edge_id": "edge_3b13dcf15ba7a60546f38ace",
+              "call_target_id": "edge_3b13dcf15ba7a60546f38ace",
+              "from_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_afa8298f2d197e5fd110e49a",
+              "to_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ccdd7df856dd459e2934ea77",
+              "relation": "call",
+              "callsite": "c_65a31b1a03ccdce71baa6a35",
+              "origin": "deterministic_analysis",
+              "certainty": "exact",
+              "evidence_ids": [
+                "e_cd995d62f666bac251ce1ecf"
+              ],
+              "unknown_target_possible": null,
+              "assumptions": [],
+              "limitations": []
+            },
+            {
+              "edge_id": "edge_562a4f1364cb9624f63417d9",
+              "call_target_id": "edge_562a4f1364cb9624f63417d9",
+              "from_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ccdd7df856dd459e2934ea77",
+              "to_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_a6ac5de30cf631400f29d67e",
+              "relation": "call",
+              "callsite": "c_c6dcf3a12d388ef2e68f444a",
+              "origin": "deterministic_analysis",
+              "certainty": "exact",
+              "evidence_ids": [
+                "e_2a739920b12448800f207340"
+              ],
+              "unknown_target_possible": null,
+              "assumptions": [],
+              "limitations": []
+            },
+            {
+              "edge_id": "edge_f7e2373b61b8d4cfdaec267e",
+              "call_target_id": "edge_f7e2373b61b8d4cfdaec267e",
+              "from_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_a6ac5de30cf631400f29d67e",
+              "to_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ec61140249f393550eb97946",
+              "relation": "call",
+              "callsite": "c_1f7c8f41faae8e839cb441be",
+              "origin": "deterministic_analysis",
+              "certainty": "exact",
+              "evidence_ids": [
+                "e_6e4cf243127574ae87b9b437"
+              ],
+              "unknown_target_possible": null,
+              "assumptions": [],
+              "limitations": []
+            },
+            {
+              "edge_id": "edge_e2665df947d74fb48e82b9c8",
+              "call_target_id": "edge_e2665df947d74fb48e82b9c8",
+              "from_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ec61140249f393550eb97946",
+              "to_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_f67649a4a3e9dcbcca8b3c1d",
+              "relation": "call",
+              "callsite": "c_dd112bdb32282aa1bcff7dcd",
+              "origin": "deterministic_analysis",
+              "certainty": "exact",
+              "evidence_ids": [
+                "e_0ac06fd72d4339b07acbffca"
+              ],
+              "unknown_target_possible": null,
+              "assumptions": [],
+              "limitations": []
+            },
+            {
+              "edge_id": "edge_52135ed254668a54b2a863f6",
+              "call_target_id": "edge_52135ed254668a54b2a863f6",
+              "from_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_f67649a4a3e9dcbcca8b3c1d",
+              "to_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_6c3177a5f9b67214f9855ee8",
+              "relation": "call",
+              "callsite": "c_a9a49f2229277208d6ae0cac",
+              "origin": "deterministic_analysis",
+              "certainty": "exact",
+              "evidence_ids": [
+                "e_252a2a3225edb071708a7d86"
+              ],
+              "unknown_target_possible": null,
+              "assumptions": [],
+              "limitations": []
+            },
+            {
+              "edge_id": "edge_f56d16123b77d06e171595a5",
+              "call_target_id": "edge_f56d16123b77d06e171595a5",
+              "from_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ccdd7df856dd459e2934ea77",
+              "to_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_bc0e6086fe5e9c1faa1eeeb6",
+              "relation": "call",
+              "callsite": "c_33150cae6b9e806385c567da",
+              "origin": "deterministic_analysis",
+              "certainty": "exact",
+              "evidence_ids": [
+                "e_0cf51c1c326a2a5a108b1522"
+              ],
+              "unknown_target_possible": null,
+              "assumptions": [],
+              "limitations": []
+            },
+            {
+              "edge_id": "edge_cbcf98820eacf3372d5afe79",
+              "call_target_id": "edge_cbcf98820eacf3372d5afe79",
+              "from_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_bc0e6086fe5e9c1faa1eeeb6",
+              "to_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ec61140249f393550eb97946",
+              "relation": "call",
+              "callsite": "c_ad629f59dd4f94c835a711f6",
+              "origin": "deterministic_analysis",
+              "certainty": "exact",
+              "evidence_ids": [
+                "e_271431007e4065e2c55f15de"
+              ],
+              "unknown_target_possible": null,
+              "assumptions": [],
+              "limitations": []
+            }
+          ],
+          "unresolved": [
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_72f06fa7b3e3ebe4c9a925fe",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_e279d09e895556271e8e0cb8"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_43615419b4162f82cdc87dff",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_744d7e33dc5e020788d10a66"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_8f009025fe3c5697e298eb10",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b2fb7e35dbd42d2661168abd"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_66d6e552cbbbeec35862e2cc",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_95a2af7b845189389bd39766"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_b90eb7d33c70fa0f1cf0ea73",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_a52c4c4878c81f740356d59e"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_fd1e39a68de33be74bd8e6c3",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_6690b1968f111571eb1ea923"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_c06c93f9c8a31ff0573c0d16",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_3fc57e4b18530320879f0a05"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_32f851231dc5cc8f75d08929",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_624785e38fd851f19eb69574"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_2ce3fab55c5d3c87f6a0e54e",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_1b72a79a5554de3537ecfc69"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_f067fe1af341e7a718c9291f",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_a671a73f94444480be256c99"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_f80bb70acd489b6fc50b4473",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_6de0a50d84003eb061aa8761"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_fe5e02eea7278a6d59180ed3",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_133e4740b18b14c2607b21a5"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_7e772fc768404cacf5fe3e10",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_d127c15bbe281437dfb3a0e0"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_359e7493e5e167cb12195147",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b0d1f21c5cb30b230f491ec1"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_1aef618f9c6ac640cadbab1e",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_dd45facb1dbc752e8b0d42b0"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_20456dd61f1d52c2f1460276",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b4d8e9a88317af92e64c5093"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_f4ee6c00751faf508a5aa4b1",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b6364b1d90515046123ba5fb"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_c9d36c7dc622624897662701",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_a23a3b12f015712c9558c2cd"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_c7165fc383d6828c5ddb8131",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_3e86b6694b96df132a37cfbb"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_15cfc9159e36e6e7627c37e4",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_4862123f5b00353e59d0fcd7"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_b76280c4e5d301eb5eecefb3",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_ffd4f97e4d93b891f7817b8e"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_fa045fc3929e6473e8c259e7",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_18444e77838bf97be6f05d09"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_144ee14b1f297d19f8bdab78"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_b19a05b7a8457000a4562e91"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_c373db5bd0ded348577b3cb3"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_87403babddf39338cdbd3f69"
+            }
+          ],
+          "choices": [
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_a6ac5de30cf631400f29d67e",
+              "id": "f_a6ac5de30cf631400f29d67e",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "submit_buffered",
+              "display_name": "submit_buffered(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 136,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_bc0e6086fe5e9c1faa1eeeb6",
+              "id": "f_bc0e6086fe5e9c1faa1eeeb6",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "submit_direct",
+              "display_name": "submit_direct(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 130,
+              "kind": "function"
+            }
+          ],
+          "common_prefix": [
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_afa8298f2d197e5fd110e49a",
+              "id": "f_afa8298f2d197e5fd110e49a",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "bus_send",
+              "display_name": "bus_send(unsigned int, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 152,
+              "kind": "function"
+            },
+            {
+              "node_ref": "code-view-bus-demo/bus/semantic-x86_64/ed326d554334432b907de21297207eb8/f_ccdd7df856dd459e2934ea77",
+              "id": "f_ccdd7df856dd459e2934ea77",
+              "workspace_id": "code-view-bus-demo",
+              "repo_id": "bus",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "name": "dispatch_transfer",
+              "display_name": "dispatch_transfer(const struct Route *, unsigned int)",
+              "file": "E:\\dsh\\plugin\\04-code-learning\\evidence\\code-view-slice\\repo\\bus.c",
+              "line": 143,
+              "kind": "function"
+            }
+          ],
+          "coverage": {
+            "ed326d554334432b907de21297207eb8": {
+              "boundary_policy": {
+                "glibc_roots": [],
+                "linux_roots": []
+              },
+              "candidate_index": {
+                "reused_files": 0,
+                "scanned_files": 2
+              },
+              "capabilities": {
+                "callback_targets": "bounded_same_function_state",
+                "cfg": "unsupported",
+                "data_flow": "partial_path_insensitive",
+                "direct_calls": "ready",
+                "field_alias": "bounded_nested_multi_target",
+                "global_objects": "ready",
+                "kernel_boundary_rules": "not_implemented",
+                "locks": "lexical_and_simple_wrapper_projection",
+                "shared_state_parallelism": "conservative_may",
+                "types": "ready"
+              },
+              "complete_call_chain": false,
+              "completed_requested_search": true,
+              "completeness": "requested_scope_complete_with_open_world_boundaries",
+              "failed": [],
+              "parsed": 2,
+              "pending_units": [],
+              "processed_units": 2,
+              "requested_scope_complete": true,
+              "reused": 0,
+              "selected_scope": {
+                "direction": "down",
+                "interface": null,
+                "mode": "repository",
+                "target": null
+              },
+              "total_available_units": 2,
+              "truncated": false,
+              "whole_program_complete": false,
+              "failed_count": 0
+            }
+          },
+          "truncated": false,
+          "budget_used": 8,
+          "direction": "down",
+          "freshness": "fresh"
+        },
+        "stderr_tail": "",
+        "summary": {
+          "nodes": [
+            "bus_send",
+            "dispatch_transfer",
+            "submit_buffered",
+            "commit_transfer",
+            "write_doorbell",
+            "platform_write",
+            "submit_direct"
+          ],
+          "edges": [
+            {
+              "from": "f_afa8298f2d197e5fd110e49a",
+              "to": "f_ccdd7df856dd459e2934ea77",
+              "certainty": "exact",
+              "origin": "deterministic_analysis",
+              "callsite": "c_65a31b1a03ccdce71baa6a35"
+            },
+            {
+              "from": "f_ccdd7df856dd459e2934ea77",
+              "to": "f_a6ac5de30cf631400f29d67e",
+              "certainty": "exact",
+              "origin": "deterministic_analysis",
+              "callsite": "c_c6dcf3a12d388ef2e68f444a"
+            },
+            {
+              "from": "f_a6ac5de30cf631400f29d67e",
+              "to": "f_ec61140249f393550eb97946",
+              "certainty": "exact",
+              "origin": "deterministic_analysis",
+              "callsite": "c_1f7c8f41faae8e839cb441be"
+            },
+            {
+              "from": "f_ec61140249f393550eb97946",
+              "to": "f_f67649a4a3e9dcbcca8b3c1d",
+              "certainty": "exact",
+              "origin": "deterministic_analysis",
+              "callsite": "c_dd112bdb32282aa1bcff7dcd"
+            },
+            {
+              "from": "f_f67649a4a3e9dcbcca8b3c1d",
+              "to": "f_6c3177a5f9b67214f9855ee8",
+              "certainty": "exact",
+              "origin": "deterministic_analysis",
+              "callsite": "c_a9a49f2229277208d6ae0cac"
+            },
+            {
+              "from": "f_ccdd7df856dd459e2934ea77",
+              "to": "f_bc0e6086fe5e9c1faa1eeeb6",
+              "certainty": "exact",
+              "origin": "deterministic_analysis",
+              "callsite": "c_33150cae6b9e806385c567da"
+            },
+            {
+              "from": "f_bc0e6086fe5e9c1faa1eeeb6",
+              "to": "f_ec61140249f393550eb97946",
+              "certainty": "exact",
+              "origin": "deterministic_analysis",
+              "callsite": "c_ad629f59dd4f94c835a711f6"
+            }
+          ],
+          "truncated": false,
+          "unresolved": [
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_72f06fa7b3e3ebe4c9a925fe",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_e279d09e895556271e8e0cb8"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_43615419b4162f82cdc87dff",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_744d7e33dc5e020788d10a66"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_8f009025fe3c5697e298eb10",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b2fb7e35dbd42d2661168abd"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_66d6e552cbbbeec35862e2cc",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_95a2af7b845189389bd39766"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_b90eb7d33c70fa0f1cf0ea73",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_a52c4c4878c81f740356d59e"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_fd1e39a68de33be74bd8e6c3",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_6690b1968f111571eb1ea923"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_c06c93f9c8a31ff0573c0d16",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_3fc57e4b18530320879f0a05"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_32f851231dc5cc8f75d08929",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_624785e38fd851f19eb69574"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_2ce3fab55c5d3c87f6a0e54e",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_1b72a79a5554de3537ecfc69"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_f067fe1af341e7a718c9291f",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_a671a73f94444480be256c99"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_f80bb70acd489b6fc50b4473",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_6de0a50d84003eb061aa8761"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_fe5e02eea7278a6d59180ed3",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_133e4740b18b14c2607b21a5"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_7e772fc768404cacf5fe3e10",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_d127c15bbe281437dfb3a0e0"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_359e7493e5e167cb12195147",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b0d1f21c5cb30b230f491ec1"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_1aef618f9c6ac640cadbab1e",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_dd45facb1dbc752e8b0d42b0"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_20456dd61f1d52c2f1460276",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b4d8e9a88317af92e64c5093"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_f4ee6c00751faf508a5aa4b1",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_b6364b1d90515046123ba5fb"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_c9d36c7dc622624897662701",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_a23a3b12f015712c9558c2cd"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_c7165fc383d6828c5ddb8131",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_3e86b6694b96df132a37cfbb"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_15cfc9159e36e6e7627c37e4",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_4862123f5b00353e59d0fcd7"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_b76280c4e5d301eb5eecefb3",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_ffd4f97e4d93b891f7817b8e"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "external_boundary",
+              "issue_id": "i_fa045fc3929e6473e8c259e7",
+              "detail": "Implementation not found in analyzed workspace",
+              "symbol": null,
+              "evidence_ids": [
+                "e_18444e77838bf97be6f05d09"
+              ],
+              "snapshot_ref": "ed326d554334432b907de21297207eb8"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_144ee14b1f297d19f8bdab78"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_b19a05b7a8457000a4562e91"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_c373db5bd0ded348577b3cb3"
+            },
+            {
+              "reason": "leaf_in_analyzed_graph",
+              "node_id": "f_87403babddf39338cdbd3f69"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "static_facts_max_len": {
+    "function_lines": {
+      "reset": 31,
+      "store_route": 43,
+      "bus_register": 50,
+      "bus_send": 152,
+      "lookup_route": 89,
+      "check_length": 96
+    },
+    "call_edges": {
+      "bus_register": [
+        {
+          "to": "store_route",
+          "certainty": "exact",
+          "origin": "deterministic_analysis",
+          "call_target_id": "edge_291bde4829ed47fc79025775",
+          "callsite_id": "c_a686c6765d3c70ca8a66ad50",
+          "callsite_line": 58,
+          "evidence_ids": [
+            "e_5c15a7d38678f322aa664dcc"
+          ]
+        }
+      ],
+      "bus_send": [
+        {
+          "to": "lookup_route",
+          "certainty": "exact",
+          "origin": "deterministic_analysis",
+          "call_target_id": "edge_e8d5f773dbd1900c9078515a",
+          "callsite_id": "c_793310e79f208f7e1368c437",
+          "callsite_line": 160,
+          "evidence_ids": [
+            "e_6e7ed1a1416660c0e7c22f95"
+          ]
+        },
+        {
+          "to": "check_length",
+          "certainty": "exact",
+          "origin": "deterministic_analysis",
+          "call_target_id": "edge_2450f21959974898ec9e4444",
+          "callsite_id": "c_2d6e6d665c1e95aca9ac14b8",
+          "callsite_line": 164,
+          "evidence_ids": [
+            "e_314adfee6301351a2dca9553"
+          ]
+        },
+        {
+          "to": "dispatch_transfer",
+          "certainty": "exact",
+          "origin": "deterministic_analysis",
+          "call_target_id": "edge_3b13dcf15ba7a60546f38ace",
+          "callsite_id": "c_65a31b1a03ccdce71baa6a35",
+          "callsite_line": 170,
+          "evidence_ids": [
+            "e_cd995d62f666bac251ce1ecf"
+          ]
+        }
+      ],
+      "reset": [
+        {
+          "to": "platform_reset",
+          "certainty": "exact",
+          "origin": "deterministic_analysis",
+          "call_target_id": "edge_7b4837983ece739b31f13bc5",
+          "callsite_id": "c_35e23d2f98fb7b80baad5be9",
+          "callsite_line": 40,
+          "evidence_ids": [
+            "e_a8d693ce9674e1660693ff7e"
+          ]
+        }
+      ]
+    },
+    "over_limit_source_lines": {
+      "file": "bus.c",
+      "lines": [
+        164,
+        165
+      ],
+      "text": [
+        "    if (!check_length(route, length))",
+        "        return -90;"
+      ],
+      "classification": "source_only_fact_from_atlas_evidence_not_runtime_proof"
+    }
+  },
+  "resource_facts": {
+    "routes_object": {
+      "resource_id": "s_0860e6738eaa8c95f37d0d03",
+      "name": "routes",
+      "type": "struct Route[4]",
+      "lifetime": "static",
+      "line": 26,
+      "evidence_ids": [
+        "e_02783480d2590d20ee91f1cb"
+      ]
+    },
+    "max_len_field_accesses": [
+      {
+        "access_id": "field_066ce4856e9b8ce75067b4e9",
+        "access": "write",
+        "certainty": "may",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "routes[channel].max_len",
+        "object_ids": [
+          "s_0860e6738eaa8c95f37d0d03",
+          "s_6ffc6325b678e1d51da6eac2"
+        ],
+        "object_names": [
+          "routes",
+          "channel"
+        ],
+        "owner_entry_id": "f_ec7feb15db7955807c4a8435",
+        "owner_function": "reset",
+        "location_line": 35,
+        "evidence_ids": [
+          "e_65dd572fc595f1a9cc788995"
+        ],
+        "limitations": [
+          "unresolved_or_multiple_base_objects"
+        ]
+      },
+      {
+        "access_id": "field_4a5beba32f2b4e170fabb37f",
+        "access": "write",
+        "certainty": "exact",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "routes[channel].max_len",
+        "object_ids": [
+          "s_0860e6738eaa8c95f37d0d03"
+        ],
+        "object_names": [
+          "routes"
+        ],
+        "owner_entry_id": "f_dfb9aead445405de7aafbbfa",
+        "owner_function": "store_route",
+        "location_line": 46,
+        "evidence_ids": [
+          "e_e2c45180048a647378048a46"
+        ],
+        "limitations": []
+      },
+      {
+        "access_id": "field_5fc4d8c993d31d23d77c7b10",
+        "access": "read",
+        "certainty": "may",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "",
+        "object_ids": [
+          "s_08da1f0f2fcebe8c9a642124",
+          "s_df7e9ea6246145b01953fcaa"
+        ],
+        "object_names": [
+          "route_defaults"
+        ],
+        "owner_entry_id": "f_5aad5c091d5772eb2dada479",
+        "owner_function": "bus_register",
+        "location_line": 57,
+        "evidence_ids": [
+          "e_64b1228871e64f798a4dfedc"
+        ],
+        "limitations": [
+          "unresolved_or_multiple_base_objects"
+        ]
+      },
+      {
+        "access_id": "field_c9847213f941252520a22173",
+        "access": "read",
+        "certainty": "may",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "route->max_len",
+        "object_ids": [
+          "s_08da1f0f2fcebe8c9a642124",
+          "s_df7e9ea6246145b01953fcaa"
+        ],
+        "object_names": [
+          "route_defaults"
+        ],
+        "owner_entry_id": "f_5aad5c091d5772eb2dada479",
+        "owner_function": "bus_register",
+        "location_line": 58,
+        "evidence_ids": [
+          "e_b97c333b4b8f9dd3d1d60d4e"
+        ],
+        "limitations": [
+          "unresolved_or_multiple_base_objects"
+        ]
+      },
+      {
+        "access_id": "field_0cd71f83a2f771a91f2dd939",
+        "access": "read",
+        "certainty": "may",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "",
+        "object_ids": [
+          "s_0860e6738eaa8c95f37d0d03",
+          "s_94384493ae9333256ae051c1"
+        ],
+        "object_names": [
+          "routes"
+        ],
+        "owner_entry_id": "f_144ee14b1f297d19f8bdab78",
+        "owner_function": "lookup_route",
+        "location_line": 92,
+        "evidence_ids": [
+          "e_a8a7e31073f7bc6bde44bdaf"
+        ],
+        "limitations": [
+          "unresolved_or_multiple_base_objects"
+        ]
+      },
+      {
+        "access_id": "field_200c5e486931ded49e62166a",
+        "access": "read",
+        "certainty": "may",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "route->max_len",
+        "object_ids": [
+          "s_0860e6738eaa8c95f37d0d03",
+          "s_94384493ae9333256ae051c1"
+        ],
+        "object_names": [
+          "routes"
+        ],
+        "owner_entry_id": "f_144ee14b1f297d19f8bdab78",
+        "owner_function": "lookup_route",
+        "location_line": 93,
+        "evidence_ids": [
+          "e_8172321a6042c5dcc4441aed"
+        ],
+        "limitations": [
+          "unresolved_or_multiple_base_objects"
+        ]
+      },
+      {
+        "access_id": "field_0574079c4daf7fd7ca66a33d",
+        "access": "read",
+        "certainty": "may",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "route->max_len",
+        "object_ids": [],
+        "object_names": [],
+        "owner_entry_id": "f_b19a05b7a8457000a4562e91",
+        "owner_function": "check_length",
+        "location_line": 98,
+        "evidence_ids": [
+          "e_768e475a22ccdbd0f0c59321"
+        ],
+        "limitations": [
+          "unresolved_or_multiple_base_objects"
+        ]
+      },
+      {
+        "access_id": "field_82c087ffda6cefc30d3ada85",
+        "access": "read",
+        "certainty": "may",
+        "field_name": "max_len",
+        "field_path": [
+          "max_len"
+        ],
+        "expression": "",
+        "object_ids": [],
+        "object_names": [],
+        "owner_entry_id": "f_b19a05b7a8457000a4562e91",
+        "owner_function": "check_length",
+        "location_line": 99,
+        "evidence_ids": [
+          "e_6d7e9e05d76acac948324a8a"
+        ],
+        "limitations": [
+          "unresolved_or_multiple_base_objects"
+        ]
+      }
+    ],
+    "resource_status": "partial",
+    "resource_status_reason": "one exact write + may reads (unresolved_or_multiple_base_objects); not an empty/unavailable layer"
+  },
+  "demo_comparison": {
+    "exit_code": 0,
+    "tests": "8",
+    "pass": "8",
+    "fail": "0",
+    "duration_ms": "143.0522",
+    "observed_behaviors": [
+      "bus_register(1) then bus_send(1,48) -> write 0x20030",
+      "stub_route(1,3,96) then bus_send(1,48) -> write 0x30030; reset() then bus_send(1,48) -> -2",
+      "bus_send(0,48) -> -2; bus_send(1,65) -> -90 (over max_len 64); bus_send(1,0) -> -22",
+      "48 bytes direct; 49 bytes stage then encode",
+      "platform stub -5 propagates to entry and transfer_lock returns 1 -> 0"
+    ]
+  },
+  "adapter_differences_found": [
+    {
+      "finding": "real Atlas 0.8 flow_edges for file-scope initializers have owner=null and sources=[]",
+      "effect": "snapshot-import rejected the real bus snapshot with UNSUPPORTED_SCHEMA before the fix",
+      "fix": "engine/code_learning/atlas.py accepts null owner and empty sources for flow edges (identity fields still required strings; other safety checks unchanged)",
+      "regression": "engine/tests/test_atlas_flow_shape.py (4 tests, pass)",
+      "class": "real_product_shape_mismatch_same_class_as_2026-11-08_findings"
+    },
+    {
+      "finding": "compile_commands.json written with a UTF-8 BOM is rejected by Atlas",
+      "effect": "first Atlas run failed: Unexpected UTF-8 BOM (decode using utf-8-sig)",
+      "fix": "fixture compile_commands.json rewritten without BOM (sha256 recorded above)"
+    }
+  ],
+  "boundaries": {
+    "atlas_executed": true,
+    "atlas_execution_scope": "synthetic Demo C only",
+    "linux_kbuild_verified": false,
+    "user_repository_analyzed": false,
+    "network_used": false,
+    "real_device_behavior_proven": false
+  },
+  "not_verified": [
+    "Linux/Kbuild, generated headers, target ABI",
+    "native CFG / locks / aliases deep analysis (capabilities cfg=unsupported, data_flow=partial_path_insensitive)",
+    "runtime return codes (-90 etc.) on real hardware; only source facts + Demo observation",
+    "five-view graphs/layout and scenario execution (CW-T2/T3)"
+  ]
+}

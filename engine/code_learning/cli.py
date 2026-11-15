@@ -120,6 +120,24 @@ def build_parser() -> argparse.ArgumentParser:
     snapshot_load.add_argument("--workspace", required=True, metavar="WID")
     snapshot_load.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
 
+    # -- read-only workbench views -------------------------------------------
+    subparsers.add_parser(
+        "view-snapshots", help="Registered workspaces and re-verified imported Atlas snapshots."
+    )
+
+    view_entries = subparsers.add_parser(
+        "view-entries", help="Entry/function list of one verified snapshot."
+    )
+    view_entries.add_argument("--workspace", required=True, metavar="WID")
+    view_entries.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+
+    view_entry = subparsers.add_parser(
+        "view-entry", help="One entry with source window, call edges, evidence and resources."
+    )
+    view_entry.add_argument("--workspace", required=True, metavar="WID")
+    view_entry.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_entry.add_argument("--entry", dest="entry_ref", required=True, metavar="ENTRY")
+
     # -- paths and relations -------------------------------------------------
     query_path = subparsers.add_parser("path", help="Bounded call-path query inside one variant.")
     query_path.add_argument("--workspace", required=True, metavar="WID")
@@ -254,6 +272,20 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
         )
     if command == "snapshot":
         return service.snapshot_load(state, args.workspace, args.snapshot_ref)
+    if command == "view-snapshots":
+        from . import views
+
+        return views.list_snapshots(state)
+    if command == "view-entries":
+        from . import views
+
+        return views.list_entries(state, args.workspace, args.snapshot_ref)
+    if command == "view-entry":
+        from . import views
+
+        return views.entry_detail(
+            state, args.workspace, args.snapshot_ref, args.entry_ref
+        )
     if command == "path":
         return service.query_path(
             state,
