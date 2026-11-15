@@ -183,7 +183,7 @@ OS 出口认证。机制说明按合同在 CW-T2/T3 完整交付时补。
 | 阶段 | 内容 | dsh-web 阶段验收 |
 |---|---|---|
 | **S2a 五视图只读**（2026-11-15 完成） | 资源关系图、可折叠文字树、单入口端到端图（竖排正交、菱形判断、红色异常）、时序（S2a 仅静态预测并标注）、文件视图；左栏「全局资源/打桩占位」、图例、详情面板、跨视图选中 | `node tools/verify-five-views.mjs --with-repo-tests` → `ok=true, verified=true`，37/37，三层全 true，in-scope `not_verified=[]`；证据 `evidence/five-views/`（五视图截图 + verification.json）；[五视图契约](five-view-contract.md) §9 |
-| **S2b 组/接口库/细节** | 组折叠展开（CW-06）、基础接口库（CW-07）、资源定位高亮细节、面包屑、AI 归纳占位、性能实测 | 追加探针与截图；A04/A06/A07 映射 |
+| **S2b 组/接口库/细节**（2026-11-15 完成） | 组折叠展开（CW-06）、基础接口库（CW-07）、子流程/面包屑、组名修订、AI 归纳占位 | `node tools/verify-s2b.mjs --with-repo-tests` → `ok=true, verified=true`，41/41，三层全 true，in-scope `not_verified=[]`；证据 `evidence/s2b/`（组/接口/子流程截图 + verification.json）；契约 §11 |
 | **S3 场景/打桩/时序运行** | 受控场景、stub DTO、运行台账、回退 N、轨迹导入、时序 observed 模式（CW-08/CW-09） | 登记→发送正/反序探针；A08/A09 |
 | **S4 目标验证** | Linux/Kbuild 生成头、CFG/locks/aliases、复核差分、性能预算（CW-T4/CW-11） | 目标环境证据；A05/A07/A11 |
 

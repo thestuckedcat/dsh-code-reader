@@ -211,6 +211,7 @@
     "network_used_by_runtime": false,
     "readonly_workbench_slice": "2026-11-15: real 0.1 snapshot fixture imported and projected for the DSH read-only workbench slice; isolated rc.5 web profile + Chromium probe + real Cordis runtime verification recorded in evidence/readonly-slice/verification.json (ok=true, verified=true, 26/26 checks, not_verified=[]).",
     "readonly_five_view_slice": "2026-11-15: CW-T2 S2a five read-only views (resource relation graph, collapsible text tree, single-entry end-to-end graph, static-prediction sequence, file view) projected from the same real Atlas 0.1 snapshot; isolated rc.5 dsh-web profile + per-view Chromium probe + real Cordis runtime verification recorded in evidence/five-views/verification.json (ok=true, verified=true, 37/37 checks, in_scope_not_verified=[]).",
+    "readonly_five_view_s2b": "2026-11-15: CW-T2 S2b group collapse (structural private-callee subflows, original edges preserved across folding), basic interface library (rule-based candidates, client-side blackbox add/remove) and function subflow/breadcrumb, verified in the same isolated rc.5 dsh-web profile: evidence/s2b/verification.json (ok=true, verified=true, 41/41 checks, in_scope_not_verified=[]). Remaining gaps are AI summary text, scenario/run observation (CW-T3), Linux/CFG/performance (CW-T4) and OS egress.",
     "note": "This source lock records read-only provenance only. It is not a redistribution manifest and does not claim the Linux analysis gates passed."
   }
 }

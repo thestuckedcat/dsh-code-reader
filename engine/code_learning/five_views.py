@@ -52,6 +52,15 @@ MAX_FILE_READ_BYTES = 64 * 1024
 MAX_FILE_READ_LINES = 2000
 MAX_EVIDENCE_SPAN = scope.MAX_EVIDENCE_SPAN
 
+#: S2b (contract section 10) limits.
+MAX_GROUPS = 50
+MAX_BREADCRUMB_HOPS = 20
+MAX_INTERFACES = 100
+MAX_INTERFACE_CALLERS = 50
+MAX_INTERFACE_EFFECTS = 32
+MAX_INTERFACE_GUARDS = 16
+MAX_INTERFACE_EXTERNAL_BOUNDARIES = 100
+
 #: Access / certainty vocabularies shared with the read model.
 ACCESS_VALUES = readmodel.ACCESS_VALUES
 CERTAINTY_VALUES = readmodel.CERTAINTY_VALUES
@@ -61,27 +70,19 @@ _CALLSITE_EXPRESSION_LIMIT = 120
 _GUARD_LABEL_LIMIT = 160
 _TREE_GUARD_LIMIT = 2048
 
-#: Product capabilities deliberately not provided in S2a (reported verbatim).
+#: Product capabilities deliberately not provided in this slice (verbatim).
 _DEFERRED_GAPS: Dict[str, Tuple[str, str]] = {
-    "group_collapse": (
-        "unavailable",
-        "S2b：组折叠/展开（CW-06）未实现；本切片只展示完整调用结构",
-    ),
-    "interface_library": (
-        "unavailable",
-        "S2b：基础接口库识别（CW-07）未实现",
-    ),
     "ai_summary": (
         "unavailable",
-        "S2b：AI 归纳（≤500 字）未实现；本切片不伪造说明文本",
+        "S2b：AI 归纳（≤500 字）未接入；本切片不伪造说明文本",
     ),
     "run_observation": (
         "unavailable",
-        "S2a 无运行观测；场景执行/轨迹导入在 CW-T3",
+        "本切片无运行观测；场景执行/轨迹导入在 CW-T3",
     ),
     "scenario_execution": (
         "unavailable",
-        "S2a 未提供场景执行/打桩/回退（CW-T3）",
+        "本切片未提供场景执行/打桩/回退（CW-T3）",
     ),
 }
 
@@ -167,6 +168,9 @@ def _selection_ext(
     evidence_ids: Optional[Sequence[str]] = None,
     focus_resource_id: Optional[str] = None,
     focus_callsite_id: Optional[str] = None,
+    group_id: Optional[str] = None,
+    interface_id: Optional[str] = None,
+    subflow_root_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     selection = readmodel._selection(
         ctx.workspace,
@@ -178,6 +182,12 @@ def _selection_ext(
     )
     selection["focus_resource_id"] = focus_resource_id
     selection["focus_callsite_id"] = focus_callsite_id
+    # S2b shared-selection extension (contract section 10.3): group/interface/
+    # subflow identity is client view state; the engine only reserves the
+    # stable fields so every view reports the same Selection shape.
+    selection["group_id"] = group_id
+    selection["interface_id"] = interface_id
+    selection["subflow_root_id"] = subflow_root_id
     return selection
 
 
@@ -705,7 +715,7 @@ def coupling(
                 "reason": "atlas_snapshot_has_no_resource_layer",
             }
         )
-    gaps.extend(_deferred_gaps("interface_library", "group_collapse", "ai_summary", "run_observation"))
+    gaps.extend(_deferred_gaps("ai_summary", "run_observation"))
 
     if entry_function is not None:
         scope_mode = "entry_neighborhood"
@@ -1174,7 +1184,7 @@ def tree(state: Any, workspace_ref: Any, snapshot_ref: Any, entry_ref: Any) -> D
     visit(entry_id, root_node_id, 0, (entry_id,))
 
     gaps = readmodel._snapshot_gaps(ctx.bundle)
-    gaps.extend(_deferred_gaps("group_collapse", "ai_summary"))
+    gaps.extend(_deferred_gaps("ai_summary"))
     if data_truncated:
         gaps.append(
             {
@@ -1218,15 +1228,95 @@ def _edge_style(certainty: str, role: str = "normal") -> Dict[str, str]:
     return {"line": "dashed", "color": "normal"}
 
 
+def _resolve_named_function(ctx: _Context, ref: Any, label: str) -> Dict[str, Any]:
+    if not isinstance(ref, str) or not ref:
+        fail("INVALID_ARGUMENT", f"{label} must be a non-empty string")
+    text = expect_str(ref, label, max_len=512)
+    return atlas.resolve_function(ctx.graph, text, label)
+
+
+def _shortest_call_path(
+    ctx: _Context, start_id: str, goal_id: str, max_hops: int = MAX_BREADCRUMB_HOPS
+) -> Tuple[List[str], List[Optional[str]]]:
+    """Shortest resolved call path ``start_id -> goal_id`` (BFS, <= max_hops).
+
+    Returns ``(function_ids, callsite_ids)`` where ``callsite_ids[i]`` is the
+    call site used from ``function_ids[i - 1]`` to ``function_ids[i]`` (the
+    first element is ``None``).  An unreachable/no-path result is ``([], [])``.
+    """
+    from collections import deque
+
+    queue: deque = deque([(start_id, [start_id], [None])])
+    visited: Set[str] = {start_id}
+    while queue:
+        function_id, path, sites = queue.popleft()
+        if len(path) - 1 >= max_hops:
+            continue
+        for call_target in ctx.call_targets_by_source.get(function_id, []):
+            target_id = call_target.get("target")
+            if (
+                not isinstance(target_id, str)
+                or target_id not in ctx.functions
+                or target_id in visited
+            ):
+                continue
+            next_path = path + [target_id]
+            next_sites = sites + [call_target.get("callsite")]
+            if target_id == goal_id:
+                return next_path, next_sites
+            visited.add(target_id)
+            queue.append((target_id, next_path, next_sites))
+    return [], []
+
+
+def _breadcrumb_items(
+    ctx: _Context, function_ids: Sequence[str], callsite_ids: Sequence[Optional[str]]
+) -> List[Dict[str, Any]]:
+    items: List[Dict[str, Any]] = []
+    for index, function_id in enumerate(function_ids):
+        info = ctx.function_info(function_id) or {}
+        item: Dict[str, Any] = {
+            "function_id": function_id,
+            "name": info.get("name"),
+            "file": info.get("file"),
+            "line": info.get("line"),
+        }
+        callsite_id = callsite_ids[index] if index < len(callsite_ids) else None
+        if index > 0 and isinstance(callsite_id, str):
+            item["callsite_id"] = callsite_id
+        items.append(item)
+    return items
+
+
 def end_to_end(
-    state: Any, workspace_ref: Any, snapshot_ref: Any, entry_ref: Any
+    state: Any,
+    workspace_ref: Any,
+    snapshot_ref: Any,
+    entry_ref: Any,
+    root_ref: Any = None,
 ) -> Dict[str, Any]:
-    """Deterministic end-to-end graph for one entry (contract section 3 rules)."""
+    """Deterministic end-to-end graph for one entry (contract sections 3/10.1)."""
     ctx = _load_context(state, workspace_ref, snapshot_ref)
     entry_function = _resolve_entry(ctx, entry_ref)
     entry_id = entry_function.get("id")
     entry_info = ctx.function_info(entry_id) or {}
     entry_file = entry_info.get("file")
+    # S2b (contract section 10.3): optional subflow root -> breadcrumb path.
+    root_function: Optional[Dict[str, Any]] = None
+    root_id: Optional[str] = None
+    subflow_root_id: Optional[str] = None
+    breadcrumb: List[Dict[str, Any]] = []
+    breadcrumb_unavailable = False
+    if root_ref is not None:
+        root_function = _resolve_named_function(ctx, root_ref, "root")
+        root_id = root_function.get("id")
+        if root_id != entry_id:
+            subflow_root_id = root_id
+            path_ids, path_sites = _shortest_call_path(ctx, root_id, entry_id)
+            if path_ids:
+                breadcrumb = _breadcrumb_items(ctx, path_ids, path_sites)
+            else:
+                breadcrumb_unavailable = True
     boundary_ids = _boundary_function_ids(ctx, entry_file)
     function_names = {
         function.get("name")
@@ -1651,8 +1741,163 @@ def end_to_end(
             }
         )
 
+    # S2b rule 10.1: private-callee subflow groups. Groups are a client-side
+    # folding projection only: original nodes/edges and their ids stay intact.
+    all_call_targets = [
+        target
+        for target in ctx.graph.get("call_targets") or []
+        if isinstance(target, dict)
+    ]
+    projected_callers: Dict[str, Set[str]] = {}
+    for call_target in all_call_targets:
+        source_id = call_target.get("source")
+        target_id = call_target.get("target")
+        if not isinstance(source_id, str) or not isinstance(target_id, str):
+            continue
+        if source_id in process:
+            projected_callers.setdefault(target_id, set()).add(source_id)
+    candidate_groups: List[Tuple[Tuple[Any, ...], Dict[str, Any]]] = []
+    for function_id in process_order:
+        if function_id == entry_id:
+            continue
+        private_callees: List[Tuple[Dict[str, Any], str]] = []
+        seen_callees: Set[str] = set()
+        for call_target in ctx.call_targets_by_source.get(function_id, []):
+            target_id = call_target.get("target")
+            if not isinstance(target_id, str) or target_id in seen_callees:
+                continue
+            if target_id == entry_id or target_id not in process:
+                continue
+            if projected_callers.get(target_id) != {function_id}:
+                continue
+            if process_node_id(target_id) not in node_ids:
+                continue
+            seen_callees.add(target_id)
+            private_callees.append((call_target, target_id))
+        if len(private_callees) < 2:
+            continue
+        private_callees.sort(key=lambda item: ctx.call_target_sort_key(item[0]))
+        member_function_ids = [target_id for _target, target_id in private_callees]
+        member_node_ids = [process_node_id(target_id) for target_id in member_function_ids]
+        member_node_set = set(member_node_ids)
+        member_set = set(member_function_ids)
+        # Entry/exit ports are derived from the *rendered* edges (calls, guards,
+        # external handoffs, returns): a member touched by an edge from outside
+        # the group is an entry port; a member whose edge leaves the group is an
+        # exit port.  Groups never merge or rewrite those edges.
+        entry_candidates: Set[str] = set()
+        exit_candidates: Set[str] = set()
+        for edge in edges:
+            edge_from = edge.get("from")
+            edge_to = edge.get("to")
+            if not isinstance(edge_from, str) or not isinstance(edge_to, str):
+                continue
+            if edge_from in member_node_set and edge_to not in member_node_set:
+                exit_candidates.add(edge_from)
+            if edge_to in member_node_set and edge_from not in member_node_set:
+                entry_candidates.add(edge_to)
+        entry_node_ids = [
+            node_id for node_id in member_node_ids if node_id in entry_candidates
+        ]
+        exit_node_ids = [
+            node_id for node_id in member_node_ids if node_id in exit_candidates
+        ]
+        evidence_ids: List[str] = []
+        for call_target, _target_id in private_callees:
+            for evidence_id in _strings(call_target.get("evidence_ids")):
+                if evidence_id not in evidence_ids:
+                    evidence_ids.append(evidence_id)
+        owner_info = ctx.function_info(function_id) or {}
+        owner_name = owner_info.get("name") or function_id
+        member_names = [
+            (ctx.function_info(member_id) or {}).get("name") or member_id
+            for member_id in member_function_ids
+        ]
+        short_hash = hashlib.sha256(
+            "\0".join(sorted(member_function_ids)).encode("utf-8")
+        ).hexdigest()[:8]
+        group = {
+            "group_id": f"group:{function_id}:{short_hash}",
+            "parent_group_id": None,
+            "label": f"{owner_name} 下游子流程",
+            "description": (
+                f"由 {'、'.join(member_names)} 组成（仅被 {owner_name} 调用）"
+            ),
+            "member_node_ids": member_node_ids,
+            "member_function_ids": member_function_ids,
+            "entry_node_ids": entry_node_ids,
+            "exit_node_ids": exit_node_ids,
+            "collapsed_default": True,
+            "origin": "structural_heuristic",
+            "evidence_ids": evidence_ids[:32],
+            "limitations": ["group_structural_heuristic", "group_name_not_semantic"],
+        }
+        candidate_groups.append(
+            (
+                (
+                    owner_info.get("file") if isinstance(owner_info.get("file"), str) else "\uffff",
+                    owner_info.get("line")
+                    if isinstance(owner_info.get("line"), int)
+                    else 1 << 60,
+                    group["group_id"],
+                ),
+                (function_id, group),
+            )
+        )
+    candidate_groups.sort(key=lambda item: item[0])
+    groups: List[Dict[str, Any]] = []
+    groups_truncated = False
+    member_owner_map: Dict[str, str] = {}
+    total_members = 0
+    for _sort_key, (owner_id, group) in candidate_groups:
+        if len(groups) >= MAX_GROUPS:
+            groups_truncated = True
+            break
+        if total_members + len(group["member_function_ids"]) > len(nodes):
+            groups_truncated = True
+            break
+        total_members += len(group["member_function_ids"])
+        for member_id in group["member_function_ids"]:
+            member_owner_map.setdefault(member_id, group["group_id"])
+        groups.append(group)
+    kept_group_ids = {group["group_id"] for group in groups}
+    for group in groups:
+        owner_id = group["group_id"].split(":")[1]
+        parent_group_id = member_owner_map.get(owner_id)
+        group["parent_group_id"] = (
+            parent_group_id
+            if parent_group_id in kept_group_ids and parent_group_id != group["group_id"]
+            else None
+        )
+    grouping_gaps: List[Dict[str, Any]] = []
+    if groups:
+        grouping_gaps.append(
+            {
+                "code": "group_semantics",
+                "status": "degraded",
+                "reason": (
+                    "组由单入口私有子图结构产生，名称/描述为结构归纳而非语义理解，"
+                    "可由用户修订"
+                ),
+            }
+        )
+    if groups_truncated:
+        grouping_gaps.append(
+            {
+                "code": "groups_truncated",
+                "status": "degraded",
+                "reason": f"组数/成员数超出预算（组≤{MAX_GROUPS}、成员≤节点数），已截断",
+            }
+        )
+    grouping = {
+        "algorithm": "private_callee_subflow",
+        "groups": len(groups),
+        "members": sum(len(group["member_function_ids"]) for group in groups),
+        "gaps": grouping_gaps,
+    }
+
     gaps = readmodel._snapshot_gaps(ctx.bundle)
-    gaps.extend(_deferred_gaps("group_collapse", "ai_summary", "run_observation"))
+    gaps.extend(_deferred_gaps("ai_summary", "run_observation"))
     callee_return_count = sum(
         len(ctx.returns_for(function_id))
         for function_id in process_order
@@ -1691,6 +1936,26 @@ def end_to_end(
                 ),
             }
         )
+    if breadcrumb_unavailable:
+        gaps.append(
+            {
+                "code": "breadcrumb_unavailable",
+                "status": "unavailable",
+                "reason": (
+                    "root 到 entry 之间没有 ≤"
+                    f"{MAX_BREADCRUMB_HOPS} 跳的已解析调用路径；"
+                    "面包屑为空，子流程仍按 entry 独立投影"
+                ),
+            }
+        )
+    if groups_truncated:
+        gaps.append(
+            {
+                "code": "groups_truncated",
+                "status": "degraded",
+                "reason": f"组数/成员数超出预算（组≤{MAX_GROUPS}、成员≤节点数），已截断",
+            }
+        )
     for key, limit in (
         ("nodes", MAX_E2E_NODES),
         ("edges", MAX_E2E_EDGES),
@@ -1706,19 +1971,398 @@ def end_to_end(
                 }
             )
     selection = _selection_ext(
-        ctx, entry_function, evidence_ids=entry_info.get("evidence_ids") or []
+        ctx,
+        entry_function,
+        evidence_ids=entry_info.get("evidence_ids") or [],
+        subflow_root_id=subflow_root_id,
     )
     return _snapshot_prefix(
         ctx,
         selection,
         gaps,
-        any(truncated_flags.values()),
+        any(truncated_flags.values()) or groups_truncated,
         entry=_entry_header(ctx, entry_function),
         nodes=nodes,
         edges=edges,
         exits=exits,
+        groups=groups,
+        grouping=grouping,
+        breadcrumb=breadcrumb,
+        root=root_id,
+        subflow_root_id=subflow_root_id,
         legend=[dict(item) for item in _LEGEND],
         layout={"direction": "DOWN", "edge_routing": "ORTHOGONAL"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# 3b) interfaces -- rule-based basic interface library (contract section 10.2)
+# ---------------------------------------------------------------------------
+_INTERFACE_CANDIDATE_LIMITATION = "candidate_rule_based_not_semantic"
+
+
+def _side_effect_location(
+    ctx: _Context, evidence_ids: Any
+) -> Dict[str, Any]:
+    raw_file, line = readmodel._evidence_location(ctx.evidence, evidence_ids)
+    relative, _file_repo = readmodel._map_file(ctx.roots, ctx.repo_id, raw_file)
+    return {"file": relative, "line": line}
+
+
+def _interface_side_effects(
+    ctx: _Context, function_id: str
+) -> List[Dict[str, Any]]:
+    """Field/global-state side effects of one candidate (field + shared + state)."""
+    effects: List[Dict[str, Any]] = []
+    seen: Set[Tuple[Any, ...]] = set()
+
+    def add(
+        access: Any,
+        field_name: Any,
+        certainty: Any,
+        evidence_ids: Any,
+        limitations: Any,
+    ) -> None:
+        record = {
+            "access": _access_kind(access),
+            "field_name": _bounded(field_name, 256),
+            "certainty": _certainty(certainty),
+            "location": _side_effect_location(ctx, evidence_ids),
+            "limitations": _strings(limitations),
+        }
+        location = record["location"] or {}
+        key = (
+            record["access"],
+            record["field_name"],
+            location.get("file"),
+            location.get("line"),
+        )
+        if key in seen:
+            return
+        seen.add(key)
+        effects.append(record)
+
+    for record in ctx.accesses_by_owner.get(function_id, []):
+        add(
+            record.get("access"),
+            record.get("field_name"),
+            record.get("certainty"),
+            record.get("evidence_ids"),
+            record.get("limitations"),
+        )
+    for shared in ctx.graph.get("shared_accesses") or []:
+        if not isinstance(shared, dict) or shared.get("owner") != function_id:
+            continue
+        object_id = shared.get("object_id")
+        field_name = ctx.object_name(object_id) if isinstance(object_id, str) else None
+        add(
+            shared.get("access"),
+            field_name,
+            shared.get("certainty"),
+            shared.get("evidence_ids"),
+            shared.get("limitations"),
+        )
+    for event in ctx.graph.get("state_events") or []:
+        if not isinstance(event, dict) or event.get("owner") != function_id:
+            continue
+        kind = event.get("kind")
+        if kind in ("write", "write_or_initialize"):
+            access = "write"
+        elif kind in ("read", "reference"):
+            access = "read"
+        else:
+            continue
+        object_id = event.get("object_id")
+        field_name = ctx.object_name(object_id) if isinstance(object_id, str) else None
+        add(access, field_name, event.get("certainty"), event.get("evidence_ids"), [])
+    effects.sort(
+        key=lambda item: (
+            (item.get("location") or {}).get("file")
+            if isinstance((item.get("location") or {}).get("file"), str)
+            else "\uffff",
+            (item.get("location") or {}).get("line")
+            if isinstance((item.get("location") or {}).get("line"), int)
+            else 1 << 60,
+            item.get("access") or "",
+            item.get("field_name") or "",
+        )
+    )
+    return effects[:MAX_INTERFACE_EFFECTS]
+
+
+def _interface_external_boundaries(
+    ctx: _Context, scope_functions: Set[str]
+) -> List[Dict[str, Any]]:
+    function_names = {
+        function.get("name")
+        for function in ctx.functions.values()
+        if isinstance(function.get("name"), str)
+    }
+    grouped: Dict[str, List[str]] = {}
+    for function_id in sorted(scope_functions, key=lambda fid: _function_sort_key(ctx, fid)):
+        for callsite in ctx.callsites_by_owner.get(function_id, []):
+            callsite_info = ctx.callsite_info(callsite)
+            callsite_id = callsite_info.get("callsite_id")
+            if not isinstance(callsite_id, str):
+                continue
+            if ctx.call_targets_by_callsite.get(callsite_id):
+                continue
+            callee = callsite_info.get("callee")
+            if not callee or callee in function_names:
+                continue
+            bucket = grouped.setdefault(callee, [])
+            if callsite_id not in bucket:
+                bucket.append(callsite_id)
+    boundaries = [
+        {
+            "callee": callee,
+            "call_count": len(callsite_ids),
+            "callsite_ids": list(callsite_ids),
+        }
+        for callee, callsite_ids in sorted(grouped.items())
+    ]
+    return boundaries[:MAX_INTERFACE_EXTERNAL_BOUNDARIES]
+
+
+def interfaces(
+    state: Any,
+    workspace_ref: Any,
+    snapshot_ref: Any,
+    entry_ref: Any = None,
+) -> Dict[str, Any]:
+    """Rule-based interface-library candidates for one verified snapshot."""
+    ctx = _load_context(state, workspace_ref, snapshot_ref)
+    entry_function: Optional[Dict[str, Any]] = None
+    scope_functions: Set[str] = set(ctx.functions)
+    gaps = readmodel._snapshot_gaps(ctx.bundle)
+    if entry_ref is not None:
+        entry_function = _resolve_entry(ctx, entry_ref)
+        entry_id = entry_function.get("id")
+        reachable, scope_truncated = ctx.downward_reachable(
+            entry_id, limit=MAX_COUPLING_REACHABLE
+        )
+        scope_functions = set(reachable)
+        if scope_truncated:
+            gaps.append(
+                {
+                    "code": "interfaces_scope_truncated",
+                    "status": "degraded",
+                    "reason": f"入口邻域函数被截断到 {MAX_COUPLING_REACHABLE} 个",
+                }
+            )
+    entry_id = entry_function.get("id") if entry_function else None
+
+    incoming_by_target: Dict[str, List[Dict[str, Any]]] = {}
+    for call_target in ctx.graph.get("call_targets") or []:
+        if not isinstance(call_target, dict):
+            continue
+        target_id = call_target.get("target")
+        if isinstance(target_id, str):
+            incoming_by_target.setdefault(target_id, []).append(call_target)
+    for rows in incoming_by_target.values():
+        rows.sort(key=ctx.call_target_sort_key)
+
+    candidates: List[Dict[str, Any]] = []
+    callers_truncated = False
+    for function_id in sorted(ctx.functions, key=lambda fid: _function_sort_key(ctx, fid)):
+        if entry_id is not None and function_id == entry_id:
+            continue
+        if function_id not in scope_functions:
+            continue
+        incoming = incoming_by_target.get(function_id, [])
+        if not incoming:
+            continue
+        function = ctx.functions[function_id]
+        info = ctx.function_info(function_id) or {}
+        signature = function.get("signature")
+        return_type = function.get("return_type")
+        if not isinstance(signature, str) or not signature:
+            continue
+        if not isinstance(return_type, str) or not return_type:
+            continue
+        side_effects = _interface_side_effects(ctx, function_id)
+        has_write = any(item.get("access") in _WRITE_ACCESSES for item in side_effects)
+        leaf = not bool(ctx.call_targets_by_source.get(function_id))
+        callers: List[Dict[str, Any]] = []
+        input_guards: List[Dict[str, Any]] = []
+        guard_seen: Set[str] = set()
+        cross_file = False
+        evidence_ids: List[str] = list(info.get("evidence_ids") or [])
+        for call_target in incoming:
+            source_id = call_target.get("source")
+            caller_info = (
+                (ctx.function_info(source_id) or {})
+                if isinstance(source_id, str)
+                else {}
+            )
+            callsite_id = call_target.get("callsite")
+            callsite_info = (
+                ctx.callsite_info(ctx.callsites.get(callsite_id, {}))
+                if isinstance(callsite_id, str)
+                else ctx.callsite_info({})
+            )
+            caller_file = caller_info.get("file")
+            if (
+                isinstance(caller_file, str)
+                and isinstance(info.get("file"), str)
+                and caller_file != info.get("file")
+            ):
+                cross_file = True
+            if len(callers) < MAX_INTERFACE_CALLERS:
+                callers.append(
+                    {
+                        "function_id": source_id if isinstance(source_id, str) else None,
+                        "name": caller_info.get("name"),
+                        "file": caller_file,
+                        "line": caller_info.get("line"),
+                        "callsite_id": callsite_id if isinstance(callsite_id, str) else None,
+                        "location": {
+                            "file": callsite_info.get("file"),
+                            "line": callsite_info.get("line"),
+                        },
+                    }
+                )
+            else:
+                callers_truncated = True
+            callsite_guards = callsite_info.get("guards") or []
+            if callsite_guards and isinstance(callsite_id, str) and callsite_id not in guard_seen:
+                guard_seen.add(callsite_id)
+                guard_text = " / ".join(
+                    filter(
+                        None,
+                        [
+                            _one_line(guard.get("expression"), _GUARD_LABEL_LIMIT)
+                            for guard in callsite_guards
+                            if isinstance(guard, dict)
+                        ],
+                    )
+                )
+                input_guards.append(
+                    {
+                        "callsite_id": callsite_id,
+                        "file": callsite_info.get("file"),
+                        "line": callsite_info.get("line"),
+                        "expression": guard_text[:_GUARD_LABEL_LIMIT] or None,
+                    }
+                )
+            for evidence_id in _strings(call_target.get("evidence_ids")):
+                if evidence_id not in evidence_ids:
+                    evidence_ids.append(evidence_id)
+        for record in ctx.accesses_by_owner.get(function_id, []):
+            for evidence_id in record.get("evidence_ids") or []:
+                if evidence_id not in evidence_ids:
+                    evidence_ids.append(evidence_id)
+        for shared in ctx.graph.get("shared_accesses") or []:
+            if isinstance(shared, dict) and shared.get("owner") == function_id:
+                for evidence_id in _strings(shared.get("evidence_ids")):
+                    if evidence_id not in evidence_ids:
+                        evidence_ids.append(evidence_id)
+
+        if leaf and not has_write:
+            decoupling = "independent"
+        elif has_write or not leaf:
+            decoupling = "mixed"
+        else:
+            decoupling = "unknown"
+        reasons: List[Dict[str, Any]] = []
+        if leaf:
+            reasons.append({"code": "leaf_callee", "label": "无已解析出边"})
+        if cross_file:
+            reasons.append({"code": "cross_file_boundary", "label": "跨文件被调用"})
+        reasons.append({"code": "stable_signature", "label": "签名/入参/返回值完整"})
+        if has_write:
+            reasons.append(
+                {"code": "side_effects_present", "label": "存在字段写副作用"}
+            )
+        if input_guards:
+            reasons.append(
+                {"code": "input_guards_present", "label": "调用点带条件 guard"}
+            )
+        if len(incoming) >= 2:
+            reasons.append({"code": "multiple_callers", "label": "被多个调用点调用"})
+        score = 0
+        if decoupling == "independent":
+            score += 5
+        if cross_file:
+            score += 3
+        if len(incoming) >= 2:
+            score += 2
+        if not side_effects:
+            score += 2
+        if has_write:
+            score -= 1
+        parameters = [
+            {
+                "name": _bounded(parameter.get("name"), 256),
+                "type": _bounded(parameter.get("type"), 512),
+            }
+            for parameter in function.get("parameters") or []
+            if isinstance(parameter, dict)
+        ]
+        candidates.append(
+            {
+                "interface_id": f"iface:{function_id}",
+                "function_id": function_id,
+                "name": info.get("name"),
+                "file": info.get("file"),
+                "line": info.get("line"),
+                "signature": _bounded(signature, 512),
+                "parameters": parameters,
+                "return_type": _bounded(return_type, 512),
+                "call_count": len(incoming),
+                "callers": callers,
+                "leaf": leaf,
+                "cross_file": cross_file,
+                "field_accesses": side_effects,
+                "input_guards": input_guards[:MAX_INTERFACE_GUARDS],
+                "decoupling": decoupling,
+                "reasons": reasons,
+                "score": score,
+                "certainty": "may",
+                "evidence_ids": evidence_ids[:32],
+                "limitations": [_INTERFACE_CANDIDATE_LIMITATION],
+            }
+        )
+    candidates.sort(key=lambda item: (-item["score"], item["name"] or "", item["function_id"]))
+    truncated = len(candidates) > MAX_INTERFACES
+    candidates = candidates[:MAX_INTERFACES]
+    if not candidates:
+        gaps.append(
+            {
+                "code": "interface_candidates",
+                "status": "unavailable",
+                "reason": "no_rule_based_interface_candidate_in_scope",
+            }
+        )
+    if truncated:
+        gaps.append(
+            {
+                "code": "interfaces_truncated",
+                "status": "degraded",
+                "reason": f"interface candidates were capped at {MAX_INTERFACES}",
+            }
+        )
+    if callers_truncated:
+        gaps.append(
+            {
+                "code": "interface_callers_truncated",
+                "status": "degraded",
+                "reason": f"per-candidate callers were capped at {MAX_INTERFACE_CALLERS}",
+            }
+        )
+    external_boundaries = _interface_external_boundaries(ctx, scope_functions)
+    selection = _selection_ext(
+        ctx,
+        entry_function,
+        evidence_ids=_strings(entry_function.get("evidence_ids")) if entry_function else [],
+    )
+    return _snapshot_prefix(
+        ctx,
+        selection,
+        gaps,
+        truncated,
+        candidates=candidates,
+        external_boundaries=external_boundaries,
     )
 
 

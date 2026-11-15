@@ -13,6 +13,7 @@ import assert from 'node:assert/strict';
 import {
   BUS_SEND_ID,
   CHECK_LENGTH_ID,
+  DISPATCH_TRANSFER_ID,
   CHANNEL,
   LOOKUP_ROUTE_ID,
   PANEL_LABEL,
@@ -30,11 +31,13 @@ import {
   makeEntryPayload,
   makeFileReadPayload,
   makeFileTreePayload,
+  makeInterfacesPayload,
   makeSelection,
   makeSequencePayload,
   makeSnapshotsPayload,
   makeSourceLines,
   makeStatusPayload,
+  makeSubflowPayload,
   makeTreePayload,
   makeWorkspace,
   readBundleSource,
@@ -71,10 +74,11 @@ function bootHarness(overrides = {}) {
     'view.getEntry': makeGetEntryHandler(),
     'view.coupling': (payload) => makeCouplingPayload(payload.entry ? {} : {selection: makeSelection(), scope: {mode: 'snapshot', entry_id: null}}),
     'view.tree': () => makeTreePayload(),
-    'view.endToEnd': () => makeEndToEndPayload(),
+    'view.endToEnd': (payload) => (payload.entry === CHECK_LENGTH_ID ? makeSubflowPayload() : makeEndToEndPayload()),
     'view.sequence': () => makeSequencePayload(),
     'view.fileTree': () => makeFileTreePayload(),
     'view.fileRead': (payload) => makeFileReadPayload({path: payload.path, repo_id: payload.repo}),
+    'view.interfaces': () => makeInterfacesPayload(),
     ...overrides,
   };
   for (const [endpoint, handler] of Object.entries(handlers)) h.rpc.setResponse(endpoint, handler);
@@ -153,7 +157,7 @@ function assertNoAbsolutePaths(text) {
 
 test('rc.5 loader wrapper: id, first executable statement, only react, plugin shape', async (t) => {
   const source = readBundleSource();
-  assert.ok(source.length < 160 * 1024, `bundle source must stay below 160KB, got ${source.length}`);
+  assert.ok(source.length < 200 * 1024, `bundle source must stay below 200KB, got ${source.length}`);
   const withoutLeadingComment = source.replace(/^\s*\/\*[\s\S]*?\*\//, '').trimStart();
   assert.ok(
     withoutLeadingComment.startsWith('window.__ModuleLoader__.load({'),
@@ -409,11 +413,14 @@ test('gaps keep server code/status/reason and add S2b placeholders with gap-code
   const scenario = h.nodeByData('data-gap-code', 'scenario_execution');
   assert.ok(scenario);
   assert.ok(h.textOf(scenario).includes('本轮只读切片；场景执行/打桩/回退未实现'));
-  for (const code of ['group_collapse', 'interface_library', 'ai_summary', 'run_observation']) {
-    assert.ok(h.findByData('data-gap-code', code).length > 0, `missing S2a/S2b gap ${code}`);
+  for (const code of ['ai_summary', 'run_observation']) {
+    assert.ok(h.findByData('data-gap-code', code).length > 0, `missing remaining gap ${code}`);
   }
-  assert.equal(h.findByData('data-gap-code', 'five_views').length, 0, 'five views are implemented in S2a');
-  assert.ok(h.findAll((node) => node.props && node.props['data-code-view'] === 'gap-code').length >= 4);
+  for (const code of ['group_collapse', 'interface_library']) {
+    assert.equal(h.findByData('data-gap-code', code).length, 0, `S2b implements ${code}; it must not be a gap`);
+  }
+  assert.equal(h.findByData('data-gap-code', 'five_views').length, 0, 'five views are implemented');
+  assert.ok(h.findAll((node) => node.props && node.props['data-code-view'] === 'gap-code').length >= 2);
   assert.equal(h.text().includes('not_available_in_readonly_slice'), false);
 });
 
@@ -506,6 +513,7 @@ test('Selection JSON carries §2 fields plus S2a focus fields', async (t) => {
     'workspace_id', 'variant_id', 'snapshot_id', 'repo_id', 'entry_id', 'symbol_id',
     'callsite_ids', 'callsite_path', 'resource_ids', 'resource_status', 'evidence_ids',
     'run_id', 'event_id', 'focus_resource_id', 'focus_callsite_id',
+    'group_id', 'interface_id', 'subflow_root_id',
   ]);
   assert.equal(before.workspace_id, 'code-view-bus-demo');
   assert.equal(before.snapshot_id, SNAPSHOT_ID);
@@ -604,7 +612,7 @@ test('five view tabs exist, switch, and each view reaches data-state=ready', asy
   await switchView(h, 'coupling');
   assert.equal(tabButton(h, 'coupling').props['aria-pressed'], 'true');
   const endpoints = new Set(h.rpc.endpoints());
-  for (const endpoint of ['view.coupling', 'view.getEntry', 'view.tree', 'view.endToEnd', 'view.sequence', 'view.fileTree', 'view.fileRead']) {
+  for (const endpoint of ['view.coupling', 'view.getEntry', 'view.tree', 'view.endToEnd', 'view.sequence', 'view.fileTree', 'view.fileRead', 'view.interfaces']) {
     assert.ok(endpoints.has(endpoint), `missing endpoint call ${endpoint}`);
   }
 });
@@ -1042,4 +1050,353 @@ test('five views expose no not_available_in_readonly_slice placeholders', async 
     assert.ok(['loading', 'ready', 'empty', 'error'].includes(root.props['data-state']));
     assert.equal(h.text().includes('not_available_in_readonly_slice'), false);
   }
+});
+
+// ---------------------------------------------------------------------------
+// 10. S2b: groups, interface library, subflow + breadcrumb
+// ---------------------------------------------------------------------------
+
+const GROUP_DISPATCH = 'group:' + DISPATCH_TRANSFER_ID + ':g1';
+const GROUP_COMMIT = 'group:f_commit_transfer:g2';
+const IFACE_PLATFORM = 'iface:platform_write';
+const IFACE_LOOKUP = 'iface:' + LOOKUP_ROUTE_ID;
+const IFACE_CHECK = 'iface:' + CHECK_LENGTH_ID;
+
+async function openGraph(h) {
+  await switchView(h, 'end_to_end');
+}
+
+function interfaceCard(h, interfaceId) {
+  return h.nodeByData('data-interface-candidate', interfaceId);
+}
+
+test('end-to-end groups collapse by default; member nodes hidden while cross-group edges keep original ids', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  const group = h.nodeByData('data-graph-group', GROUP_DISPATCH);
+  assert.ok(group, 'collapsed group box missing');
+  assert.equal(group.props['data-collapsed'], 'true');
+  assert.ok(h.textOf(group).includes('dispatch_transfer 下游子流程'));
+  assert.ok(h.textOf(group).includes('5 成员'));
+  assert.equal(h.nodeByData('data-graph-node', 'fn:submit_buffered'), null, 'group member node must be hidden');
+  assert.equal(h.nodeByData('data-graph-group', GROUP_COMMIT), null, 'nested group must be hidden while the parent is collapsed');
+  assert.ok(h.nodeByData('data-graph-node', 'fn:' + DISPATCH_TRANSFER_ID), 'non-member function stays visible');
+  const crossEdge = h.findAll((node) => node.props && node.props['data-graph-edge'] !== undefined && node.props['data-edge-id'] === 'call:dispatch_buffered')[0];
+  assert.ok(crossEdge, 'cross-group edge missing');
+  assert.equal(crossEdge.props['data-cross-group'], 'true');
+  assert.equal(crossEdge.props['data-certainty'], 'exact');
+  assert.equal(crossEdge.props['data-edge-label'], 'submit_buffered(route, length)');
+  const semanticsGap = h.nodeByData('data-gap-code', 'group_semantics');
+  assert.ok(semanticsGap, 'grouping gap must surface in the gap area');
+  assert.ok(h.textOf(semanticsGap).includes('结构归纳'));
+});
+
+test('single-group toggle, nested group boxes, collapse-all and expand-all restore nodes/edges', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  h.clickNode(h.nodeByData('data-group-toggle', GROUP_DISPATCH));
+  await h.settle();
+  assert.equal(h.nodeByData('data-graph-group', GROUP_DISPATCH).props['data-collapsed'], 'false');
+  assert.ok(h.nodeByData('data-graph-node', 'fn:submit_buffered'), 'expanded group must show member nodes');
+  const nested = h.nodeByData('data-graph-group', GROUP_COMMIT);
+  assert.ok(nested, 'nested group box must appear when the parent expands');
+  assert.equal(nested.props['data-collapsed'], 'true');
+  assert.equal(nested.props['data-group-depth'], '1');
+  assert.equal(h.nodeByData('data-graph-node', 'fn:encode_doorbell'), null, 'nested collapsed group hides its members');
+
+  h.clickData('data-graph-collapse-all', '');
+  await h.settle();
+  assert.equal(h.nodeByData('data-graph-group', GROUP_DISPATCH).props['data-collapsed'], 'true');
+  assert.equal(h.nodeByData('data-graph-node', 'fn:submit_buffered'), null);
+
+  h.clickData('data-graph-expand-all', '');
+  await h.settle();
+  assert.equal(h.nodeByData('data-graph-group', GROUP_DISPATCH).props['data-collapsed'], 'false');
+  assert.equal(h.nodeByData('data-graph-group', GROUP_COMMIT).props['data-collapsed'], 'false');
+  assert.ok(h.nodeByData('data-graph-node', 'fn:encode_doorbell'), 'nested expand-all shows deep members');
+  assert.ok(h.nodeByData('data-graph-node', 'fn:write_doorbell'));
+});
+
+test('group name/description editing marks 已修订 and survives data refresh and remount', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  h.clickNode(h.nodeByData('data-group-edit', GROUP_DISPATCH));
+  await h.settle();
+  const labelInput = h.findAll((node) => node.props && node.props['data-group-edit-label'] === GROUP_DISPATCH)[0];
+  assert.ok(labelInput, 'group editor label input missing');
+  labelInput.props.onChange({target: {value: '登记后的下游子流程'}});
+  await h.settle();
+  h.findAll((node) => node.props && node.props['data-group-edit-save'] === GROUP_DISPATCH)[0].props.onClick({stopPropagation() {}});
+  await h.settle();
+  assert.ok(h.textOf(h.nodeByData('data-graph-group', GROUP_DISPATCH)).includes('登记后的下游子流程'));
+  assert.ok(h.findByData('data-group-revised', 'true').length > 0, '已修订 marker missing');
+
+  h.clickButton('重新读取');
+  await h.settle();
+  await h.settle();
+  assert.ok(h.textOf(h.nodeByData('data-graph-group', GROUP_DISPATCH)).includes('登记后的下游子流程'), 'override must survive refresh');
+
+  h.unmountMain();
+  await h.settle();
+  h.remountMain();
+  await h.settle();
+  await h.settle();
+  assert.equal(h.nodeByData('data-code-view', 'view').props['data-view'], 'end_to_end');
+  assert.ok(h.textOf(h.nodeByData('data-graph-group', GROUP_DISPATCH)).includes('登记后的下游子流程'), 'override must survive remount');
+});
+
+test('node drag positions are preserved across group collapse/expand and reset restores layout', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  const graphNodes = () => h.findAll((node) => node.props && node.props['data-graph-node'] !== undefined);
+  const lookupId = 'fn:' + LOOKUP_ROUTE_ID;
+  const before = graphNodes().find((node) => node.props['data-node-id'] === lookupId).props.style.left;
+  graphNodes().find((node) => node.props['data-node-id'] === lookupId)
+    .props.onPointerDown({clientX: 10, clientY: 10, pointerId: 1, button: 0, stopPropagation() {}, preventDefault() {}});
+  await h.settle();
+  let viewport = h.findAll((node) => String((node.props && node.props.className) || '').includes('dcr-canvas-viewport'))[0];
+  viewport.props.onPointerMove({clientX: 90, clientY: 40, pointerId: 1});
+  await h.settle();
+  viewport = h.findAll((node) => String((node.props && node.props.className) || '').includes('dcr-canvas-viewport'))[0];
+  viewport.props.onPointerUp({pointerId: 1});
+  await h.settle();
+  const moved = graphNodes().find((node) => node.props['data-node-id'] === lookupId).props.style.left;
+  assert.notEqual(moved, before);
+  h.clickData('data-graph-expand-all', '');
+  await h.settle();
+  h.clickData('data-graph-collapse-all', '');
+  await h.settle();
+  assert.equal(graphNodes().find((node) => node.props['data-node-id'] === lookupId).props.style.left, moved, 'collapse/expand must not lose dragged positions');
+  const reset = h.findAll((node) => node.tag === 'button' && h.textOf(node).includes('一键规整'))[0];
+  h.clickNode(reset);
+  await h.settle();
+  assert.equal(graphNodes().find((node) => node.props['data-node-id'] === lookupId).props.style.left, before);
+});
+
+test('interface library lists candidates with signature/params/reasons/effects/guards and read-only external boundaries', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  const library = h.nodeByData('data-code-view', 'interface-library');
+  assert.ok(library, 'interface library hook missing');
+  const card = interfaceCard(h, IFACE_PLATFORM);
+  assert.ok(card, 'interface candidate card missing');
+  const text = h.textOf(card);
+  for (const needle of ['platform_write', 'int (unsigned int, unsigned int)', 'address', '返回 int', '跨文件边界', '副作用', '写入 / 修改', 'simulated_doorbell', 'guard', 'if (address != TX_DOORBELL)']) {
+    if (needle === '') continue;
+    assert.ok(text.includes(needle), `interface card must show ${needle}`);
+  }
+  const addAction = h.findAll((node) => node.props && node.props['data-interface-action'] === 'add' && node.props['data-interface-id'] === IFACE_PLATFORM)[0];
+  assert.ok(addAction, 'add action missing');
+  const boundary = h.findAll((node) => node.props && node.props['data-external-boundary'] !== undefined);
+  assert.ok(boundary.length >= 1, 'external boundary list missing');
+  assert.ok(h.textOf(boundary[0]).includes('trace') || h.textOf(boundary[0]).includes('platform_write'));
+});
+
+test('adding an interface turns the graph node into a blackbox and removing restores it', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  const externalBefore = h.nodeByData('data-graph-node', 'external:callee:platform_write');
+  assert.ok(externalBefore);
+  assert.equal(h.findAll((node) => node.props && node.props['data-interface-action'] === 'add' && node.props['data-interface-id'] === IFACE_PLATFORM).length, 1);
+  h.findAll((node) => node.props && node.props['data-interface-action'] === 'add' && node.props['data-interface-id'] === IFACE_PLATFORM)[0].props.onClick();
+  await h.settle();
+  const blackbox = h.nodeByData('data-blackbox-node', IFACE_PLATFORM);
+  assert.ok(blackbox, 'blackbox node missing after adding interface');
+  assert.equal(blackbox.props['data-interface-id'], IFACE_PLATFORM);
+  assert.ok(h.textOf(blackbox).includes('platform_write'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-graph-node'] === 'external:callee:platform_write' && node.props['data-node-kind'] === 'external').length, 0, 'original node is folded into the blackbox');
+  const expand = h.findAll((node) => node.props && node.props['data-blackbox-expand'] === IFACE_PLATFORM)[0];
+  assert.ok(expand);
+  h.clickNode(expand);
+  await h.settle();
+  assert.equal(h.nodeByData('data-blackbox-node', IFACE_PLATFORM), null);
+  assert.ok(h.nodeByData('data-graph-node', 'external:callee:platform_write'), 'expanding the blackbox restores the original node');
+  const actionsAfterExpand = h.findAll((node) => node.props && node.props['data-interface-action'] === 'remove' && node.props['data-interface-id'] === IFACE_PLATFORM);
+  assert.equal(actionsAfterExpand.length, 1, 'added candidate offers a remove action');
+  actionsAfterExpand[0].props.onClick();
+  await h.settle();
+  assert.equal(h.nodeByData('data-blackbox-node', IFACE_PLATFORM), null);
+  assert.ok(h.findAll((node) => node.props && node.props['data-interface-action'] === 'add' && node.props['data-interface-id'] === IFACE_PLATFORM).length >= 1);
+});
+
+test('blackbox folds downstream nodes in the graph and subtree in the tree, expandable again', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  assert.ok(h.nodeByData('data-graph-node', 'decision:c_check'));
+  h.findAll((node) => node.props && node.props['data-interface-action'] === 'add' && node.props['data-interface-id'] === IFACE_LOOKUP)[0].props.onClick();
+  await h.settle();
+  assert.ok(h.nodeByData('data-blackbox-node', IFACE_LOOKUP), 'lookup_route blackbox missing');
+  assert.equal(h.nodeByData('data-graph-node', 'fn:' + CHECK_LENGTH_ID), null, 'blackbox hides downstream nodes');
+  await switchView(h, 'tree');
+  const treeBlackbox = h.nodeByData('data-blackbox-node', IFACE_LOOKUP);
+  assert.ok(treeBlackbox, 'tree blackbox node missing');
+  assert.ok(h.textOf(treeBlackbox).includes('lookup_route'));
+  const expand = h.findAll((node) => node.props && node.props['data-blackbox-expand'] === IFACE_LOOKUP)[0];
+  h.clickNode(expand);
+  await h.settle();
+  assert.ok(h.findAll((node) => node.props && node.props['data-tree-node'] !== undefined && h.textOf(node).includes('lookup_route')).length > 0, 'expanded interface restores the normal tree node');
+
+  const IFACE_DISPATCH = 'iface:' + DISPATCH_TRANSFER_ID;
+  h.findAll((node) => node.props && node.props['data-interface-action'] === 'add' && node.props['data-interface-id'] === IFACE_DISPATCH)[0].props.onClick();
+  await h.settle();
+  const dispatchBlackbox = h.nodeByData('data-blackbox-node', IFACE_DISPATCH);
+  assert.ok(dispatchBlackbox, 'dispatch_transfer tree blackbox missing');
+  const hiddenChild = h.findAll((node) => node.props && node.props['data-tree-node'] !== undefined && h.textOf(node).includes('platform_write'));
+  assert.equal(hiddenChild.length, 0, 'tree blackbox folds its subtree');
+  h.findAll((node) => node.props && node.props['data-blackbox-expand'] === IFACE_DISPATCH)[0].props.onClick({stopPropagation() {}});
+  await h.settle();
+  assert.ok(h.findAll((node) => node.props && node.props['data-tree-node'] !== undefined && h.textOf(node).includes('platform_write')).length > 0, 'expanded tree blackbox restores the subtree');
+});
+
+test('details tabs expose source/subflow/resources and subflow fetches with entry+root', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  const checkNode = h.findAll((node) => node.props && node.props['data-graph-node'] !== undefined && node.props['data-function-id'] === CHECK_LENGTH_ID)[0];
+  assert.ok(checkNode);
+  h.clickNode(checkNode);
+  await h.settle();
+  const tabs = h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab');
+  assert.deepEqual(tabs.map((node) => node.props['data-tab']), ['source', 'subflow', 'resources']);
+  const resourcesTab = tabs.find((node) => node.props['data-tab'] === 'resources');
+  h.clickNode(resourcesTab);
+  await h.settle();
+  assert.ok(h.nodeByData('data-code-view', 'resources'));
+  const subflowTab = h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab' && node.props['data-tab'] === 'subflow')[0];
+  h.clickNode(subflowTab);
+  await h.settle();
+  const subflowPayload = h.rpc.lastPayload('view.endToEnd');
+  assert.equal(subflowPayload.entry, CHECK_LENGTH_ID);
+  assert.equal(subflowPayload.root, BUS_SEND_ID);
+  assert.ok(h.nodeByData('data-code-view', 'subflow'), 'subflow region missing');
+  const subflowNodes = h.findAll((node) => node.props && node.props['data-subflow-node'] !== undefined);
+  assert.ok(subflowNodes.length >= 1);
+  const breadcrumb = h.findByData('data-breadcrumb', '')[0];
+  assert.ok(breadcrumb, 'breadcrumb hook missing');
+  const crumbs = h.findAll((node) => node.props && node.props['data-crumb'] !== undefined);
+  assert.deepEqual(crumbs.map((node) => node.props['data-crumb']), [BUS_SEND_ID, CHECK_LENGTH_ID]);
+  assert.ok(h.textOf(crumbs[0]).includes('bus_send'));
+  assert.equal(selectionJson(h).subflow_root_id, BUS_SEND_ID);
+  h.clickNode(crumbs[0]);
+  await h.settle();
+  assert.equal(h.nodeByData('data-code-view', 'view').props['data-view'], 'end_to_end');
+  assert.equal(h.nodeByData('data-code-view', 'subflow'), null, 'root crumb returns to the main graph');
+  assert.ok(h.nodeByData('data-graph-group', GROUP_DISPATCH), 'main graph nodes/edges are restored from cache');
+  assert.equal(h.rpc.callsFor('view.endToEnd').filter((call) => call.payload.root !== undefined).length, 1, 'root crumb must reuse the cached main graph');
+});
+
+test('subflow without a resolved root path shows the breadcrumb gap', async (t) => {
+  const h = bootHarness({
+    'view.endToEnd': (payload) => (payload.entry === CHECK_LENGTH_ID
+      ? makeSubflowPayload({breadcrumb: [], gaps: [{code: 'breadcrumb_unavailable', status: 'degraded', reason: 'no resolved caller path'}]})
+      : makeEndToEndPayload()),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  const checkNode = h.findAll((node) => node.props && node.props['data-graph-node'] !== undefined && node.props['data-function-id'] === CHECK_LENGTH_ID)[0];
+  h.clickNode(checkNode);
+  await h.settle();
+  h.clickNode(h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab' && node.props['data-tab'] === 'subflow')[0]);
+  await h.settle();
+  assert.ok(h.text().includes('breadcrumb_unavailable'));
+  assert.equal(h.findByData('data-crumb', '').length, 0);
+  assert.ok(h.findByData('data-subflow-gap', 'breadcrumb_unavailable').length > 0);
+});
+
+test('Selection JSON gains group_id / interface_id / subflow_root_id', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  const selectionBefore = selectionJson(h);
+  assert.equal(selectionBefore.group_id, null);
+  assert.equal(selectionBefore.interface_id, null);
+  assert.equal(selectionBefore.subflow_root_id, null);
+  h.clickNode(h.nodeByData('data-group-toggle', GROUP_DISPATCH));
+  await h.settle();
+  assert.equal(selectionJson(h).group_id, GROUP_DISPATCH);
+  h.findAll((node) => node.props && node.props['data-interface-action'] === 'add' && node.props['data-interface-id'] === IFACE_PLATFORM)[0].props.onClick();
+  await h.settle();
+  assert.equal(selectionJson(h).interface_id, IFACE_PLATFORM);
+  const checkNode = h.findAll((node) => node.props && node.props['data-graph-node'] !== undefined && node.props['data-function-id'] === CHECK_LENGTH_ID)[0];
+  h.clickNode(checkNode);
+  await h.settle();
+  h.clickNode(h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab' && node.props['data-tab'] === 'subflow')[0]);
+  await h.settle();
+  assert.equal(selectionJson(h).subflow_root_id, BUS_SEND_ID);
+});
+
+test('legend explains group rectangles and blackbox interfaces', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  const trigger = h.findAll((node) => String((node.props && node.props.className) || '').includes('dcr-legend-trigger'))[0];
+  h.clickNode(trigger);
+  await h.settle();
+  const legendText = h.textOf(h.nodeByData('data-code-view', 'legend'));
+  for (const needle of ['组与黑盒', '矩形组框', '黑盒接口', '隐藏下游']) {
+    assert.ok(legendText.includes(needle), `legend must explain ${needle}`);
+  }
+});
+
+test('middle breadcrumb crumb re-roots the subflow without losing the cached main graph', async (t) => {
+  const lookupCrumb = {function_id: LOOKUP_ROUTE_ID, name: 'lookup_route', file: 'bus.c', line: 89, callsite_id: 'c_lookup'};
+  const checkCrumb = {function_id: CHECK_LENGTH_ID, name: 'check_length', file: 'bus.c', line: 96, callsite_id: 'c_check'};
+  const busCrumb = {function_id: BUS_SEND_ID, name: 'bus_send', file: 'bus.c', line: 152, callsite_id: null};
+  const h = bootHarness({
+    'view.endToEnd': (payload) => {
+      if (payload.entry !== CHECK_LENGTH_ID) return makeEndToEndPayload();
+      if (payload.root === LOOKUP_ROUTE_ID) {
+        return makeSubflowPayload({root: LOOKUP_ROUTE_ID, breadcrumb: [lookupCrumb, checkCrumb]});
+      }
+      return makeSubflowPayload({breadcrumb: [busCrumb, lookupCrumb, checkCrumb]});
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await openGraph(h);
+  const mainCallsBefore = h.rpc.callsFor('view.endToEnd').filter((call) => call.payload.root === undefined).length;
+  const checkNode = h.findAll((node) => node.props && node.props['data-graph-node'] !== undefined && node.props['data-function-id'] === CHECK_LENGTH_ID)[0];
+  h.clickNode(checkNode);
+  await h.settle();
+  h.clickNode(h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab' && node.props['data-tab'] === 'subflow')[0]);
+  await h.settle();
+  let crumbs = h.findAll((node) => node.props && node.props['data-crumb'] !== undefined);
+  assert.deepEqual(crumbs.map((crumb) => crumb.props['data-crumb']), [BUS_SEND_ID, LOOKUP_ROUTE_ID, CHECK_LENGTH_ID]);
+  h.clickNode(crumbs[1]);
+  await h.settle();
+  const rerootCall = h.rpc.callsFor('view.endToEnd').filter((call) => call.payload.root === LOOKUP_ROUTE_ID).pop();
+  assert.ok(rerootCall, 'middle crumb must re-root the subflow');
+  assert.equal(rerootCall.payload.entry, CHECK_LENGTH_ID);
+  assert.equal(selectionJson(h).subflow_root_id, LOOKUP_ROUTE_ID);
+  crumbs = h.findAll((node) => node.props && node.props['data-crumb'] !== undefined);
+  assert.deepEqual(crumbs.map((crumb) => crumb.props['data-crumb']), [LOOKUP_ROUTE_ID, CHECK_LENGTH_ID]);
+  assert.equal(h.rpc.callsFor('view.endToEnd').filter((call) => call.payload.root === undefined).length, mainCallsBefore, 'main graph is not refetched');
+  assert.ok(h.nodeByData('data-graph-group', GROUP_DISPATCH), 'main graph groups still cached');
 });

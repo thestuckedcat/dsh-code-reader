@@ -331,19 +331,22 @@ test('view.status reports host/engine facts and slice gaps without starting the 
     readonly_workbench: true,
     five_views: true,
     resource_graph: true,
+    group_collapse: true,
+    interface_library: true,
+    subflow_breadcrumb: true,
     scenario_execution: false,
     run_observation: false,
-    group_collapse: false,
-    interface_library: false,
     ai_summary: false,
   })
   assert.deepEqual(
     value.gaps.map((gap) => gap.code),
-    ['scenario_execution', 'run_observation', 'group_collapse', 'interface_library', 'ai_summary'],
+    ['scenario_execution', 'run_observation', 'ai_summary'],
   )
-  // S2a implements the five views/resource graph: they must not remain gaps.
+  // S2a/S2b implemented capabilities must not remain gaps.
   assert.equal(
-    value.gaps.some((gap) => gap.code === 'five_views' || gap.code === 'resource_graph'),
+    value.gaps.some((gap) =>
+      ['five_views', 'resource_graph', 'group_collapse', 'interface_library', 'subflow_breadcrumb'].includes(gap.code),
+    ),
     false,
   )
   for (const gap of value.gaps) {
@@ -380,10 +383,11 @@ test('view.status stays ok:true with explicit gaps when Python and bootstrap are
   const value = result.json.result.value
   assert.deepEqual(value.engine, { python: 'missing', bootstrap: { configured: true, exists: false } })
   // Availability is carried by `engine`; `gaps` stays the fixed capability list
-  // (S2a views are implemented) so the UI does not render duplicate rows.
+  // (S2a/S2b views and capabilities are implemented) so the UI does not render
+  // duplicate rows.
   assert.deepEqual(
     value.gaps.map((gap) => gap.code),
-    ['scenario_execution', 'run_observation', 'group_collapse', 'interface_library', 'ai_summary'],
+    ['scenario_execution', 'run_observation', 'ai_summary'],
   )
   // The degraded status must not leak the interpreter/bootstrap paths.
   assert.equal(result.response.body.includes('python.exe'), false)
@@ -617,7 +621,7 @@ test('createViewDispatch fails closed for unknown endpoints', async () => {
 const WORKSPACE = 'code-view-bus-demo'
 const ENTRY = 'f_afa8298f2d197e5fd110e49a'
 
-test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the six five-view endpoints', () => {
+test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the five-view and S2b endpoints', () => {
   assert.deepEqual(VIEW_ENDPOINTS, [
     'view.status',
     'view.listSnapshots',
@@ -629,6 +633,7 @@ test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the six five-view
     'view.fileTree',
     'view.fileRead',
     'view.sequence',
+    'view.interfaces',
   ])
   const service = createViewService({ bridge: createBridgeStub(), settings: testSettings() })
   assert.deepEqual(Object.keys(service), [...VIEW_ENDPOINTS])
@@ -711,7 +716,7 @@ test('view.tree maps to the fixed argv and requires a bounded entry', async () =
   assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
 })
 
-test('view.endToEnd maps to the fixed argv', async () => {
+test('view.endToEnd maps to the fixed argv and supports the optional S2b root', async () => {
   const engineJson = {
     schema_version: 1,
     entry: { entry_id: ENTRY, name: 'bus_send' },
@@ -735,15 +740,40 @@ test('view.endToEnd maps to the fixed argv', async () => {
     ['view-end-to-end', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY],
   ])
 
+  // S2b sub-flow root: appended after --entry.
+  const root = 'f_1a2b3c4d5e6f708192a3b4c5'
+  await invoke(route, {
+    endpoint: 'view.endToEnd',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, root },
+  })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-end-to-end', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY, '--root', root,
+  ])
+  // root omitted / null → no --root.
+  await invoke(route, { endpoint: 'view.endToEnd', payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, root: null } })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-end-to-end', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY,
+  ])
+  await invoke(route, { endpoint: 'view.endToEnd', payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY } })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-end-to-end', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY,
+  ])
+
   const before = bridge.calls.length
-  for (const payload of [
-    { workspace: WORKSPACE, snapshot: SNAPSHOT_ID },
-    { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, mode: 'static' },
-  ]) {
+  const rejected = [
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID }, /entry is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, mode: 'static' }, /unknown payload field: mode/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, root: 42 }, /root must be a string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, root: '' }, /root must be a non-empty string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, root: 'f'.repeat(513) }, /at most 512 characters/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, root: 'bad/root' }, /root must match/],
+  ]
+  for (const [payload, message] of rejected) {
     const bad = await invoke(route, { endpoint: 'view.endToEnd', payload })
     assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
   }
-  assert.equal(bridge.calls.length, before)
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
 })
 
 test('view.fileTree maps to the fixed argv and rejects entry input', async () => {
@@ -886,7 +916,66 @@ test('view.sequence maps to the fixed static argv and rejects other modes', asyn
   assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
 })
 
-test('five-view endpoints map BridgeError without leaking host paths', async () => {
+// ---------------------------------------------------------------------------
+// S2b increment: base interface library (docs/five-view-contract.md §10.2)
+// ---------------------------------------------------------------------------
+test('view.interfaces maps to the fixed argv with an optional entry', async () => {
+  const engineJson = {
+    schema_version: 1,
+    snapshot: { snapshot_id: SNAPSHOT_ID },
+    selection: {},
+    candidates: [],
+    external_boundaries: [],
+    gaps: [],
+    truncated: false,
+  }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  const result = await invoke(route, {
+    endpoint: 'view.interfaces',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID },
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  assert.deepEqual(bridge.calls.map((call) => call.argv), [
+    ['view-interfaces', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID],
+  ])
+
+  // Optional entry: provided → --entry; omitted/null → snapshot-wide pool.
+  await invoke(route, {
+    endpoint: 'view.interfaces',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY },
+  })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-interfaces', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--entry', ENTRY,
+  ])
+  await invoke(route, {
+    endpoint: 'view.interfaces',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: null },
+  })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-interfaces', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID,
+  ])
+
+  const before = bridge.calls.length
+  const rejected = [
+    [{}, /workspace is required/],
+    [{ workspace: WORKSPACE }, /snapshot is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 42 }, /entry must be a string/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 'f'.repeat(513) }, /at most 512 characters/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: 'bad/entry' }, /entry must match/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, mode: 'static' }, /unknown payload field: mode/],
+    [{ workspace: 'Code-View', snapshot: SNAPSHOT_ID }, /workspace must match/],
+  ]
+  for (const [payload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.interfaces', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
+})
+
+test('view endpoints map BridgeError without leaking host paths', async () => {
   const bridge = createBridgeStub(async () => {
     throw new BridgeError('DEPENDENCY_UNAVAILABLE', 'engine at C:\\Users\\admin\\python.exe failed')
   })
@@ -895,9 +984,12 @@ test('five-view endpoints map BridgeError without leaking host paths', async () 
     ['view.coupling', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
     ['view.tree', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
     ['view.endToEnd', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
+    ['view.endToEnd', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY, root: ENTRY }],
     ['view.fileTree', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
     ['view.fileRead', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, repo: 'bus', path: 'bus.c' }],
     ['view.sequence', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
+    ['view.interfaces', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
+    ['view.interfaces', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
   ]
   for (const [endpoint, payload] of calls) {
     const result = await invoke(route, { endpoint, payload })
@@ -1005,9 +1097,9 @@ test('plugin mounts the /code-view prefix route when host services are available
   assert.equal(route.path, '/code-view')
   assert.equal(typeof route.handler, 'function')
 
-  // The nested route's whitelist covers the S2a endpoints too: an invalid
+  // The nested route's whitelist covers the S2a/S2b endpoints too: an invalid
   // payload is rejected by the read model before the bridge (no engine spawn).
-  for (const endpoint of ['view.coupling', 'view.tree', 'view.endToEnd', 'view.fileTree', 'view.fileRead', 'view.sequence']) {
+  for (const endpoint of ['view.coupling', 'view.tree', 'view.endToEnd', 'view.fileTree', 'view.fileRead', 'view.sequence', 'view.interfaces']) {
     const rejected = await invoke(route, {
       endpoint,
       payload: { workspace: 'NOT A WORKSPACE', snapshot: SNAPSHOT_ID, entry: 'bad entry', mode: 'observed' },

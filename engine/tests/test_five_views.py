@@ -28,6 +28,7 @@ import unittest
 import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+from unittest import mock
 
 from tests import helpers
 from tests.fixtures.snapshots import support
@@ -341,7 +342,16 @@ class RealBusFiveViewTest(FiveViewTestBase):
         self.assertEqual(BUS_SEND_ID, selection["entry_id"])
         self.assertIsNone(selection["focus_resource_id"])
         self.assertIsNone(selection["focus_callsite_id"])
-        self.assertIn("interface_library", {gap["code"] for gap in payload["gaps"]})
+        # S2b shared-selection extension fields are always present.
+        self.assertIsNone(selection["group_id"])
+        self.assertIsNone(selection["interface_id"])
+        self.assertIsNone(selection["subflow_root_id"])
+        gap_codes = {gap["code"] for gap in payload["gaps"]}
+        # S2b implements group folding and the interface library: the S2a
+        # "not implemented" claims must be gone from this endpoint.
+        self.assertNotIn("interface_library", gap_codes)
+        self.assertNotIn("group_collapse", gap_codes)
+        self.assertIn("ai_summary", gap_codes)
         self.assert_no_absolute_paths(payload)
         self.assert_relative_path_fields(payload)
 
@@ -401,7 +411,10 @@ class RealBusFiveViewTest(FiveViewTestBase):
         node_ids = [node["node_id"] for node in first["nodes"]]
         self.assertEqual(len(node_ids), len(set(node_ids)))
         gap_codes = {gap["code"] for gap in first["gaps"]}
-        self.assertIn("group_collapse", gap_codes)
+        # Groups are an end-to-end concern (contract 10.1); the tree keeps the
+        # S2b "group_collapse" implementation gap out of its payload while the
+        # still-missing AI summary stays explicit.
+        self.assertNotIn("group_collapse", gap_codes)
         self.assertIn("ai_summary", gap_codes)
         self.assert_no_absolute_paths(first)
         self.assert_relative_path_fields(first)
@@ -556,6 +569,357 @@ class RealBusFiveViewTest(FiveViewTestBase):
         self.assertIn("callsite", branch_gap["reason"])
         self.assert_no_absolute_paths(first)
         self.assert_relative_path_fields(first)
+
+    # -- S2b end-to-end groups --------------------------------------------
+    def test_end_to_end_private_callee_groups(self) -> None:
+        first = five_views.end_to_end(
+            self.env.state, WORKSPACE_ID, self.snapshot_id, "bus_send"
+        )
+        groups = first["groups"]
+        self.assertGreaterEqual(len(groups), 2)
+        grouping = first["grouping"]
+        self.assertEqual("private_callee_subflow", grouping["algorithm"])
+        self.assertEqual(len(groups), grouping["groups"])
+        self.assertEqual(
+            sum(len(group["member_function_ids"]) for group in groups),
+            grouping["members"],
+        )
+        self.assertTrue(
+            any(
+                gap["code"] == "group_semantics" and gap["status"] == "degraded"
+                for gap in grouping["gaps"]
+            )
+        )
+        node_by_id = {node["node_id"]: node for node in first["nodes"]}
+        node_ids = set(node_by_id)
+        names_by_group: Dict[str, List[str]] = {}
+        for group in groups:
+            self.assertRegex(group["group_id"], r"^group:f_[0-9a-f]+:[0-9a-f]{8}$")
+            self.assertTrue(group["label"].endswith("下游子流程"))
+            self.assertIn("仅被", group["description"])
+            self.assertTrue(group["collapsed_default"])
+            self.assertEqual("structural_heuristic", group["origin"])
+            self.assertEqual(
+                ["group_structural_heuristic", "group_name_not_semantic"],
+                group["limitations"],
+            )
+            self.assertEqual(
+                len(group["member_node_ids"]), len(group["member_function_ids"])
+            )
+            for node_id in group["member_node_ids"]:
+                self.assertIn(node_id, node_ids)
+                self.assertEqual("process", node_by_id[node_id]["kind"])
+            for node_id in group["entry_node_ids"] + group["exit_node_ids"]:
+                self.assertIn(node_id, group["member_node_ids"])
+            self.assertTrue(group["evidence_ids"])
+            names_by_group[group["label"]] = [
+                node_by_id[node_id]["label"] for node_id in group["member_node_ids"]
+            ]
+
+        dispatch_group = next(
+            group for group in groups if "dispatch_transfer" in group["label"]
+        )
+        self.assertEqual(
+            ["submit_buffered", "submit_direct"],
+            names_by_group[dispatch_group["label"]],
+        )
+        self.assertEqual(
+            [
+                "fn:f_a6ac5de30cf631400f29d67e",
+                "fn:f_bc0e6086fe5e9c1faa1eeeb6",
+            ],
+            dispatch_group["member_node_ids"],
+        )
+        self.assertEqual(
+            dispatch_group["member_node_ids"], dispatch_group["entry_node_ids"]
+        )
+        self.assertEqual(
+            dispatch_group["member_node_ids"], dispatch_group["exit_node_ids"]
+        )
+        self.assertIsNone(dispatch_group["parent_group_id"])
+
+        commit_group = next(
+            group for group in groups if "commit_transfer" in group["label"]
+        )
+        self.assertEqual(
+            ["encode_doorbell", "write_doorbell"],
+            names_by_group[commit_group["label"]],
+        )
+        # Both members have edges leaving the group (external TRACE calls and
+        # the platform_write handoff), so both are exit ports.
+        self.assertEqual(
+            [
+                "fn:f_87403babddf39338cdbd3f69",
+                "fn:f_f67649a4a3e9dcbcca8b3c1d",
+            ],
+            commit_group["exit_node_ids"],
+        )
+        self.assertEqual(
+            [
+                "fn:f_87403babddf39338cdbd3f69",
+                "fn:f_f67649a4a3e9dcbcca8b3c1d",
+            ],
+            commit_group["entry_node_ids"],
+        )
+
+        # Shared functions (more than one projected caller) never join a group.
+        all_members = {fid for group in groups for fid in group["member_function_ids"]}
+        self.assertNotIn("f_ec61140249f393550eb97946", all_members)  # commit_transfer
+        self.assertNotIn("f_dfb9aead445405de7aafbbfa", all_members)  # store_route
+        # Groups are an additive projection: S2a nodes/edges keep their shape.
+        self.assertEqual(19, len(first["nodes"]))
+        self.assertEqual(31, len(first["edges"]))
+        self.assertFalse(first["truncated"])
+        self.assert_no_absolute_paths(first)
+        self.assert_relative_path_fields(first)
+
+    def test_breadcrumb_subflow_paths(self) -> None:
+        state = self.env.state
+        main = five_views.end_to_end(
+            state, WORKSPACE_ID, self.snapshot_id, "bus_send"
+        )
+        self.assertEqual([], main["breadcrumb"])
+        self.assertIsNone(main["selection"]["subflow_root_id"])
+
+        subflow = five_views.end_to_end(
+            state, WORKSPACE_ID, self.snapshot_id, "check_length", root_ref="bus_send"
+        )
+        breadcrumb = subflow["breadcrumb"]
+        self.assertEqual(
+            ["bus_send", "check_length"], [item["name"] for item in breadcrumb]
+        )
+        self.assertEqual(BUS_SEND_ID, breadcrumb[0]["function_id"])
+        self.assertEqual("f_b19a05b7a8457000a4562e91", breadcrumb[-1]["function_id"])
+        self.assertEqual("bus.c", breadcrumb[1]["file"])
+        self.assertEqual(96, breadcrumb[1]["line"])
+        self.assertEqual(
+            "c_2d6e6d665c1e95aca9ac14b8", breadcrumb[1]["callsite_id"]
+        )
+        self.assertNotIn("callsite_id", breadcrumb[0])
+        self.assertEqual(BUS_SEND_ID, subflow["selection"]["subflow_root_id"])
+        self.assertEqual(BUS_SEND_ID, subflow["root"])
+        self.assertEqual("check_length", subflow["entry"]["name"])
+        self.assertLessEqual(len(breadcrumb), 21)
+
+        same_root = five_views.end_to_end(
+            state, WORKSPACE_ID, self.snapshot_id, "bus_send", root_ref="bus_send"
+        )
+        self.assertEqual([], same_root["breadcrumb"])
+        self.assertIsNone(same_root["selection"]["subflow_root_id"])
+
+        unreachable = five_views.end_to_end(
+            state,
+            WORKSPACE_ID,
+            self.snapshot_id,
+            "check_length",
+            root_ref="write_doorbell",
+        )
+        self.assertEqual([], unreachable["breadcrumb"])
+        unavailable = next(
+            gap
+            for gap in unreachable["gaps"]
+            if gap["code"] == "breadcrumb_unavailable"
+        )
+        self.assertEqual("unavailable", unavailable["status"])
+        self.assertIn("20", unavailable["reason"])
+        self.assert_no_absolute_paths(subflow)
+        self.assert_no_absolute_paths(unreachable)
+
+    # -- S2b interface library --------------------------------------------
+    def test_interfaces_platform_write_and_independent_candidates(self) -> None:
+        first = five_views.interfaces(self.env.state, WORKSPACE_ID, self.snapshot_id)
+        second = five_views.interfaces(self.env.state, WORKSPACE_ID, self.snapshot_id)
+        self.assertEqual(
+            json.dumps(first, ensure_ascii=False, sort_keys=True),
+            json.dumps(second, ensure_ascii=False, sort_keys=True),
+        )
+        candidates = first["candidates"]
+        self.assertGreaterEqual(len(candidates), 5)
+        self.assertLessEqual(len(candidates), 100)
+        scores = [candidate["score"] for candidate in candidates]
+        self.assertEqual(scores, sorted(scores, reverse=True), "score descending")
+        for candidate in candidates:
+            self.assertEqual("may", candidate["certainty"])
+            self.assertEqual(
+                ["candidate_rule_based_not_semantic"], candidate["limitations"]
+            )
+            self.assertIn(
+                "stable_signature", [reason["code"] for reason in candidate["reasons"]]
+            )
+            self.assertIn(candidate["decoupling"], {"independent", "mixed", "unknown"})
+            self.assertIn("interface_id", candidate)
+            self.assertEqual(
+                f"iface:{candidate['function_id']}", candidate["interface_id"]
+            )
+            self.assertIn("parameters", candidate)
+            self.assertIn("return_type", candidate)
+            self.assertIn("callers", candidate)
+            self.assertIn("input_guards", candidate)
+            self.assertIn("field_accesses", candidate)
+        by_name = {candidate["name"]: candidate for candidate in candidates}
+
+        platform_write = by_name["platform_write"]
+        self.assertTrue(platform_write["cross_file"])
+        self.assertTrue(platform_write["leaf"])
+        self.assertEqual("mixed", platform_write["decoupling"])
+        self.assertIn(
+            "side_effects_present",
+            [reason["code"] for reason in platform_write["reasons"]],
+        )
+        writes = [
+            effect
+            for effect in platform_write["field_accesses"]
+            if effect["access"] in {"write", "rmw", "init", "deinit", "alloc", "free", "acquire", "release"}
+        ]
+        self.assertTrue(
+            any(
+                effect["field_name"] == "simulated_doorbell"
+                and effect["location"] == {"file": "platform.c", "line": 25}
+                for effect in writes
+            ),
+            "platform_write writes the simulated_doorbell register",
+        )
+        self.assertEqual("platform.c", platform_write["file"])
+        self.assertEqual(19, platform_write["line"])
+        self.assertEqual("int (unsigned int, unsigned int)", platform_write["signature"])
+        self.assertEqual("int", platform_write["return_type"])
+        self.assertEqual(
+            [{"name": "address", "type": "unsigned int"}, {"name": "value", "type": "unsigned int"}],
+            platform_write["parameters"],
+        )
+        self.assertEqual(1, platform_write["call_count"])
+        self.assertEqual("write_doorbell", platform_write["callers"][0]["name"])
+        self.assertEqual(
+            {"file": "bus.c", "line": 113}, platform_write["callers"][0]["location"]
+        )
+        self.assertEqual("c_a9a49f2229277208d6ae0cac", platform_write["callers"][0]["callsite_id"])
+        self.assertLess(platform_write["score"], 5)
+
+        independent = {
+            candidate["name"]
+            for candidate in candidates
+            if candidate["decoupling"] == "independent"
+        }
+        self.assertGreaterEqual(
+            len(independent & {"lookup_route", "check_length", "encode_doorbell"}), 2
+        )
+        for name in ("lookup_route", "check_length", "encode_doorbell"):
+            self.assertIn(name, by_name)
+        for name in ("lookup_route", "check_length", "encode_doorbell"):
+            candidate = by_name[name]
+            writes = [
+                effect
+                for effect in candidate["field_accesses"]
+                if effect["access"] in {"write", "rmw", "init", "deinit", "alloc", "free", "acquire", "release"}
+            ]
+            self.assertEqual([], writes)
+            self.assertTrue(candidate["leaf"])
+        self.assertTrue(by_name["check_length"]["input_guards"])
+        self.assertIn(
+            "input_guards_present",
+            [reason["code"] for reason in by_name["check_length"]["reasons"]],
+        )
+        self.assertEqual(
+            "c_2d6e6d665c1e95aca9ac14b8",
+            by_name["check_length"]["input_guards"][0]["callsite_id"],
+        )
+
+        external_boundaries = {
+            item["callee"]: item for item in first["external_boundaries"]
+        }
+        self.assertIn("trace", external_boundaries)
+        self.assertEqual(22, external_boundaries["trace"]["call_count"])
+        self.assertEqual(22, len(external_boundaries["trace"]["callsite_ids"]))
+        self.assert_no_absolute_paths(first)
+        self.assert_relative_path_fields(first)
+
+    def test_interfaces_entry_scope_and_cli(self) -> None:
+        scoped = five_views.interfaces(
+            self.env.state, WORKSPACE_ID, self.snapshot_id, "bus_send"
+        )
+        names = {candidate["name"] for candidate in scoped["candidates"]}
+        self.assertIn("platform_write", names)
+        self.assertIn("lookup_route", names)
+        self.assertNotIn("platform_reset", names)
+        self.assertNotIn("store_route", names)
+        self.assertEqual(BUS_SEND_ID, scoped["selection"]["entry_id"])
+        self.assertIsNone(scoped["selection"]["interface_id"])
+        self.assert_no_absolute_paths(scoped)
+
+        payload = self.assert_single_json_object(
+            "view-interfaces",
+            "--workspace",
+            WORKSPACE_ID,
+            "--snapshot",
+            self.snapshot_id,
+        )
+        for key in ("candidates", "external_boundaries", "gaps", "truncated"):
+            self.assertIn(key, payload)
+        scoped_payload = self.assert_single_json_object(
+            "view-interfaces",
+            "--workspace",
+            WORKSPACE_ID,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "bus_send",
+        )
+        self.assertIn(
+            "platform_write", {item["name"] for item in scoped_payload["candidates"]}
+        )
+        subflow = self.assert_single_json_object(
+            "view-end-to-end",
+            "--workspace",
+            WORKSPACE_ID,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "check_length",
+            "--root",
+            "bus_send",
+        )
+        self.assertEqual(
+            ["bus_send", "check_length"],
+            [item["name"] for item in subflow["breadcrumb"]],
+        )
+        self.assertIn("groups", subflow)
+        self.assertIn("grouping", subflow)
+        completed = helpers.run_cli(
+            self.env.bootstrap_path,
+            "view-end-to-end",
+            "--workspace",
+            WORKSPACE_ID,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "check_length",
+            "--root",
+            "f_does_not_exist",
+            expect=2,
+        )
+        self.assertEqual("NOT_FOUND", json.loads(completed.stdout)["error"]["code"])
+        completed = helpers.run_cli(
+            self.env.bootstrap_path,
+            "view-interfaces",
+            "--workspace",
+            "no-such-workspace",
+            "--snapshot",
+            self.snapshot_id,
+            expect=2,
+        )
+        self.assertEqual("NOT_FOUND", json.loads(completed.stdout)["error"]["code"])
+        completed = helpers.run_cli(
+            self.env.bootstrap_path,
+            "view-interfaces",
+            "--workspace",
+            WORKSPACE_ID,
+            "--snapshot",
+            self.snapshot_id,
+            "--entry",
+            "f_does_not_exist",
+            expect=2,
+        )
+        self.assertEqual("NOT_FOUND", json.loads(completed.stdout)["error"]["code"])
 
     # -- file tree / file read --------------------------------------------
     def test_file_tree_lists_only_snapshot_evidence_files(self) -> None:
@@ -727,6 +1091,9 @@ class RealBusFiveViewTest(FiveViewTestBase):
             ["view-coupling", *common],
             ["view-tree", "--entry", "bus_send", *common],
             ["view-end-to-end", "--entry", "bus_send", *common],
+            ["view-end-to-end", "--entry", "check_length", "--root", "bus_send", *common],
+            ["view-interfaces", *common],
+            ["view-interfaces", "--entry", "bus_send", *common],
             ["view-file-tree", *common],
             ["view-file-read", "--repo", REPO_ID, "--path", "bus.c", *common],
             ["view-file-read", "--repo", REPO_ID, "--path", "bus.c", "--max-lines", "10", *common],
@@ -737,7 +1104,10 @@ class RealBusFiveViewTest(FiveViewTestBase):
             ("scope", "resources", "functions", "edges", "external_nodes"),
             ("scope", "resources", "functions", "edges", "external_nodes"),
             ("entry", "nodes", "max_depth"),
-            ("entry", "nodes", "edges", "exits", "legend", "layout"),
+            ("entry", "nodes", "edges", "exits", "legend", "layout", "groups", "grouping"),
+            ("entry", "nodes", "edges", "exits", "legend", "layout", "groups", "grouping", "breadcrumb"),
+            ("candidates", "external_boundaries"),
+            ("candidates", "external_boundaries"),
             ("repos",),
             ("repo_id", "path", "lines", "evidence_ref"),
             ("repo_id", "path", "lines", "evidence_ref"),
@@ -1144,6 +1514,110 @@ class SyntheticBudgetAndDegradationTest(FiveViewTestBase):
         self.assertFalse(result["truncated"])
         self.assertIsNotNone(result["evidence_ref"])
         self.assert_no_absolute_paths(result)
+
+
+    def test_nested_private_callee_groups(self) -> None:
+        functions = [
+            support.function("f_entry", "entry_fn", file="src/n.c", line=1),
+            support.function("f_a", "a_fn", file="src/n.c", line=10),
+            support.function("f_b", "b_fn", file="src/n.c", line=20),
+            support.function("f_x", "x_fn", file="src/n.c", line=30),
+            support.function("f_d", "d_fn", file="src/n.c", line=40),
+            support.function("f_e", "e_fn", file="src/n.c", line=50),
+        ]
+        callsites = [
+            support.callsite("c_entry_a", owner="f_entry", file="src/n.c", line=2),
+            support.callsite("c_a_b", owner="f_a", file="src/n.c", line=11),
+            support.callsite("c_a_x", owner="f_a", file="src/n.c", line=12),
+            support.callsite("c_b_d", owner="f_b", file="src/n.c", line=21),
+            support.callsite("c_b_e", owner="f_b", file="src/n.c", line=22),
+        ]
+        evidence = [
+            support.evidence(f"e_{callsite['id']}", file="src/n.c", line=callsite["line"])
+            for callsite in callsites
+        ]
+        targets = [
+            support.call_target(
+                f"edge_{callsite['id']}",
+                callsite=callsite["id"],
+                source=callsite["owner"],
+                target=target_id,
+                evidence=[f"e_{callsite['id']}"],
+            )
+            for callsite, target_id in (
+                (callsites[0], "f_a"),
+                (callsites[1], "f_b"),
+                (callsites[2], "f_x"),
+                (callsites[3], "f_d"),
+                (callsites[4], "f_e"),
+            )
+        ]
+        payload = support.graph_payload(
+            functions=functions,
+            callsites=callsites,
+            call_targets=targets,
+            evidence=evidence,
+        )
+        snapshot_id = self.import_synthetic(
+            "snap-nested-groups", "5a5a00005a5a11115a5a22225a5a3333", payload
+        )
+        result = five_views.end_to_end(
+            self.env.state, WORKSPACE_ID, snapshot_id, "entry_fn"
+        )
+        self.assertEqual(2, result["grouping"]["groups"])
+        self.assertEqual(4, result["grouping"]["members"])
+        groups = {group["label"]: group for group in result["groups"]}
+        self.assertEqual({"a_fn 下游子流程", "b_fn 下游子流程"}, set(groups))
+        outer = groups["a_fn 下游子流程"]
+        inner = groups["b_fn 下游子流程"]
+        self.assertIsNone(outer["parent_group_id"])
+        self.assertEqual(outer["group_id"], inner["parent_group_id"])
+        self.assertEqual(["f_b", "f_x"], outer["member_function_ids"])
+        self.assertEqual(["f_d", "f_e"], inner["member_function_ids"])
+        self.assertEqual(
+            ["fn:f_b", "fn:f_x"], outer["entry_node_ids"]
+        )
+        self.assertEqual(["fn:f_b"], outer["exit_node_ids"])
+        self.assertEqual(["fn:f_d", "fn:f_e"], inner["entry_node_ids"])
+        self.assertEqual([], inner["exit_node_ids"])
+        self.assertEqual(
+            [reason for reason in outer["limitations"]],
+            ["group_structural_heuristic", "group_name_not_semantic"],
+        )
+        # Groups are additive: the original call edges are untouched.
+        call_edge_ids = {
+            edge["edge_id"] for edge in result["edges"] if edge["kind"] == "call"
+        }
+        self.assertEqual(
+            {f"call:{target['id']}" for target in targets}, call_edge_ids
+        )
+        self.assertFalse(result["truncated"])
+        self.assert_no_absolute_paths(result)
+
+    def test_s2b_budget_truncation(self) -> None:
+        with mock.patch.object(five_views, "MAX_GROUPS", 1):
+            result = five_views.end_to_end(
+                self.env.state, WORKSPACE_ID, self.snapshot_id, "bus_send"
+            )
+        self.assertEqual(1, len(result["groups"]))
+        self.assertTrue(result["truncated"])
+        self.assertIn("groups_truncated", {gap["code"] for gap in result["gaps"]})
+        self.assertIn(
+            "groups_truncated",
+            {gap["code"] for gap in result["grouping"]["gaps"]},
+        )
+        self.assert_no_absolute_paths(result)
+
+        with mock.patch.object(five_views, "MAX_INTERFACES", 3):
+            interfaces = five_views.interfaces(
+                self.env.state, WORKSPACE_ID, self.snapshot_id
+            )
+        self.assertEqual(3, len(interfaces["candidates"]))
+        self.assertTrue(interfaces["truncated"])
+        self.assertIn(
+            "interfaces_truncated", {gap["code"] for gap in interfaces["gaps"]}
+        )
+        self.assert_no_absolute_paths(interfaces)
 
 
 if __name__ == "__main__":

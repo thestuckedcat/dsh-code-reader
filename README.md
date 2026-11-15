@@ -16,16 +16,17 @@ DeepSeek Harness（DSH）插件 + `learn-code-workspace` skill + 本地 Python �
 
 - **已实现并自测**：workspace 登记/校验、源码只读查找与引用、Atlas 0.1 快照导入与完整性校验、路径/关系查询（含跨仓 `abi_bridge` 候选）、学习记录 CAS/导出/resume 失效、`learn-code-workspace` skill、6 个 DSH Host 工具、安装后注册验证。
 - **只读代码工作台 S2a 五视图（2026-11-15，CW-T2 首阶段）**：DSH 插件自带 client 半，侧边栏「代码工作台」keyed 主面板；**资源关系图**（三列 writers/resources/readers + 访问线 kind/certainty + 左栏全局资源 + 打桩占位）、**可折叠文字树**（调用点/guard/返回/局限）、**单入口端到端图**（竖排 H/V 正交折线、判断菱形、异常红色实线、外部边界虚线、拖拽/平移/缩放/适应/搜索/一键规整）、**时序图**（S2a 静态预测模式，明确 warning + observed=false）、**文件视图**（快照涉及文件 + 行号 + 联动高亮）；图例/详情/缺口/共享 Selection 跨视图联动。读模型 `view.status/listSnapshots/listEntries/getEntry` + `view.coupling/tree/endToEnd/fileTree/fileRead/sequence`（自有 `/code-view` RPC，连接准入 + 严格输入校验）。真实快照夹具与隔离 dsh-web 证据见 `evidence/code-view-slice/`、`evidence/readonly-slice/`、`evidence/five-views/`。
+- **组折叠 / 基础接口库 / 子流程面包屑（2026-11-15，CW-T2 S2b）**：端到端图按「单入口私有子流程」结构自动分组（`groups`/`grouping`，默认折叠、可展开/一键折叠展开、跨组边保留原 edge 元数据、组名/描述可修订并标“已修订（结构归纳）”）；接口库 `view.interfaces` 规则候选（leaf/cross_file/副作用/入参 guard/理由/score，全部 may），可加入/移出并把函数收作黑盒（图/树折叠下游，可展开恢复）；函数详情新增子流程 tab 与调用面包屑（回主图或重新定根），Selection 扩展 `group_id/interface_id/subflow_root_id`。隔离 dsh-web 验收 `41/41`：`evidence/s2b/verification.json`（组/接口/子流程截图）。
 - **真实 Atlas 0.8 产物对照（已做，非 Linux 门禁）**：Atlas trusted quickstart + 自建三函数 C 仓库（2026-11-08）与 Demo bus/platform C（2026-11-15）真实 0.1 快照被本适配器导入；真实 function 的 file/line 从 evidence 解析，exact 调用边与 `flow_legacy` 在真实产物上验证；本轮修复真实 `flow_edges.owner=null/sources=[]` 适配缺口（`engine/tests/test_atlas_flow_shape.py`）。见 [evidence/real-atlas/README.md](evidence/real-atlas/README.md)。
-- **未声明通过**（需要目标 Linux/Kbuild/固定 Atlas runtime/强制隔离 runner/native CFG）：真实内核索引与编译、编译探针隔离、真实驱动运行时行为、组折叠/接口库、场景执行/打桩/回退/运行观测。静态证据不证明运行时必达；Demo 的 Wasm 观测只作行为对照（`demo_observed`），不冒充设备行为。
-- 当前测试：261 Python unittest + 83 Node tests + Demo 8/8；S2a 隔离 dsh-web 验收 `37/37`（`evidence/five-views/verification.json`），CW-T1 验收见 `evidence/readonly-slice/`。
+- **未声明通过**（需要目标 Linux/Kbuild/固定 Atlas runtime/强制隔离 runner/native CFG）：真实内核索引与编译、编译探针隔离、真实驱动运行时行为、AI 归纳正文、场景执行/打桩/回退/运行观测。静态证据不证明运行时必达；Demo 的 Wasm 观测只作行为对照（`demo_observed`），不冒充设备行为。
+- 当前测试：267 Python unittest + 96 Node tests + Demo 8/8；隔离 dsh-web 验收：S2a `37/37`（`evidence/five-views/`）、S2b `41/41`（`evidence/s2b/`），CW-T1 见 `evidence/readonly-slice/`。
 
 ## 组成
 
 | 层 | 位置 | 作用 |
 |---|---|---|
 | DSH Host bundle | `index.js`、`lib/`、`cordis.patch.yml` | 注册 6 个 `code_*` 工具与 skill provider；固定 argv 调用本地引擎；嵌套 UI 子插件注册 `/code-view` RPC（缺 `connection`/`webServer` 时保持 pending，不影响旧工具） |
-| DSH Client bundle | `bundle/client.js` | rc.5 原生 client 半：侧边栏「代码工作台」、keyed 主面板、五视图（资源关系图/文字树/端到端图/时序图/文件视图）、左栏全局资源/打桩占位、图例/详情、共享 Selection、跨视图联动、可注销 |
+| DSH Client bundle | `bundle/client.js` | rc.5 原生 client 半：侧边栏「代码工作台」、keyed 主面板、五视图（资源关系图/文字树/端到端图/时序图/文件视图）、组折叠/接口库/黑盒、子流程与面包屑、左栏全局资源/打桩占位、图例/详情、共享 Selection、跨视图联动、可注销 |
 | 打包 skill | `skills/learn-code-workspace/` | 阅读顺序、讲解、预测/观察、停止规则；普通问答不强制复盘 |
 | Python 引擎 | `engine/code_learning/` | workspace/source/snapshot/paths/bindings/records/invalidation + `views`/`five_views` 只读投影，只用标准库 |
 | 合同与 schema | `engine/schemas/`、`docs/implementation-contract.md`、`docs/readonly-workbench-contract.md`、`docs/five-view-contract.md` | 自有对象 `schema_version=1`；Atlas 对象保持 `0.1` |
@@ -64,6 +65,7 @@ node --test tests/node/*.test.mjs              # Host RPC / client / plugin 合�
 node --test demo/code-view/demo.test.cjs       # Demo「登记 → 发送」对照（Wasm 模拟观测）
 node tools/verify-readonly.mjs --with-repo-tests      # CW-T1 只读切片隔离 dsh-web 验收
 node tools/verify-five-views.mjs --with-repo-tests    # CW-T2 S2a 五视图隔离 dsh-web 逐视图验收
+node tools/verify-s2b.mjs --with-repo-tests           # CW-T2 S2b 组折叠/接口库/子流程隔离 dsh-web 验收
 ```
 
 隔离验收只使用独立 `DSH_HOME`、本仓真实快照夹具与本机已装宿主；不访问网络、不改真实 `~/.dsh`、不重启桌面宿主。

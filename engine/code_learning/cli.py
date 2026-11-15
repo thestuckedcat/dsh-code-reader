@@ -159,6 +159,21 @@ def build_parser() -> argparse.ArgumentParser:
     view_end_to_end.add_argument("--workspace", required=True, metavar="WID")
     view_end_to_end.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
     view_end_to_end.add_argument("--entry", dest="entry_ref", required=True, metavar="ENTRY")
+    view_end_to_end.add_argument(
+        "--root",
+        dest="root_ref",
+        default=None,
+        metavar="ROOT",
+        help="Optional subflow root function ref; adds a root->entry breadcrumb.",
+    )
+
+    view_interfaces = subparsers.add_parser(
+        "view-interfaces",
+        help="Rule-based basic interface library candidates (S2b).",
+    )
+    view_interfaces.add_argument("--workspace", required=True, metavar="WID")
+    view_interfaces.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_interfaces.add_argument("--entry", dest="entry_ref", default=None, metavar="ENTRY")
 
     view_file_tree = subparsers.add_parser(
         "view-file-tree", help="Files referenced by the snapshot evidence."
@@ -342,6 +357,7 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
         "view-file-tree",
         "view-file-read",
         "view-sequence",
+        "view-interfaces",
     ):
         from . import five_views
 
@@ -355,7 +371,11 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
             )
         if command == "view-end-to-end":
             return five_views.end_to_end(
-                state, args.workspace, args.snapshot_ref, args.entry_ref
+                state,
+                args.workspace,
+                args.snapshot_ref,
+                args.entry_ref,
+                root_ref=args.root_ref,
             )
         if command == "view-file-tree":
             return five_views.file_tree(state, args.workspace, args.snapshot_ref)
@@ -367,6 +387,10 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
                 args.repo_id,
                 args.path_ref,
                 max_lines=args.max_lines,
+            )
+        if command == "view-interfaces":
+            return five_views.interfaces(
+                state, args.workspace, args.snapshot_ref, args.entry_ref
             )
         return five_views.sequence_static(
             state,

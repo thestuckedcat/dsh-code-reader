@@ -267,3 +267,148 @@ S4 目标验证/性能、OS 出口）如实列出。分层：`demo_observed` Dem
 挂载-卸载-二次挂载）。另：引擎 `Ran 261 tests, OK`、Node `83/83`。dsh-web 逐视图证据见
 `evidence/five-views/`（`verification.json`、五视图截图、`main.png`、`host-runtime.json/tap`、`commands.log`）。
 S2a 未实现能力（组折叠、接口库、AI 归纳、运行观测、场景执行）继续以面板 gaps 显示，未写成已通过。
+
+## 10. S2b 增量契约：组折叠、基础接口库、子流程与面包屑（CW-06/CW-07/CW-09）
+
+S2b 在 S2a 之上增加三项能力，其余 DTO/钩子保持兼容（只加字段，不改既有字段含义）。
+
+### 10.1 端到端图 `groups`（CW-06）
+
+`view.endToEnd` 响应新增：
+
+```jsonc
+"groups":[{
+  "group_id":"group:f_owner:g1","parent_group_id":null,
+  "label":"dispatch_transfer 下游子流程","description":"由 submit_buffered、submit_direct 组成（仅被 dispatch_transfer 调用）",
+  "member_node_ids":["fn:f_…","fn:f_…"],"member_function_ids":["f_…","f_…"],
+  "entry_node_ids":["fn:f_…"],"exit_node_ids":["fn:f_…"],
+  "collapsed_default":true,"origin":"structural_heuristic",
+  "evidence_ids":["e_…"],
+  "limitations":["group_structural_heuristic","group_name_not_semantic"]}
+],
+"grouping":{"algorithm":"private_callee_subflow","groups":2,"members":4,
+            "gaps":[{"code":"group_semantics","status":"degraded",
+                     "reason":"组由单入口私有子图结构产生，名称/描述为结构归纳而非语义理解，可由用户修订"}]}
+```
+
+派生规则（确定性，engine 实现）：
+1. 对端到端投影中的每个**非入口、非外部**函数 `F`，令 `P(F)` = `F` 的直接 callee 中
+   **在投影内只有 `F` 一个调用者**、且本身是 process 节点的函数。
+2. `|P(F)| ≥ 2` 时生成组 `G(F)`：`group_id = group:<F_id>:<members 排序后短哈希>`；
+   `member_node_ids` 为 `P(F)` 对应节点；`entry_node_ids` = 被至少一个组外节点指向的成员，
+   `exit_node_ids` = 从成员出发指向组外的边源节点。`parent_group_id`：若 `F` 本身是某组 `G'` 的成员，
+   则指向 `G'`（支持嵌套）；否则 `null`。
+3. `label = "<F.name> 下游子流程"`；`description` 列出成员名与“仅被 F 调用”；两者均为
+   `structural_heuristic`，用户可修订（见 10.3）。组数 ≤50、成员总数 ≤节点数；超出截断并置 `truncated`。
+4. **边不合并**：原 `edges` 保持 S2a 形状与 id；折叠是**客户端投影**，跨组边映射到组端口时保留原
+   `edge_id/certainty/label/evidence_ids/limitations`，展开后恢复。共享函数（多调用者）永不入组，
+   保持在图上作为独立节点（公共函数只维护一份实现）。
+5. 组仅作为视图辅助；不改变调用事实、不新增语义推断。
+
+### 10.2 基础接口库 `view.interfaces`（CW-07）
+
+新端点：`view.interfaces` → 引擎 `view-interfaces --workspace W --snapshot S [--entry E]`（E 可选：
+
+```jsonc
+{"schema_version":1,"snapshot":{…},"selection":{…},
+ "candidates":[{
+   "interface_id":"iface:f_…","function_id":"f_…","name":"platform_write",
+   "file":"platform.c","line":19,"signature":"int (unsigned int, unsigned int)",
+   "parameters":[{"name":"address","type":"unsigned int"},{"name":"value","type":"unsigned int"}],
+   "return_type":"int","call_count":1,
+   "callers":[{"function_id":"f_…","name":"write_doorbell","file":"bus.c","line":110,
+               "callsite_id":"c_…","location":{"file":"bus.c","line":113}}],
+   "leaf":true,"cross_file":true,
+   "field_accesses":[{"access":"write","field_name":"simulated_doorbell","certainty":"exact",
+                      "location":{"file":"platform.c","line":25},"limitations":[]}],
+   "input_guards":[{"callsite_id":"c_…","file":"bus.c","line":113,"expression":"if (…)…"}],
+   "decoupling":"independent|mixed|unknown",
+   "reasons":[{"code":"leaf_callee","label":"无已解析出边"},{"code":"cross_file_boundary","label":"跨文件被调用"},
+              {"code":"stable_signature","label":"签名/入参/返回值完整"},
+              {"code":"side_effects_present","label":"存在字段写副作用"}],
+   "score":42,"certainty":"may","evidence_ids":["e_…"],
+   "limitations":["candidate_rule_based_not_semantic"]}],
+ "external_boundaries":[{"callee":"trace","call_count":13,"callsite_ids":["c_…"]}],
+ "gaps":[…],"truncated":false}
+```
+
+规则：候选池 = 快照函数（有 `--entry` 时限定入口邻域）中**被至少 1 条已解析调用边指向**、非入口根、
+签名/返回值完整者；`leaf`= 无已解析出边；`cross_file`= 存在与自身不同文件的调用者；
+`decoupling`：`independent` = leaf 且**无写类字段访问**且签名完整（读静态表/入参校验允许）；`mixed` = leaf 但
+存在写类副作用（write/rmw/init/deinit/alloc/free/acquire/release），或非 leaf 但签名完整、可作为复杂接口
+黑盒；`unknown` = 证据不足（非 leaf 且无稳定签名/调用信息）。`score` 为可解释权重（independent +5、
+cross_file +3、callers≥2 +2、无字段访问 +2、写类副作用 -1；同分按 name）。
+`reasons` 至少含证据说明；`input_guards` 取指向该函数的 callsite guards。排序 `score` 降序 + name；≤100。
+**全部 `certainty:"may"`，是规则候选不是语义断言**；接口库加入/移出是客户端展示覆盖，不写入快照/源码。
+
+### 10.3 客户端行为（S2b）
+
+- **组折叠**：`[data-graph-group][data-group-id][data-collapsed]` 矩形组框；组内节点/内部边隐藏，
+  跨组边接到组端口（左右端口按方向）；`[data-group-toggle]` 单组切换；`[data-graph-expand-all]`/
+  `[data-graph-collapse-all]`；折叠/展开保持节点拖拽位置与选中；展开后原边 id/标签/条件恢复。
+- **组名/描述修订**：组框双击（或编辑按钮）出现输入框，修订仅存当前会话 view 状态
+  （`groupOverrides`），显示“已修订（结构归纳）”标记；刷新数据保留修订；不改引擎快照。
+- **基础接口库**：左栏可折叠区 `[data-interface-library]`，候选卡
+  `[data-interface-candidate][data-interface-id]` 显示签名/入参/返回/理由/副作用/入参 guard；
+  `[data-interface-action="add|remove"]` 加入/移出；加入后端到端图与文字树把该函数渲染为
+  `[data-blackbox-node][data-interface-id]` 黑盒（显示接口卡摘要、隐藏其下游子流程/子树），
+  “展开原有步骤”后恢复；外部边界单独列表只读展示。
+- **子流程与面包屑（CW-09）**：详情面板增加 `[data-code-view="details-tab"][data-tab="source|subflow|resources"]`；
+  子流程 tab 调用 `view.endToEnd {entry: selectedFunctionId, root: currentRootEntryId}`，响应新增
+  `breadcrumb:[{function_id,name,file,line,callsite_id?}]`（engine 从 `root` 到 `entry` 的调用路径，最多 20 跳；
+  无路径时 `[]` + gap `breadcrumb_unavailable`）；`[data-breadcrumb] [data-crumb=…]` 点击：
+  根入口 → 回同一张主图（同一 `view.endToEnd` 缓存数据），中间节点 → 以其为 root 的子流程。
+- **AI 归纳**：详情仍显示“AI 归纳未接入”gap，不伪造正文。
+- 组/接口库/面包屑动作全部写入共享 `Selection` 的扩展字段：`group_id`、`interface_id`、`subflow_root_id`
+  （可为 null；旧字段不改）。
+
+### 10.4 DOM 钩子（S2b 新增）
+
+`[data-code-view="end-to-end"] [data-graph-group][data-group-id][data-collapsed="true|false"]`、
+`[data-group-toggle]`、`[data-graph-collapse-all]`、`[data-graph-expand-all]`；
+`[data-code-view="interface-library"]`、`[data-interface-candidate][data-interface-id]`、
+`[data-interface-action="add|remove"]`、`[data-interface-card]`；
+`[data-blackbox-node][data-interface-id]`、`[data-blackbox-expand]`；
+`[data-code-view="details-tab"][data-tab]`、`[data-code-view="subflow"]`、`[data-breadcrumb] [data-crumb]`；
+`[data-code-view="selection"]` 追加 `group_id/interface_id/subflow_root_id`。
+
+### 10.5 dsh-web S2b 验收（`node tools/verify-s2b.mjs --with-repo-tests`）
+
+1. 五视图 S2a 全部回归通过（含 console error=0、无绝对路径）。
+2. 组：`bus_send` 端到端图出现 ≥2 组（dispatch_transfer 下游、commit_transfer 下游）；
+   折叠一组后成员节点消失且出现 `[data-graph-group]`，跨组边数与原口径一致（按组端口映射），
+   展开后原边 id/标签恢复；一键折叠/展开可用；组名可修订并显示已修订标记。
+3. 接口库：候选含 `platform_write`（跨文件/有副作用）与 `lookup_route`/`check_length`/`encode_doorbell`
+   中至少 2 个 independent 候选；加入 `platform_write` 后端到端图出现 `[data-blackbox-node]`，
+   移出后恢复原节点；接口卡显示入参/返回/理由/副作用。
+4. 子流程/面包屑：选中 `check_length` 打开子流程 tab → 展示以其为入口的图；`[data-breadcrumb]` 含
+   `bus_send → check_length`；点击根 crumb 回到主图（原节点/边恢复）。
+5. 截图 `evidence/s2b/{groups,interfaces,subflow}.png` + 主图；证据 JSON `evidence/s2b/verification.json`
+   （layers/checks/not_verified/commands/limitations）；`out_of_scope_not_verified` 保留 S3/S4/性能/AI 等。
+
+### 10.6 文件所有权（S2b）
+
+| 负责人 | 写入范围 |
+|---|---|
+| Lead | `docs/`、`source.lock.json`、最终集成/提交、`evidence/s2b/` 汇总 |
+| engine | `engine/code_learning/five_views.py`、`cli.py`、`engine/tests/test_five_views.py` |
+| host | `lib/view-service.mjs`、`tests/node/view-rpc.test.mjs`（新增 view.interfaces；endToEnd 增加可选 root） |
+| client | `bundle/client.js`、`tests/node/client.test.mjs`、`tests/node/helpers/client-harness.mjs` |
+| verifier | `tools/verify-s2b.mjs`、`tools/s2b-probe.cjs`（新）、`evidence/s2b/` |
+
+跨范围修改先经 Lead；不 git 提交；不联网；不改真实 `~/.dsh`；不重启桌面宿主。
+
+## 11. 本轮验收结果（2026-11-15，S2b）
+
+`node tools/verify-s2b.mjs --with-repo-tests`：`ok=true, verified=true`，**41/41 检查通过**，
+`in_scope_not_verified=[]`；`out_of_scope_not_verified` 4 类（AI 归纳正文、S3 场景/运行观测、S4 Linux/CFG/
+性能、OS 出口）。分层：`demo_observed` Demo 8/8、`atlas_snapshot` S2a 六端点 + `view.interfaces` +
+`view.endToEnd groups/breadcrumb` 真实 Python、`dsh_host` 隔离 rc.5 web（boot graph/bundle 前缀/401 准入/
+旧 4+S2a 6+S2b 2 端点/Chromium 组折叠与接口库与子流程/S2a+S1 回归/Cordis 挂载-卸载-二次挂载）。
+关键 dsh-web DOM：groups=2（31 条原边不合并、折叠后跨组边保留原 edge id/certainty/label、展开精确恢复）、
+接口库 10 候选（platform_write mixed+cross_file+副作用；3 independent；add 黑盒/remove 恢复）、
+breadcrumb `bus_send→check_length` 与根 crumb 回主图、Selection 追加 `group_id/interface_id/subflow_root_id`、
+console error=0、无绝对路径。另：引擎 `Ran 267 tests, OK`、Node `96/96`。证据见 `evidence/s2b/`
+（`verification.json`、`groups.png`/`interfaces.png`/`subflow.png`/`main.png`、S2a 回归截图、
+`host-runtime.json/tap`、`commands.log`、README）。S2b 未实现能力（AI 归纳正文、运行观测、场景执行）继续以
+gaps 显示，未写成已通过。
