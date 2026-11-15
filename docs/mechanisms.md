@@ -2,15 +2,15 @@
 
 版本 `MECH-04-2`，2026-11-15。本文按[机制说明合同](../../docs/mechanism-document-contract.md)交付：以 **场景→触发→输入与前置条件→判断规则→工具动作→状态/输出→证据→失败与恢复** 为主线，解释为什么这样设计、代价与已知限制，并区分 **skill 可调策略** 与 **plugin/Host/引擎必须执行的硬边界**。
 
-**覆盖的交付**：首版 `CL-IMPL-1`（2026-11-07，登记/源码证据/快照/路径/记录/resume/6 工具/skill）+ `CL-VIEW-T1` 只读工作台切片（CW-T1）+ `CW-T2` 五视图 S2a / 组折叠·接口库·子流程 S2b + `CW-T3` 受控场景 S3a / 回退·轨迹导入 S3b + `CW-T4A` S4-prep（AI 归纳 CW-09、性能实测 A11、Linux 可移植性探测）。本文覆盖 2026-11-15 最终交付（T37 批量首屏验收；基线提交 `0098942` + T35–T37 增量）；`view.firstScreen` 已**验证通过**、首屏预算已达标（见 M-04-22、§12.2 与[五视图契约 §12](five-view-contract.md)）；**S4 目标门禁仍未验证**，见证据边界。
+**覆盖的交付**：首版 `CL-IMPL-1`（2026-11-07，登记/源码证据/快照/路径/记录/resume/6 工具/skill）+ `CL-VIEW-T1` 只读工作台切片（CW-T1）+ `CW-T2` 五视图 S2a / 组折叠·接口库·子流程 S2b + `CW-T3` 受控场景 S3a / 回退·轨迹导入 S3b + `CW-T4A` S4-prep（AI 归纳 CW-09、性能实测 A11、异步/IRQ 事件边界、Linux 可移植性探测）。本文覆盖 2026-11-15 最终交付（T37 批量首屏收口提交 `69a1173` + 异步/IRQ 增量）；`view.firstScreen` 已**验证通过**、首屏预算已达标（见 M-04-22、§12.2 与[五视图契约 §12](five-view-contract.md)）；异步/IRQ 事件边界已**验证通过**（M-04-33、[场景契约 §11](scenario-contract.md)）；**S4 目标门禁仍未验证**，见证据边界。
 
 ## 证据边界（先读，不得改写为已通过）
 
-1. **本版只覆盖 2026-11-15 最终交付**。已知测试：**313 Python unittest、191 Node 测试、Demo 8/8**（本轮独立复跑：引擎 `Ran 313 tests, OK`、Node `191/191`）；隔离 dsh-web 阶段验收 S1 `26/26`、S2a `37/37`、S2b `41/41`、S3a `43/43`、S3b `58/58`、AI 归纳 `49/49`；性能实测 **25/25 全绿**（含批量首屏/`coupling_aux` 一致性与 5 项回归），`ok=true, verified=true`。
+1. **本版只覆盖 2026-11-15 最终交付**。已知测试：**318 Python unittest、195 Node 测试、Demo 8/8**（本轮独立复跑：引擎 `Ran 318 tests, OK`、Node `195/195`）；隔离 dsh-web 阶段验收 S1 `26/26`、S2a `37/37`、S2b `41/41`、S3a `43/43`、S3b `58/58`、AI 归纳 `49/49`；性能实测 **25/25 全绿**（含批量首屏/`coupling_aux` 一致性与 5 项回归）；**异步/IRQ 事件边界 34/34 全绿**（`in_scope_not_verified=0`、`out_of_scope=5`），均 `ok=true, verified=true`。
 2. **S4 目标门禁未验证**：真实 Linux/Kbuild 索引与生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证全部**未验证**。`evidence/s4-feasibility/` 只是 Linux 可移植性探测，`verification.json` 明确 `verified=false`；不得据 Node/Wasm 在 Linux 上跑通推断内核分析已通过。
 3. **首屏性能预算已达标（最终验收）**：500/800 图 hot 首屏 p50/p95 = **328–330/382–387 ms ≤ 500 ms**（历史：T27 基线 1078/1141 → T28 优化 646/704 → T33 批量首屏无 aux 455/527 → T37 `coupling_aux` 后 328–330/382–387）；`verify-perf` **25/25 全绿**、layers 全 true、`ok=true/verified=true`，预算未调整。剩余 not_verified 4 项（cold UI 20 冷样本、tree→file 行高亮、拖动反馈、2000/10k UI「已截断」文本）如实保留；本轮数字只对本机/本版本有效。
 4. **批量首屏 `view.firstScreen` 已验证**（[五视图契约 §12/§12.4](five-view-contract.md)）：最终 `node tools/verify-perf.mjs --with-repo-tests` **25/25 全绿**；20/20 hot 样本中 `[data-first-screen]` 共 60 处全部 `batch`（fallback=0）；`coupling_aux` 一致性 **8/8**（view!=coupling 时 CLI 5/5 视图与单独 `view-coupling` 逐字段一致、RPC 5/5 一致；view==coupling 省略 aux 且 `sizes.coupling_aux=0`；`sizes` 4 键精确、aux 计入 480 KiB；未知 view→`INVALID_ARGUMENT`（优先于 entry）、未知 entry→`NOT_FOUND`；CLI/RPC 无绝对路径）；client 消费 aux 后 0 次单独 coupling RPC，缺失/格式错回退。证据 `evidence/perf/{verification.json,first-screen-consistency.json}`。
-5. **已验证范围的边界**：所有 `dsh_host` 层证据来自本机 pinned DSH `0.2.1-rc.5` 的**隔离 profile**（独立 `DSH_HOME`，不改真实 `~/.dsh`、不重启桌面宿主，Windows）；`atlas_snapshot` 层来自 Atlas 0.8.0 自带 Windows runtime 对**合成 C/Demo C** 的产物；`demo_observed` 层来自 Demo 的 Wasm 模拟。真实用户仓库、真实设备/硬件、目标 ABI、Linux 桌面宿主、桌面宿主热更新、OS 级出口认证均**未验证**。
+5. **已验证范围的边界**：所有 `dsh_host` 层证据来自本机 pinned DSH `0.2.1-rc.5` 的**隔离 profile**（独立 `DSH_HOME`，不改真实 `~/.dsh`、不重启桌面宿主，Windows）；`atlas_snapshot` 层来自 Atlas 0.8.0 自带 Windows runtime 对**合成 C/Demo C** 的产物；`demo_observed` 层来自 Demo 的 Wasm 模拟。真实用户仓库、真实设备/硬件、目标 ABI、Linux 桌面宿主、桌面宿主热更新、OS 级出口认证均**未验证**；异步/IRQ 只做**声明式边界标记**（profile/导入轨迹声明→`async` 标记→UI chip），**不推断**真实硬件中断/因果（`out_of_scope`）。
 6. **三层证据不得互相冒充**：`demo_observed`（Wasm/JS 行为模型）、`atlas_snapshot`（真实 Atlas 0.1 静态快照 + 真实 Python 投影）、`dsh_host`（隔离真实宿主/浏览器行为）分层记录在任何证据 JSON 与 UI 标签中；没有运行的项只进 `not_verified`。
 7. 设计文档中的“未来合同”不等于已实现；本文对每个机制给出实际证据与未验证项，候选改进只写成假设。
 
@@ -36,7 +36,7 @@
 | M-04-14 | 预测/观察/决策的 pending 规则 | 硬边界 | `learning.py`、`records.py` | `test_records.py::DraftValidationTests`、`test_verifier_regressions.py::RecordClaimTest`、`test_skill_contract.py` |
 | M-04-15 | resume 失效重核与事件消费 | 硬边界 | `invalidation.py`、`scope.py` | `test_invalidation.py`（25）、`test_verifier_regressions.py::SourceManifestJunctionTest` |
 | M-04-16 | 编译/Atlas 执行阻断 | 硬边界 | `service.py`、`cli.py` | `test_cli_journey.py::test_plan_is_reference_only_and_run_is_blocked` |
-| M-04-17 | 工具注册、固定 argv 桥、技能分发 | 硬边界 + 预算可调 | `index.js`、`lib/{bridge,config,skills,tools}.mjs` | `tests/node/{bridge,plugin}.test.mjs`；7 个 `code_*` 工具（首版 6 个 + S4-prep `code_summary`）、191 Node 测试；Cordis `host-runtime.tap` 1/1；`evidence/plugin-install-verification.json`（首版安装旅程） |
+| M-04-17 | 工具注册、固定 argv 桥、技能分发 | 硬边界 + 预算可调 | `index.js`、`lib/{bridge,config,skills,tools}.mjs` | `tests/node/{bridge,plugin}.test.mjs`；7 个 `code_*` 工具（首版 6 个 + S4-prep `code_summary`）、195 Node 测试；Cordis `host-runtime.tap` 1/1；`evidence/plugin-install-verification.json`（首版安装旅程） |
 | M-04-18 | 学习编排 skill（阅读顺序/讲解/停止/归纳写入） | skill 可调 | `skills/learn-code-workspace/` | `test_skill_contract.py`（19 条款）；`evidence/*/verification.json` 的回归层 |
 | M-04-19 | 只读工作台 RPC 载体与准入 | 硬边界 | `index.js`、`lib/http-rpc.mjs`、`lib/view-service.mjs`、`bundle/client.js` | `evidence/readonly-slice/verification.json`（26/26、401 准入、71 boot 条目、bundle 精确前缀）；`host-runtime.tap` 1/1 |
 | M-04-20 | 只读读模型、五视图投影与共享 Selection | 硬边界（派生/预算）+ 展示可调 | `engine/code_learning/views.py`、`five_views.py`、`lib/view-service.mjs`、`bundle/client.js` | `evidence/five-views/verification.json`（37/37）；五视图截图；`test_views.py`（18）、`test_five_views.py`（31） |
@@ -47,11 +47,12 @@
 | M-04-25 | 边界打桩与失败传播 | 硬边界 + 场景可调 | `scenario.py`、`lib/sim-worker.mjs`、`bundle/client.js` | `evidence/s3/`（`set_platform_stub(-5)` → -5、无 WRITE、LOCK 1→0）；`evidence/scenario-sim/README.md` |
 | M-04-26 | 回退末尾 N 次与前缀重放 | 硬边界 | `scenario.py`、`lib/scenario-service.mjs`、`bundle/client.js` | `evidence/s3b/verification.json`（58/58：memory_digest 逐条一致、`undo.state_digest_verified`、count=99 拒绝） |
 | M-04-27 | 轨迹导入（只读台账） | 硬边界 | `scenario.py`、`lib/scenario-service.mjs` | `evidence/s3b/`（`scn_982682c88e20` imported 幂等；3418 B sha256 `8860df51…`；undo 禁用） |
-| M-04-28 | 运行观测时序（observed） | 硬边界（证据分级）+ 展示可调 | `scenario.py`（`view-sequence-observed`）、`lib/scenario-service.mjs`、`bundle/client.js` | `evidence/s3/`（observed 20 消息）；`evidence/s3b/`（多场景选择/imported 标记/前缀 6 消息） |
+| M-04-28 | 运行观测时序（observed） | 硬边界（证据分级）+ 展示可调 | `scenario.py`（`view-sequence-observed`）、`lib/scenario-service.mjs`、`bundle/client.js` | `evidence/s3/`（observed 20 消息）；`evidence/s3b/`（多场景选择/imported 标记/前缀 6 消息）；`evidence/async-irq/`（IRQ async 标记，M-04-33） |
 | M-04-29 | AI 归纳（Agent 写入/签名/失效） | 硬边界 + 内容 skill 可调 | `engine/code_learning/summary.py`、`lib/tools.mjs`（`code_summary`）、`lib/view-service.mjs`、`bundle/client.js` | `evidence/ai-summary/verification.json`（49/49：gap→put→UI 展示、非法 put 拒绝、group subject、Cordis TAP 1/1） |
 | M-04-30 | 性能实测口径与首屏预算 | 测量机制（非产品路径，**已验收**） | `tools/verify-perf.mjs`、`tools/perf-probe.cjs`、`tools/perf/*`、`tools/firstscreen-consistency.mjs` | `evidence/perf/verification.json`（25/25 全绿；hot p50/p95 328–330/382–387 ms ≤500 ✅；coupling p95 3 ms；历史 646/704→455/527→328–330/382–387；not_verified 4 项如实） |
 | M-04-31 | S4 Linux 可移植性探测与不可声明项 | 待验证门禁（只记录） | `evidence/s4-feasibility/`、`source.lock.json` | `evidence/s4-feasibility/verification.json`（Node 164/164、Wasm worker 8/8、Python 3.8 引擎单测 255 errors、Windows 快照被拒绝；`ok=true, verified=false`） |
-| M-04-32 | 分层证据与隔离 dsh-web 验收门禁 | 硬边界（证据纪律） | `tools/verify-*.mjs`、`tools/*-probe.cjs`、`evidence/*/verification.json` | S1..AI 6 阶段 + 性能 **25/25** 均 `ok=true, verified=true`；`in_scope_not_verified` 如实（perf 4 项）；pinned 宿主 SHA 门禁 |
+| M-04-32 | 分层证据与隔离 dsh-web 验收门禁 | 硬边界（证据纪律） | `tools/verify-*.mjs`、`tools/*-probe.cjs`、`evidence/*/verification.json` | S1..AI 6 阶段 + 性能 **25/25** + 异步/IRQ **34/34** 均 `ok=true, verified=true`；`in_scope_not_verified` 如实（perf 4 项、async 0 项）；pinned 宿主 SHA 门禁 |
+| M-04-33 | 异步/IRQ 事件边界（声明→校验→observed 标记→UI；不推断中断发生） | 硬边界 + 展示可调（**已验收**） | `engine/code_learning/scenario.py`、`bundle/client.js`、`tools/verify-irq.mjs` | `evidence/async-irq/verification.json`（34/34、layers 全 true、`in_scope_not_verified=0`；真实 Wasm `bus_irq`→IRQ、observed `async:true`、dsh-web `[data-sequence-async]`+“异步”chip/说明；非法声明拒绝不写）；sha256 `38080909…` |
 
 ---
 
@@ -61,7 +62,7 @@
 
 1. **模型侧学习**：Agent 在“已登记 workspace”上回答“某个 ioctl / 调用链 / 对象生命周期 / 同步路径如何工作”，必须能回到**真实源码行**与**已核验快照边**，区分 exact/may/unknown/source_text，并保留用户自己的预测与观察（`CL-IMPL-1`）。
 2. **浏览器侧只读工作台**：人在 DSH 侧边栏看同一份已核验快照的入口、源码、资源读写、五视图、组/接口库/子流程，并与模型共享同一选择标识（CW-T1/T2）。
-3. **受控模拟观测**：在没有真实设备/编译器的情况下，对**已登记且可信**的 Wasm 模拟 profile 执行用户在 UI 里编排的有序接口调用，落不可变台账，得到 observed 时序；支持边界打桩、失败传播、回退前缀重放与只读轨迹导入（CW-T3）。
+3. **受控模拟观测**：在没有真实设备/编译器的情况下，对**已登记且可信**的 Wasm 模拟 profile 执行用户在 UI 里编排的有序接口调用，落不可变台账，得到 observed 时序；支持边界打桩、失败传播、回退前缀重放与只读轨迹导入（CW-T3）；另支持异步/IRQ 事件的声明式边界标记（M-04-33，不推断中断发生）。
 4. **AI 归纳缓存**：Agent 基于已核验证据写 ≤500 字归纳，工作台详情展示并标 generator/事实引用/stale；**插件自身不调用模型**（CW-09）。
 5. **可复核的证据链**：所有能力按阶段在隔离 dsh-web 中黑盒验收，输出分层 `verification.json`，未验证项单列（CW-11/A11、S4-prep）。
 
@@ -109,6 +110,7 @@
 8  用户编排步骤 → 运行 ────────► scenario-plan → scenario-module → worker_threads(Wasm, env.trace)
                                   → scenario-record（代次 CAS/不可变台账）→ 台账投影
 9  observed 时序 / undoTail / trace.import（obs=台账；undo=前缀重放+digest 核验；import=只读）
+   异步/IRQ：profile/导入轨迹声明 async_events → observed 事件标 async:true → UI「异步」chip/说明（不推断中断发生）
 10 Agent code_summary put ─────► 校验+签名+graph sha 绑定 → summary 缓存；UI 只读展示/stale 标记
 11 证据：tools/verify-*.mjs 在隔离 dsh-web 产出 evidence/<stage>/verification.json（分层/not_verified）
 12 取消/部分完成/恢复：abort→OUTCOME_UNKNOWN（不落台账）；预算/能力缺失→gaps/truncated；stale→重新导入/复核
@@ -146,7 +148,7 @@
 
 ### 4.1 基础机制 M-04-01..18（保留并更新证据）
 
-以下机制在 2026-11-15 仍有效；测试计数统一更新为 **313 Python / 191 Node / Demo 8/8**，每节列出场景/判断/证据/失败恢复/可调与限制。**类别与主要代码位置见 §0 总表**；**参数范围见 §6**、**规则间依赖见 §7**、**最小验证命令见 §8**（按节内文件名即可定位到对应测试模块）。
+以下机制在 2026-11-15 仍有效；测试计数统一更新为 **318 Python / 195 Node / Demo 8/8**，每节列出场景/判断/证据/失败恢复/可调与限制。**类别与主要代码位置见 §0 总表**；**参数范围见 §6**、**规则间依赖见 §7**、**最小验证命令见 §8**（按节内文件名即可定位到对应测试模块）。
 
 - **M-04-01 可信 bootstrap 与 scope 根表（硬边界）**。**场景**：Agent 要读“某个仓库”，但不能自决读整块磁盘。**触发**：每次 CLI 调用前由 `--bootstrap`/`CODE_READER_BOOTSTRAP`/`$DSH_HOME/code-reader/bootstrap.json` 解析。**输入与前置**：`BootstrapConfigV1{schema_version:1, profile_ref, scope_ref, scope_generation, state_dir, import_inbox_dir, output_root, candidate_roots[{root_ref,absolute_path,read_grant_ref}]}`，由人工 `bootstrap-init` 创建，已存在拒绝覆盖（`STATE_CONFLICT`）。**判断**：绝对路径/字段白名单、`root_ref` 唯一、state/inbox/output 必须存在；模型参数永不出现绝对路径。**动作/状态**：`State` 持有 layout、HMAC secret（首次 0600）、workspace 锁、operation 幂等文件、snapshot 索引。**输出**：`state_root`/`inbox_dir`/`output_root`/candidate roots。**失败恢复**：缺失→`CONFIG_UNAVAILABLE`(exit 2)，人工修 bootstrap，不自动重建。**可调**：何时调用；**不可调**：根表/secret。**最小验证**：`cd engine && python -m unittest discover -s tests -p "test_workspace.py" -v`。**代价**：一次人工配置换“模型无法扩权”。
 
@@ -180,11 +182,11 @@
 
 - **M-04-16 编译/Atlas 执行阻断（硬边界）**。**规则**：`plan` 只做数据/摘要与固定 Atlas 0.8 argv 形状（引用字符串、不 embedding 绝对 host 路径、不执行）；`plan_id` 是签名令牌（TTL 600s）；`run` 校验签名/过期后**始终**返回 `EXECUTION_BLOCKED`（exit 2），因为未提供强制隔离 execution profile；没有裸跑 compiler probe/Atlas/CMake 的路径。**证据**：`test_cli_journey.py::test_plan_is_reference_only_and_run_is_blocked`。**恢复**：真实执行需未来固定 Linux 隔离 runner + 固定 Atlas runtime + 授权（未实现）。**重要区分**：CW-T3 的“受控场景执行”（M-04-23..28）是**受控 Wasm 模拟**，不是编译/Atlas/用户代码执行，不改变本机制的阻断。
 
-- **M-04-17 工具注册、固定 argv 桥、技能分发（硬边界 + 预算可调）**。**触发**：插件 bundle `apply(ctx, config)` 激活。**规则**：`inject=['tools','skills']`；`ctx.effect` 注册/清理；`ctx.tools.register` 注册 **7 个** `code_*`（首版 6 个，S4-prep 增加 `code_summary`：`code_workspace/overview/source/snapshot/path/learn/summary`）；`ctx.skills.registerProvider` 扫描 `skills/*/SKILL.md`（frontmatter/rank=550/source=custom）。每次工具调用→`lib/bridge.mjs` 解析 Python（配置 `pythonPath`/`DSH_CODE_READER_PYTHON`/`python3`/`python`，探测 `--version` 并要求 3.11+，旧 3.x 判 `DEPENDENCY_UNAVAILABLE`）→`spawn(python,['-m','code_learning.cli','--bootstrap',…,固定 argv])`，`cwd=engine/`，**无 shell**；环境变量白名单、剥离 API key 等凭据；stdout 必须是一个 JSON（>8 MiB 截断保护）；域内错误以 `{schema_version,ok,exit_code,cli}` 返回；spawn/超时/取消抛 `BridgeError`（超时=`OUTCOME_UNKNOWN/4`）。工具层参数只填 typed slots，不能提供可执行文件、cwd、根表、bootstrap；插件内**串行**化 CLI 调用避免同一 sqlite writer 竞争（这也是首屏性能瓶颈的结构原因，见 M-04-30）。**UI 子插件**：嵌套 Cordis 插件声明 `inject:['connection','webServer']` 挂载 `/code-view` 载体（13 个 view 端点 + 7 个 scenario 端点）；服务缺失时该子插件保持 pending，旧工具不受影响。**输出**：工具值 JSON + RPC 信封。**失败恢复**：`DEPENDENCY_UNAVAILABLE`→配置 `pythonPath`；超时/取消→`OUTCOME_UNKNOWN`，不得当成功。**可调**：`bootstrapPath`、`pythonPath`、`timeoutMs(1000..600000)`、更小查询预算；**不可调**：argv 形状、环境白名单、JSON/退出码合同、写作用域。**证据**：`tests/node/bridge.test.mjs`、`tests/node/plugin.test.mjs`、`tests/node/view-rpc.test.mjs`、`tests/node/scenario.test.mjs`、`tests/node/client.test.mjs`（191 Node 总计）；`evidence/plugin-install-verification.json`；Cordis `host-runtime.tap` 各阶段 1/1（7 工具注册、真实 Python 调用、dispose 注销、二次挂载再注册）。
+- **M-04-17 工具注册、固定 argv 桥、技能分发（硬边界 + 预算可调）**。**触发**：插件 bundle `apply(ctx, config)` 激活。**规则**：`inject=['tools','skills']`；`ctx.effect` 注册/清理；`ctx.tools.register` 注册 **7 个** `code_*`（首版 6 个，S4-prep 增加 `code_summary`：`code_workspace/overview/source/snapshot/path/learn/summary`）；`ctx.skills.registerProvider` 扫描 `skills/*/SKILL.md`（frontmatter/rank=550/source=custom）。每次工具调用→`lib/bridge.mjs` 解析 Python（配置 `pythonPath`/`DSH_CODE_READER_PYTHON`/`python3`/`python`，探测 `--version` 并要求 3.11+，旧 3.x 判 `DEPENDENCY_UNAVAILABLE`）→`spawn(python,['-m','code_learning.cli','--bootstrap',…,固定 argv])`，`cwd=engine/`，**无 shell**；环境变量白名单、剥离 API key 等凭据；stdout 必须是一个 JSON（>8 MiB 截断保护）；域内错误以 `{schema_version,ok,exit_code,cli}` 返回；spawn/超时/取消抛 `BridgeError`（超时=`OUTCOME_UNKNOWN/4`）。工具层参数只填 typed slots，不能提供可执行文件、cwd、根表、bootstrap；插件内**串行**化 CLI 调用避免同一 sqlite writer 竞争（这也是首屏性能瓶颈的结构原因，见 M-04-30）。**UI 子插件**：嵌套 Cordis 插件声明 `inject:['connection','webServer']` 挂载 `/code-view` 载体（13 个 view 端点 + 7 个 scenario 端点）；服务缺失时该子插件保持 pending，旧工具不受影响。**输出**：工具值 JSON + RPC 信封。**失败恢复**：`DEPENDENCY_UNAVAILABLE`→配置 `pythonPath`；超时/取消→`OUTCOME_UNKNOWN`，不得当成功。**可调**：`bootstrapPath`、`pythonPath`、`timeoutMs(1000..600000)`、更小查询预算；**不可调**：argv 形状、环境白名单、JSON/退出码合同、写作用域。**证据**：`tests/node/bridge.test.mjs`、`tests/node/plugin.test.mjs`、`tests/node/view-rpc.test.mjs`、`tests/node/scenario.test.mjs`、`tests/node/client.test.mjs`（195 Node 总计）；`evidence/plugin-install-verification.json`；Cordis `host-runtime.tap` 各阶段 1/1（7 工具注册、真实 Python 调用、dispose 注销、二次挂载再注册）。
 
 - **M-04-18 学习编排 skill（skill 可调）**。**规则**：workspace 优先 9 步（登记/校验→概览→选一个问题→一条证据路径→解释→先预测→最小授权核验→规则/未知→记录/停止）；普通问答直接答、不强制记录/测验；仅用户明确“学完了/复盘”才走完整 11 阶段，未完成字段保持 pending；Next Action ≤1（动作+分钟+完成标准）；K2/K3 无 G/Q 可停；证据分级 exact/may/unknown/source_text；不自动跑构建/测试、不自动写 05、不代填预测。**S4-prep 增量**：可选第 10 步“详情归纳”——用户要工作台详情出现归纳时用 `code_summary put` 写 ≤500 字，必须基于已核验证据、facts 放 evidence/节点引用、候选/未知用 `inference_labels` 标注、无运行台账不得用 `from_observation`、不得伪造正文或把候选写成 exact；插件不会自动调用模型。**可调**：阅读顺序、每次讲多少、何时建记录、是否总结、预算内查询范围、是否/如何写归纳、停止时机。**不可调**：M-04-01/05/08/11/12/13/14/15/16/19/20/23..29 的硬边界（skill 不能绕过 scope、不能把文本当编译事实、不能把 pending 写成 user、不能执行 run、不能伪造 observed/归纳、不能声称未验证通过）。**证据**：`test_skill_contract.py`（19 条款，含六工具/证据分级/resume/复盘/停止/秘密 ref_only）；各阶段 dsh-web 验收把 S1..S4-prep 回归层作为 skill 行为的护栏。**仍需**：独立对话评审实际学习质量（结构测试不等于效果证明）。**打包范围**：仅 `skills/learn-code-workspace/`（SKILL.md + references）；`docs/dsh-code-view-ui/SKILL.md` 是 UI 指导 skill 草案，未打包。
 
-### 4.2 本轮新增机制 M-04-19..32
+### 4.2 本轮新增机制 M-04-19..33
 
 #### M-04-19 只读工作台 RPC 载体与准入（硬边界）
 
@@ -239,7 +241,7 @@
 | 输入与前置 | 契约[五视图契约 §12](five-view-contract.md)：引擎 `view-first-screen --workspace --snapshot --entry [--view <coupling/tree/end_to_end/sequence/file>]`（默认 coupling）；返回 `entry`/`interfaces`/`view_payload`，当 `view!=coupling` 时额外返回 `coupling_aux`（同 `view.coupling` 同参投影）；Host 端点 `view.firstScreen` 输入 `{workspace,snapshot,entry,view?}`（枚举/有界/未知字段拒绝），映射 CLI，`VIEW_ENDPOINTS` 13 个。 |
 | 判断规则 | 一次加载并核验快照，`entry`/`interfaces`/`view_payload`/`coupling_aux` **必须与单独端点逐字段一致**（certainty/gap/预算/标签不得因批量改变）；`--view` 只接受 5 个视图枚举；未知 view→`INVALID_ARGUMENT`（优先于 entry）、未知 entry→`NOT_FOUND`；`view==coupling` 时省略 `coupling_aux`（或 null）且 `sizes.coupling_aux=0`；`sizes` 固定 4 键 `{entry,interfaces,view,coupling_aux}` 且值为各组件 canonical JSON 的 UTF-8 字节数；响应总大小引擎侧预算 ≤480 KiB（**含 aux**），超限 `LIMIT_EXCEEDED`（附 sizes），**不做静默裁剪**；client 失败（gap/`LIMIT_EXCEEDED`/旧宿主 404/aux 缺失或格式错）回退单独端点，`data-first-screen="batch 或 fallback"`，ready 仍由真实 payload 决定。 |
 | 工具动作与状态 | 引擎在单进程内一次核验快照并投影；client 优先 1 次 `view.firstScreen`，成功后写 entry/interfaces/view/`coupling_aux` 会话缓存（后续视图切换命中缓存）；`view!=coupling` 时消费 aux 填 rail/缓存 → **0 次单独 coupling RPC**；缺失 aux 时回退原单独请求路径。 |
-| 输出/证据 | 最终验收：`evidence/perf/verification.json`（116,133 B，sha256 `e350ed99fa73072c2493305ef6832021f7c3187dbca9e4669c8b2c9c7358fa0c`；25/25 全绿、layers 全 true、`ok=true/verified=true`；hot p50/p95 **328–330/382–387 ms ≤500 ✅**；20/20 hot 样本 `[data-first-screen]` 共 60 处全部 `batch`、fallback=0）；`evidence/perf/first-screen-consistency.json`（38,950 B，sha256 `8bb859f90f30909d18a7020d706e94172b2005ae056509af5d13568ec7784393`；8/8：CLI 5/5 视图+RPC 5/5 视图逐字段一致、sizes 4 键精确/aux 计入 480 KiB、负例、无绝对路径，duration 8.8 s）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191 + Demo 8/8 全绿。 |
+| 输出/证据 | 最终验收：`evidence/perf/verification.json`（116,133 B，sha256 `e350ed99fa73072c2493305ef6832021f7c3187dbca9e4669c8b2c9c7358fa0c`；25/25 全绿、layers 全 true、`ok=true/verified=true`；hot p50/p95 **328–330/382–387 ms ≤500 ✅**；20/20 hot 样本 `[data-first-screen]` 共 60 处全部 `batch`、fallback=0）；`evidence/perf/first-screen-consistency.json`（38,950 B，sha256 `8bb859f90f30909d18a7020d706e94172b2005ae056509af5d13568ec7784393`；8/8：CLI 5/5 视图+RPC 5/5 视图逐字段一致、sizes 4 键精确/aux 计入 480 KiB、负例、无绝对路径，duration 8.8 s）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191（当次；最终 195/195）+ Demo 8/8 全绿。 |
 | 参数与范围 | 视图枚举 5；sizes 4 键；响应 ≤480 KiB（含 aux）；Host 输入有界；无额外缓存（首屏合并即一次调用）；`LIMIT_EXCEEDED` 走回退。 |
 | 依赖与冲突 | 依赖 M-04-19/20；与单端点共享同一 DTO 形状，若批量/aux 偏离单端点即违约；`coupling_aux` 与 `view.coupling` 同源保证 coupling 视图与左栏资源 rail 一致；失败必须回退，不能把批量失败变成面板失败。 |
 | 失败与恢复 | 旧宿主/引擎不支持→404 或引擎错误→client 回退单独端点；`LIMIT_EXCEEDED` 或 aux 缺失/格式错→回退；批量一致性不放宽（逐字段严格相等，signed `v1.*` evidence_ref 按 claims 归一化、忽略每次签发时间 t）；回退后行为与错误语义不变。 |
@@ -251,15 +253,15 @@
 | 项 | 内容 |
 |---|---|
 | 场景/触发 | 在没有真实设备/编译器的情况下，对可信、可重放的 Wasm 模拟执行有序接口调用，观察行为与资源影响。**触发**：人工/Host 把 `sim-profile.json` 与其 `module.file`（Wasm）放入 bootstrap 可信 `import_inbox_dir`，执行 `sim-profile-import --workspace --variant --repo --profile <inbox 文件名> --operation-id` 登记；之后由**用户**在工作台「打桩模拟」点「运行」触发 Host `scenario.run`。 |
-| 输入与前置 | `SimProfileV1`：`profile_id ^[a-z0-9][a-z0-9._-]{0,63}$`；binding workspace/variant/repo **必须已登记**、snapshot **已导入且与 repo 匹配**；module `file`+`sha256`；interface ≤32、params ≤8、`type ∈ {u32,i32}`、`returns ∈ {i32,void}`、`role ∈ {entry,stub_control,util}`、min/max 必须含类型合法范围；trace import 名 `env.trace`、5 个 i32 参数、events ≤64 大写标识符；`event_resources` 只引用该绑定快照的对象 id（不得伪造）。 |
-| 判断规则 | 引擎校验 Wasm sha256/大小/接口/事件表/资源映射后复制到 `state/sim/` 只读区并签名登记；运行只使用 state 内副本；Host/引擎在 spawn 前再次校验 plan、module sha、steps ≤20、args 与 profile min/max（`INVALID_ARGUMENT`，不产生 Wasm trap）；worker 内再做一次 sha256 防御（`MODULE_HASH_MISMATCH`），未知接口 `UNKNOWN_INTERFACE`。 |
+| 输入与前置 | `SimProfileV1`：`profile_id ^[a-z0-9][a-z0-9._-]{0,63}$`；binding workspace/variant/repo **必须已登记**、snapshot **已导入且与 repo 匹配**；module `file`+`sha256`；interface ≤32、params ≤8、`type ∈ {u32,i32}`、`returns ∈ {i32,void}`、`role ∈ {entry,stub_control,util}`、min/max 必须含类型合法范围；trace import 名 `env.trace`、5 个 i32 参数、events ≤64 大写标识符；`event_resources` 只引用该绑定快照的对象 id（不得伪造）；可选顶层 `async_events`（≤16、去重、必须来自 trace events；见 M-04-33）。 |
+| 判断规则 | 引擎校验 Wasm sha256/大小/接口/事件表/资源映射后复制到 `state/sim/` 只读区并签名登记；运行只使用 state 内副本；Host/引擎在 spawn 前再次校验 plan、module sha、steps ≤20、args 与 profile min/max（`INVALID_ARGUMENT`，不产生 Wasm trap）；worker 内再做一次 sha256 防御（`MODULE_HASH_MISMATCH`），未知接口 `UNKNOWN_INTERFACE`；profile/轨迹的 async_events 声明按 M-04-33 校验（≤16、去重、必须属事件表）。 |
 | 工具动作与状态 | worker 由父进程 `worker_threads` 启动，只通过 `workerData` 拿模块字节/steps/trace 表，**worker 不读文件系统、不联网、无其他 import**（只有 `node:crypto`、`node:worker_threads`），唯一宿主回调是 `env.trace`；父进程不接触 wasm 内存；`execArgv:[]` 防止继承测试参数；资源限制 `maxOldGenerationSizeMb=64`；默认超时 10 s，最大 30 s（Host 总超时 15 s）；超时/取消/崩溃/异常退出→`OUTCOME_UNKNOWN`，**不落台账**。模型-facing 工具没有执行入口。 |
 | 输出/证据 | profile 投影（无绝对路径）、`scenario-module` 给 worker 的模块载荷、运行 records/台账（M-04-24）。证据：`evidence/s3/verification.json`（43/43；profile 7 接口、`bus.wasm` 1547 B sha256 `69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c`、limits `{timeout_ms:10000,steps:20,events_per_step:256}`、19 trace events）；`evidence/scenario-sim/README.md`（来源=Demo 已构建产物原样解码，插件不编译）；`evidence/s4-feasibility/`（Linux 上真实 Wasm worker 8/8）；`tests/node/sim-runner.test.mjs`、`test_scenario.py`。 |
 | 参数与范围 | steps ≤20、args/步 ≤8、总参数 ≤4 KiB；events/步 ≤256；内存 64 MB；worker 超时 10 s（≤30 s）；profile/接口/事件/资源映射上限固定。 |
 | 依赖与冲突 | 依赖 M-04-08/09（绑定快照核验）、M-04-05（签名）、M-04-24（台账）；与 M-04-16 不冲突——它是 Wasm 模拟，不是编译/Atlas/用户代码执行。 |
 | 失败与恢复 | profile 未导入/绑定错/哈希不符→gap 或引擎错误，不执行；worker 超时/崩溃→`OUTCOME_UNKNOWN`、台账不变；未知接口/越界参数→`INVALID_ARGUMENT`，不落台账。 |
 | 最小验证 | `cd engine && python -m unittest discover -s tests -p "test_scenario.py" -v`；`node --test tests/node/sim-runner.test.mjs`；`node tools/verify-s3.mjs --with-repo-tests`。 |
-| 限制/改进假设 | Wasm 模块是 Demo 构建产物，**不证明真实设备/内核行为**；异步/IRQ 因果未建模；真实设备下发需单独授权与运行验证；profile 只能来自可信 inbox（人工），浏览器/模型不能上传或指定路径。 |
+| 限制/改进假设 | Wasm 模块是 Demo 构建产物，**不证明真实设备/内核行为**；异步/IRQ 因果未建模（M-04-33 仅声明式标记）；真实设备下发需单独授权与运行验证；profile 只能来自可信 inbox（人工），浏览器/模型不能上传或指定路径。 |
 
 #### M-04-24 场景 plan/record 台账与代次 CAS（硬边界）
 
@@ -311,8 +313,8 @@
 | 项 | 内容 |
 |---|---|
 | 场景/触发 | 先支持“导入已有轨迹”：外部采集的调用序列作为只读证据进入工作台，用于观测时序对照。触发：人工把轨迹 JSON 放入可信 inbox；工作台「导入轨迹」输入 `inbox 内单文件名` + 点击；Host `trace.import`；引擎 `trace-import`。 |
-| 输入与前置 | `{schema_version:1,kind:'imported_trace',label,profile_id?,snapshot_id,metadata,steps:[{interface,args,status,result,events,memory_digest?,elapsed_ms}]}`；steps 1..200；interface 名 `^[A-Za-z_][A-Za-z0-9_]{0,63}$`；args ≤8 个 32 位整数；event ≤256/step 且名字/字段合法；`memory_digest` 可选 64hex；文件 ≤64 KiB；`snapshot_id` 必须等于命令行 snapshot；若给 `profile_id` 必须已登记且绑定一致。 |
-| 判断规则 | **导入不执行任何代码**；`scenario_id=scn_<digest(snapshot,steps) 前 12>`；台账 generation 首次 1；同一输入再次导入返回当前代（幂等 operation）；ledger 加 `imported:true`、`source:"imported_trace"`、`label`、`metadata`、`observed:true`、limitations `imported_trace_not_executed_by_host`；records 加 `affected_resources=[]`（无 profile 映射时不伪造）+ limitation `resource_effects_unknown_for_imported_trace`、`stubbed=false`；**不提供 undo/重放**。 |
+| 输入与前置 | `{schema_version:1,kind:'imported_trace',label,profile_id?,snapshot_id,metadata,steps:[{interface,args,status,result,events,memory_digest?,elapsed_ms}]}`；steps 1..200；interface 名 `^[A-Za-z_][A-Za-z0-9_]{0,63}$`；args ≤8 个 32 位整数；event ≤256/step 且名字/字段合法；`memory_digest` 可选 64hex；文件 ≤64 KiB；`snapshot_id` 必须等于命令行 snapshot；若给 `profile_id` 必须已登记且绑定一致；可选顶层 `async_events`（≤16、必须属于本轨迹 steps 的事件名；见 M-04-33）。 |
+| 判断规则 | **导入不执行任何代码**；`scenario_id=scn_<digest(snapshot,steps) 前 12>`；台账 generation 首次 1；同一输入再次导入返回当前代（幂等 operation）；ledger 加 `imported:true`、`source:"imported_trace"`、`label`、`metadata`、`observed:true`、limitations `imported_trace_not_executed_by_host`；records 加 `affected_resources=[]`（无 profile 映射时不伪造）+ limitation `resource_effects_unknown_for_imported_trace`、`stubbed=false`；可选 async 声明记入 ledger 并在 limitations 追加 `async_events_declared`（见 M-04-33）；**不提供 undo/重放**。 |
 | 工具动作与状态 | 引擎校验+登记只读台账；Host 只接受 inbox 内普通文件名（≤256，`^[A-Za-z0-9._-]+$`），不接受路径/上传；客户端成功后 observed 选择器出现 imported 台账并选中，显示 `[data-sequence-imported="true"]` 标记/label/limitations，undo 禁用并显示原因。 |
 | 输出/证据 | `evidence/s3b/verification.json`（58/58）：`trace-bus-send.json`（3418 B，sha256 `8860df515c39ae26cf62edfc8da74f454bcc3e65677092a7559aaf6d05d47e06`）导入为 `scn_982682c88e20` generation 1，imported/label/source/observed/limitations、幂等；observed 20 消息含 `bus_send(1,48)`/DOORBELL/WRITE/返回 0；imported undo 被拒（`CAPABILITY_UNAVAILABLE`）；`test_scenario.py`。 |
 | 参数与范围 | steps 1..200（轨迹文件；运行场景 steps ≤20 是另一约束，见 M-04-24）；args ≤8；events ≤256/步；文件 ≤64 KiB；输入名 ≤256 且只允许普通文件名。 |
@@ -331,10 +333,10 @@
 | 工具动作与状态 | 引擎只读台账生成 DTO；client 渲染（`[data-sequence-observed="true"]`、`[data-sequence-message][data-message-kind][data-observed="true"]`、`[data-scenario-id]`、代次/digest、`[data-sequence-imported="true"]`）；Selection 追加 `scenario_id/run_generation/call_id`；静态图/树/资源视图不因运行改变。 |
 | 输出/证据 | `evidence/s3/`（observed 20 条 call/return/access/event，含 `bus_send(1,48)`、DOORBELL/WRITE、平台/设备边界、返回 0；切回 static `observed=false`）；`evidence/s3b/`（多场景切换：prefix 6 消息 / imported 20 消息；`[data-sequence-imported="true"]`；Selection 跟随）；`test_scenario.py`、`tests/node/client.test.mjs`。 |
 | 参数与范围 | 消息数受台账 steps/events 限制（≤20 步、≤256 事件/步）；无分页参数；`scenario` 有界标识。 |
-| 依赖与冲突 | 依赖 M-04-24/26/27；与静态预测是**两种证据等级**，不得混写：observed 只来自台账，静态预测只来自快照；imported 台账的标志不得丢失。 |
+| 依赖与冲突 | 依赖 M-04-24/26/27；与静态预测是**两种证据等级**，不得混写：observed 只来自台账，静态预测只来自快照；imported 台账的标志不得丢失；异步声明（M-04-33）只给消息加 `async` 标记与顶层 `async_events`，不改变消息序/观察语义。 |
 | 失败与恢复 | 无台账→observed 不可选 + gap；请求的 scenario 不存在→引擎 `NOT_FOUND`；worker/记录失败不会产生半截台账（M-04-24）。 |
 | 最小验证 | `node tools/verify-s3.mjs --with-repo-tests`；`node tools/verify-s3b.mjs --with-repo-tests`；`cd engine && python -m unittest discover -s tests -p "test_scenario.py" -v`。 |
-| 限制/改进假设 | 只记录有序步骤台账，**没有异步/IRQ 因果细化**；observed 默认最近台账、选择无持久化；`elapsed_ms` 是 Wasm 调用耗时不是设备时延；Wasm 模拟不证明真实设备行为。 |
+| 限制/改进假设 | 只记录有序步骤台账，**没有异步/IRQ 因果细化**（M-04-33 仅声明式标记，不推断中断发生/完成）；observed 默认最近台账、选择无持久化；`elapsed_ms` 是 Wasm 调用耗时不是设备时延；Wasm 模拟不证明真实设备行为。 |
 
 #### M-04-29 AI 归纳（Agent 写入/签名/失效，硬边界 + 内容 skill 可调）
 
@@ -395,6 +397,21 @@
 | 最小验证 | 逐阶段 `node tools/verify-readonly.mjs --with-repo-tests`、`verify-five-views.mjs`、`verify-s2b.mjs`、`verify-s3.mjs`、`verify-s3b.mjs`、`verify-summary.mjs`、`verify-perf.mjs`（均带 `--with-repo-tests`）。 |
 | 限制/改进假设 | 探针是时序观测而非确定性像素基线；宿主首次运行浮层由探针关闭并记录；证据固定 Windows 路径/SHA；Chromium 探针使用本机通用 Electron（测试仪器，非产品依赖）；验证工具本身也应被评审（本轮只做只读使用）。 |
 
+#### M-04-33 异步/IRQ 事件边界（声明→校验→observed 标记→UI；不推断中断发生；硬边界 + 展示可调，**已验收**）
+
+| 项 | 内容 |
+|---|---|
+| 场景/触发 | Demo 的 `bus_irq` 会触发平台 IRQ 事件，原 observed 时序把 IRQ 当普通 event，看不出“异步完成/中断触发”；设计 A08/§3 要求异步完成单独显示事件触发。本增量给事件加**声明式异步边界标记**，不改静态投影、不改台账顺序/记录语义。触发：`sim-profile-import`/`trace-import` 的 `async_events` 声明；`view-sequence-observed` 与工作台 observed 时序。 |
+| 输入与前置 | Profile 可选顶层 `async_events`：事件名数组 ≤16、去重、每个必须是 `trace.events` 中的事件名；缺省空=无异步事件。导入轨迹可选顶层 `async_events`：≤16、必须属于该轨迹 steps 里出现的事件名；缺省空。profile 签名/摘要覆盖该字段（重导入产生新 digest）；rev1 profile/trace 缺省为空=旧行为（S3a/S3b 证据有效，rev2 仅新增可选字段）。 |
+| 判断规则 | 校验：非数组/超 16/重复/未知事件/非字符串→`INVALID_ARGUMENT`；profile 与 trace import **均拒绝且不写**（profile 数/台账数不变）。observed：执行台账的 async 声明从 ledger 绑定的已登记 profile 解析；导入台账从自身 `async_events` 解析（rev1 导入无声明保持 S3b 形状）；对应 event 消息加 `async:true`（其余消息 false/不含），顶层返回 `async_events`（≤16，供图例）；call/access/return 消息不受影响。**`async:true` 只表示该事件在 profile/轨迹中被声明为异步触发，不推断硬件中断已发生/完成**。 |
+| 工具动作与状态 | 引擎：profile/轨迹导入校验+投影；`view-sequence-observed` 在台账上生成标记，不写回台账/源码。Host：`scenario.*`/`trace.import`/`view.sequence observed` 原样透传。client observed 时序给异步事件加 `[data-sequence-async="true"]`、`[data-sequence-async-chip]`“异步”、`[data-sequence-async-note]`“异步：由中断/完成事件触发，仍来自已执行或导入的台账”；static 模式与 rev1 导入台账无标记。 |
+| 输出/证据 | `node tools/verify-irq.mjs --with-repo-tests` → **34/34 全绿**（layers `{atlas_snapshot,dsh_host,demo_observed}` 全 true、`ok=true, verified=true`、`in_scope_not_verified=0`、`out_of_scope=5`、duration_ms≈164,131）；真实 Wasm 路径（无 fallback）：rev2 profile（`evidence/scenario-sim/inbox/sim-profile.json` sha256 `1c9ae155…`）真实导入 → `reset→bus_register(1)→bus_irq()` 台账 records `[null,0,0]`、`bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`（label `IRQ: write irq_count`）；Chromium 探针 `[data-sequence-async="true"]`=1、chip“异步”、note 文案、console=0、无绝对路径、static 0 标记、rev1 导入 0 标记；非法 async_events（duplicate/unknown/non_array/>16）对 profile 与 trace import 均 `INVALID_ARGUMENT` 且不写；带声明导入轨迹 limitations 含 `async_events_declared`。回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195 + Demo 8/8。证据：`evidence/async-irq/verification.json`（46,736 B sha256 `38080909…`）、`README.md`（8,307 B sha256 `5914291e…`）、`async-irq.png`（163,779 B sha256 `36907e95…`）、`commands.log`（6,398 B sha256 `bf493784…`）。 |
+| 参数与范围 | `async_events` ≤16、去重、必须来自事件表；profile rev1/rev2 兼容；无新增静态投影/台账字段语义（导入台账额外 `async_events` + limitation）；DOM 钩子只读。 |
+| 依赖与冲突 | 依赖 M-04-23/24/27/28（profile/台账/导入/observed）；与静态预测互斥（static 不显示 async）；rev1 行为不变；`async` 不升级任何证据等级/certainty。 |
+| 失败与恢复 | 非法声明→`INVALID_ARGUMENT` 且不写 profile/台账；执行台账的 async 声明不冻结在台账里（按当前已登记 profile 解析），导入台账按自身声明；缺省无声明=旧行为（S3b）。 |
+| 最小验证 | `node tools/verify-irq.mjs --with-repo-tests`（34/34）；`cd engine && python -m unittest discover -s tests -p "test_scenario.py" -v`（async 校验/observed/导入）；`node --test tests/node/client.test.mjs`（async DOM）；回归 `verify-s3`/`verify-s3b`。 |
+| 限制/改进假设 | 只做**声明式边界标记**：不推断真实硬件 IRQ 因果/中断完成、不建模跨进程异步调度/时序竞态；真实设备/外部轨迹采集、rev1 历史证据重跑、超大 payload async 变体为 out_of_scope；rev2 fixture sha 固定，变更需重跑工具；本版不写“异步因果已被证明”。 |
+
 ---
 
 ## 5. 硬边界 vs skill 可调（改 skill 不能越过的项）
@@ -412,6 +429,7 @@
 | 台账只追加/代次 CAS/不可变 generation | `scenario.py` | 提示层无法伪装 generation 或就地改历史 |
 | 回退必须前缀重放 + memory_digest 逐条核验 | `scenario.py` | 不能“声称回退成功”；不一致 `STATE_CONFLICT` 不发布 |
 | 轨迹导入只读、不执行 | `scenario.py`/`lib/scenario-service.mjs` | 外部轨迹不能作为“已执行”证据；无 undo/重放 |
+| 异步/IRQ 只做声明标记 | `scenario.py`（profile/轨迹校验、observed）+ `bundle/client.js` | `async:true` 只表示该事件被声明为异步触发，**不推断**硬件中断已发生/完成；skill/UI 不得写成运行事实 |
 | AI 归纳由 Agent 写入、签名、绑定 graph sha、无模型出口 | `summary.py`/`lib/tools.mjs`/`lib/view-service.mjs` | 插件不得自动生成正文；快照变化必须 stale；`from_observation` 需台账 |
 | 性能/门禁声明 | `tools/verify-perf.mjs`/`evidence/*/verification.json` | 未达标必须 `ok=false`；skill/文档不得把未验证写成通过 |
 | 分层证据不互相冒充 | 验收工具 + 证据 JSON + 后端/UI 标签 | `demo_observed`/`atlas_snapshot`/`dsh_host` 各自标注；`observed`（台账）不得冒充静态 exact |
@@ -437,6 +455,7 @@
 | RPC 输入上限 | workspace/snapshot ≤128、entry ≤512、repo/path 有界 | 固定模式 | Host；拒绝未知字段/路径穿越 |
 | `view.firstScreen` 响应/`coupling_aux` | ≤480 KiB（含 aux）；sizes 4 键；view 5 枚举 | 固定 | 引擎；超限 `LIMIT_EXCEEDED`（附 sizes），client 回退单端点 |
 | 场景 steps / args / 参数总量 / JSON | 20 / 8 / 4 KiB / scenario 8 KiB、records 32 KiB | 固定 | 引擎；超限 `LIMIT_EXCEEDED`/`INVALID_ARGUMENT` |
+| `async_events` 声明 | 空 | ≤16、去重、必须属事件表（profile/导入轨迹） | 引擎校验；非法 `INVALID_ARGUMENT` 且不写 |
 | worker 超时 / 内存 | 10 s（≤30 s）/ 64 MB；Host 总 15 s | 固定 | Host/引擎；超时 `OUTCOME_UNKNOWN`，不落台账 |
 | undo count | 1 | 1..源步数（Host ≤200） | UI 输入 + 引擎校验；越界拒绝 |
 | summary text / facts / labels | 500 码点 / 32 / 8 | 固定 | Host+引擎双重校验；超限 `LIMIT_EXCEEDED` |
@@ -460,16 +479,17 @@
 9. `run` 阻断（M-04-16）→ 本版不存在“实验已执行”的真实来源，因此记录 observation 只能是 pending（M-04-14）——**受控 Wasm 模拟台账不是 learning 记录的 execution backend**，二者不互相充数。
 10. 首屏性能（M-04-30）→ M-04-22 批量首屏（已验证）：首屏由 4 个 RPC 合并为 1 次批量 RPC + `coupling_aux`，hot p50/p95 328–330/382–387 ms ≤500；批量与单端点 DTO 必须逐字段一致（M-04-20 的预算/证据等级不变），失败回退单端点。
 11. `coupling_aux`（M-04-22）→ coupling 视图/左栏资源 rail 与单独 `view.coupling` 同源；sizes 4 键含 aux、总预算 480 KiB；client 消费后跳过单独 coupling RPC（0 次），aux 缺失/格式错回退。
+12. 异步声明（M-04-33）→ profile/导入轨迹 `async_events` → observed event 消息 `async` 与顶层 `async_events`；只影响标记，不改台账顺序/静态投影；rev1 无声明保持 S3b 旧行为。
 
 ---
 
 ## 8. 最小验证清单（改 skill/机制后至少重跑）
 
 ```bash
-# 引擎（合成 fixture + 真实 Atlas fixture；当前 313 tests）
+# 引擎（合成 fixture + 真实 Atlas fixture；当前 318 tests）
 cd engine && python -m unittest discover -s tests -v
 
-# 插件 Host/Client 合同（当前 191 tests）
+# 插件 Host/Client 合同（当前 195 tests）
 node --test tests/node/*.test.mjs
 
 # Demo 行为对照（Wasm 模拟观测，8/8）
@@ -484,9 +504,10 @@ node tools/verify-s3b.mjs --with-repo-tests             # S3b 回退/轨迹导�
 node tools/verify-summary.mjs --with-repo-tests         # AI 归纳（49/49）
 node tools/verify-perf.mjs --with-repo-tests            # 性能实测（当前 25/25 全绿；首屏 hot p50/p95 328–330/382–387 ≤500 ✅）
 node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes 一致性（8/8；verify-perf 内含）
+node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边界（34/34；真实 Wasm IRQ + dsh-web async 标记）
 ```
 
-对照关系：CL-001（M-04-01/02/03/05/06/07）、CL-003（M-04-08/09）、CL-004（M-04-10/11/12）、CL-005（M-04-13/14）、CL-006（M-04-15）、CL-009（M-04-16/17）、CL-007（M-04-18 文档条款）；CL-VIEW-T1（M-04-19、部分 20）、CW-T2（M-04-20/21）、CW-T3（M-04-23..28）、CW-T4A（M-04-29/30/31、M-04-32）；S4 目标门禁仍不在此清单的“通过”含义内（M-04-22 批量首屏已验收）。
+对照关系：CL-001（M-04-01/02/03/05/06/07）、CL-003（M-04-08/09）、CL-004（M-04-10/11/12）、CL-005（M-04-13/14）、CL-006（M-04-15）、CL-009（M-04-16/17）、CL-007（M-04-18 文档条款）；CL-VIEW-T1（M-04-19、部分 20）、CW-T2（M-04-20/21）、CW-T3（M-04-23..28）、CW-T4A（M-04-29/30/31、M-04-32、M-04-33 异步/IRQ）；S4 目标门禁仍不在此清单的“通过”含义内（M-04-22 批量首屏、M-04-33 异步/IRQ 已验收）。
 
 ---
 
@@ -510,6 +531,7 @@ node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes
 | Wasm 哈希不符/无法实例化/无 memory | `MODULE_HASH_MISMATCH`/`INSTANTIATE_FAILED`/`MODULE_BINDING_INVALID` | 重新登记 profile；不执行 |
 | 回退前缀 digest 不一致 | `STATE_CONFLICT/state_digest_mismatch`（含 step_index/digests） | 不发布；重试或保留只读历史 |
 | 导入轨迹不可回退 | `CAPABILITY_UNAVAILABLE` | 只读历史；重跑新场景 |
+| 非法 `async_events`（重复/未知/超 16/非数组） | `INVALID_ARGUMENT`（profile 与 trace-import 均拒绝） | 修正声明；profile/台账不写 |
 | 归纳超长/控制字符/非法 facts | `LIMIT_EXCEEDED`/`INVALID_ARGUMENT` | 修正 payload；原文不被覆盖 |
 | 快照变化后的旧归纳 | `stale:true` + `summary_stale_against_current_snapshot` | UI 显示“基于旧快照，待复核”；重写归纳 |
 | 性能预算未达标（历史） | 验收 `ok=false`（首屏，历史 run） | 优化后复测；不得调预算。当前已达标：hot p95 387 ms、25/25 全绿 |
@@ -521,10 +543,11 @@ node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 313 引擎测试 + 191 Node 测试 + 安装后 Host 工具旅程 |
+| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 318 引擎测试 + 195 Node 测试 + 安装后 Host 工具旅程 |
 | 真实 Atlas 0.8 产物适配（Windows runtime，合成 C） | **actual（非 Linux 门禁）** | `evidence/real-atlas/`、`evidence/code-view-slice/`：envelope/graph_hash/coverage/真实 file/line/exact 边/flow_legacy |
 | 只读工作台 RPC/面板/五视图/组折叠/接口库/子流程 | **actual** | S1 26/26、S2a 37/37、S2b 41/41 隔离 dsh-web 验收 |
 | 受控 Wasm 场景/打桩/台账/observed/回退/轨迹导入 | **actual** | S3a 43/43、S3b 58/58 隔离 dsh-web 验收（Demo Wasm，非真实设备） |
+| 异步/IRQ 事件边界（observed `async` 标记） | **actual（已验证）** | `verify-irq` 34/34：真实 Wasm `bus_irq`→IRQ、observed `async_events:["IRQ"]`/IRQ `async:true`、dsh-web `[data-sequence-async]`+“异步”chip/说明；static/rev1 无标记；非法声明拒绝不写（M-04-33） |
 | AI 归纳写入/缓存/展示/失效 | **actual** | 49/49，Agent 写入 ≠ 插件生成 |
 | 性能实测与大图规模证据 | **actual，首屏预算已达标** | `evidence/perf/`：25/25 全绿，首屏 hot p50/p95 328–330/382–387 ms ≤500；coupling p95 3 ms；not_verified 4 项（cold UI/tree→file/拖动/2000-10k 截断文本）如实 |
 | 批量首屏 `view.firstScreen`（含 `coupling_aux`） | **actual（已验证）** | `verify-perf` 25/25；一致性 8/8；20/20 hot 60 处 batch、fallback=0；client 消费 aux→0 次单独 coupling RPC（M-04-22） |
@@ -547,6 +570,7 @@ node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes
 7. **S3/S4-prep 增量**：受控场景、AI 归纳、性能实测按分阶段契约实现；AI 归纳正文由 Agent 经工具写入（插件无模型出口）。**首屏批量端点 + `coupling_aux`（T33/T37）是 S4-prep 性能迭代的最终实现并已验收：hot p95 328–330/382–387 ms、25/25 全绿**。
 8. **已知交互限制**：observed 默认最近更新台账（可切换但无持久化）；client `expected_generation` 依赖全局 latestGeneration，跨场景后重跑旧场景可能 CAS 冲突；组名/接口库修订只在会话内；接口候选是规则候选（全部 may）。
 9. **首屏批量的边界**：`LIMIT_EXCEEDED`（480 KiB）路径最终 verifier run 未触发（真实快照远低于上限），其 sizes/回退由引擎/Node 测试覆盖；跨参考机预算校准为 out_of_scope；cold UI、tree→file 行高亮、拖动反馈、2000/10k UI「已截断」文本仍 not_verified（不伪造）。
+10. **异步/IRQ 边界（M-04-33）**：按 profile/导入轨迹的 `async_events` 声明给事件加 `async` 标记与 UI chip/说明，**不推断**真实硬件中断/因果；rev1/rev2 兼容，静态投影与台账语义不变；out_of_scope 5 项已列在证据。
 
 ---
 
@@ -560,7 +584,7 @@ node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes
 4. **大仓库下 find/overview/五视图性能与预算**；当前“候选枚举不计入读取预算”可能成为热点。
 5. **事件来源 03 的真实 event_id/generation 语义**；本版仅 fixture 兼容。
 6. **首屏达标（已达成，T37 最终验收）**：M-04-22 批量首屏 + `coupling_aux` 使 hot p50/p95 = 328–330/382–387 ms ≤500，一致性 8/8、fallback=0；**仍待补测**：cold UI 20 冷样本、tree→file 行高亮、拖动反馈、2000/10k UI「已截断」文本（not_verified 4 项，不伪造）；跨参考机预算校准为 out_of_scope。
-7. **observed 异步/IRQ 因果**、真实设备下发的可回退语义（当前仅有序步骤 + memory digest 前缀）。
+7. **异步/IRQ 声明式边界（M-04-33）已实现并验收（34/34）**；**仍未验证**：真实硬件 IRQ 因果/中断完成判定、跨进程异步调度/时序竞态、真实设备下发的可回退语义（当前仅有序步骤 + memory digest 前缀）。
 8. **结构布局/compat**：只有真实目标 ABI 证据才可解释字节偏移。
 9. **skill 实际学习质量**：独立对话评审（结构测试不能证明学习效果）；AI 归纳语义质量（是否把候选写成确定）需评审。
 10. **OS 出口认证**：需要目标 OS 的网络策略证据，当前只有“不联网”的代码事实与本机回环观测。
@@ -593,13 +617,15 @@ node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes
 | S2b 组/接口库/子流程 | `verify-s2b` 41/41 | 组折叠必须边不合并（31 条原边元数据 before/after 全量比对）；接口候选全部 may；组修订仅会话 |
 | S3a 场景/打桩/observed | `verify-s3` 43/43 | 契约 §5 DOM 示例与实际差异如实记录（如 `data-code-view="stub-panel"` 实际为容器类名）；observed 默认最近台账、跨场景 CAS 限制记录为交互改进候选 |
 | S3b 回退/轨迹导入/多场景 | `verify-s3b` 58/58 | imported 台账 undo 实际返回 `CAPABILITY_UNAVAILABLE`（契约只写“不提供”），按实际码记录；S3a 回归探针新增 `RV_SCENARIO_CHANNEL` 避免共享台账 CAS 冲突 |
-| S4-prep AI 归纳 | `verify-summary` 49/49 | **Windows 签名密钥文本模式损坏**：`State.secret` 用 `os.open` 未带 `O_BINARY`，CRT 文本模式把随机密钥中的 `0x0A` 扩展为 CRLF，导致签名文件约 12% 概率损坏、已签 profile/台账/plan/summary 随机 `SCOPE_DENIED`（S3/S4 偶发失败根因）。修复为二进制打开+严格 32 字节校验，回归 `test_io_robustness.py`（含 0x0A/0x0D 密钥 round-trip 与损坏文件报错）；修复后引擎套件稳定（最终 313 tests） |
+| S4-prep AI 归纳 | `verify-summary` 49/49 | **Windows 签名密钥文本模式损坏**：`State.secret` 用 `os.open` 未带 `O_BINARY`，CRT 文本模式把随机密钥中的 `0x0A` 扩展为 CRLF，导致签名文件约 12% 概率损坏、已签 profile/台账/plan/summary 随机 `SCOPE_DENIED`（S3/S4 偶发失败根因）。修复为二进制打开+严格 32 字节校验，回归 `test_io_robustness.py`（含 0x0A/0x0D 密钥 round-trip 与损坏文件报错）；修复后引擎套件稳定（最终 318 tests） |
 | S4-prep 性能 + 首屏批量（T27–T37） | `verify-perf` **25/25 全绿**，`ok=true/verified=true` | 首屏链路：T27 基线 1078/1141 → T28 并行/预取/缓存 646/704 → T33 批量首屏 455/527 → T37 `coupling_aux` **328–330/382–387 ms ≤500 ✅**；coupling p95 3 ms；`data-first-screen` 20/20 样本 60 处 batch、fallback=0；`coupling_aux` 一致性 8/8；剩余 not_verified 4 项（cold UI/tree→file/拖动/2000-10k 截断文本）如实；`LIMIT_EXCEEDED` 路径本 run 未触发（引擎/Node 测试覆盖） |
+| S4-prep 异步/IRQ 边界（T39–T41） | `verify-irq` **34/34 全绿**、layers 全 true、`ok/verified=true`、`in_scope_not_verified=0` | 真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`；dsh-web `[data-sequence-async="true"]`+“异步”chip/说明；static/rev1 导入台账无标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195 + Demo 8/8；证据 sha256 见 §12.3 |
 | S4 可行性 | `evidence/s4-feasibility/`（`ok=true, verified=false`） | Linux 可移植性探测：Node 164/164、真实 Wasm worker 8/8、引擎 CLI status/import 可用；Python 3.8 引擎套件 255 errors；Windows 构建快照被拒绝——Kbuild/CFG/复核/OS 出口保持不可声明 |
 
-### 12.3 最终验收收口（2026-11-15T22:38+08）
+### 12.3 最终验收收口（2026-11-15）
 
-- **M-04-22 批量首屏 `view.firstScreen`（含 `coupling_aux`）已完成最终验收**：`node tools/verify-perf.mjs --with-repo-tests` → 25/25 全绿、layers 全 true、`ok=true/verified=true`；首屏 hot p50/p95 = **328–330/382–387 ms ≤500 ✅**（历史：batch 前 646/704、无 aux 455/527）；20/20 hot 样本 `[data-first-screen]` 60 处全部 batch（fallback=0）；一致性 8/8（CLI 5/5 视图 + RPC 5/5 逐字段一致、sizes 4 键、aux 计入 480 KiB、未知 view→INVALID_ARGUMENT/未知 entry→NOT_FOUND、无绝对路径）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191 + Demo 8/8 全绿。证据 sha256：`verification.json` `e350ed99…`、`first-screen-consistency.json` `8bb859f9…`、`README.md` `f2d39214…`、`commands.log` `a62f8942…`。
+- **M-04-22 批量首屏 `view.firstScreen`（含 `coupling_aux`）已完成最终验收**：`node tools/verify-perf.mjs --with-repo-tests` → 25/25 全绿、layers 全 true、`ok=true/verified=true`；首屏 hot p50/p95 = **328–330/382–387 ms ≤500 ✅**（历史：batch 前 646/704、无 aux 455/527）；20/20 hot 样本 `[data-first-screen]` 60 处全部 batch（fallback=0）；一致性 8/8（CLI 5/5 视图 + RPC 5/5 逐字段一致、sizes 4 键、aux 计入 480 KiB、未知 view→INVALID_ARGUMENT/未知 entry→NOT_FOUND、无绝对路径）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191（当次；最终 195/195）+ Demo 8/8 全绿。证据 sha256：`verification.json` `e350ed99…`、`first-screen-consistency.json` `8bb859f9…`、`README.md` `f2d39214…`、`commands.log` `a62f8942…`。
+- **M-04-33 异步/IRQ 事件边界已完成最终验收（T41）**：`node tools/verify-irq.mjs --with-repo-tests` → **34/34 全绿**（layers 全 true、`ok=true/verified=true`、`in_scope_not_verified=0`、out_of_scope 5）；真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`（label `IRQ: write irq_count`）；dsh-web `[data-sequence-async="true"]`=1 + `[data-sequence-async-chip]`“异步” + `[data-sequence-async-note]` 说明；static 与 rev1 导入台账 0 标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195 + Demo 8/8。证据 sha256：`verification.json` `38080909…`、`README.md` `5914291e…`、`async-irq.png` `36907e95…`、`commands.log` `bf493784…`。
 - **S4 目标门禁**：在具备 Linux 内核源码/compdb/生成头、Linux 构建 Atlas 快照、固定 Atlas Linux runtime、复核数据的固定 Linux 目标上重跑同一验收口径；在此之前不得更新本文件的“未验证”结论。
 
 ---
@@ -616,7 +642,8 @@ node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes
 | CW-T3 S3b | `node tools/verify-s3b.mjs --with-repo-tests` | `evidence/s3b/`（58/58、undo/imported/多场景截图） | actual（Wasm 模拟） |
 | CW-09 AI 归纳 | `node tools/verify-summary.mjs --with-repo-tests` | `evidence/ai-summary/`（49/49、gap/written 截图） | actual（Agent 写入） |
 | CW-11/A11 性能（含首屏批量/aux） | `node tools/verify-perf.mjs --with-repo-tests`（内含 `tools/firstscreen-consistency.mjs`） | `evidence/perf/`（25/25 全绿、hot p50/p95 328–330/382–387 ≤500 ✅、一致性 8/8、60 处 batch/fallback=0、4 项 not_verified 如实） | **actual（已验证）** |
+| 异步/IRQ 事件边界（S4-prep 收尾） | `node tools/verify-irq.mjs --with-repo-tests` | `evidence/async-irq/`（34/34、layers 全 true、`in_scope_not_verified=0`/out_of_scope 5、真实 Wasm IRQ、async DOM、截图；4 个证据 sha256 见 §12.3） | **actual（已验证）** |
 | S4 可行性 | 见 `evidence/s4-feasibility/README.md` | `evidence/s4-feasibility/`（Node 164/164、worker 8/8、引擎限制） | **仅探测，门禁未验证** |
 | 首屏批量端点（`view.firstScreen`+aux） | `node tools/verify-perf.mjs --with-repo-tests` | `evidence/perf/{verification.json,first-screen-consistency.json}`（25/25；8/8；sha256 见 §12.3） | **actual（已验证）** |
 
-**结论**：本交付可作为“合成 fixture + 真实 Atlas 产物对照 + 隔离 rc.5 dsh-web 上可安装、可自测、边界清晰”的当前整体实现；不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/CFG/locks/aliases/复核/OS 出口门禁。首屏性能已在**合成 500/800 夹具 + 本机**上达标（hot p50/p95 328–330/382–387 ms ≤500，25/25 全绿），但不代表真实仓库/其它机器；S4 门禁仍未验证。改 skill 只能调整阅读/提问/呈现/何时写归纳等策略，不能绕过硬边界，也不能把未验证结果（Linux/CFG/真实设备/异步因果）提升为事实。
+**结论**：本交付可作为“合成 fixture + 真实 Atlas 产物对照 + 隔离 rc.5 dsh-web 上可安装、可自测、边界清晰”的当前整体实现；不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/CFG/locks/aliases/复核/OS 出口门禁。首屏性能已在**合成 500/800 夹具 + 本机**上达标（hot p50/p95 328–330/382–387 ms ≤500，25/25 全绿），但不代表真实仓库/其它机器；异步/IRQ 边界仅做声明式标记（34/34），**不推断**真实中断/因果；S4 门禁仍未验证。改 skill 只能调整阅读/提问/呈现/何时写归纳等策略，不能绕过硬边界，也不能把未验证结果（Linux/CFG/真实设备/异步因果）提升为事实。

@@ -267,6 +267,8 @@ python -m code_learning.cli --bootstrap <bootstrap.json> sim-profile-import \
    LOCK 1→0；未登记通道 `bus_send(0,48)` → `-2`；非法参数被 UI/引擎拒绝且不产生台账。
 6. 时序图切「运行观测」（`observed=true`）读取台账消息（call/return/access/event，含 DOORBELL/WRITE、平台边界）；
    切回「静态预测」仍是 `observed=false` 的静态推断。观测模式有台账场景选择器（默认最近更新，可切换前缀/导入等台账）。
+   若 profile/导入轨迹声明了异步事件（如 Demo 的 `IRQ`），对应事件消息显示“异步”chip 与说明（`async:true`），
+   仅表示该事件被声明为异步触发，不等于中断已发生；静态模式不显示。
 7. 回退：输入「回退步数 N」（1..当前步数）→ 点「回退」→ 重放前缀并逐条核对 memory digest，成功切到前缀台账
    （`undo.state_digest_verified`、步骤编辑器同步前缀步骤、时序选择器刷新）；不一致显示
    `STATE_CONFLICT/state_digest_mismatch` 且不改台账。导入轨迹台账不可回退（按钮禁用并显示原因）。

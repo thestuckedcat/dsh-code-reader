@@ -1606,9 +1606,11 @@ export function makeObservedSequencePayload(overrides = {}) {
       {message_id: 'm_4', index: 4, kind: 'return', from: 'driver', to: 'caller', label: '返回 0', call_id: 'call_1_3', step_index: 2, status: 'ok', result: 0, observed: true, source_ref: null, limitations: []},
       {message_id: 'm_5', index: 5, kind: 'error', from: 'driver', to: 'caller', label: '返回 -2（未登记 channel）', call_id: 'call_1_4', step_index: 3, status: 'error', result: -2, observed: true, source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 152}, limitations: []},
       {message_id: 'm_6', index: 6, kind: 'call', from: 'caller', to: 'driver', label: 'set_platform_stub(-5)', call_id: 'call_1_5', step_index: 4, status: 'ok', result: null, observed: true, stubbed: true, source_ref: null, limitations: []},
+      {message_id: 'm_7', index: 7, kind: 'event', from: 'platform', to: 'driver', label: 'IRQ', call_id: 'call_1_3', step_index: 2, status: 'ok', result: 0, observed: true, event: 'IRQ', code: null, async: true, source_ref: {function_id: BUS_SEND_ID, file: 'bus.c', line: 113}, limitations: []},
     ],
     warning: null,
     gaps: [],
+    async_events: ['IRQ'],
     truncated: false,
     limitations: ['observed_wasm_simulation_not_real_device'],
   };

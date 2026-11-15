@@ -1,0 +1,609 @@
+{
+  "schema_version": 1,
+  "kind": "final-acceptance-summary",
+  "project": "04-code-learning (CL-VIEW-T1..T4A)",
+  "generated_at": "2026-11-15T23:10:00+08:00",
+  "objective": "参考 demo 以及设计文档完成所有开发，并逐阶段在 dsh-web 完成测试",
+  "staged_acceptance": [
+    {
+      "stage": "S1",
+      "evidence_dir": "evidence/readonly-slice",
+      "label": "只读切片：侧边栏代码工作台 → 已登记且核验的 Atlas 快照 → 入口 → 真实 C 源码/证据",
+      "command": "node tools/verify-readonly.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 26,
+        "passed": 26,
+        "failed": 0,
+        "not_verified": 0
+      },
+      "layers": {
+        "demo_observed": true,
+        "atlas_snapshot": true,
+        "dsh_host": true
+      },
+      "expected_layers": [
+        "demo_observed",
+        "atlas_snapshot",
+        "dsh_host"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [],
+      "verification_json": {
+        "bytes": 62862,
+        "sha256": "2b007dc845cef2dc2971bd629f21b4bc4902c69a3849ab14ac1b29e9585b11f2"
+      }
+    },
+    {
+      "stage": "S2a",
+      "evidence_dir": "evidence/five-views",
+      "label": "五视图（资源关系图/文字树/端到端图/静态预测时序/文件视图）+ 共享 Selection",
+      "command": "node tools/verify-five-views.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 37,
+        "passed": 37,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 4
+      },
+      "layers": {
+        "demo_observed": true,
+        "atlas_snapshot": true,
+        "dsh_host": true
+      },
+      "expected_layers": [
+        "demo_observed",
+        "atlas_snapshot",
+        "dsh_host"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [
+        {
+          "item": "group folding / interface library / AI summary (S2b)",
+          "reason": "S2a only; shown as gaps in the UI",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "sequence observed mode / run observation / scenario execution / stub / rollback (S3)",
+          "reason": "CW-T3 scope; S2a sequence is static-prediction only",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+          "reason": "CW-T4 scope; snapshot-only read model in this slice",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "OS-wide egress certification",
+          "reason": "verifier only performs loopback HTTP and local process observation",
+          "layer": null,
+          "out_of_scope": true
+        }
+      ],
+      "verification_json": {
+        "bytes": 96493,
+        "sha256": "2ce16854f02ecca884a0a7bafe28bb442e24ccf970d08ac1d3c35a53e83df726"
+      }
+    },
+    {
+      "stage": "S2b",
+      "evidence_dir": "evidence/s2b",
+      "label": "组折叠/接口库（黑盒 add/remove）/子流程面包屑",
+      "command": "node tools/verify-s2b.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 41,
+        "passed": 41,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 4
+      },
+      "layers": {
+        "demo_observed": true,
+        "atlas_snapshot": true,
+        "dsh_host": true
+      },
+      "expected_layers": [
+        "demo_observed",
+        "atlas_snapshot",
+        "dsh_host"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [
+        {
+          "item": "AI summary / model-generated description text (CW-07 placeholder)",
+          "reason": "S2b shows \"AI 归纳未接入\" gap only; model egress not available",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "scenario execution / stub / rollback / run observation / sequence observed mode (S3)",
+          "reason": "CW-T3 scope; S2b sequence stays static-prediction only",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+          "reason": "CW-T4 scope; snapshot-only read model in this slice",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "OS-wide egress certification",
+          "reason": "verifier only performs loopback HTTP and local process observation",
+          "layer": null,
+          "out_of_scope": true
+        }
+      ],
+      "verification_json": {
+        "bytes": 90768,
+        "sha256": "dfccdf39ccf6b6244b1c87cc0fa26d7e27417ae83cef2eee5a0ed9753c5e2ef5"
+      }
+    },
+    {
+      "stage": "S3a",
+      "evidence_dir": "evidence/s3",
+      "label": "受控 Wasm 场景执行/边界打桩/不可变运行台账/运行观测时序",
+      "command": "node tools/verify-s3.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 43,
+        "passed": 43,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 5
+      },
+      "layers": {
+        "demo_observed": true,
+        "atlas_snapshot": true,
+        "dsh_host": true
+      },
+      "expected_layers": [
+        "demo_observed",
+        "atlas_snapshot",
+        "dsh_host"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [
+        {
+          "item": "undo last N / prefix replay / trace import (S3b)",
+          "reason": "scenario-contract §0: deferred to S3b; UI shows disabled undo + gap",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "AI summary / model-generated description text",
+          "reason": "not provided in S3a; gap shown, no fabricated text",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "scenario observed async/IRQ causal refinement + real device dispatch",
+          "reason": "S3a only records ordered step ledger; real device is S4/external authorization",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+          "reason": "CW-T4 scope",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "OS-wide egress certification",
+          "reason": "verifier only performs loopback HTTP and local process/worker observation",
+          "layer": null,
+          "out_of_scope": true
+        }
+      ],
+      "verification_json": {
+        "bytes": 82388,
+        "sha256": "acfd7eb34cbb9529e03e48f6c2ff4a1ae33b509ca2b4318e448c07bbcab6c230"
+      }
+    },
+    {
+      "stage": "S3b",
+      "evidence_dir": "evidence/s3b",
+      "label": "回退末尾 N 步+前缀重放（memory digest 核验）/轨迹导入/observed 多台账选择",
+      "command": "node tools/verify-s3b.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 58,
+        "passed": 58,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 5
+      },
+      "layers": {
+        "demo_observed": true,
+        "atlas_snapshot": true,
+        "dsh_host": true
+      },
+      "expected_layers": [
+        "demo_observed",
+        "atlas_snapshot",
+        "dsh_host"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [
+        {
+          "item": "observed async/IRQ causal refinement",
+          "reason": "S3b keeps ordered-step ledger only; async/IRQ causal inference is future work",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "AI summary / model-generated description text",
+          "reason": "not provided in S3b; gap shown, no fabricated text",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "real device dispatch / graph source write-back",
+          "reason": "S3b only reverts/imports ledgers; real device is S4/external authorization",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+          "reason": "CW-T4 scope",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "OS-wide egress certification",
+          "reason": "verifier only performs loopback HTTP and local process/worker observation",
+          "layer": null,
+          "out_of_scope": true
+        }
+      ],
+      "verification_json": {
+        "bytes": 106153,
+        "sha256": "d0081e2616ff114f866cf8eceac2ad9ce1f46cf272b4c01e4b50fa263ef75f96"
+      }
+    },
+    {
+      "stage": "CW-09",
+      "evidence_dir": "evidence/ai-summary",
+      "label": "AI 归纳（Agent 经 code_summary 写入/签名/失效/详情展示；插件不调用模型）",
+      "command": "node tools/verify-summary.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 49,
+        "passed": 49,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 5
+      },
+      "layers": {
+        "demo_observed": true,
+        "atlas_snapshot": true,
+        "dsh_host": true
+      },
+      "expected_layers": [
+        "demo_observed",
+        "atlas_snapshot",
+        "dsh_host"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [
+        {
+          "item": "plugin/model-side AI text generation",
+          "reason": "the plugin never calls a model; summaries are written by the Agent through code_summary/summary-put (verified as an Agent driver would)",
+          "layer": "dsh_host",
+          "out_of_scope": true
+        },
+        {
+          "item": "real Linux/Kbuild + CFG/locks/aliases deep analysis",
+          "reason": "CW-T4 follow-up; this slice uses the imported Atlas snapshot",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "real device dispatch / graph source write-back",
+          "reason": "not part of the summary slice",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+          "reason": "CW-T4 scope",
+          "layer": "atlas_snapshot",
+          "out_of_scope": true
+        },
+        {
+          "item": "OS-wide egress certification",
+          "reason": "verifier only performs loopback HTTP and local process/worker observation",
+          "layer": null,
+          "out_of_scope": true
+        }
+      ],
+      "verification_json": {
+        "bytes": 159320,
+        "sha256": "3ac29d50d5f528542f53a464454c54eccef2f69c13e821c52ac9f1376ca7b974"
+      }
+    },
+    {
+      "stage": "A11",
+      "evidence_dir": "evidence/perf",
+      "label": "性能实测：合成 500/800 与 2000/10k 图；首屏 hot p95 328–330/382–387 ms ≤500 ms 预算、coupling p95 3–4 ms",
+      "command": "node tools/verify-perf.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 25,
+        "passed": 25,
+        "failed": 0,
+        "in_scope_not_verified": 4,
+        "out_of_scope_not_verified": 5
+      },
+      "layers": {
+        "engine": true,
+        "dsh_host": true,
+        "fixture": true,
+        "demo_observed": true
+      },
+      "expected_layers": [
+        "engine",
+        "dsh_host",
+        "fixture",
+        "demo_observed"
+      ],
+      "in_scope_not_verified": [
+        {
+          "item": "cold first-screen UI sampling (20 fresh-process/selection samples)",
+          "reason": "one-time host URL token makes repeated full page reloads unreliable, so the 20 cold UI samples were not taken within the time box; no samples fabricated. The cold engine path is covered by the 20 engine-CLI cold projection samples.",
+          "layer": "dsh_host",
+          "out_of_scope": false
+        },
+        {
+          "item": "cross_view_tree (tree -> file line highlight)",
+          "reason": "synthetic fixture lacks real file evidence / a locatable file target; 0/0 samples measured (failed 0); not fabricated",
+          "layer": "dsh_host",
+          "out_of_scope": false
+        },
+        {
+          "item": "drag_feedback (pointermove -> rAF edge path update)",
+          "reason": "synthetic 4-node entry neighborhood does not provide a stable draggable edge target; 0/0 samples measured (failed 0); not fabricated",
+          "layer": "dsh_host",
+          "out_of_scope": false
+        },
+        {
+          "item": "2000/10k UI truncation marker (\"已截断\")",
+          "reason": "this run loaded the 2000-node/10k-event synthetic snapshot and measured search/event-sequence feedback, but the e2e truncation marker text was not observed at sample time; no marker text was fabricated. Fixture coverage is truncated=true and entries=1600.",
+          "layer": "dsh_host",
+          "out_of_scope": false
+        }
+      ],
+      "out_of_scope_not_verified": [
+        {
+          "item": "real Linux/Kbuild index and CFG/locks/aliases deep analysis",
+          "reason": "S4 follow-up; this slice measures the imported Atlas read model only",
+          "out_of_scope": true
+        },
+        {
+          "item": "plugin/model-side AI summary text",
+          "reason": "not part of the perf slice; the plugin never calls a model",
+          "out_of_scope": true
+        },
+        {
+          "item": "OS-wide egress certification",
+          "reason": "measurements use loopback HTTP + local processes only",
+          "out_of_scope": true
+        },
+        {
+          "item": "budget calibration on a different reference machine",
+          "reason": "values are recorded for THIS machine/version; other machines need their own run",
+          "out_of_scope": true
+        },
+        {
+          "item": "tree -> file line-highlight completion on the synthetic fixture",
+          "reason": "file view navigation is measured, but the synthetic source path model does not yield highlighted [data-file-line] rows; line-highlight completion is not claimed for the synthetic fixture (real-snapshot S2a tree locate evidence covers that hook)",
+          "out_of_scope": true
+        }
+      ],
+      "verification_json": {
+        "bytes": 116133,
+        "sha256": "e350ed99fa73072c2493305ef6832021f7c3187dbca9e4669c8b2c9c7358fa0c"
+      }
+    },
+    {
+      "stage": "S4-prep-async",
+      "evidence_dir": "evidence/async-irq",
+      "label": "异步/IRQ 事件边界：async_events 声明 + observed async:true + “异步”chip；真实 Wasm bus_irq 与导入异步轨迹",
+      "command": "node tools/verify-irq.mjs --with-repo-tests",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 34,
+        "passed": 34,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 5
+      },
+      "layers": {
+        "atlas_snapshot": true,
+        "dsh_host": true,
+        "demo_observed": true
+      },
+      "expected_layers": [
+        "atlas_snapshot",
+        "dsh_host",
+        "demo_observed"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [
+        {
+          "item": "真实硬件 IRQ 因果/中断完成判定",
+          "reason": "async:true 仅表示该事件被 profile 声明为异步触发，不推断硬件中断已发生（契约 §11.2 明确）",
+          "out_of_scope": true
+        },
+        {
+          "item": "真实设备/外部轨迹采集与下发",
+          "reason": "S4 后续；本轮只验证已执行 Wasm 台账与导入轨迹的异步边界标记",
+          "out_of_scope": true
+        },
+        {
+          "item": "跨进程异步调度/时序竞态的证明",
+          "reason": "台账只记录顺序与事件本身，不建模调度器；S4 后续",
+          "out_of_scope": true
+        },
+        {
+          "item": "rev1 历史证据重跑",
+          "reason": "rev1 profile/trace 的 S3a/S3b 证据在 evidence/s3、evidence/s3b 保持有效，不重复纳入本轮",
+          "out_of_scope": true
+        },
+        {
+          "item": "480KiB 内核/大 payload 的 async 变体",
+          "reason": "限流路径由引擎/Node 测试覆盖，本轮夹具远低于上限，未构造超大 payload",
+          "out_of_scope": true
+        }
+      ],
+      "verification_json": {
+        "bytes": 46736,
+        "sha256": "3808090963607283cf329cad263f83d75a44d82a9d636fcf6bbe4a88fe3dcf94"
+      }
+    }
+  ],
+  "s4_feasibility": {
+    "stage": "S4-feasibility",
+    "evidence_dir": "evidence/s4-feasibility",
+    "label": "Linux 可移植性探测（非 S4 门禁通过）：Node 契约 164/164、真实 Wasm worker 8/8、引擎 CLI 可用；Python 3.8<3.11、Windows 快照 manifest 被拒",
+    "command": "WSL2 Ubuntu 20.04 probe（见 evidence/s4-feasibility/README.md）",
+    "ok": true,
+    "verified": false,
+    "checks": {
+      "linux_node_contract_suite": {
+        "ok": true,
+        "tests": 164,
+        "passed": 164,
+        "failed": 0,
+        "log": "linux-node-suite.log"
+      },
+      "linux_wasm_worker": {
+        "ok": true,
+        "tests": 8,
+        "passed": 8,
+        "failed": 0,
+        "log": "linux-host-worker.log",
+        "note": "worker_threads + WebAssembly execute the real Demo bus.wasm on Linux"
+      },
+      "linux_engine_cli_status": {
+        "ok": true,
+        "exit_code": 0,
+        "freshness": "fresh",
+        "valid": true,
+        "absolute_path_leak": false,
+        "log": "linux-engine-cli.log"
+      },
+      "linux_engine_cli_import_cas": {
+        "ok": true,
+        "repeat_import_code": "STATE_CONFLICT",
+        "note": "revision CAS behaves on Linux"
+      },
+      "linux_engine_unittest": {
+        "ok": false,
+        "ran": 309,
+        "errors": 255,
+        "reason": "Python 3.8 does not satisfy the engine's >=3.11 requirement; test helpers use Path.write_text(newline=) (3.10+)",
+        "log": "linux-engine-unittest.log"
+      },
+      "linux_snapshot_from_windows_build": {
+        "ok": false,
+        "error": "analysis_manifest.workspace_roots does not identify this registered workspace",
+        "reason": "Windows-built Atlas manifest is bound to Windows workspace roots; a Linux target needs a snapshot built on Linux",
+        "log": "linux-engine-cli.log"
+      }
+    },
+    "available": [
+      "JS layers (Host/Client/tools) contract suite on Linux",
+      "Isolated Wasm worker execution on Linux",
+      "Engine CLI basic commands (status / import CAS) on Linux default Python"
+    ],
+    "in_scope_not_verified": [
+      {
+        "item": "real Linux kernel/Kbuild analysis and generated headers",
+        "reason": "no kernel source/compdb/generated headers/Atlas Linux runtime in this environment"
+      },
+      {
+        "item": "native CFG / locks / aliases analysis",
+        "reason": "Atlas Linux runtime and Linux-built snapshots unavailable"
+      },
+      {
+        "item": "review precision/recall on real repositories",
+        "reason": "no review data and no Linux-built snapshots"
+      },
+      {
+        "item": "OS egress certification",
+        "reason": "the plugin never uses the network; target-OS egress certification still requires the target environment"
+      },
+      {
+        "item": "engine unittest on Linux with Python>=3.11",
+        "reason": "environment ships Python 3.8 only; engine requires >=3.11"
+      }
+    ],
+    "out_of_scope": [
+      "real device dispatch",
+      "in-graph source write-back",
+      "Linux DSH desktop host availability"
+    ],
+    "verification_json": {
+      "bytes": 2964,
+      "sha256": "efe5ac1c943870acd66ffc2c69bfca9f20e37cbd1e70da8254c6b95ad0a45a1d"
+    }
+  },
+  "totals": {
+    "stages_all_green": 8,
+    "stage_count": 8,
+    "checks_total": 313,
+    "checks_passed": 313,
+    "python_tests": 318,
+    "node_tests": 195,
+    "demo_tests": 8
+  },
+  "gaps": {
+    "s4_gates_not_verified": [
+      "真实 Linux 内核索引与 Kbuild 编译（含生成头）",
+      "native CFG / locks / aliases 深分析",
+      "复核 precision/recall（真实复核数据）",
+      "OS 出口认证"
+    ],
+    "product_scope_pending": [
+      "真实设备下发（需单独授权与运行验证）",
+      "图内源码写回（产品范围待确认）"
+    ],
+    "known_limitations": [
+      "AI 归纳正文由 Agent 写入，插件不调用模型；入口 subject 独立归纳未在 UI 暴露（function/group 已支持）",
+      "observed 异步标记只表示声明为异步触发，不推断中断发生/因果完成",
+      "性能达标仅限合成 500/800 夹具+本机，跨参考机校准未做；cold UI 20 冷样本/tree→file/拖动/2000-10k UI 截断文本仍 not_verified",
+      "真实设备/硬件行为、跨进程异步调度、ABI 字节布局仍为 unknown/未验证",
+      "历史 S3a/S3b 证据使用 rev1 profile；异步证据使用 rev2（async_events:[\"IRQ\"]），版本差异已在 evidence/scenario-sim/README.md 记录"
+    ],
+    "out_of_scope": [
+      "真实 Linux/Kbuild 环境（外部前置）",
+      "跨参考机性能预算校准",
+      "桌面宿主热更新/其它 OS 出口"
+    ]
+  },
+  "commits": [
+    "2694ee5 CW-T1 只读切片",
+    "c7c5d4f S2a 五视图",
+    "c7c6f8d S2b 组折叠/接口库/子流程",
+    "a18ffcc S3a 场景/打桩/台账/observed",
+    "295f2fe S3b 回退/轨迹导入/多场景",
+    "bbd42d6 S4-prep AI 归纳+性能基线+Windows 签名密钥修复",
+    "0098942 S4-prep 首屏优化+Linux 可移植性探测",
+    "69a1173 S4-prep 批量首屏+coupling_aux（首屏预算达标）+机制文档"
+  ],
+  "verdict": "已实现并逐阶段在隔离 dsh-web 验证：只读工作台/五视图/组折叠/接口库/子流程/场景执行/打桩/台账/回退/轨迹导入/observed/AI 归纳/批量首屏/异步 IRQ。S4 目标门禁（真实 Linux/Kbuild、CFG/locks/aliases、复核、OS 出口）因环境前置不具备而未验证、不可声明；真实设备下发与图内源码写回未授权/待产品确认。"
+}

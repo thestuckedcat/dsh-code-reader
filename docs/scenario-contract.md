@@ -250,3 +250,64 @@ real_device_dispatch gaps 原样；console error=0、无绝对路径。另：eng
 证据见 `evidence/s3/`（`verification.json`、`s3-stub-run.png`/`s3-stub-stub.png`/`s3-sequence-observed.png`/
 `s3-main.png`、S1/S2a/S2b 回归截图、`host-runtime.json/tap`、`commands.log`、引擎/Node 测试日志、README）。
 已知交互限制（S3b 候选）：observed 默认最近更新台账、无多场景选择器；跨场景后重跑旧场景可能 CAS 冲突。
+
+## 11. 增量：异步/IRQ 事件边界（2026-11-15，S4-prep 收尾）
+
+设计依据：设计 A08/§3“异步完成单独显示事件触发”。Demo 的 `bus_irq` 入口会触发平台 IRQ 事件；当前
+observed 时序把 IRQ 当普通 event，无法看出它是异步完成/中断触发。本增量给事件增加**异步边界标记**，
+不改静态投影、不改台账记录语义（记录仍只包含顺序与事件本身）。
+
+### 11.1 Profile / 导入轨迹的异步事件声明
+
+- SimProfileV1 新增可选顶层字段 `async_events`：事件名数组（≤16，去重，每个必须是 `trace.events` 中的
+  事件名）；缺省为空 = 无异步事件。profile 签名/摘要覆盖该字段（重导入产生新 digest）。
+- 导入轨迹（`trace-import`）文件新增可选顶层字段 `async_events`：≤16 事件名，必须属于该轨迹 steps 的
+  events；缺省为空。导入台账 `limitations` 增加 `async_events_declared`（当有声明时）。
+- Demo 夹具 `evidence/scenario-sim/inbox/sim-profile.json` 声明 `["IRQ"]`（rev2）；历史 S3a/S3b 证据使用
+  rev1（sha 记录在各自 verification.json），本轮异步证据使用 rev2，README 记版本差异。
+- 校验：非法（非数组/超 16/重复/未知事件/非字符串）→ `INVALID_ARGUMENT`；无绝对路径。
+
+### 11.2 observed 时序 DTO 与 UI
+
+- `view-sequence-observed`：当台账有异步事件声明时，对应 event 消息增加 `"async":true`（其余消息
+  `async:false` 或不含；契约以 `async:true` 为准），并在顶层 `async_events` 返回声明列表（≤16，供图例）。
+  call/access/return 消息不受影响；无声明时行为与 S3b 完全一致。
+- 客户端 observed 时序：异步事件消息加 `[data-sequence-async="true"]` 标记与“异步”chip（样式区分，
+  不改变消息顺序/观察语义）；图例/头部说明“异步：由中断/完成事件触发，仍来自已执行或导入的台账”；
+  静态预测模式不显示 async 标记。
+- 不推断“因果完成”与否：`async:true` 只表示该事件在 profile 中被声明为异步触发，不表示硬件中断已发生。
+
+### 11.3 验收（`node tools/verify-irq.mjs --with-repo-tests`）
+
+隔离 profile + 真实 dsh web：
+1) 用 rev2 profile 运行包含 `bus_irq` 的场景（reset, bus_register(1), bus_irq）→ 台账成功、observed 返回
+   IRQ 事件 `async:true`（若 bus_irq 不产生事件则如实记录该 Demo 行为并改为构造导入轨迹验证）；
+2) dsh-web observed 视图出现 `[data-sequence-async="true"]`（IRQ 消息）与“异步”chip；
+3) 无 async 声明的导入轨迹（rev1 trace）observed 不出现 async 标记（旧行为不变）；
+4) 非法 `async_events`（重复/未知/超 16）被引擎拒绝且不写台账；无绝对路径、console=0；
+5) 证据 `evidence/async-irq/{verification.json,README.md,async-irq.png}`；回归 S3b/S3a/S2b/summary + Node/
+   Demo。
+
+### 11.4 文件所有权
+
+| 负责人 | 写入范围 |
+|---|---|
+| engine | `engine/code_learning/scenario.py`、`cli.py`、`engine/tests/test_scenario.py`（async_events 校验/observed 标记/导入轨迹） |
+| client | `bundle/client.js`、`tests/node/client.test.mjs`、`tests/node/helpers/client-harness.mjs` |
+| verifier | `tools/verify-irq.mjs`、`tools/irq-probe.cjs`、`evidence/async-irq/` |
+| Lead | 夹具 rev2、`docs/scenario-contract.md`、`source.lock.json`、集成/提交 |
+
+### 11.5 验收结果（2026-11-15，T41 最终）
+
+`node tools/verify-irq.mjs --with-repo-tests` → **34/34 全绿**，layers 全 true，`ok=true, verified=true`；
+`in_scope_not_verified=0`、out_of_scope 5。真实 Wasm 路径（无需 fallback）：rev2 profile（sha256
+`1c9ae155…`）真实导入 → `reset → bus_register(1) → bus_irq()` 台账 records `[null,0,0]`，bus_irq 真实产生
+`IRQ` 事件（observed `async_events:["IRQ"]`、IRQ 消息 `async:true`，无绝对路径）；真实 dsh web observed 出现
+`[data-sequence-async="true"]`（IRQ 消息 `IRQ: write irq_count`）+ `[data-sequence-async-chip]`“异步”+
+`[data-sequence-async-note]` 说明；static 模式与 rev1 导入台账无 async 标记（旧行为不变）；非法 async_events
+（重复/未知/超16/非数组）对 `sim-profile-import` 与 `trace-import` 均 `INVALID_ARGUMENT` 且不写台账；
+console=0。另验证带 `async_events` 的导入轨迹路径（`async_events_declared`）。回归 S3b/S3a（residual=[]）/
+S2b/summary + Node `195/195` + Demo 8/8 全绿。证据 `evidence/async-irq/`（`verification.json`、
+`async-irq.png`、`README.md`、`commands.log`）。out_of_scope：真实硬件 IRQ 因果/中断完成判定、真实设备与外部
+轨迹采集、跨进程异步调度证明、rev1 历史证据重跑、超大 payload async 变体；`async:true` 只表示声明为异步触发，
+不推断中断已发生。

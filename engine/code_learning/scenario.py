@@ -56,6 +56,7 @@ MAX_INTERFACES = 32
 MAX_PARAMS = 8
 MAX_EVENTS = 64
 MAX_EVENT_RESOURCES = 256
+MAX_ASYNC_EVENTS = 16
 MAX_LIMITATIONS = 16
 
 #: Scenario / plan / record limits (contract section 3).
@@ -103,6 +104,7 @@ _PROFILE_KEYS = frozenset(
         "trace",
         "event_resources",
         "limitations",
+        "async_events",
     }
 )
 _BINDING_KEYS = frozenset({"workspace_id", "variant_id", "repo_id", "snapshot_id"})
@@ -158,7 +160,7 @@ _RECORD_KEYS = frozenset(
 )
 _EVENT_KEYS = frozenset({"event", "code", "a", "b", "c", "line"})
 _IMPORTED_TRACE_KEYS = frozenset(
-    {"schema_version", "kind", "label", "profile_id", "snapshot_id", "metadata", "steps"}
+    {"schema_version", "kind", "label", "profile_id", "snapshot_id", "metadata", "steps", "async_events"}
 )
 _TRACE_STEP_KEYS = frozenset(
     {"interface", "args", "status", "result", "events", "memory_digest", "elapsed_ms"}
@@ -187,6 +189,7 @@ _LEDGER_KEYS = frozenset(
         "source",
         "label",
         "metadata",
+        "async_events",
     }
 )
 
@@ -427,6 +430,31 @@ def _validate_trace(trace: Any) -> Dict[str, Any]:
     }
 
 
+def _validate_async_event_names(
+    value: Any, known: Set[str], where: str
+) -> List[str]:
+    """Validate an optional ``async_events`` declaration (contract section 11).
+
+    Order is preserved; duplicates and names that are not declared by the
+    profile trace table (or by the imported trace steps) are rejected.
+    """
+    raw = expect_array(value, where, max_items=MAX_ASYNC_EVENTS)
+    normalized: List[str] = []
+    seen: Set[str] = set()
+    for index, item in enumerate(raw):
+        name = expect_str(item, f"{where}[{index}]", max_len=64)
+        if name not in known:
+            fail(
+                "INVALID_ARGUMENT",
+                f"{where}[{index}] is not a declared event name",
+            )
+        if name in seen:
+            fail("INVALID_ARGUMENT", f"{where}[{index}] is a duplicate event name")
+        seen.add(name)
+        normalized.append(name)
+    return normalized
+
+
 def _validate_event_resources(
     event_resources: Any, events: Dict[str, int], graph: Dict[str, Any]
 ) -> Dict[str, List[Dict[str, Any]]]:
@@ -536,6 +564,9 @@ def _validate_profile(
         profile.get("event_resources", {}), trace["events"], graph
     )
     limitations = _validate_limitations(profile.get("limitations"))
+    async_events = _validate_async_event_names(
+        profile.get("async_events", []), set(trace["events"]), "async_events"
+    )
 
     module_path = state.inbox_file(module_file, max_bytes=MAX_MODULE_BYTES)
     try:
@@ -548,24 +579,27 @@ def _validate_profile(
     if actual_sha != module_sha:
         fail("INVALID_ARGUMENT", "simulation module sha256 does not match the profile")
 
-    return {
-        "profile": {
-            "schema_version": 1,
-            "profile_id": profile_id,
-            "label": label,
-            "kind": kind,
-            "binding": {
-                "workspace_id": binding_workspace,
-                "variant_id": binding_variant,
-                "repo_id": binding_repo,
-                "snapshot_id": binding_snapshot,
-            },
-            "module": {"file": module_file, "sha256": module_sha},
-            "interfaces": interfaces,
-            "trace": trace,
-            "event_resources": event_resources,
-            "limitations": limitations,
+    normalized_profile: Dict[str, Any] = {
+        "schema_version": 1,
+        "profile_id": profile_id,
+        "label": label,
+        "kind": kind,
+        "binding": {
+            "workspace_id": binding_workspace,
+            "variant_id": binding_variant,
+            "repo_id": binding_repo,
+            "snapshot_id": binding_snapshot,
         },
+        "module": {"file": module_file, "sha256": module_sha},
+        "interfaces": interfaces,
+        "trace": trace,
+        "event_resources": event_resources,
+        "limitations": limitations,
+    }
+    if async_events:
+        normalized_profile["async_events"] = async_events
+    return {
+        "profile": normalized_profile,
         "module_bytes": module_bytes,
         "module_bytes_len": len(module_bytes),
         "module_sha256": module_sha,
@@ -599,6 +633,7 @@ def _profile_projection(record: Dict[str, Any]) -> Dict[str, Any]:
             for name, entries in profile["event_resources"].items()
         },
         "limitations": list(profile["limitations"]),
+        "async_events": list(profile.get("async_events") or []),
     }
 
 
@@ -848,6 +883,7 @@ def sim_profile_list(state: Any, workspace_ref: str) -> Dict[str, Any]:
                     "module_bytes": record["module_bytes_len"],
                     "interface_count": len(profile["interfaces"]),
                     "interfaces": _interfaces_projection(profile["interfaces"]),
+                    "async_events": list(profile.get("async_events") or []),
                     "limits": _plan_limits(),
                     "trace_events": {
                         name: profile["trace"]["events"][name]
@@ -870,6 +906,7 @@ def sim_profile_list(state: Any, workspace_ref: str) -> Dict[str, Any]:
                     "module_bytes": entry.get("module_bytes"),
                     "interface_count": None,
                     "interfaces": [],
+                    "async_events": [],
                     "limits": _plan_limits(),
                     "trace_events": {},
                     "limited": None,
@@ -2103,13 +2140,20 @@ def trace_import(
         _validate_imported_trace_step(step, index)
         for index, step in enumerate(raw_steps)
     ]
-    scenario_digest = util.digest(
-        {
-            "kind": "imported_trace",
-            "snapshot_id": snapshot_id,
-            "steps": steps,
-        }
+    trace_event_names: Set[str] = {
+        event["event"] for step in steps for event in step["events"]
+    }
+    async_events = _validate_async_event_names(
+        document.get("async_events", []), trace_event_names, "async_events"
     )
+    digest_payload: Dict[str, Any] = {
+        "kind": "imported_trace",
+        "snapshot_id": snapshot_id,
+        "steps": steps,
+    }
+    if async_events:
+        digest_payload["async_events"] = async_events
+    scenario_digest = util.digest(digest_payload)
     scenario_id = "scn_" + scenario_digest[:12]
     request_digest = util.digest(
         {
@@ -2136,6 +2180,12 @@ def trace_import(
     for step in steps:
         step["role"] = "util"
         step["affected_resources"] = []
+    limitations = [
+        "imported_trace_not_executed_by_host",
+        "resource_effects_unknown_for_imported_trace",
+    ]
+    if async_events:
+        limitations.append("async_events_declared")
     ledger = _publish_generation(
         state,
         scenario_id=scenario_id,
@@ -2151,15 +2201,13 @@ def trace_import(
             profile_record["module_sha256"] if profile_record is not None else None
         ),
         records=steps,
-        limitations=[
-            "imported_trace_not_executed_by_host",
-            "resource_effects_unknown_for_imported_trace",
-        ],
+        limitations=limitations,
         extra_ledger={
             "imported": True,
             "source": "imported_trace",
             "label": label,
             "metadata": metadata,
+            **({"async_events": async_events} if async_events else {}),
         },
         current_extra={
             "imported": True,
@@ -2336,6 +2384,21 @@ def view_sequence_observed(
     else:
         source_refs, driver_files, object_files = {}, set(), {}
         interface_roles = {}
+    # Contract section 11: async declarations come from the profile for
+    # executed ledgers and from the imported trace document for imported ones
+    # (a rev1 imported trace stays legacy S3b-shaped even if its optional
+    # profile binding now declares async events).
+    async_events: List[str] = []
+    if imported:
+        raw_async = ledger.get("async_events")
+    elif profile is not None:
+        raw_async = profile.get("async_events")
+    else:
+        raw_async = None
+    if isinstance(raw_async, list):
+        async_events = [
+            name for name in raw_async if isinstance(name, str)
+        ][:MAX_ASYNC_EVENTS]
     messages: List[Dict[str, Any]] = []
     truncated = False
 
@@ -2365,6 +2428,8 @@ def view_sequence_observed(
             "imported": fields.pop("imported", imported),
         }
         message.update(fields)
+        if async_events:
+            message["async"] = message.get("event") in async_events
         messages.append(message)
 
     for record_item in ledger["records"]:
@@ -2467,7 +2532,7 @@ def view_sequence_observed(
     if imported:
         scenario_block["label"] = ledger.get("label")
         scenario_block["source"] = ledger.get("source")
-    return {
+    result: Dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "mode": "observed",
         "observed": True,
@@ -2490,3 +2555,6 @@ def view_sequence_observed(
             else ["observed_wasm_simulation_not_real_device"]
         ),
     }
+    if async_events:
+        result["async_events"] = list(async_events)
+    return result

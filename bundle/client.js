@@ -338,6 +338,8 @@ traceImportSuccess:'已导入轨迹台账：',
 traceImportInvalid:'文件名只能是 inbox 内的普通文件名（A-Za-z0-9._-，≤256）。',
 sequenceScenarioLabel:'台账场景',
 sequenceImportedBadge:'imported · ',
+sequenceAsyncChip:'异步',
+sequenceAsyncNote:'异步：由中断/完成事件触发，仍来自已执行或导入的台账',
 sequenceScenarioNoLedger:'暂无运行台账可切换。',
 };
 function isRecord(value){
@@ -1316,6 +1318,7 @@ evidence_ids:copyStringArray(message.evidence_ids,32),
 limitations:copyStringArray(message.limitations,32),
 observed:message.observed===true,
 imported:message.imported===true,
+async:message.async===true,
 call_id:copyNullableString(message.call_id),
 step_index:toInteger(message.step_index),
 stubbed:message.stubbed===true,
@@ -1335,6 +1338,7 @@ scenario:normalizeObservedScenario(source.scenario),
 participants:participants,
 messages:messages,
 gaps:Array.isArray(source.gaps)?source.gaps:[],
+async_events:copyStringArray(source.async_events,16),
 truncated:source.truncated===true,
 limitations:copyStringArray(source.limitations,32),
 };
@@ -4095,13 +4099,15 @@ var d=self?('M '+fromX+' 8 h 3 v 8 h -3'):('M '+fromX+' 10 H '+toX);
 var dashed=message.kind==='return'||message.kind==='external'||message.kind==='error';
 var arrowClass='dcr-arrow'+(message.kind==='error'?' dcr-arrow-exception':'');
 var selected=props.focusCallsiteId!==null&&message.callsite_id===props.focusCallsiteId;
+var asyncFlag=observedFlag===true&&message.async===true;
 return el('div',{
 key:message.message_id,
-className:'dcr-seq-row dcr-seq-'+message.kind+(selected?' dcr-selected':''),
+className:'dcr-seq-row dcr-seq-'+message.kind+(selected?' dcr-selected':'')+(asyncFlag?' dcr-seq-async-row':''),
 'data-sequence-message':message.message_id,
 'data-message-kind':message.kind,
 'data-certainty':message.certainty,
 'data-observed':observedFlag===true?'true':undefined,
+'data-sequence-async':asyncFlag?'true':undefined,
 'data-call-id':observedFlag===true&&message.call_id!==null?message.call_id:undefined,
 tabIndex:0,
 role:'button',
@@ -4129,6 +4135,7 @@ observedFlag===true&&message.result!==null?el('span',{className:'dcr-meta'},'结
 observedFlag===true&&message.stubbed===true?el('span',{className:'dcr-chip dcr-stub-boundary-chip','data-stubbed':'true'},'stubbed'):null,
 observedFlag===true&&message.imported===true?el('span',{className:'dcr-chip'},'imported'):null,
 observedFlag===true&&message.event!==null?el('span',{className:'dcr-chip'},'event '+message.event+(message.code===null?'':' #'+String(message.code))):null,
+asyncFlag?el('span',{className:'dcr-chip dcr-seq-async-chip','data-sequence-async-chip':''},TEXT.sequenceAsyncChip):null,
 observedFlag===true?message.affected_resources.map(function(resource){
 return el('span',{key:resource.resource_id,className:'dcr-chip dcr-stub-affect','data-stub-affect':resource.resource_id,'data-resource-id':resource.resource_id},resource.name+' · '+accessLabel(resource.access));
 }):null,
@@ -4195,9 +4202,14 @@ var observedPayloadRecord=isRecord(observed.payload)?observed.payload:{};
 var importedScenario=observedPayloadRecord.imported===true||(scenario!==null&&scenario.imported===true)||(selectedSummary!==null&&selectedSummary.imported===true);
 var scenarioLabel=scenario!==null&&scenario.label!==null?scenario.label:(selectedSummary!==null?selectedSummary.label:null);
 if(scenarioLabel===null&&copyNullableString(observedPayloadRecord.label)!==null)scenarioLabel=observedPayloadRecord.label;
+var asyncDeclared=observedSequence.async_events.length>0;
+for(var asyncIndex=0;asyncIndex<observedSequence.messages.length;asyncIndex+=1){
+if(observedSequence.messages[asyncIndex].async===true){asyncDeclared=true;break;}
+}
 body=el('div',null,
 scenarioPicker,
 el('p',{className:'dcr-warning dcr-warning-observed','data-sequence-observed':'true'},TEXT.sequenceObservedTitle+' · '+TEXT.sequenceObservedTrue),
+asyncDeclared?el('p',{className:'dcr-warning dcr-warning-async','data-sequence-async-note':''},TEXT.sequenceAsyncNote):null,
 importedScenario?el('p',{className:'dcr-chip dcr-seq-imported','data-sequence-imported':'true'},TEXT.sequenceImportedBadge+String(scenarioLabel!==null?scenarioLabel:'imported trace')):null,
 observedSequence.limitations.length>0?el('p',{className:'dcr-muted','data-sequence-limitations':''},observedSequence.limitations.join('、')):null,
 el('div',{className:'dcr-seq-scenario','data-scenario-id':scenario!==null&&scenario.scenario_id!==null?scenario.scenario_id:undefined,'data-scenario-generation':scenario!==null&&scenario.generation!==null?String(scenario.generation):undefined},
@@ -4762,6 +4774,9 @@ var EXTRA_CSS=[
 '.dcr-stub-undobar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}',
 '.dcr-stub-trace{display:flex;flex-direction:column;gap:5px;}',
 '.dcr-seq-imported{display:inline-block;margin:2px 0;}',
+'.dcr-seq-async-row{border-left:2px dashed var(--dsh-warning-color,currentColor);}',
+'.dcr-seq-async-chip{border-style:dashed;}',
+'.dcr-warning-async{margin:2px 0;padding:6px 8px;border-left:3px dashed var(--dsh-warning-color,currentColor);}',
 ].join('\n');
 CSS=CSS+'\n'+EXTRA_CSS;
 function createInitialFileState(){

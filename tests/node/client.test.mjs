@@ -3078,3 +3078,111 @@ test('coupling view batches ignore coupling_aux and use view_payload (old behavi
   assert.equal(viewRoot(h).props['data-state'], 'ready');
   assert.ok(h.nodeByData('data-resource-row', ROUTES_ID));
 });
+
+// ---------------------------------------------------------------------------
+// 17. S4-prep: observed async/IRQ event markers
+// ---------------------------------------------------------------------------
+
+function asyncRows(h) {
+  return h.findAll((node) => node.props && node.props['data-sequence-async'] === 'true');
+}
+function asyncNote(h) {
+  return h.findAll((node) => node.props && node.props['data-sequence-async-note'] !== undefined)[0];
+}
+async function enterObserved(h) {
+  await openEntry(h);
+  await switchView(h, 'sequence');
+  await h.settle();
+  h.clickNode(h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0]);
+  await h.settle();
+  await h.settle();
+}
+
+test('observed async event renders the 异步 chip, data-sequence-async marker and the header note', async (t) => {
+  const h = bootHarness({
+    'scenario.list': () => makeScenarioLedgerPayload({scenarios: [makeScenarioSummary()]}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await enterObserved(h);
+  const rows = asyncRows(h);
+  assert.equal(rows.length, 1, 'exactly the async IRQ message is marked');
+  assert.equal(rows[0].props['data-sequence-message'], 'm_7');
+  assert.equal(rows[0].props['data-observed'], 'true');
+  assert.ok(h.textOf(rows[0]).includes('IRQ'));
+  assert.ok(h.textOf(rows[0]).includes('异步'));
+  assert.ok(h.findAll((node) => node.props && node.props['data-sequence-async-chip'] !== undefined).length >= 1);
+  const writeRow = h.findAll((node) => node.props && node.props['data-sequence-message'] === 'm_2')[0];
+  assert.ok(writeRow);
+  assert.equal(writeRow.props['data-sequence-async'], undefined, 'non-async observed messages have no async marker');
+  assert.equal(h.textOf(writeRow).includes('异步'), false);
+  const note = asyncNote(h);
+  assert.ok(note, 'header note appears when async messages exist');
+  assert.ok(h.textOf(note).includes('由中断/完成事件触发'));
+  assert.ok(h.textOf(note).includes('已执行或导入'));
+  assert.ok(h.text().includes('observed=true'), 'old observed header hook still present');
+  assert.equal(h.findAll((node) => node.props && node.props['data-sequence-message'] !== undefined && node.props['data-observed'] === 'true').length >= 7, true);
+  assert.equal(h.text().includes('E:\\'), false);
+});
+
+test('static prediction mode never renders async markers or the async note', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await switchView(h, 'sequence');
+  assert.equal(asyncRows(h).length, 0);
+  assert.equal(asyncNote(h), undefined);
+  assert.equal(h.text().includes('异步：由中断/完成事件触发'), false);
+  assert.equal(h.findAll((node) => node.props && node.props['data-sequence-async-chip'] !== undefined).length, 0);
+});
+
+test('switching observed -> static -> observed updates the async markers', async (t) => {
+  const h = bootHarness({
+    'scenario.list': () => makeScenarioLedgerPayload({scenarios: [makeScenarioSummary()]}),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await enterObserved(h);
+  assert.equal(asyncRows(h).length, 1);
+  assert.ok(asyncNote(h));
+  h.clickNode(h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'static')[0]);
+  await h.settle();
+  assert.equal(asyncRows(h).length, 0, 'static mode clears the async markers');
+  assert.equal(asyncNote(h), undefined);
+  h.clickNode(h.findAll((node) => node.props && node.props['data-sequence-mode'] === 'observed')[0]);
+  await h.settle();
+  await h.settle();
+  assert.equal(asyncRows(h).length, 1, 'returning to observed restores the async marker');
+  assert.ok(asyncNote(h));
+});
+
+test('async markers follow the observed scenario selection', async (t) => {
+  const scenarios = [
+    makeScenarioSummary({scenario_id: 'scn_0123456789ab', generation: 2, updated_at: '2026-11-15T09:00:00Z'}),
+    makeImportedScenarioSummary({updated_at: '2026-11-15T08:00:00Z'}),
+  ];
+  const h = bootHarness({
+    'scenario.list': () => makeScenarioLedgerPayload({scenarios}),
+    'view.sequence': (payload) => {
+      if (payload.mode !== 'observed') return makeSequencePayload();
+      return payload.scenario === 'scn_1a2b3c4d5e6f' ? makeImportedObservedSequencePayload() : makeObservedSequencePayload();
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await enterObserved(h);
+  assert.equal(asyncRows(h).length, 1);
+  const select = h.findAll((node) => node.props && node.props['data-sequence-scenario-select'] !== undefined)[0];
+  select.props.onChange({target: {value: 'scn_1a2b3c4d5e6f'}});
+  await h.settle();
+  await h.settle();
+  assert.equal(asyncRows(h).length, 0, 'an imported trace without async declarations has no async marker');
+  assert.equal(asyncNote(h), undefined);
+  const selectAgain = h.findAll((node) => node.props && node.props['data-sequence-scenario-select'] !== undefined)[0];
+  selectAgain.props.onChange({target: {value: 'scn_0123456789ab'}});
+  await h.settle();
+  await h.settle();
+  assert.equal(asyncRows(h).length, 1, 'switching back restores the async marker for the simulated ledger');
+  assert.ok(asyncNote(h));
+});

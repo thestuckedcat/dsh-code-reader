@@ -19,8 +19,8 @@
 | 文件 | 说明 |
 |---|---|
 | `bus.wasm`（=`inbox/bus.wasm`） | 隔离模拟模块；sha256 见上 |
-| `inbox/sim-profile.json` | 可信 SimProfileV1：绑定、接口（entry/util/stub_control）、trace 事件表、事件→资源映射、局限 |
-| `inbox/trace-bus-send.json` | S3b 轨迹导入夹具：外部采集的 reset/bus_register(1)/bus_send(1,48) 记录（3418 B，sha256 `8860df515c39ae26cf62edfc8da74f454bcc3e65677092a7559aaf6d05d47e06`），导入时插件不执行代码 |
+| `inbox/sim-profile.json` | 可信 SimProfileV1：绑定、接口（entry/util/stub_control）、trace 事件表、事件→资源映射、局限、**rev2 增加 `async_events:["IRQ"]`**（异步/IRQ 边界，见 `docs/scenario-contract.md` §11；rev1 sha256 `268d312a…` 见 S3a/S3b 历史证据，rev2 当前 sha256 `1c9ae1553f06486353cb0044f11d96fc0f1fc58eca13e9fe8dfca99747c298d9`，4793 B） |
+| `inbox/trace-bus-send.json` | S3b 轨迹导入夹具（rev1，无 async 声明）：外部采集的 reset/bus_register(1)/bus_send(1,48) 记录（3418 B，sha256 `8860df515c39ae26cf62edfc8da74f454bcc3e65677092a7559aaf6d05d47e06`），导入时插件不执行代码 |
 | `README.md` | 本文件 |
 
 ## 用途与边界

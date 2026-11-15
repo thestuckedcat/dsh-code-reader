@@ -1,0 +1,1191 @@
+{
+  "ok": true,
+  "verified": true,
+  "started_at_utc": "2026-11-15T14:59:12.173Z",
+  "checks": {
+    "host.pinned_baseline": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "executable": {
+          "path": "E:/dsh/DeepSeek Harness.exe",
+          "sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+        },
+        "archive": {
+          "path": "E:/dsh/resources/app.asar",
+          "sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "dsh_version": "0.2.1-rc.5"
+        },
+        "failed": []
+      }
+    },
+    "atlas.rev2_profile_fixture": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "profile_sha256": "1c9ae1553f06486353cb0044f11d96fc0f1fc58eca13e9fe8dfca99747c298d9",
+        "async_events": [
+          "IRQ"
+        ],
+        "note": "rev2 fixture (Lead-updated); rev1 historical evidence in evidence/s3b and evidence/s3a stays valid"
+      }
+    },
+    "atlas.atlas_import": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "workspace_exit": 0,
+        "snapshot_exit": 0,
+        "workspace_error": null,
+        "snapshot_error": null
+      }
+    },
+    "atlas.profile_import_rev2": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "profile_id": "bus-demo-wasm",
+        "label": "Demo bus/platform Wasm 隔离模拟",
+        "module": {
+          "sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+          "bytes": 1547
+        },
+        "async_events": [
+          "IRQ"
+        ],
+        "error": null,
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "atlas.profile_list_async_events": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "profile_id": "bus-demo-wasm",
+        "async_events": [
+          "IRQ"
+        ],
+        "interface_count": 7,
+        "bus_irq_interface": {
+          "name": "bus_irq",
+          "params": [],
+          "returns": "i32",
+          "role": "entry",
+          "entry_id": "f_ff22940e08661e4950585599"
+        },
+        "profiles": [
+          {
+            "profile_id": "bus-demo-wasm",
+            "async_events": [
+              "IRQ"
+            ]
+          }
+        ],
+        "error": null
+      }
+    },
+    "atlas.invalid_async_profile_rejected": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "cases": {
+          "duplicate": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events[1] is a duplicate event name"
+          },
+          "unknown": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events[0] is not a declared event name"
+          },
+          "non_array": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events must be an array"
+          },
+          "too_many": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events must contain between 0 and 16 items"
+          }
+        },
+        "profiles_before": 1,
+        "profiles_after": 1,
+        "note": "duplicate / unknown / non-array / >16 all rejected with INVALID_ARGUMENT; no profile registered"
+      }
+    },
+    "atlas.rev1_trace_import": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "scenario_id": "scn_982682c88e20",
+        "observed": true,
+        "imported": true,
+        "limitations": [
+          "imported_trace_not_executed_by_host",
+          "resource_effects_unknown_for_imported_trace"
+        ],
+        "async_events": null,
+        "note": "rev1 fixture: no async_events declaration, expected to stay without async markers",
+        "error": null
+      }
+    },
+    "atlas.invalid_async_trace_rejected": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "cases": {
+          "duplicate": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events[1] is a duplicate event name"
+          },
+          "unknown": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events[0] is not a declared event name"
+          },
+          "non_array": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events must be an array"
+          },
+          "too_many": {
+            "exit_code": 2,
+            "ok": false,
+            "code": "INVALID_ARGUMENT",
+            "error": "async_events must contain between 0 and 16 items"
+          }
+        },
+        "scenarios_before": 1,
+        "scenarios_after": 1,
+        "note": "invalid async_events on trace-import rejected; ledger generation count unchanged"
+      }
+    },
+    "atlas.async_trace_import": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "scenario_id": "scn_e301506ffcad",
+        "async_events": [
+          "IRQ"
+        ],
+        "limitations": [
+          "imported_trace_not_executed_by_host",
+          "resource_effects_unknown_for_imported_trace",
+          "async_events_declared"
+        ],
+        "error": null
+      }
+    },
+    "atlas.observed_async_engine": {
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "scenario_id": "scn_e301506ffcad",
+        "async_events": [
+          "IRQ"
+        ],
+        "irq_messages": [
+          {
+            "kind": "event",
+            "event": "IRQ",
+            "async": true,
+            "label": "IRQ"
+          }
+        ],
+        "async_true_count": 1,
+        "message_count": 23,
+        "error": null,
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "host.web_shell": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "bytes": 38241,
+        "cookies": [
+          "dsh-auth-UK24UOhJgq_ICelea44lVpA3F0gR8OlCZW_tR0lXw84"
+        ]
+      }
+    },
+    "host.boot_graph_entry": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "entry": {
+          "id": "@local/dsh-code-reader",
+          "rev": "389faa6efb3a",
+          "inject": [
+            "@deepseek-ai/dsh-client-connection",
+            "@deepseek-ai/dsh-client-ui-layout",
+            "@deepseek-ai/dsh-client-ui-renderer"
+          ]
+        },
+        "host_version": "0.2.1-rc.5"
+      }
+    },
+    "host.rpc_profiles_async": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "profiles": [
+          {
+            "profile_id": "bus-demo-wasm",
+            "async_events": [
+              "IRQ"
+            ]
+          }
+        ],
+        "error": null
+      }
+    },
+    "host.rpc_bus_irq_run": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "scenario_id": "scn_7b5258892e19",
+        "records": [
+          {
+            "interface": "reset",
+            "status": "ok",
+            "result": null,
+            "events": []
+          },
+          {
+            "interface": "bus_register",
+            "status": "ok",
+            "result": 0,
+            "events": [
+              "DEFAULT_ROUTE",
+              "STORE_ROUTE"
+            ]
+          },
+          {
+            "interface": "bus_irq",
+            "status": "ok",
+            "result": 0,
+            "events": [
+              "IRQ"
+            ]
+          }
+        ],
+        "bus_irq_events": [
+          "IRQ"
+        ],
+        "bus_irq_produces_irq": true,
+        "error": null
+      }
+    },
+    "host.rpc_bus_irq_observed_async": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "scenario_id": "scn_7b5258892e19",
+        "async_events": [
+          "IRQ"
+        ],
+        "irq_messages": [
+          {
+            "kind": "access",
+            "async": true,
+            "label": "IRQ: write irq_count"
+          }
+        ],
+        "error": null
+      }
+    },
+    "host.rpc_observed_async_primary": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "scenario_id": "scn_7b5258892e19",
+        "source": "bus_irq_wasm_run",
+        "async_events": [
+          "IRQ"
+        ],
+        "async_true_count": 1,
+        "error": null
+      }
+    },
+    "host.rpc_static_no_async": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "mode": "static",
+        "observed": false,
+        "error": null
+      }
+    },
+    "host.rpc_rev1_no_async": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "scenario_id": "scn_982682c88e20",
+        "async_events": null,
+        "async_true_count": 0,
+        "error": null
+      }
+    },
+    "host.rpc_invalid_async_trace": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "code": "INVALID_ARGUMENT",
+        "ledger_before": 3,
+        "ledger_after": 3,
+        "error": null
+      }
+    },
+    "host.irq_probe": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "duration_ms": 12102,
+        "failed_steps": [],
+        "steps": {
+          "page_loaded": true,
+          "window_invisible": true,
+          "sidebar": true,
+          "panel": true,
+          "snapshot": true,
+          "entries": true,
+          "entry_clicked": true,
+          "sequence_ready": true,
+          "observed_enabled": true,
+          "async_marker_seen": true,
+          "window_closed": true
+        },
+        "checks": {
+          "workbench_open": true,
+          "sequence_ready": true,
+          "static_no_async_marker": true,
+          "observed_async_marker": true,
+          "observed_irq_message": true,
+          "observed_async_chip": true,
+          "observed_async_chip_attr": true,
+          "observed_async_note": true,
+          "observed_root": true,
+          "static_vs_observed_diff": true,
+          "rev1_no_async_marker": true,
+          "static_after_no_async_marker": true,
+          "no_absolute_paths": true,
+          "console_errors_zero": true,
+          "screenshot": true
+        },
+        "console_error_count": 0,
+        "observed": {
+          "async_count": 1,
+          "chips": [
+            {
+              "tag": "SPAN",
+              "className": "dcr-chip dcr-seq-async-chip",
+              "text": "异步"
+            }
+          ],
+          "async_event_present": true
+        },
+        "static": {
+          "async_count": 0,
+          "chips": 0,
+          "text": "时序图 mode static observed false 时序模式 静态预测 运行观测 静态预测：无运行观测，不表示实际执行顺序或取值 · observed=false（静态预测，无运行观测） 生命线 · 消息分色；点击消息定位源码。 调用方 驱动 全局资源 设备/库边界 未解析外部边界 #1 调用方 → 驱动 bus_send(unsigned int, unsigned int) 调用 静态确定 证据 e_231505a73a485bc1d8c9249d #2 驱动 → 未解析外部边界 TRACE(REQUEST, channel, length, 0) 分析域边界 候选 证据 e_b6364b1d90515046123ba5fb 限制 implementation_not_found、external_boundary #3 驱动 → 未解析外部边界 TRACE(INVALID,"
+        },
+        "rev1": {
+          "async_count": 0,
+          "chips": 0,
+          "text": "时序图 mode observed observed true scenario scn_982682c88e20 代次 1 时序模式 静态预测 运行观测 台账场景 scn_7b5258892e19 · gen 1 · 3 步 · 2026-11-15T14:59:18Z scn_e301506ffcad · gen 1 · 4 步 · 2026-11-15T14:59:14Z · imported verifier 构造的带 async_events:[\"IRQ\"] 导入轨迹（T41 async 验收夹具） scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T14:59:13Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例） 运行观测（observed） · observed=true（运行台账） im"
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "host.irq_observed_async": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "checks": {
+          "observed_async_marker": true,
+          "observed_irq_message": true,
+          "observed_async_chip": true
+        },
+        "observed": {
+          "observed_root": true,
+          "async_nodes": [
+            {
+              "text": "#8 驱动 → 驱动资源 IRQ: write irq_count 资源访问 运行观测 call call_1_3 event IRQ #17 异步 irq_count · 写入 / 修改",
+              "parent": "#1 调用方 → 驱动 reset() 调用 运行观测 call call_1_1 status ok #2 驱动 → 调用方 返回 null 返回 运行观测 call call_1_1 status ok #3 调用方 → 驱动 bus_register(1) 调用 运行观测 call call_1_2 status ok 结果 0 #4 驱动 → 驱动资源 DEFAULT_ROUTE: read route_defaults 资源访问 运行观测 call call_1_2"
+            }
+          ],
+          "async_count": 1,
+          "chips": [
+            {
+              "tag": "SPAN",
+              "className": "dcr-chip dcr-seq-async-chip",
+              "text": "异步"
+            }
+          ],
+          "async_chip_attr_count": 1,
+          "async_chip_nodes": [
+            {
+              "text": "异步",
+              "className": "dcr-chip dcr-seq-async-chip"
+            }
+          ],
+          "async_note_count": 1,
+          "async_notes": [
+            "异步：由中断/完成事件触发，仍来自已执行或导入的台账"
+          ],
+          "text": "时序图 mode observed observed true scenario scn_7b5258892e19 代次 1 时序模式 静态预测 运行观测 台账场景 scn_7b5258892e19 · gen 1 · 3 步 · 2026-11-15T14:59:18Z scn_e301506ffcad · gen 1 · 4 步 · 2026-11-15T14:59:14Z · imported verifier 构造的带 async_events:[\"IRQ\"] 导入轨迹（T41 async 验收夹具） scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T14:59:13Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例） 运行观测（observed） · observed=true（运行台账） 异步：由中断/完成事件触发，仍来自已执行或导入的台账 observed_wasm_simulation_not_real_device scenario_id scn_7b5258892e19 generation 1 profile bus-demo-wasm records_digest 86f1d59062de… created 2026-11-15T14:59:18Z 消息来自模拟运行台账，observed=true；只代表隔离 Wasm 模拟，不等同真实设备/内核行为。 调用方 驱动 驱动资源 平台/设备边界 #1 调用方 → 驱动 reset() 调用 运行观测 call call_1_1 status ok #2 驱动 → 调用方 返回 null 返回 运行观测 call call_1_1 status ok #3 调用方 → 驱动 bus_register(1) 调用 运行观测 call call_1_2 status ok 结果 0 #4 驱动 → 驱动资源 DEFAULT_ROUTE: read route_defaults 资源访问 运行观测 call call_1_2 event DEFAULT_ROUTE #1 route_defaults · 读取 #5 驱动 → 驱动资源 STORE_ROUTE: write routes 资源访问 运行观测 call call_1_2 event STORE_ROUTE #3 routes · 写入 / 修改 #6 驱动 → 调用方 返回 0 返回 运行观测 call call_1_2 status ok 结果 0 #7 调用方 → 驱动 bus_irq() 调用 运行观测 call call_1_3 status ok 结果 0 #8 驱动 → 驱动资源 IRQ: write irq_count 资源访问 运行",
+          "async_event_present": true
+        }
+      }
+    },
+    "host.irq_async_chrome": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "checks": {
+          "observed_async_chip_attr": true,
+          "observed_async_note": true
+        },
+        "chip_nodes": [
+          {
+            "text": "异步",
+            "className": "dcr-chip dcr-seq-async-chip"
+          }
+        ],
+        "notes": [
+          "异步：由中断/完成事件触发，仍来自已执行或导入的台账"
+        ]
+      }
+    },
+    "host.irq_static_no_marker": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "static": {
+          "async_count": 0,
+          "chips": 0,
+          "text": "时序图 mode static observed false 时序模式 静态预测 运行观测 静态预测：无运行观测，不表示实际执行顺序或取值 · observed=false（静态预测，无运行观测） 生命线 · 消息分色；点击消息定位源码。 调用方 驱动 全局资源 设备/库边界 未解析外部边界 #1 调用方 → 驱动 bus_send(unsigned int, unsigned int) 调用 静态确定 证据 e_231505a73a485bc1d8c9249d #2 驱动 → 未解析外部边界 TRACE(REQUEST, channel, length, 0) 分析域边界 候选 证据 e_b6364b1d90515046123ba5fb 限制 implementation_not_found、external_boundary #3 驱动 → 未解析外部边界 TRACE(INVALID,"
+        },
+        "static_after": {
+          "async_count": 0
+        }
+      }
+    },
+    "host.irq_rev1_no_marker": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "rev1": {
+          "async_count": 0,
+          "chips": 0,
+          "text": "时序图 mode observed observed true scenario scn_982682c88e20 代次 1 时序模式 静态预测 运行观测 台账场景 scn_7b5258892e19 · gen 1 · 3 步 · 2026-11-15T14:59:18Z scn_e301506ffcad · gen 1 · 4 步 · 2026-11-15T14:59:14Z · imported verifier 构造的带 async_events:[\"IRQ\"] 导入轨迹（T41 async 验收夹具） scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T14:59:13Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例） 运行观测（observed） · observed=true（运行台账） im"
+        }
+      }
+    },
+    "host.irq_console_clean": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_error_count": 0,
+        "console_lines": []
+      }
+    },
+    "host.irq_no_absolute_paths": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "absolute_paths": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "host.irq_screenshot": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "screenshot": {
+          "path": "evidence/async-irq/async-irq.png",
+          "bytes": 163779,
+          "sha256": "36907e95a96fd29d3f47d16c9e2a1971a81a4ecd7219fbc5fb9da1de378fe022"
+        }
+      }
+    },
+    "regression.s3b": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "check": {
+          "ok": true,
+          "detail": {
+            "exit_code": 0,
+            "failed_steps": [],
+            "console_error_count": 0,
+            "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+          }
+        },
+        "exit_code": 0,
+        "log_tail": "[readonly-slice] perf-regressions: booted http://127.0.0.1:10303/?token=<redacted>\n"
+      }
+    },
+    "regression.s3a": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "check": {
+          "ok": true,
+          "detail": {
+            "exit_code": 1,
+            "residual_failed_steps": [],
+            "ignored_superseded": [
+              "s3bGap",
+              "traceImportGap",
+              "capabilityGaps",
+              "undoDisabled"
+            ],
+            "console_error_count": 0,
+            "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+          }
+        }
+      }
+    },
+    "regression.s2b": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "check": {
+          "ok": true,
+          "detail": {
+            "exit_code": 0,
+            "failed_steps": [],
+            "console_error_count": 0,
+            "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+          }
+        }
+      }
+    },
+    "regression.summary": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "check": {
+          "ok": true,
+          "detail": {
+            "gap": {
+              "exit_code": 0,
+              "ok": true,
+              "steps": {
+                "pageLoaded": true,
+                "windowShownInvisible": true,
+                "bodySettled": true,
+                "panelOpened": true,
+                "statusReady": true,
+                "entriesListed": true,
+                "entryClicked": {
+                  "ok": true
+                },
+                "workbenchOpened": true,
+                "busSendSelected": true,
+                "gapShown": true,
+                "noText": true,
+                "noSummaryRecord": true,
+                "noAbsolutePaths": true,
+                "noConsoleErrors": true
+              }
+            },
+            "summary_put": {
+              "exit_code": 0,
+              "ok": true,
+              "projection_text": "bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。此归纳基于静态结构与源码文本，未含运行观测。"
+            },
+            "written": {
+              "exit_code": 0,
+              "ok": true,
+              "steps": {
+                "pageLoaded": true,
+                "windowShownInvisible": true,
+                "bodySettled": true,
+                "panelOpened": true,
+                "statusReady": true,
+                "entriesListed": true,
+                "entryClicked": {
+                  "ok": true
+                },
+                "workbenchOpened": true,
+                "busSendSelected": true,
+                "textShown": true,
+                "textMatches": true,
+                "generatorShown": true,
+                "generatedAtShown": true,
+                "factsShown": true,
+                "staleFalse": true,
+                "gapGone": true,
+                "noAbsolutePaths": true,
+                "noConsoleErrors": true
+              }
+            },
+            "console_error_counts": {
+              "gap": 0,
+              "written": 0
+            },
+            "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+          }
+        }
+      }
+    },
+    "regression.console_clean": {
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "probes": {
+          "s3b": 0,
+          "s3a": 0,
+          "s2b": 0,
+          "summary_gap": 0,
+          "summary_written": 0
+        }
+      }
+    },
+    "regression.node_tests": {
+      "ok": true,
+      "layer": "demo_observed",
+      "detail": {
+        "summary": {
+          "tests": 195,
+          "pass": 195,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "view budget\n  ---\n  duration_ms: 0.8452\n  type: 'test'\n  ...\n# Subtest: view.firstScreen passes engine error documents through unchanged\nok 191 - view.firstScreen passes engine error documents through unchanged\n  ---\n  duration_ms: 0.5905\n  type: 'test'\n  ...\n# Subtest: view endpoints map BridgeError without leaking host paths\nok 192 - view endpoints map BridgeError without leaking host paths\n  ---\n  duration_ms: 0.5809\n  type: 'test'\n  ...\n# Subtest: the 512 KiB response cap still applies to five-view responses\nok 193 - the 512 KiB response cap still applies to five-view responses\n  ---\n  duration_ms: 0.8612\n  type: 'test'\n  ...\n# Subtest: plugin identity is unchanged and the UI fiber stays pending without host services\nok 194 - plugin identity is unchanged and the UI fiber stays pending without host services\n  ---\n  duration_ms: 0.8548\n  type: 'test'\n  ...\n# Subtest: plugin mounts the /code-view prefix route when host services are available\nok 195 - plugin mounts the /code-view prefix route when host services are available\n  ---\n  duration_ms: 1.2699\n  type: 'test'\n  ...\n1..195\n# tests 195\n# suites 0\n# pass 195\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 8703.1554\n\n"
+      }
+    },
+    "regression.demo": {
+      "ok": true,
+      "layer": "demo_observed",
+      "detail": {
+        "summary": {
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "t and long payloads return without a write\n  ---\n  duration_ms: 0.3464\n  type: 'test'\n  ...\n# Subtest: call graph and embedded code map to fixture source\nok 4 - call graph and embedded code map to fixture source\n  ---\n  duration_ms: 0.1728\n  type: 'test'\n  ...\n# Subtest: 48 bytes take the direct branch and 49 bytes stage before encoding\nok 5 - 48 bytes take the direct branch and 49 bytes stage before encoding\n  ---\n  duration_ms: 0.8223\n  type: 'test'\n  ...\n# Subtest: nested folding reconnects edges and merges duplicate boundary links\nok 6 - nested folding reconnects edges and merges duplicate boundary links\n  ---\n  duration_ms: 0.3201\n  type: 'test'\n  ...\n# Subtest: a shared implementation does not borrow observations from the other caller\nok 7 - a shared implementation does not borrow observations from the other caller\n  ---\n  duration_ms: 0.07\n  type: 'test'\n  ...\n# Subtest: platform return stubs propagate to the entry and release the transfer lock\nok 8 - platform return stubs propagate to the entry and release the transfer lock\n  ---\n  duration_ms: 0.4137\n  type: 'test'\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 116.5697\n\n"
+      }
+    }
+  },
+  "layers": {
+    "atlas_snapshot": true,
+    "dsh_host": true,
+    "demo_observed": true
+  },
+  "checks_summary": {
+    "total": 34,
+    "passed": 34,
+    "failed": 0,
+    "in_scope_not_verified": 0,
+    "out_of_scope_not_verified": 5
+  },
+  "not_verified": [
+    {
+      "item": "真实硬件 IRQ 因果/中断完成判定",
+      "reason": "async:true 仅表示该事件被 profile 声明为异步触发，不推断硬件中断已发生（契约 §11.2 明确）",
+      "out_of_scope": true
+    },
+    {
+      "item": "真实设备/外部轨迹采集与下发",
+      "reason": "S4 后续；本轮只验证已执行 Wasm 台账与导入轨迹的异步边界标记",
+      "out_of_scope": true
+    },
+    {
+      "item": "跨进程异步调度/时序竞态的证明",
+      "reason": "台账只记录顺序与事件本身，不建模调度器；S4 后续",
+      "out_of_scope": true
+    },
+    {
+      "item": "rev1 历史证据重跑",
+      "reason": "rev1 profile/trace 的 S3a/S3b 证据在 evidence/s3、evidence/s3b 保持有效，不重复纳入本轮",
+      "out_of_scope": true
+    },
+    {
+      "item": "480KiB 内核/大 payload 的 async 变体",
+      "reason": "限流路径由引擎/Node 测试覆盖，本轮夹具远低于上限，未构造超大 payload",
+      "out_of_scope": true
+    }
+  ],
+  "commands": [
+    {
+      "at": "2026-11-15T14:59:12.683Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "workspace-import",
+        "--manifest",
+        "workspace.json",
+        "--expected-revision",
+        "0",
+        "--operation-id",
+        "98c94f9a-aa0f-4f54-8870-f7237cb8d2ea"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json workspace-import --manifest workspace.json --expected-revision 0 --operation-id 98c94f9a-aa0f-4f54-8870-f7237cb8d2ea"
+    },
+    {
+      "at": "2026-11-15T14:59:12.841Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "snapshot-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--snapshot",
+        "snapshot-bus",
+        "--operation-id",
+        "68b80279-2b7d-440a-948b-f7be7a69159c"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json snapshot-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --snapshot snapshot-bus --operation-id 68b80279-2b7d-440a-948b-f7be7a69159c"
+    },
+    {
+      "at": "2026-11-15T14:59:12.997Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--profile",
+        "sim-profile.json",
+        "--operation-id",
+        "4cc3ded2-8045-4c1d-bbb9-5fb78baf275f"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile sim-profile.json --operation-id 4cc3ded2-8045-4c1d-bbb9-5fb78baf275f"
+    },
+    {
+      "at": "2026-11-15T14:59:13.126Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-list",
+        "--workspace",
+        "code-view-bus-demo"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-list --workspace code-view-bus-demo"
+    },
+    {
+      "at": "2026-11-15T14:59:13.260Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--profile",
+        "invalid-profile-duplicate.json",
+        "--operation-id",
+        "0cbb66f5-fba4-4168-8c4e-113856cb5a46"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile invalid-profile-duplicate.json --operation-id 0cbb66f5-fba4-4168-8c4e-113856cb5a46"
+    },
+    {
+      "at": "2026-11-15T14:59:13.401Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--profile",
+        "invalid-profile-unknown.json",
+        "--operation-id",
+        "4ce94338-ffd8-4420-a7ef-f5fad0c6acf0"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile invalid-profile-unknown.json --operation-id 4ce94338-ffd8-4420-a7ef-f5fad0c6acf0"
+    },
+    {
+      "at": "2026-11-15T14:59:13.534Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--profile",
+        "invalid-profile-non_array.json",
+        "--operation-id",
+        "5d45f00d-9544-46a7-b773-31dab5a13bb9"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile invalid-profile-non_array.json --operation-id 5d45f00d-9544-46a7-b773-31dab5a13bb9"
+    },
+    {
+      "at": "2026-11-15T14:59:13.667Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--profile",
+        "invalid-profile-too_many.json",
+        "--operation-id",
+        "79c85695-c6dc-4728-a3be-48f5a8895e48"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile invalid-profile-too_many.json --operation-id 79c85695-c6dc-4728-a3be-48f5a8895e48"
+    },
+    {
+      "at": "2026-11-15T14:59:13.792Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-list",
+        "--workspace",
+        "code-view-bus-demo"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-list --workspace code-view-bus-demo"
+    },
+    {
+      "at": "2026-11-15T14:59:13.941Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "trace-bus-send.json",
+        "--operation-id",
+        "2baac9ef-884c-4713-b1a2-95846a1aa68c"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input trace-bus-send.json --operation-id 2baac9ef-884c-4713-b1a2-95846a1aa68c"
+    },
+    {
+      "at": "2026-11-15T14:59:14.073Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-list",
+        "--workspace",
+        "code-view-bus-demo"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-list --workspace code-view-bus-demo"
+    },
+    {
+      "at": "2026-11-15T14:59:14.207Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "invalid-trace-duplicate.json",
+        "--operation-id",
+        "ecada315-33bc-4005-b6a2-0bb84a4d9c9e"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input invalid-trace-duplicate.json --operation-id ecada315-33bc-4005-b6a2-0bb84a4d9c9e"
+    },
+    {
+      "at": "2026-11-15T14:59:14.342Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "invalid-trace-unknown.json",
+        "--operation-id",
+        "0ce058be-58d1-4e1c-9f5f-b6bf58f5bb38"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input invalid-trace-unknown.json --operation-id 0ce058be-58d1-4e1c-9f5f-b6bf58f5bb38"
+    },
+    {
+      "at": "2026-11-15T14:59:14.474Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "invalid-trace-non_array.json",
+        "--operation-id",
+        "aab334c7-8cc9-4537-b1f7-08309cd6f41e"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input invalid-trace-non_array.json --operation-id aab334c7-8cc9-4537-b1f7-08309cd6f41e"
+    },
+    {
+      "at": "2026-11-15T14:59:14.611Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "invalid-trace-too_many.json",
+        "--operation-id",
+        "299628a6-75b4-4180-87ce-36a33a513bb7"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input invalid-trace-too_many.json --operation-id 299628a6-75b4-4180-87ce-36a33a513bb7"
+    },
+    {
+      "at": "2026-11-15T14:59:14.741Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-list",
+        "--workspace",
+        "code-view-bus-demo"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-list --workspace code-view-bus-demo"
+    },
+    {
+      "at": "2026-11-15T14:59:14.885Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "trace-async-irq.json",
+        "--operation-id",
+        "c4e21fa8-cd8d-4b80-8f83-a3fa130108b9"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input trace-async-irq.json --operation-id c4e21fa8-cd8d-4b80-8f83-a3fa130108b9"
+    },
+    {
+      "at": "2026-11-15T14:59:15.018Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-sequence-observed",
+        "--workspace",
+        "code-view-bus-demo",
+        "--scenario",
+        "scn_e301506ffcad"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-sequence-observed --workspace code-view-bus-demo --scenario scn_e301506ffcad"
+    },
+    {
+      "at": "2026-11-15T14:59:31.484Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\irq\\apps\\irq-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\irq\\apps\\irq-probe-app --no-sandbox --disable-gpu"
+    },
+    {
+      "at": "2026-11-15T15:01:47.248Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "tools/perf-regressions.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe tools/perf-regressions.mjs"
+    },
+    {
+      "at": "2026-11-15T15:01:56.076Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "tests/node/bridge.test.mjs",
+        "tests/node/client.test.mjs",
+        "tests/node/plugin.test.mjs",
+        "tests/node/scenario.test.mjs",
+        "tests/node/sim-runner.test.mjs",
+        "tests/node/view-rpc.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 tests/node/bridge.test.mjs tests/node/client.test.mjs tests/node/plugin.test.mjs tests/node/scenario.test.mjs tests/node/sim-runner.test.mjs tests/node/view-rpc.test.mjs"
+    },
+    {
+      "at": "2026-11-15T15:01:56.304Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "demo/code-view/demo.test.cjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 demo/code-view/demo.test.cjs"
+    }
+  ],
+  "config": {
+    "profile_path": "evidence/scenario-sim/inbox/sim-profile.json",
+    "profile_sha256": "1c9ae1553f06486353cb0044f11d96fc0f1fc58eca13e9fe8dfca99747c298d9",
+    "profile_async_events": [
+      "IRQ"
+    ],
+    "module_sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+    "trace_fixture": "evidence/scenario-sim/inbox/trace-bus-send.json",
+    "snapshot_id": "ed326d554334432b907de21297207eb8",
+    "workspace_id": "code-view-bus-demo"
+  },
+  "screenshots": {
+    "async-irq": {
+      "path": "evidence/async-irq/async-irq.png",
+      "bytes": 163779,
+      "sha256": "36907e95a96fd29d3f47d16c9e2a1971a81a4ecd7219fbc5fb9da1de378fe022"
+    }
+  },
+  "finished_at_utc": "2026-11-15T15:01:56.304Z",
+  "duration_ms": 164131,
+  "evidence": "evidence/async-irq/verification.json"
+}

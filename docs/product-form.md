@@ -32,3 +32,26 @@
 skill负责阅读顺序、讲解、提问和停止；固定Atlas CLI负责已有结构/语义/快照；本地薄适配负责范围、执行隔离、证据与记录。索引、源码证据、报告和记录存本地；模型只使用已批准Provider，CLI不新增模型接收方。08可在以后打开报告，05只在明确用途与许可下接收学习经验，两者均不是04独立交付前提。
 
 详细模块、schema、CLI、状态机、迁移、故障与验收见[软件设计](software-design.md)。本产品说明不宣称Atlas已适配真实业务内核，也不代表插件安装或运行验证完成。后续局部新增/微调按[修订规则](../../docs/design-change-policy.md)，只重核真正改变产品范围的选择。
+
+## 交付状态（2026-11-15，按阶段 dsh-web 验收）
+
+`CL-PF-08` 的插件化交互式代码视图已按 S1→S4-prep 分阶段交付并在**隔离 rc.5 dsh web profile**逐阶段验收；
+下表只记录实际验证结果，未验证项明确保留。
+
+| 阶段/能力 | 状态与证据 |
+|---|---|
+| S1 只读切片（侧边栏工作台→快照→入口→真实源码/证据） | ✅ 已验证（`evidence/readonly-slice/`） |
+| S2a 五视图（资源关系图/文字树/端到端图/静态预测时序/文件视图）+ 共享 Selection | ✅ 已验证 37/37（`evidence/five-views/`） |
+| S2b 组折叠/接口库（黑盒）/子流程面包屑 | ✅ 已验证 41/41（`evidence/s2b/`） |
+| S3a 受控场景/边界打桩/不可变台账/运行观测 | ✅ 已验证 43/43（`evidence/s3/`） |
+| S3b 回退末尾 N 步+前缀重放/轨迹导入/observed 多台账选择 | ✅ 已验证 58/58（`evidence/s3b/`） |
+| CW-09 AI 归纳（Agent 经 `code_summary` 写入/签名/失效/UI 展示，插件不调用模型） | ✅ 已验证 49/49（`evidence/ai-summary/`） |
+| A11 性能实测（合成 500/800、2000/10k；首屏预算 500 ms） | ✅ 25/25，首屏 hot p95 382–387 ms 达标、coupling p95 3–4 ms（`evidence/perf/`）；合成夹具+本机限定 |
+| 异步/IRQ 事件边界（observed `async:true` + “异步”标记） | ✅ 已验证 34/34（`evidence/async-irq/`；真实 Wasm `bus_irq` 产生 IRQ、导入异步轨迹、static/rev1 无标记） |
+| S4 目标门禁：真实 Linux/Kbuild、生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证 | ⛔ **未验证/不可声明**：需要固定 Linux 目标（Python≥3.11、Linux 构建 Atlas 快照、内核源码/compdb、复核数据）；已做 Linux 可移植性探测（`evidence/s4-feasibility/`：Node 契约 164/164、真实 Wasm worker 8/8、引擎 CLI 可用；Python 3.8<3.11、Windows 快照 manifest 路径绑定被拒） |
+| 真实设备下发、图内源码写回 | 产品范围待确认/未授权（面板内以 gap 显示） |
+| 入口 subject 独立 AI 归纳 | 契约允许但 UI 目前按 function/group 展示（限制记录于 mechanisms） |
+
+`CL-PF-06` 的“首版不要求专用 Harness 学习面板”已被后续用户指示（`CL-PF-07/08`）取代：本版以 DSH
+插件侧边栏工作台交付，替代原学习面板；这不是未经确认的产品扩张，而是 2026-11-12/15 的用户明确要求。
+插件运行不联网、不调用模型、不在运行期编译 C；真实运行/硬件行为仍需独立观察证据。

@@ -225,5 +225,8 @@
   },
   "limitations": [
     "Wasm 模拟器为 Demo 构建产物，不证明真实设备/内核行为；执行在 Host worker 隔离内完成，不联网、不写源码"
+  ],
+  "async_events": [
+    "IRQ"
   ]
 }

@@ -575,6 +575,40 @@ class ProfileImportTest(ScenarioTestBase):
 
         self.expect_error("INVALID_ARGUMENT", lambda: self.import_profile_variant(bad_entry_id))
 
+    def test_import_rejects_invalid_async_events(self) -> None:
+        known = sorted(self.profile["trace"]["events"])
+
+        def mutate_names(value: Any):
+            def mutate(payload: Dict[str, Any]) -> None:
+                payload["async_events"] = value
+
+            return mutate
+
+        cases = {
+            "not-array": "IRQ",
+            "too-many": known[:17],
+            "duplicate": ["IRQ", "IRQ"],
+            "unknown": ["NOT_A_DECLARED_EVENT"],
+            "non-string": [17],
+            "null": None,
+        }
+        for label, value in cases.items():
+            with self.subTest(case=label):
+                self.expect_error(
+                    "INVALID_ARGUMENT",
+                    lambda mutate=mutate_names(value): self.import_profile_variant(
+                        mutate
+                    ),
+                )
+        # A declaration with known event names is accepted (new profile id:
+        # re-importing different content under the existing id is a conflict).
+        accepted = self.import_profile_variant(
+            lambda payload: payload.update(
+                {"profile_id": "bus-demo-wasm-async", "async_events": ["IRQ", "WRITE"]}
+            )
+        )
+        self.assertEqual(["IRQ", "WRITE"], accepted["async_events"])
+
     def test_profile_list_verified_and_unknown_workspace(self) -> None:
         listing = scenario.sim_profile_list(self.env.state, WORKSPACE_ID)
         self.assertEqual(1, listing["schema_version"])
@@ -629,6 +663,7 @@ class ProfileImportTest(ScenarioTestBase):
         )
         self.assertEqual(19, len(item["trace_events"]))
         self.assertEqual(7, item["trace_events"]["WRITE"])
+        self.assertEqual(["IRQ"], item["async_events"])
         # Stable order: repeated listings are byte-identical for the projection.
         again = scenario.sim_profile_list(self.env.state, WORKSPACE_ID)
         self.assertEqual(
@@ -1113,6 +1148,11 @@ class ObservedSequenceTest(ScenarioTestBase):
         kinds = {message["kind"] for message in payload["messages"]}
         self.assertTrue({"call", "return", "access", "event"} <= kinds)
         labels = [message["label"] or "" for message in payload["messages"]]
+        # The rev2 profile declares IRQ as async; the marker must not change
+        # ordering or the observed semantics of existing messages.
+        self.assertEqual(["IRQ"], payload["async_events"])
+        for message in payload["messages"]:
+            self.assertIn("async", message)
         self.assertIn("bus_send(1, 48)", labels)
         event_names = {message["event"] for message in payload["messages"] if message["event"]}
         self.assertIn("WRITE", event_names)
@@ -1203,6 +1243,93 @@ class ObservedSequenceTest(ScenarioTestBase):
             ),
         )
 
+
+    def test_observed_async_irq_markers_from_executed_ledger(self) -> None:
+        codes = self.profile["trace"]["events"]
+        irq_event = {
+            "event": "IRQ",
+            "code": codes["IRQ"],
+            "a": 4160,
+            "b": 48,
+            "c": 0,
+            "line": 114,
+        }
+        doorbell_event = next(
+            event
+            for event in self.events_for("bus_send")
+            if event["event"] == "DOORBELL"
+        )
+        plan = self.make_plan(steps=[{"interface": "bus_irq", "args": []}])
+        records = self.make_records(
+            plan, events_by_step={0: [irq_event, doorbell_event]}
+        )
+        ledger = self.record(plan, records)
+        payload = scenario.view_sequence_observed(
+            self.env.state, WORKSPACE_ID, ledger["scenario_id"]
+        )
+        self.assertEqual(["IRQ"], payload["async_events"])
+        self.assertEqual(
+            ["observed_wasm_simulation_not_real_device"], payload["limitations"]
+        )
+        irq_message = next(
+            message for message in payload["messages"] if message.get("event") == "IRQ"
+        )
+        self.assertTrue(irq_message["async"])
+        doorbell_message = next(
+            message
+            for message in payload["messages"]
+            if message.get("event") == "DOORBELL"
+        )
+        self.assertFalse(doorbell_message["async"])
+        for message in payload["messages"]:
+            self.assertIn("async", message)
+            if message is not irq_message:
+                self.assertFalse(message["async"])
+        self.assert_no_absolute_paths(payload)
+
+    def test_observed_without_async_declaration_keeps_s3b_shape(self) -> None:
+        payload = self.read_profile_payload()
+        payload.pop("async_events", None)
+        payload["profile_id"] = "bus-demo-wasm-noasync"
+        payload["label"] = "no async profile"
+        name = self.write_inbox_profile(payload, "sim-profile-noasync.json")
+        noasync = scenario.sim_profile_import(
+            self.env.state,
+            WORKSPACE_ID,
+            VARIANT_ID,
+            REPO_ID,
+            name,
+            str(uuid.uuid4()),
+        )
+        self.assertEqual([], noasync["async_events"])
+        codes = self.profile["trace"]["events"]
+        plan = self.make_plan(
+            steps=[{"interface": "bus_irq", "args": []}],
+            profile_id="bus-demo-wasm-noasync",
+        )
+        records = self.make_records(
+            plan,
+            events_by_step={
+                0: [
+                    {
+                        "event": "IRQ",
+                        "code": codes["IRQ"],
+                        "a": 4160,
+                        "b": 48,
+                        "c": 0,
+                        "line": 114,
+                    }
+                ]
+            },
+        )
+        ledger = self.record(plan, records)
+        observed = scenario.view_sequence_observed(
+            self.env.state, WORKSPACE_ID, ledger["scenario_id"]
+        )
+        self.assertNotIn("async_events", observed)
+        for message in observed["messages"]:
+            self.assertNotIn("async", message)
+        self.assert_no_absolute_paths(observed)
 
 class ScenarioCliTest(ScenarioTestBase):
     def test_cli_full_flow(self) -> None:
@@ -1746,6 +1873,95 @@ class TraceImportTest(ScenarioTestBase):
             "NOT_FOUND", lambda: self.import_trace("trace-missing.json")
         )
 
+
+    def test_trace_import_async_declaration_and_legacy_trace(self) -> None:
+        payload = self.trace_payload()
+        payload["steps"][2]["events"].append(
+            {"event": "IRQ", "code": 17, "a": 4160, "b": 48, "c": 0, "line": 114}
+        )
+        payload["async_events"] = ["IRQ"]
+        name = self.write_inbox_json("trace-async.json", payload)
+        ledger = self.import_trace(name)
+        self.assertEqual(["IRQ"], ledger["async_events"])
+        self.assertIn("async_events_declared", ledger["limitations"])
+        observed = scenario.view_sequence_observed(
+            self.env.state, WORKSPACE_ID, ledger["scenario_id"]
+        )
+        self.assertEqual(["IRQ"], observed["async_events"])
+        self.assertIn("async_events_declared", observed["limitations"])
+        irq_message = next(
+            message for message in observed["messages"] if message.get("event") == "IRQ"
+        )
+        self.assertTrue(irq_message["async"])
+        write_message = next(
+            message for message in observed["messages"] if message.get("event") == "WRITE"
+        )
+        self.assertFalse(write_message["async"])
+        for message in observed["messages"]:
+            self.assertIn("async", message)
+        self.assert_no_absolute_paths(ledger)
+        self.assert_no_absolute_paths(observed)
+
+        # The rev1 fixture trace declares nothing: legacy S3b shape, and the
+        # async trace is a different ledger/scenario id.
+        legacy = self.import_trace()
+        self.assertNotIn("async_events", legacy)
+        self.assertNotEqual(ledger["scenario_id"], legacy["scenario_id"])
+        legacy_observed = scenario.view_sequence_observed(
+            self.env.state, WORKSPACE_ID, legacy["scenario_id"]
+        )
+        self.assertNotIn("async_events", legacy_observed)
+        for message in legacy_observed["messages"]:
+            self.assertNotIn("async", message)
+        self.assertEqual(
+            [
+                "imported_trace_not_executed_by_host",
+                "resource_effects_unknown_for_imported_trace",
+            ],
+            legacy_observed["limitations"],
+        )
+
+    def test_trace_import_rejects_invalid_async_declarations(self) -> None:
+        base = self.trace_payload()
+        base["steps"][2]["events"].append(
+            {"event": "IRQ", "code": 17, "a": 4160, "b": 48, "c": 0, "line": 114}
+        )
+
+        def import_variant(mutator) -> Dict[str, Any]:
+            payload = json.loads(json.dumps(base))
+            mutator(payload)
+            return self.import_trace(
+                self.write_inbox_json("trace-async-invalid.json", payload)
+            )
+
+        def expect_invalid(code: str, mutator) -> None:
+            self.expect_error(code, lambda: import_variant(mutator))
+
+        expect_invalid(
+            "INVALID_ARGUMENT",
+            lambda payload: payload.update({"async_events": "IRQ"}),
+        )
+        expect_invalid(
+            "INVALID_ARGUMENT",
+            lambda payload: payload.update({"async_events": ["IRQ", "IRQ"]}),
+        )
+        expect_invalid(
+            "INVALID_ARGUMENT",
+            lambda payload: payload.update({"async_events": ["NOT_IN_STEPS"]}),
+        )
+        expect_invalid(
+            "INVALID_ARGUMENT",
+            lambda payload: payload.update({"async_events": [17]}),
+        )
+
+        def too_many(payload: Dict[str, Any]) -> None:
+            payload["steps"][2]["events"] = [
+                {"event": f"E{index}", "code": index, "a": 0, "b": 0, "c": 0, "line": 1}
+                for index in range(17)
+            ]
+            payload["async_events"] = [f"E{index}" for index in range(17)]
+
+        expect_invalid("INVALID_ARGUMENT", too_many)
 
 class S3bCliTest(ScenarioTestBase):
     def test_trace_import_and_observed_cli(self) -> None:
