@@ -1,0 +1,2890 @@
+{
+  "schema_version": 1,
+  "stage": "S4-prep",
+  "contract": "docs/ai-summary-perf-contract.md (CL-VIEW-T4A-CONTRACT)",
+  "started_at_utc": "2026-11-15T12:34:44.557Z",
+  "purpose": "Independent black-box acceptance of S4-prep AI summary (CW-09): real isolated dsh web gap state, engine summary-put/view-summary writes (simulated Agent), UI rendering of text/facts/generator/generated_at/stale=false, invalid payload rejection, group subject, S3b/S3a/S2b/S2a/S1 regression and real Cordis code_summary put/get with dispose/remount.",
+  "host": {
+    "executable_path": "E:/dsh/DeepSeek Harness.exe",
+    "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+    "archive_path": "E:/dsh/resources/app.asar",
+    "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+    "dsh_version": "0.2.1-rc.5",
+    "embedded_node": "24.21.0",
+    "electron": "44.7.0"
+  },
+  "layers": {
+    "demo_observed": true,
+    "atlas_snapshot": true,
+    "dsh_host": true
+  },
+  "checks": {
+    "host.pinned_baseline": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "executable": {
+          "path": "E:/dsh/DeepSeek Harness.exe",
+          "sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+        },
+        "archive": {
+          "path": "E:/dsh/resources/app.asar",
+          "sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "dsh_version": "0.2.1-rc.5"
+        },
+        "completed_checks": 12,
+        "failed_checks": []
+      }
+    },
+    "host.client_s3_contract": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "ok": true,
+        "package": {
+          "name": "@local/dsh-code-reader",
+          "version": "0.1.0",
+          "main": "index.js",
+          "dsh": {
+            "bundle": {
+              "patch": "./cordis.patch.yml"
+            },
+            "client": {
+              "inject": [
+                "@deepseek-ai/dsh-client-connection",
+                "@deepseek-ai/dsh-client-ui-layout",
+                "@deepseek-ai/dsh-client-ui-renderer"
+              ],
+              "platform": "web"
+            }
+          }
+        },
+        "client_bundle": {
+          "path": "bundle/client.js",
+          "bytes": 285729,
+          "sha256": "a626b053ee27c86675350e21253da5ceddd9cd34a44f8cc1b56e5f4cdb136ede"
+        },
+        "checks": {
+          "name": true,
+          "client_platform": true,
+          "client_export": true,
+          "client_bundle_exists": true,
+          "client_loader": true,
+          "client_s3_labels": true,
+          "client_ai_summary_hooks": true,
+          "client_s3b_hooks": true
+        }
+      }
+    },
+    "host.isolated_profile": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "home": "scratch/readonly-home/home",
+        "home_is_isolated_from_user_profile": true,
+        "inbox": {
+          "path": "scratch/s3/inbox",
+          "files": [
+            "bus.wasm",
+            "sim-profile.json",
+            "snapshot-bus",
+            "trace-bus-send.json",
+            "workspace.json"
+          ],
+          "note": "isolated copy of Lead slice inbox + evidence/scenario-sim/inbox sim-profile.json + bus.wasm"
+        },
+        "bootstrap": {
+          "path": "scratch/readonly-home/home/code-reader/bootstrap.json",
+          "import_inbox_dir": "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\inbox",
+          "candidate_roots": [
+            {
+              "root_ref": "slice-root",
+              "absolute_path": "evidence/code-view-slice"
+            }
+          ]
+        },
+        "python": {
+          "command": "E:/Anaconda-main/python.exe",
+          "version": "3.11.4",
+          "directory": "E:\\Anaconda-main"
+        },
+        "imports": {
+          "workspace": 0,
+          "snapshot": 0
+        },
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "path": "evidence/code-view-slice/snapshot/ed326d554334432b907de21297207eb8"
+        }
+      }
+    },
+    "host.entry_hints": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "entry_count": 19,
+        "bus_send_line": 152
+      }
+    },
+    "atlas.sim_profile_import": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile sim-profile.json --operation-id <uuid>",
+        "profile_id": "bus-demo-wasm",
+        "label": "Demo bus/platform Wasm 隔离模拟",
+        "binding": {
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "snapshot_id": "ed326d554334432b907de21297207eb8"
+        },
+        "module": {
+          "sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+          "bytes": 1547
+        },
+        "module_sha256_expected": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+        "module_bytes": 1547,
+        "interface_count": 7,
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.sim_profile_list": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "sim-profile-list --workspace code-view-bus-demo",
+        "profiles": [
+          {
+            "profile_id": "bus-demo-wasm",
+            "label": "Demo bus/platform Wasm 隔离模拟",
+            "module_sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+            "interface_count": 7,
+            "limits": {
+              "timeout_ms": 10000,
+              "steps": 20,
+              "events_per_step": 256
+            },
+            "trace_events": {
+              "BUFFERED": 14,
+              "CHECK_LENGTH": 6,
+              "COMMIT": 12,
+              "DEFAULT_ROUTE": 1,
+              "DIRECT": 13,
+              "DOORBELL": 19,
+              "ENCODE": 11,
+              "INVALID": 8,
+              "IRQ": 17,
+              "LIBRARY": 16,
+              "LOCK": 15,
+              "LOOKUP": 5,
+              "REQUEST": 4,
+              "STAGE": 10,
+              "STORE_ROUTE": 3,
+              "STUB_ROUTE": 2,
+              "TRANSFER": 9,
+              "UNREGISTER": 18,
+              "WRITE": 7
+            }
+          }
+        ],
+        "interfaces": [
+          {
+            "name": "reset",
+            "returns": "void",
+            "role": "util",
+            "entry_id": null,
+            "params": []
+          },
+          {
+            "name": "bus_register",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_5aad5c091d5772eb2dada479",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              }
+            ]
+          },
+          {
+            "name": "stub_route",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_4962656fc82c513cdd5a744c",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              },
+              {
+                "name": "lane",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              },
+              {
+                "name": "max_len",
+                "type": "u32",
+                "min": 1,
+                "max": 65535
+              }
+            ]
+          },
+          {
+            "name": "bus_unregister",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_a691fe380ba8d75efac40379",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              }
+            ]
+          },
+          {
+            "name": "bus_send",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_afa8298f2d197e5fd110e49a",
+            "params": [
+              {
+                "name": "channel",
+                "type": "u32",
+                "min": 0,
+                "max": 3
+              },
+              {
+                "name": "length",
+                "type": "u32",
+                "min": 0,
+                "max": 65535
+              }
+            ]
+          },
+          {
+            "name": "bus_irq",
+            "returns": "i32",
+            "role": "entry",
+            "entry_id": "f_ff22940e08661e4950585599",
+            "params": []
+          },
+          {
+            "name": "set_platform_stub",
+            "returns": "void",
+            "role": "stub_control",
+            "entry_id": null,
+            "params": [
+              {
+                "name": "return_code",
+                "type": "i32",
+                "min": -4095,
+                "max": 0
+              }
+            ]
+          }
+        ],
+        "limits": {
+          "timeout_ms": 10000,
+          "steps": 20,
+          "events_per_step": 256
+        },
+        "error": null
+      }
+    },
+    "atlas.scenario_plan": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "scenario-plan --workspace code-view-bus-demo --snapshot <snapshot> --profile bus-demo-wasm --scenario-json <base64>",
+        "plan_id": "plan_82e1ce703689a5a6a858e6eef66ac9bb",
+        "scenario_id": "scn_0eb3626beb3d",
+        "generation": 1,
+        "steps": [
+          {
+            "index": 0,
+            "interface": "reset",
+            "role": "util",
+            "args": []
+          },
+          {
+            "index": 1,
+            "interface": "bus_register",
+            "role": "entry",
+            "args": [
+              2
+            ]
+          },
+          {
+            "index": 2,
+            "interface": "bus_send",
+            "role": "entry",
+            "args": [
+              2,
+              48
+            ]
+          }
+        ],
+        "limits": {
+          "timeout_ms": 10000,
+          "steps": 20,
+          "events_per_step": 256
+        },
+        "expires_at": "2026-11-15T12:44:45Z",
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.scenario_module": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "ok": true,
+        "bytes": 1547,
+        "sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+        "expected_sha256": "69c8622d3522f68f90450a2db36ee11a85c859c91bdf2b5df1688fd6acd1321c",
+        "expected_bytes": 1547,
+        "trace": {
+          "import": {
+            "field": "trace",
+            "module": "env"
+          },
+          "signature": [
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+          ],
+          "events": {
+            "BUFFERED": 14,
+            "CHECK_LENGTH": 6,
+            "COMMIT": 12,
+            "DEFAULT_ROUTE": 1,
+            "DIRECT": 13,
+            "DOORBELL": 19,
+            "ENCODE": 11,
+            "INVALID": 8,
+            "IRQ": 17,
+            "LIBRARY": 16,
+            "LOCK": 15,
+            "LOOKUP": 5,
+            "REQUEST": 4,
+            "STAGE": 10,
+            "STORE_ROUTE": 3,
+            "STUB_ROUTE": 2,
+            "TRANSFER": 9,
+            "UNREGISTER": 18,
+            "WRITE": 7
+          }
+        },
+        "profile_id": "bus-demo-wasm",
+        "absolute_path_leak": {
+          "count": 0,
+          "samples": []
+        },
+        "error": null
+      }
+    },
+    "atlas.trace_import": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "trace-import --workspace code-view-bus-demo --snapshot <snapshot> --input trace-bus-send.json --operation-id <uuid>",
+        "scenario_id": "scn_982682c88e20",
+        "generation": 1,
+        "label": "外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）",
+        "source": "imported_trace",
+        "imported": true,
+        "record_count": 3,
+        "limitations": [
+          "imported_trace_not_executed_by_host",
+          "resource_effects_unknown_for_imported_trace"
+        ],
+        "records_digest": "503f53e6a3aafbb259a1a690b58775648b10f2a39ac066a535363e5b81a902e2",
+        "error": null
+      }
+    },
+    "atlas.trace_import_idempotent": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "scenario_id": "scn_982682c88e20",
+        "generation": 1,
+        "first_generation": 1,
+        "error": null
+      }
+    },
+    "atlas.trace_observed": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "view-sequence-observed --workspace code-view-bus-demo --scenario <imported id>",
+        "scenario": {
+          "scenario_id": "scn_982682c88e20",
+          "generation": 1,
+          "profile_id": "bus-demo-wasm",
+          "workspace_id": "code-view-bus-demo",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "records_digest": "503f53e6a3aafbb259a1a690b58775648b10f2a39ac066a535363e5b81a902e2",
+          "created_at": "2026-11-15T12:34:45Z",
+          "imported": true,
+          "label": "外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）",
+          "source": "imported_trace"
+        },
+        "observed": true,
+        "imported": true,
+        "message_count": 20,
+        "limitations": [
+          "imported_trace_not_executed_by_host",
+          "resource_effects_unknown_for_imported_trace"
+        ],
+        "error": null
+      }
+    },
+    "atlas.undo_plan_imported_rejected": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "command": "scenario-undo-plan --workspace code-view-bus-demo --scenario <imported id> --count 1 --expected-generation <gen>",
+        "exit_code": 2,
+        "code": "CAPABILITY_UNAVAILABLE",
+        "error": {
+          "code": "CAPABILITY_UNAVAILABLE",
+          "message": "imported trace ledgers cannot be undone: there is no replayable simulation prefix",
+          "details_ref": null,
+          "retryable": false
+        },
+        "ok": true
+      }
+    },
+    "host.web_shell": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "final_url": "http://127.0.0.1:9659/",
+        "redirects": 1,
+        "bytes": 38241,
+        "cookies_issued_by_host": [
+          "dsh-auth-emAcGtX5Ebk83hHE9VR_4LwMxbtat2q55eG9N44XTss"
+        ]
+      }
+    },
+    "host.boot_release": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "release": {
+          "version": "0.2.1-rc.5",
+          "commit": "d4db512"
+        },
+        "entries": 71
+      }
+    },
+    "host.boot_graph_entry": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "entry": {
+          "id": "@local/dsh-code-reader",
+          "url": "plugins/??@local/dsh-code-reader/client.js&rev=831b349d4531",
+          "inject": [
+            "@deepseek-ai/dsh-client-connection",
+            "@deepseek-ai/dsh-client-ui-layout",
+            "@deepseek-ai/dsh-client-ui-renderer"
+          ]
+        },
+        "plugin_entries": 71
+      }
+    },
+    "host.boot_graph_inject": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "boot_graph_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ],
+        "package_inject": [
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ]
+      }
+    },
+    "host.client_bundle_bytes": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "fetched": true,
+        "url": "http://127.0.0.1:9659/plugins/??@local/dsh-code-reader/client.js&rev=831b349d4531",
+        "status": 200,
+        "bytes": 285809,
+        "sha256": "4105e8bcf99eb10f171f1453f6f28eb4bef07f7344b111b6a8644f0d65b0d0f8",
+        "repo_bytes": 285729,
+        "exact_prefix": true
+      }
+    },
+    "host.summary_gap_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "panelOpened": true,
+          "statusReady": true,
+          "entriesListed": true,
+          "entryClicked": {
+            "ok": true
+          },
+          "workbenchOpened": true,
+          "busSendSelected": true,
+          "gapShown": true,
+          "noText": true,
+          "noSummaryRecord": true,
+          "noAbsolutePaths": true,
+          "noConsoleErrors": true
+        },
+        "views": {
+          "before": {
+            "panel_present": true,
+            "summary_present": false,
+            "text": null,
+            "text_length": null,
+            "gap_text": "AI 归纳未生成（Agent 可通过 code_summary 写入）",
+            "facts_text": [],
+            "generator_text": null,
+            "generated_at_text": null,
+            "labels_text": null,
+            "stale": null,
+            "entries": [
+              {
+                "entry_id": "f_ec7feb15db7955807c4a8435",
+                "name": "reset",
+                "active": false
+              },
+              {
+                "entry_id": "f_5aad5c091d5772eb2dada479",
+                "name": "bus_register",
+                "active": false
+              },
+              {
+                "entry_id": "f_4962656fc82c513cdd5a744c",
+                "name": "stub_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_a691fe380ba8d75efac40379",
+                "name": "bus_unregister",
+                "active": false
+              },
+              {
+                "entry_id": "f_ff22940e08661e4950585599",
+                "name": "bus_irq",
+                "active": false
+              },
+              {
+                "entry_id": "f_afa8298f2d197e5fd110e49a",
+                "name": "bus_send",
+                "active": true
+              },
+              {
+                "entry_id": "f_b881ed23ccdead8054d7b99e",
+                "name": "set_platform_stub",
+                "active": false
+              },
+              {
+                "entry_id": "f_dfb9aead445405de7aafbbfa",
+                "name": "store_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_144ee14b1f297d19f8bdab78",
+                "name": "lookup_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_b19a05b7a8457000a4562e91",
+                "name": "check_length",
+                "active": false
+              },
+              {
+                "entry_id": "f_87403babddf39338cdbd3f69",
+                "name": "encode_doorbell",
+                "active": false
+              },
+              {
+                "entry_id": "f_f67649a4a3e9dcbcca8b3c1d",
+                "name": "write_doorbell",
+                "active": false
+              },
+              {
+                "entry_id": "f_ec61140249f393550eb97946",
+                "name": "commit_transfer",
+                "active": false
+              },
+              {
+                "entry_id": "f_c373db5bd0ded348577b3cb3",
+                "name": "stage_payload",
+                "active": false
+              },
+              {
+                "entry_id": "f_bc0e6086fe5e9c1faa1eeeb6",
+                "name": "submit_direct",
+                "active": false
+              },
+              {
+                "entry_id": "f_a6ac5de30cf631400f29d67e",
+                "name": "submit_buffered",
+                "active": false
+              },
+              {
+                "entry_id": "f_ccdd7df856dd459e2934ea77",
+                "name": "dispatch_transfer",
+                "active": false
+              },
+              {
+                "entry_id": "f_29e513b091be215bb024bc5a",
+                "name": "platform_reset",
+                "active": false
+              },
+              {
+                "entry_id": "f_6c3177a5f9b67214f9855ee8",
+                "name": "platform_write",
+                "active": false
+              }
+            ],
+            "details_text": "函数详情：bus_send 定位源码 关闭详情 点空白关闭；拖动/平移保留选择。 源码 子流程图 资源分析 签名 int (unsigned int, unsigned int) 位置 bus.c:152 · 类型 function · 存储 NONE 源码 源码证据 bus.c:152–174 证据区间 字节 4086–4743 · sha256 b2ec232896c2… 152 int bus_send(unsigned channel, unsigned length) 153 { 154 TRACE(REQUEST, channel, length, 0); 155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { 156 TRACE(INVALID, channel, length, 0); 157 return -22; 158 } 159 160 const struct Route *route = lookup_route(channel); 161 if (!route) 162 return -2; 163 164 if (!check_length(route, length)) 165 return -90; 166 167 /* Serial simulator: this flag records the protected scope, without threads. */ 168 transfer_lock = 1; 169 TRACE(LOCK, transfer_lock, 0, 0); 170 int status = dispatch_transfer(route, length); 171 transfer_lock = 0; 172 TRACE(LOCK, transfer_lock, 0, 0); 173 return status; 174 } 资源标识 状态 partial 对象（1） routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（7） 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证据 e_6d7e9e05d76acac948324a8a 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:148 字段 lane（route->lane） 证据 e_6689b07acd5985af8e0604e8 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:149 字段 lane（route->lane） 证据 e_ca4511d50de099afd258bfb7 限制 unresolved_or_multiple_base_objects 直接调用（本函数调用的目标）（3） 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:160 · lookup_route(channel) 目标 lookup_route（bus.c:89） 证据 e_6e7ed1a1416660c0e7c22f95 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:164 · check_length(route, length) 目标 check_length（bus.c:96） 证据 e_314adfee6301351a2dca9553 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:170 · dispatch_transfer(route, length) 目标 dispatch_transfer（bus.c:143） 证据 e_cd995d62f666bac251ce1ecf 被调用（调用本函数的来源）（0） 没有可显示的调用来源边。 证据（11） e_231505a73a485bc1d8c9249d evidence bus.c:152 int bus_send(unsigned channel, unsigned length) { TRACE(REQUEST, channel, length, 0); if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { TRACE(INVALID, channel, length, 0); return -22; } const struct Route *route = lookup_route(channel); if (!route) return -2; if (!check_length(route, length)) return -90; /* Serial simulator: this flag records the protected scope, without threads. */ transfer_lock = 1; TRACE(LOCK, transfer_ 已截断 e_6e7ed1a1416660c0e7c22f95 evidence bus.c:160 lookup_route(channel) e_314adfee6301351a2dca9553 evidence bus.c:164 check_length(route, length) e_cd995d62f666bac251ce1ecf evidence bus.c:170 dispatch_transfer(route, length) e_a8a7e31073f7bc6bde44bdaf evidence bus.c:92 e_8172321a6042c5dcc4441aed evidence bus.c:93 route->max_len e_768e475a22ccdbd0f0c59321 evidence bus.c:98 route->max_len e_6d7e9e05d76acac948324a8a evidence bus.c:99 e_6689b07acd5985af8e0604e8 evidence bus.c:148 route->lane e_ca4511d50de099afd258bfb7 evidence bus.c:149 route->lane e_02783480d2590d20ee91f1cb evidence bus.c:26 static struct Route routes[CHANNEL_COUNT] AI 归纳（只读） 函数 bus_send AI 归纳未生成（Agent 可通过 code_summary 写入） 归纳正文由 Agent 经 code_summary 写入；插件不调用模型。",
+            "panel_text": "代码工作台 只读五视图：快照 → 入口 → 源码 / 资源 / 文件 返回聊天 重新读取 工作台已就绪；快照 ed326d554334432b907de21297207eb8（code-view-bus-demo / semantic-x86_64 / fresh）；入口 19 个；当前入口 bus_send 缺口 5 快照 code-view-bus-demo → semantic-x86_64 → ed326d554334432b907de21297207eb8 状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false 入口（入口优先） reset（入口） bus.c:31 · void (void) bus_register（入口） bus.c:50 · int (unsigned int) stub_route（入口） bus.c:62 · int (unsigned int, unsigned int, unsigned int) bus_unregister（入口） bus.c:73 · int (unsigned int) bus_irq（入口） bus.c:82 · int (void) bus_send（入口） bus.c:152 · int (unsigned int, unsigned int) set_platform_stub（入口） platform.c:14 · void (int) store_route bus.c:43 · void (unsigned int, unsigned int, unsigned int) lookup_route bus.c:89 · const struct Route *(unsigned int) check_length bus.c:96 · int (const struct Route *, unsigned int) encode_doorbell bus.c:103 · unsigned int (unsigned int, unsigned int) write_doorbell bus.c:110 · int (unsigned int) commit_transfer bus.c:116 · int (unsigned int, unsigned int) stage_payload bus.c:123 · unsigned int (unsigned int, unsigned int) submit_direct bus.c:130 · int (unsigned int, unsigned int) submit_buffered bus.c:136 · int (unsigned int, unsigned int) dispatch_transfer bus.c:143 · int (const struct Route *, unsigned int) platform_reset platform.c:8 · void (void) platform_write platform.c:19 · int (unsigned int, unsigned int) 资源关系图 文字树 端到端图 时序图 文件视图 ? 全局资源 打桩模拟 全局资源 与当前入口/选择相关 · 0 项 暂无直接相关资源。 其他全局资源 · 1 项 routes struct Route[4] · STATIC · bus.c:26 字段：lane、max_len 读取 7 写入 / 修改 4 基础接口库（10） 收起 encode_doorbell 候选 独立接口（可黑盒） 调用次数 1 签名 unsigned int (unsigned int, unsigned int) · 返回 unsigned int 入参：lane:unsigned int，length:unsigned int bus.c:103 候选理由：无已解析出边签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 check_length 候选 独立接口（可黑盒） 调用次数 1 签名 int (const struct Route *, unsigned int) · 返回 int 入参：route:const struct Route *，length:unsigned int bus.c:96 候选理由：无已解析出边签名/入参/返回值完整调用点带条件 guard 副作用：无写类副作用 入参 guard：guard bus.c:164 · if (!check_length(route, length)) return -90 局限：candidate_rule_based_not_semantic 加入接口库 lookup_route 候选 独立接口（可黑盒） 调用次数 1 签名 const struct Route *(unsigned int) · 返回 const struct Route * 入参：channel:unsigned int bus.c:89 候选理由：无已解析出边签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 commit_transfer 候选 混合职责（有副作用） 调用次数 2 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:116 候选理由：签名/入参/返回值完整被多个调用点调用 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 platform_write 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：address:unsigned int，value:unsigned int platform.c:19 候选理由：无已解析出边跨文件被调用签名/入参/返回值完整存在字段写副作用 副作用：写入 / 修改 simulated_doorbell @ platform.c:25 局限：candidate_rule_based_not_semantic 加入接口库 submit_buffered 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:136 候选理由：签名/入参/返回值完整调用点带条件 guard 副作用：无写类副作用 入参 guard：guard bus.c:148 · if (buffered) return submit_buffered(route->lane, length) 局限：candidate_rule_based_not_semantic 加入接口库 submit_direct 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:130 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 write_doorbell 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int) · 返回 int 入参：value:unsigned int bus.c:110 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 dispatch_transfer 候选 混合职责（有副作用） 调用次数 1 签名 int (const struct Route *, unsigned int) · 返回 int 入参：route:const struct Route *，length:unsigned int bus.c:143 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 stage_payload 候选 混合职责（有副作用） 调用次数 1 签名 unsigned int (unsigned int, unsigned int) · 返回 unsigned int 入参：lane:unsigned int，length:unsigned int bus.c:123 候选理由：无已解析出边签名/入参/返回值完整存在字段写副作用 副作用：写入 / 修改 staged_lengths @ bus.c:125 局限：candidate_rule_based_not_semantic 加入接口库 外部边界（只读） 外部边界 trace · 调用 15 次 加入后在图与文字树中折叠为黑盒（客户端展示状态，不写快照）。 资源关系图 作用域：入口邻域 竖排 · 正交折线 · 拖节点/平移/缩放 左：函数（写者） 中：全局资源 右：函数（读者） max_len lane max_len max_len max_len lane lane lane max_len lane max_len 外部边界（未解析 callee）（4） external trace @ bus.c:47 候选 implementation_not_found external trace @ bus.c:92 候选 implementation_not_found external trace @ bus.c:99 候选 implementation_not_found external trace @ bus.c:146 候选 implementation_not_found 函数详情：bus_send 定位源码 关闭详情 点空白关闭；拖动/平移保留选择。 源码 子流程图 资源分析 签名 int (unsigned int, unsigned int) 位置 bus.c:152 · 类型 function · 存储 NONE 源码 源码证据 bus.c:152–174 证据区间 字节 4086–4743 · sha256 b2ec232896c2… 152 int bus_send(unsigned channel, unsigned length) 153 { 154 TRACE(REQUEST, channel, length, 0); 155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { 156 TRACE(INVALID, channel, length, 0); 157 return -22; 158 } 159 160 const struct Route *route = lookup_route(channel); 161 if (!route) 162 return -2; 163 164 if (!check_length(route, length)) 165 return -90; 166 167 /* Serial simulator: this flag records the protected scope, without threads. */ 168 transfer_lock = 1; 169 TRACE(LOCK, transfer_lock, 0, 0); 170 int status = dispatch_transfer(route, length); 171 transfer_lock = 0; 172 TRACE(LOCK, transfer_lock, 0, 0); 173 return status; 174 } 资源标识 状态 partial 对象（1） routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（7） 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证"
+          }
+        },
+        "console_error_count": 0,
+        "screenshot": {
+          "path": "evidence/ai-summary/gap.png",
+          "bytes": 141363,
+          "sha256": "50a5f79c1239e1b92e20216a4fb93a265f20c34538f62c0eacea3c859888414d"
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "atlas.summary_put": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "exit_code": 0,
+        "projection": {
+          "schema_version": 1,
+          "workspace_id": "code-view-bus-demo",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "subject": {
+            "type": "function",
+            "id": "f_afa8298f2d197e5fd110e49a"
+          },
+          "text": "bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。实现以 trace(REQUEST) 记录入口，成功后 doorbell 写回平台边界。此归纳基于静态结构与源码文本，未含运行观测。",
+          "facts": [
+            {
+              "kind": "evidence",
+              "ref": "e_231505a73a485bc1d8c9249d"
+            }
+          ],
+          "generator": {
+            "kind": "agent",
+            "ref": "verify-summary",
+            "model_ref": null
+          },
+          "inference_labels": [
+            "from_static_structure"
+          ],
+          "generated_at": "2026-11-15T12:34:56Z",
+          "snapshot_graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "stale": false,
+          "limitations": []
+        }
+      }
+    },
+    "atlas.summary_view": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "exit_code": 0,
+        "stale_count": 0,
+        "summary_count": 1,
+        "row": {
+          "schema_version": 1,
+          "workspace_id": "code-view-bus-demo",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "subject": {
+            "type": "function",
+            "id": "f_afa8298f2d197e5fd110e49a"
+          },
+          "text": "bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。实现以 trace(REQUEST) 记录入口，成功后 doorbell 写回平台边界。此归纳基于静态结构与源码文本，未含运行观测。",
+          "facts": [
+            {
+              "kind": "evidence",
+              "ref": "e_231505a73a485bc1d8c9249d"
+            }
+          ],
+          "generator": {
+            "kind": "agent",
+            "model_ref": null,
+            "ref": "verify-summary"
+          },
+          "inference_labels": [
+            "from_static_structure"
+          ],
+          "generated_at": "2026-11-15T12:34:56Z",
+          "snapshot_graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "stale": false,
+          "limitations": []
+        }
+      }
+    },
+    "atlas.summary_invalid": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "invalid": [
+          {
+            "name": "text_too_long",
+            "exit_code": 2,
+            "code": "LIMIT_EXCEEDED",
+            "rejected": true
+          },
+          {
+            "name": "control_char",
+            "exit_code": 2,
+            "code": "INVALID_ARGUMENT",
+            "rejected": true
+          },
+          {
+            "name": "facts_invalid",
+            "exit_code": 2,
+            "code": "INVALID_ARGUMENT",
+            "rejected": true
+          }
+        ]
+      }
+    },
+    "atlas.summary_group": {
+      "ok": true,
+      "required": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "put_exit_code": 0,
+        "view_exit_code": 0,
+        "row": {
+          "schema_version": 1,
+          "workspace_id": "code-view-bus-demo",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "subject": {
+            "type": "group",
+            "id": "group:f_ec61140249f393550eb97946:294d40d8"
+          },
+          "text": "bus_register 下游子流程：两条私有子路径（direct/buffered），由单入口结构归纳，名称可修订。",
+          "facts": [
+            {
+              "kind": "selection",
+              "ref": "group:f_ec61140249f393550eb97946:294d40d8"
+            }
+          ],
+          "generator": {
+            "kind": "agent",
+            "model_ref": null,
+            "ref": "verify-summary"
+          },
+          "inference_labels": [
+            "from_static_structure"
+          ],
+          "generated_at": "2026-11-15T12:34:56Z",
+          "snapshot_graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "stale": false,
+          "limitations": [
+            "subject_existence_not_verified"
+          ]
+        }
+      }
+    },
+    "host.summary_written_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "panelOpened": true,
+          "statusReady": true,
+          "entriesListed": true,
+          "entryClicked": {
+            "ok": true
+          },
+          "workbenchOpened": true,
+          "busSendSelected": true,
+          "textShown": true,
+          "textMatches": true,
+          "generatorShown": true,
+          "generatedAtShown": true,
+          "factsShown": true,
+          "staleFalse": true,
+          "gapGone": true,
+          "noAbsolutePaths": true,
+          "noConsoleErrors": true
+        },
+        "views": {
+          "before": {
+            "panel_present": true,
+            "summary_present": true,
+            "text": "bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。实现以 trace(REQUEST) 记录入口，成功后 doorbell 写回平台边界。此归纳基于静态结构与源码文本，未含运行观测。",
+            "text_length": 120,
+            "gap_text": null,
+            "facts_text": [
+              "事实引用 1（evidence×1）：e_231505a73a485bc1d8c9249d"
+            ],
+            "generator_text": "generator：agent / verify-summary",
+            "generated_at_text": "生成于 2026-11-15T12:34:56Z",
+            "labels_text": "推断标签：from_static_structure",
+            "stale": "false",
+            "entries": [
+              {
+                "entry_id": "f_ec7feb15db7955807c4a8435",
+                "name": "reset",
+                "active": false
+              },
+              {
+                "entry_id": "f_5aad5c091d5772eb2dada479",
+                "name": "bus_register",
+                "active": false
+              },
+              {
+                "entry_id": "f_4962656fc82c513cdd5a744c",
+                "name": "stub_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_a691fe380ba8d75efac40379",
+                "name": "bus_unregister",
+                "active": false
+              },
+              {
+                "entry_id": "f_ff22940e08661e4950585599",
+                "name": "bus_irq",
+                "active": false
+              },
+              {
+                "entry_id": "f_afa8298f2d197e5fd110e49a",
+                "name": "bus_send",
+                "active": true
+              },
+              {
+                "entry_id": "f_b881ed23ccdead8054d7b99e",
+                "name": "set_platform_stub",
+                "active": false
+              },
+              {
+                "entry_id": "f_dfb9aead445405de7aafbbfa",
+                "name": "store_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_144ee14b1f297d19f8bdab78",
+                "name": "lookup_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_b19a05b7a8457000a4562e91",
+                "name": "check_length",
+                "active": false
+              },
+              {
+                "entry_id": "f_87403babddf39338cdbd3f69",
+                "name": "encode_doorbell",
+                "active": false
+              },
+              {
+                "entry_id": "f_f67649a4a3e9dcbcca8b3c1d",
+                "name": "write_doorbell",
+                "active": false
+              },
+              {
+                "entry_id": "f_ec61140249f393550eb97946",
+                "name": "commit_transfer",
+                "active": false
+              },
+              {
+                "entry_id": "f_c373db5bd0ded348577b3cb3",
+                "name": "stage_payload",
+                "active": false
+              },
+              {
+                "entry_id": "f_bc0e6086fe5e9c1faa1eeeb6",
+                "name": "submit_direct",
+                "active": false
+              },
+              {
+                "entry_id": "f_a6ac5de30cf631400f29d67e",
+                "name": "submit_buffered",
+                "active": false
+              },
+              {
+                "entry_id": "f_ccdd7df856dd459e2934ea77",
+                "name": "dispatch_transfer",
+                "active": false
+              },
+              {
+                "entry_id": "f_29e513b091be215bb024bc5a",
+                "name": "platform_reset",
+                "active": false
+              },
+              {
+                "entry_id": "f_6c3177a5f9b67214f9855ee8",
+                "name": "platform_write",
+                "active": false
+              }
+            ],
+            "details_text": "函数详情：bus_send 定位源码 关闭详情 点空白关闭；拖动/平移保留选择。 源码 子流程图 资源分析 签名 int (unsigned int, unsigned int) 位置 bus.c:152 · 类型 function · 存储 NONE 源码 源码证据 bus.c:152–174 证据区间 字节 4086–4743 · sha256 b2ec232896c2… 152 int bus_send(unsigned channel, unsigned length) 153 { 154 TRACE(REQUEST, channel, length, 0); 155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { 156 TRACE(INVALID, channel, length, 0); 157 return -22; 158 } 159 160 const struct Route *route = lookup_route(channel); 161 if (!route) 162 return -2; 163 164 if (!check_length(route, length)) 165 return -90; 166 167 /* Serial simulator: this flag records the protected scope, without threads. */ 168 transfer_lock = 1; 169 TRACE(LOCK, transfer_lock, 0, 0); 170 int status = dispatch_transfer(route, length); 171 transfer_lock = 0; 172 TRACE(LOCK, transfer_lock, 0, 0); 173 return status; 174 } 资源标识 状态 partial 对象（1） routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（7） 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证据 e_6d7e9e05d76acac948324a8a 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:148 字段 lane（route->lane） 证据 e_6689b07acd5985af8e0604e8 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:149 字段 lane（route->lane） 证据 e_ca4511d50de099afd258bfb7 限制 unresolved_or_multiple_base_objects 直接调用（本函数调用的目标）（3） 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:160 · lookup_route(channel) 目标 lookup_route（bus.c:89） 证据 e_6e7ed1a1416660c0e7c22f95 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:164 · check_length(route, length) 目标 check_length（bus.c:96） 证据 e_314adfee6301351a2dca9553 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:170 · dispatch_transfer(route, length) 目标 dispatch_transfer（bus.c:143） 证据 e_cd995d62f666bac251ce1ecf 被调用（调用本函数的来源）（0） 没有可显示的调用来源边。 证据（11） e_231505a73a485bc1d8c9249d evidence bus.c:152 int bus_send(unsigned channel, unsigned length) { TRACE(REQUEST, channel, length, 0); if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { TRACE(INVALID, channel, length, 0); return -22; } const struct Route *route = lookup_route(channel); if (!route) return -2; if (!check_length(route, length)) return -90; /* Serial simulator: this flag records the protected scope, without threads. */ transfer_lock = 1; TRACE(LOCK, transfer_ 已截断 e_6e7ed1a1416660c0e7c22f95 evidence bus.c:160 lookup_route(channel) e_314adfee6301351a2dca9553 evidence bus.c:164 check_length(route, length) e_cd995d62f666bac251ce1ecf evidence bus.c:170 dispatch_transfer(route, length) e_a8a7e31073f7bc6bde44bdaf evidence bus.c:92 e_8172321a6042c5dcc4441aed evidence bus.c:93 route->max_len e_768e475a22ccdbd0f0c59321 evidence bus.c:98 route->max_len e_6d7e9e05d76acac948324a8a evidence bus.c:99 e_6689b07acd5985af8e0604e8 evidence bus.c:148 route->lane e_ca4511d50de099afd258bfb7 evidence bus.c:149 route->lane e_02783480d2590d20ee91f1cb evidence bus.c:26 static struct Route routes[CHANNEL_COUNT] AI 归纳（只读） 函数 bus_send bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。实现以 trace(REQUEST) 记录入口，成功后 doorbell 写回平台边界。此归纳基于静态结构与源码文本，未含运行观测。 generator：agent / verify-summary 生成于 2026-11-15T12:34:56Z 事实引用 1（evidence×1）：e_231505a73a485bc1d8c9249d 推断标签：from_static_structure 归纳正文由 Agent 经 code_summary 写入；插件不调用模型。",
+            "panel_text": "代码工作台 只读五视图：快照 → 入口 → 源码 / 资源 / 文件 返回聊天 重新读取 工作台已就绪；快照 ed326d554334432b907de21297207eb8（code-view-bus-demo / semantic-x86_64 / fresh）；入口 19 个；当前入口 bus_send 缺口 5 快照 code-view-bus-demo → semantic-x86_64 → ed326d554334432b907de21297207eb8 状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false 入口（入口优先） reset（入口） bus.c:31 · void (void) bus_register（入口） bus.c:50 · int (unsigned int) stub_route（入口） bus.c:62 · int (unsigned int, unsigned int, unsigned int) bus_unregister（入口） bus.c:73 · int (unsigned int) bus_irq（入口） bus.c:82 · int (void) bus_send（入口） bus.c:152 · int (unsigned int, unsigned int) set_platform_stub（入口） platform.c:14 · void (int) store_route bus.c:43 · void (unsigned int, unsigned int, unsigned int) lookup_route bus.c:89 · const struct Route *(unsigned int) check_length bus.c:96 · int (const struct Route *, unsigned int) encode_doorbell bus.c:103 · unsigned int (unsigned int, unsigned int) write_doorbell bus.c:110 · int (unsigned int) commit_transfer bus.c:116 · int (unsigned int, unsigned int) stage_payload bus.c:123 · unsigned int (unsigned int, unsigned int) submit_direct bus.c:130 · int (unsigned int, unsigned int) submit_buffered bus.c:136 · int (unsigned int, unsigned int) dispatch_transfer bus.c:143 · int (const struct Route *, unsigned int) platform_reset platform.c:8 · void (void) platform_write platform.c:19 · int (unsigned int, unsigned int) 资源关系图 文字树 端到端图 时序图 文件视图 ? 全局资源 打桩模拟 全局资源 与当前入口/选择相关 · 0 项 暂无直接相关资源。 其他全局资源 · 1 项 routes struct Route[4] · STATIC · bus.c:26 字段：lane、max_len 读取 7 写入 / 修改 4 基础接口库（10） 收起 encode_doorbell 候选 独立接口（可黑盒） 调用次数 1 签名 unsigned int (unsigned int, unsigned int) · 返回 unsigned int 入参：lane:unsigned int，length:unsigned int bus.c:103 候选理由：无已解析出边签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 check_length 候选 独立接口（可黑盒） 调用次数 1 签名 int (const struct Route *, unsigned int) · 返回 int 入参：route:const struct Route *，length:unsigned int bus.c:96 候选理由：无已解析出边签名/入参/返回值完整调用点带条件 guard 副作用：无写类副作用 入参 guard：guard bus.c:164 · if (!check_length(route, length)) return -90 局限：candidate_rule_based_not_semantic 加入接口库 lookup_route 候选 独立接口（可黑盒） 调用次数 1 签名 const struct Route *(unsigned int) · 返回 const struct Route * 入参：channel:unsigned int bus.c:89 候选理由：无已解析出边签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 commit_transfer 候选 混合职责（有副作用） 调用次数 2 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:116 候选理由：签名/入参/返回值完整被多个调用点调用 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 platform_write 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：address:unsigned int，value:unsigned int platform.c:19 候选理由：无已解析出边跨文件被调用签名/入参/返回值完整存在字段写副作用 副作用：写入 / 修改 simulated_doorbell @ platform.c:25 局限：candidate_rule_based_not_semantic 加入接口库 submit_buffered 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:136 候选理由：签名/入参/返回值完整调用点带条件 guard 副作用：无写类副作用 入参 guard：guard bus.c:148 · if (buffered) return submit_buffered(route->lane, length) 局限：candidate_rule_based_not_semantic 加入接口库 submit_direct 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:130 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 write_doorbell 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int) · 返回 int 入参：value:unsigned int bus.c:110 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 dispatch_transfer 候选 混合职责（有副作用） 调用次数 1 签名 int (const struct Route *, unsigned int) · 返回 int 入参：route:const struct Route *，length:unsigned int bus.c:143 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 stage_payload 候选 混合职责（有副作用） 调用次数 1 签名 unsigned int (unsigned int, unsigned int) · 返回 unsigned int 入参：lane:unsigned int，length:unsigned int bus.c:123 候选理由：无已解析出边签名/入参/返回值完整存在字段写副作用 副作用：写入 / 修改 staged_lengths @ bus.c:125 局限：candidate_rule_based_not_semantic 加入接口库 外部边界（只读） 外部边界 trace · 调用 15 次 加入后在图与文字树中折叠为黑盒（客户端展示状态，不写快照）。 资源关系图 作用域：入口邻域 竖排 · 正交折线 · 拖节点/平移/缩放 左：函数（写者） 中：全局资源 右：函数（读者） max_len lane max_len max_len max_len lane lane lane max_len lane max_len 外部边界（未解析 callee）（4） external trace @ bus.c:47 候选 implementation_not_found external trace @ bus.c:92 候选 implementation_not_found external trace @ bus.c:99 候选 implementation_not_found external trace @ bus.c:146 候选 implementation_not_found 函数详情：bus_send 定位源码 关闭详情 点空白关闭；拖动/平移保留选择。 源码 子流程图 资源分析 签名 int (unsigned int, unsigned int) 位置 bus.c:152 · 类型 function · 存储 NONE 源码 源码证据 bus.c:152–174 证据区间 字节 4086–4743 · sha256 b2ec232896c2… 152 int bus_send(unsigned channel, unsigned length) 153 { 154 TRACE(REQUEST, channel, length, 0); 155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { 156 TRACE(INVALID, channel, length, 0); 157 return -22; 158 } 159 160 const struct Route *route = lookup_route(channel); 161 if (!route) 162 return -2; 163 164 if (!check_length(route, length)) 165 return -90; 166 167 /* Serial simulator: this flag records the protected scope, without threads. */ 168 transfer_lock = 1; 169 TRACE(LOCK, transfer_lock, 0, 0); 170 int status = dispatch_transfer(route, length); 171 transfer_lock = 0; 172 TRACE(LOCK, transfer_lock, 0, 0); 173 return status; 174 } 资源标识 状态 partial 对象（1） routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（7） 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证"
+          },
+          "after": {
+            "panel_present": true,
+            "summary_present": true,
+            "text": "bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。实现以 trace(REQUEST) 记录入口，成功后 doorbell 写回平台边界。此归纳基于静态结构与源码文本，未含运行观测。",
+            "text_length": 120,
+            "gap_text": null,
+            "facts_text": [
+              "事实引用 1（evidence×1）：e_231505a73a485bc1d8c9249d"
+            ],
+            "generator_text": "generator：agent / verify-summary",
+            "generated_at_text": "生成于 2026-11-15T12:34:56Z",
+            "labels_text": "推断标签：from_static_structure",
+            "stale": "false",
+            "entries": [
+              {
+                "entry_id": "f_ec7feb15db7955807c4a8435",
+                "name": "reset",
+                "active": false
+              },
+              {
+                "entry_id": "f_5aad5c091d5772eb2dada479",
+                "name": "bus_register",
+                "active": false
+              },
+              {
+                "entry_id": "f_4962656fc82c513cdd5a744c",
+                "name": "stub_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_a691fe380ba8d75efac40379",
+                "name": "bus_unregister",
+                "active": false
+              },
+              {
+                "entry_id": "f_ff22940e08661e4950585599",
+                "name": "bus_irq",
+                "active": false
+              },
+              {
+                "entry_id": "f_afa8298f2d197e5fd110e49a",
+                "name": "bus_send",
+                "active": true
+              },
+              {
+                "entry_id": "f_b881ed23ccdead8054d7b99e",
+                "name": "set_platform_stub",
+                "active": false
+              },
+              {
+                "entry_id": "f_dfb9aead445405de7aafbbfa",
+                "name": "store_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_144ee14b1f297d19f8bdab78",
+                "name": "lookup_route",
+                "active": false
+              },
+              {
+                "entry_id": "f_b19a05b7a8457000a4562e91",
+                "name": "check_length",
+                "active": false
+              },
+              {
+                "entry_id": "f_87403babddf39338cdbd3f69",
+                "name": "encode_doorbell",
+                "active": false
+              },
+              {
+                "entry_id": "f_f67649a4a3e9dcbcca8b3c1d",
+                "name": "write_doorbell",
+                "active": false
+              },
+              {
+                "entry_id": "f_ec61140249f393550eb97946",
+                "name": "commit_transfer",
+                "active": false
+              },
+              {
+                "entry_id": "f_c373db5bd0ded348577b3cb3",
+                "name": "stage_payload",
+                "active": false
+              },
+              {
+                "entry_id": "f_bc0e6086fe5e9c1faa1eeeb6",
+                "name": "submit_direct",
+                "active": false
+              },
+              {
+                "entry_id": "f_a6ac5de30cf631400f29d67e",
+                "name": "submit_buffered",
+                "active": false
+              },
+              {
+                "entry_id": "f_ccdd7df856dd459e2934ea77",
+                "name": "dispatch_transfer",
+                "active": false
+              },
+              {
+                "entry_id": "f_29e513b091be215bb024bc5a",
+                "name": "platform_reset",
+                "active": false
+              },
+              {
+                "entry_id": "f_6c3177a5f9b67214f9855ee8",
+                "name": "platform_write",
+                "active": false
+              }
+            ],
+            "details_text": "函数详情：bus_send 定位源码 关闭详情 点空白关闭；拖动/平移保留选择。 源码 子流程图 资源分析 签名 int (unsigned int, unsigned int) 位置 bus.c:152 · 类型 function · 存储 NONE 源码 源码证据 bus.c:152–174 证据区间 字节 4086–4743 · sha256 b2ec232896c2… 152 int bus_send(unsigned channel, unsigned length) 153 { 154 TRACE(REQUEST, channel, length, 0); 155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { 156 TRACE(INVALID, channel, length, 0); 157 return -22; 158 } 159 160 const struct Route *route = lookup_route(channel); 161 if (!route) 162 return -2; 163 164 if (!check_length(route, length)) 165 return -90; 166 167 /* Serial simulator: this flag records the protected scope, without threads. */ 168 transfer_lock = 1; 169 TRACE(LOCK, transfer_lock, 0, 0); 170 int status = dispatch_transfer(route, length); 171 transfer_lock = 0; 172 TRACE(LOCK, transfer_lock, 0, 0); 173 return status; 174 } 资源标识 状态 partial 对象（1） routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（7） 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证据 e_6d7e9e05d76acac948324a8a 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:148 字段 lane（route->lane） 证据 e_6689b07acd5985af8e0604e8 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner dispatch_transfer（bus.c:143） 位置 bus.c:149 字段 lane（route->lane） 证据 e_ca4511d50de099afd258bfb7 限制 unresolved_or_multiple_base_objects 直接调用（本函数调用的目标）（3） 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:160 · lookup_route(channel) 目标 lookup_route（bus.c:89） 证据 e_6e7ed1a1416660c0e7c22f95 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:164 · check_length(route, length) 目标 check_length（bus.c:96） 证据 e_314adfee6301351a2dca9553 静态确定 确定性 exact 来源 deterministic_analysis 调用点 bus.c:170 · dispatch_transfer(route, length) 目标 dispatch_transfer（bus.c:143） 证据 e_cd995d62f666bac251ce1ecf 被调用（调用本函数的来源）（0） 没有可显示的调用来源边。 证据（11） e_231505a73a485bc1d8c9249d evidence bus.c:152 int bus_send(unsigned channel, unsigned length) { TRACE(REQUEST, channel, length, 0); if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { TRACE(INVALID, channel, length, 0); return -22; } const struct Route *route = lookup_route(channel); if (!route) return -2; if (!check_length(route, length)) return -90; /* Serial simulator: this flag records the protected scope, without threads. */ transfer_lock = 1; TRACE(LOCK, transfer_ 已截断 e_6e7ed1a1416660c0e7c22f95 evidence bus.c:160 lookup_route(channel) e_314adfee6301351a2dca9553 evidence bus.c:164 check_length(route, length) e_cd995d62f666bac251ce1ecf evidence bus.c:170 dispatch_transfer(route, length) e_a8a7e31073f7bc6bde44bdaf evidence bus.c:92 e_8172321a6042c5dcc4441aed evidence bus.c:93 route->max_len e_768e475a22ccdbd0f0c59321 evidence bus.c:98 route->max_len e_6d7e9e05d76acac948324a8a evidence bus.c:99 e_6689b07acd5985af8e0604e8 evidence bus.c:148 route->lane e_ca4511d50de099afd258bfb7 evidence bus.c:149 route->lane e_02783480d2590d20ee91f1cb evidence bus.c:26 static struct Route routes[CHANNEL_COUNT] AI 归纳（只读） 函数 bus_send bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。实现以 trace(REQUEST) 记录入口，成功后 doorbell 写回平台边界。此归纳基于静态结构与源码文本，未含运行观测。 generator：agent / verify-summary 生成于 2026-11-15T12:34:56Z 事实引用 1（evidence×1）：e_231505a73a485bc1d8c9249d 推断标签：from_static_structure 归纳正文由 Agent 经 code_summary 写入；插件不调用模型。",
+            "panel_text": "代码工作台 只读五视图：快照 → 入口 → 源码 / 资源 / 文件 返回聊天 重新读取 工作台已就绪；快照 ed326d554334432b907de21297207eb8（code-view-bus-demo / semantic-x86_64 / fresh）；入口 19 个；当前入口 bus_send 缺口 5 快照 code-view-bus-demo → semantic-x86_64 → ed326d554334432b907de21297207eb8 状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false 入口（入口优先） reset（入口） bus.c:31 · void (void) bus_register（入口） bus.c:50 · int (unsigned int) stub_route（入口） bus.c:62 · int (unsigned int, unsigned int, unsigned int) bus_unregister（入口） bus.c:73 · int (unsigned int) bus_irq（入口） bus.c:82 · int (void) bus_send（入口） bus.c:152 · int (unsigned int, unsigned int) set_platform_stub（入口） platform.c:14 · void (int) store_route bus.c:43 · void (unsigned int, unsigned int, unsigned int) lookup_route bus.c:89 · const struct Route *(unsigned int) check_length bus.c:96 · int (const struct Route *, unsigned int) encode_doorbell bus.c:103 · unsigned int (unsigned int, unsigned int) write_doorbell bus.c:110 · int (unsigned int) commit_transfer bus.c:116 · int (unsigned int, unsigned int) stage_payload bus.c:123 · unsigned int (unsigned int, unsigned int) submit_direct bus.c:130 · int (unsigned int, unsigned int) submit_buffered bus.c:136 · int (unsigned int, unsigned int) dispatch_transfer bus.c:143 · int (const struct Route *, unsigned int) platform_reset platform.c:8 · void (void) platform_write platform.c:19 · int (unsigned int, unsigned int) 资源关系图 文字树 端到端图 时序图 文件视图 ? 全局资源 打桩模拟 全局资源 与当前入口/选择相关 · 0 项 暂无直接相关资源。 其他全局资源 · 1 项 routes struct Route[4] · STATIC · bus.c:26 字段：lane、max_len 读取 7 写入 / 修改 4 基础接口库（10） 收起 encode_doorbell 候选 独立接口（可黑盒） 调用次数 1 签名 unsigned int (unsigned int, unsigned int) · 返回 unsigned int 入参：lane:unsigned int，length:unsigned int bus.c:103 候选理由：无已解析出边签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 check_length 候选 独立接口（可黑盒） 调用次数 1 签名 int (const struct Route *, unsigned int) · 返回 int 入参：route:const struct Route *，length:unsigned int bus.c:96 候选理由：无已解析出边签名/入参/返回值完整调用点带条件 guard 副作用：无写类副作用 入参 guard：guard bus.c:164 · if (!check_length(route, length)) return -90 局限：candidate_rule_based_not_semantic 加入接口库 lookup_route 候选 独立接口（可黑盒） 调用次数 1 签名 const struct Route *(unsigned int) · 返回 const struct Route * 入参：channel:unsigned int bus.c:89 候选理由：无已解析出边签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 commit_transfer 候选 混合职责（有副作用） 调用次数 2 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:116 候选理由：签名/入参/返回值完整被多个调用点调用 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 platform_write 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：address:unsigned int，value:unsigned int platform.c:19 候选理由：无已解析出边跨文件被调用签名/入参/返回值完整存在字段写副作用 副作用：写入 / 修改 simulated_doorbell @ platform.c:25 局限：candidate_rule_based_not_semantic 加入接口库 submit_buffered 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:136 候选理由：签名/入参/返回值完整调用点带条件 guard 副作用：无写类副作用 入参 guard：guard bus.c:148 · if (buffered) return submit_buffered(route->lane, length) 局限：candidate_rule_based_not_semantic 加入接口库 submit_direct 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int, unsigned int) · 返回 int 入参：lane:unsigned int，length:unsigned int bus.c:130 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 write_doorbell 候选 混合职责（有副作用） 调用次数 1 签名 int (unsigned int) · 返回 int 入参：value:unsigned int bus.c:110 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 dispatch_transfer 候选 混合职责（有副作用） 调用次数 1 签名 int (const struct Route *, unsigned int) · 返回 int 入参：route:const struct Route *，length:unsigned int bus.c:143 候选理由：签名/入参/返回值完整 副作用：无写类副作用 局限：candidate_rule_based_not_semantic 加入接口库 stage_payload 候选 混合职责（有副作用） 调用次数 1 签名 unsigned int (unsigned int, unsigned int) · 返回 unsigned int 入参：lane:unsigned int，length:unsigned int bus.c:123 候选理由：无已解析出边签名/入参/返回值完整存在字段写副作用 副作用：写入 / 修改 staged_lengths @ bus.c:125 局限：candidate_rule_based_not_semantic 加入接口库 外部边界（只读） 外部边界 trace · 调用 15 次 加入后在图与文字树中折叠为黑盒（客户端展示状态，不写快照）。 资源关系图 作用域：入口邻域 竖排 · 正交折线 · 拖节点/平移/缩放 左：函数（写者） 中：全局资源 右：函数（读者） max_len lane max_len max_len max_len lane lane lane max_len lane max_len 外部边界（未解析 callee）（4） external trace @ bus.c:47 候选 implementation_not_found external trace @ bus.c:92 候选 implementation_not_found external trace @ bus.c:99 候选 implementation_not_found external trace @ bus.c:146 候选 implementation_not_found 函数详情：bus_send 定位源码 关闭详情 点空白关闭；拖动/平移保留选择。 源码 子流程图 资源分析 签名 int (unsigned int, unsigned int) 位置 bus.c:152 · 类型 function · 存储 NONE 源码 源码证据 bus.c:152–174 证据区间 字节 4086–4743 · sha256 b2ec232896c2… 152 int bus_send(unsigned channel, unsigned length) 153 { 154 TRACE(REQUEST, channel, length, 0); 155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { 156 TRACE(INVALID, channel, length, 0); 157 return -22; 158 } 159 160 const struct Route *route = lookup_route(channel); 161 if (!route) 162 return -2; 163 164 if (!check_length(route, length)) 165 return -90; 166 167 /* Serial simulator: this flag records the protected scope, without threads. */ 168 transfer_lock = 1; 169 TRACE(LOCK, transfer_lock, 0, 0); 170 int status = dispatch_transfer(route, length); 171 transfer_lock = 0; 172 TRACE(LOCK, transfer_lock, 0, 0); 173 return status; 174 } 资源标识 状态 partial 对象（1） routes 类型 struct Route[4] · 存储 STATIC 位置 bus.c:26 字段访问（7） 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 max_len 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:93 字段 max_len（route->max_len） 对象 routes 证据 e_8172321a6042c5dcc4441aed 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner lookup_route（bus.c:89） 位置 bus.c:92 字段 lane 对象 routes 证据 e_a8a7e31073f7bc6bde44bdaf 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:98 字段 max_len（route->max_len） 证据 e_768e475a22ccdbd0f0c59321 限制 unresolved_or_multiple_base_objects 候选 方向 读取（read） owner check_length（bus.c:96） 位置 bus.c:99 字段 max_len 证"
+          }
+        },
+        "console_error_count": 0,
+        "screenshot": {
+          "path": "evidence/ai-summary/written.png",
+          "bytes": 165078,
+          "sha256": "724c7ca8dd6d62e3bf1fcf1d535053dcaeb2217656ac61047f3e230fee7d0baf"
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "host.summary_screenshots": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "gap": {
+          "path": "evidence/ai-summary/gap.png",
+          "bytes": 141363,
+          "sha256": "50a5f79c1239e1b92e20216a4fb93a265f20c34538f62c0eacea3c859888414d"
+        },
+        "written": {
+          "path": "evidence/ai-summary/written.png",
+          "bytes": 165078,
+          "sha256": "724c7ca8dd6d62e3bf1fcf1d535053dcaeb2217656ac61047f3e230fee7d0baf"
+        }
+      }
+    },
+    "host.summary_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "gap": 0,
+        "written": 0
+      }
+    },
+    "host.rpc_admission": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 401,
+        "body_head": "unauthorized"
+      }
+    },
+    "host.rpc_view_status": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "host": {
+          "plugin": "dsh-code-reader",
+          "package": "@local/dsh-code-reader",
+          "version": "0.1.0",
+          "panel_key": "dsh-code-reader",
+          "rpc_channel": "/code-view",
+          "node": "24.21.0",
+          "platform": "win32"
+        }
+      }
+    },
+    "host.rpc_list_snapshots": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "status": 200,
+        "snapshot": {
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "manifest_sha256": "6fc22d8408f3956094e42718926da125900ba662d3305796df8588adda06c4b6",
+          "tool_version": "0.8.0",
+          "status": "verified",
+          "freshness": "fresh",
+          "atlas_schema": "0.1",
+          "imported_at": "2026-11-15T12:34:45Z",
+          "entry_count": 19,
+          "coverage": {
+            "failed_count": 0,
+            "pending_count": 0,
+            "whole_program_complete": false
+          },
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "limitations": [],
+          "error": null
+        }
+      }
+    },
+    "host.rpc_summary": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "summary": {
+          "schema_version": 1,
+          "workspace_id": "code-view-bus-demo",
+          "snapshot_id": "ed326d554334432b907de21297207eb8",
+          "subject": {
+            "type": "function",
+            "id": "f_afa8298f2d197e5fd110e49a"
+          },
+          "text": "bus_send 先校验通道与长度，再查路由表；长度上限取 route->max_len，超长返回 -22。实现以 trace(REQUEST) 记录入口，成功后 doorbell 写回平台边界。此归纳基于静态结构与源码文本，未含运行观测。",
+          "facts": [
+            {
+              "kind": "evidence",
+              "ref": "e_231505a73a485bc1d8c9249d"
+            }
+          ],
+          "generator": {
+            "kind": "agent",
+            "model_ref": null,
+            "ref": "verify-summary"
+          },
+          "inference_labels": [
+            "from_static_structure"
+          ],
+          "generated_at": "2026-11-15T12:34:56Z",
+          "snapshot_graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+          "stale": false,
+          "limitations": []
+        },
+        "gaps": [],
+        "error": null
+      }
+    },
+    "host.rpc_summary_group": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "http_status": 200,
+        "summaries": [
+          {
+            "schema_version": 1,
+            "workspace_id": "code-view-bus-demo",
+            "snapshot_id": "ed326d554334432b907de21297207eb8",
+            "subject": {
+              "type": "group",
+              "id": "group:f_ec61140249f393550eb97946:294d40d8"
+            },
+            "text": "bus_register 下游子流程：两条私有子路径（direct/buffered），由单入口结构归纳，名称可修订。",
+            "facts": [
+              {
+                "kind": "selection",
+                "ref": "group:f_ec61140249f393550eb97946:294d40d8"
+              }
+            ],
+            "generator": {
+              "kind": "agent",
+              "model_ref": null,
+              "ref": "verify-summary"
+            },
+            "inference_labels": [
+              "from_static_structure"
+            ],
+            "generated_at": "2026-11-15T12:34:56Z",
+            "snapshot_graph_sha256": "c6e49fe9a774ff02961b0417ce7a79b15e6630a03a7e8c42750d236cbef4207c",
+            "stale": false,
+            "limitations": [
+              "subject_existence_not_verified"
+            ]
+          }
+        ],
+        "gaps": []
+      }
+    },
+    "host.rpc_status_summary_caps": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "capabilities": {
+          "readonly_workbench": true,
+          "five_views": true,
+          "resource_graph": true,
+          "group_collapse": true,
+          "interface_library": true,
+          "subflow_breadcrumb": true,
+          "scenario_execution": true,
+          "run_observation": true,
+          "scenario_undo": true,
+          "trace_import": true,
+          "real_device_dispatch": false,
+          "ai_summary": false,
+          "ai_summary_store": true
+        },
+        "gaps": [
+          {
+            "code": "ai_summary",
+            "status": "unavailable",
+            "reason": "归纳正文由 Agent 经 code_summary 写入；插件不调用模型"
+          },
+          {
+            "code": "real_device_dispatch",
+            "status": "unavailable",
+            "reason": "真实设备下发需单独授权与运行验证"
+          }
+        ]
+      }
+    },
+    "host.summary_flow": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "gap": true,
+          "written": true,
+          "engine": true
+        },
+        "screenshots": {
+          "gap": {
+            "path": "evidence/ai-summary/gap.png",
+            "bytes": 141363,
+            "sha256": "50a5f79c1239e1b92e20216a4fb93a265f20c34538f62c0eacea3c859888414d"
+          },
+          "written": {
+            "path": "evidence/ai-summary/written.png",
+            "bytes": 165078,
+            "sha256": "724c7ca8dd6d62e3bf1fcf1d535053dcaeb2217656ac61047f3e230fee7d0baf"
+          }
+        },
+        "summary_checks": {
+          "put": true,
+          "view": true,
+          "invalid": true,
+          "group": true
+        }
+      }
+    },
+    "host.s3b_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "duration_ms": 28256,
+        "failed_steps": [],
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "sidebarEntry": true,
+          "panelOpened": true,
+          "statusReady": true,
+          "entryListed": true,
+          "entryClicked": true,
+          "workbenchOpened": true,
+          "stubPanelOpened": true,
+          "undo": true,
+          "traceImport": true,
+          "observedScenarios": true,
+          "chrome": true,
+          "selectionFields": true,
+          "noAbsolutePaths": true,
+          "noConsoleErrors": true
+        },
+        "console_error_count": 0,
+        "screenshots": {
+          "undo": {
+            "path": "evidence/s3b/s3b-undo.png",
+            "bytes": 364270,
+            "sha256": "61a1a2cbe7598fe87fcbeed7ea8e35ae37249581a82ccbf7cd8c46d4b32ebde3"
+          },
+          "imported": {
+            "path": "evidence/s3b/s3b-imported.png",
+            "bytes": 300908,
+            "sha256": "938ef547d25956f852f5833c7d3fcb634b42db1c7d058c50dff9ba3771112bda"
+          },
+          "observed-scenario": {
+            "path": "evidence/s3b/s3b-observed-scenario.png",
+            "bytes": 289680,
+            "sha256": "0ef19c91d3eb66ec94ee506630c4037757686ccc565ee96d63d7f20ccd28c890"
+          },
+          "main": {
+            "path": "evidence/s3b/s3b-main.png",
+            "bytes": 272243,
+            "sha256": "af5b2c5abfde9939ef5fac491aa90ce050b52ba03bbef6f853bf8d7420e686ca"
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "host.s3b_screenshots": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "required": [
+          "undo",
+          "imported",
+          "observed-scenario",
+          "main"
+        ],
+        "copied": {
+          "undo": {
+            "path": "evidence/s3b/s3b-undo.png",
+            "bytes": 364270,
+            "sha256": "61a1a2cbe7598fe87fcbeed7ea8e35ae37249581a82ccbf7cd8c46d4b32ebde3"
+          },
+          "imported": {
+            "path": "evidence/s3b/s3b-imported.png",
+            "bytes": 300908,
+            "sha256": "938ef547d25956f852f5833c7d3fcb634b42db1c7d058c50dff9ba3771112bda"
+          },
+          "observed-scenario": {
+            "path": "evidence/s3b/s3b-observed-scenario.png",
+            "bytes": 289680,
+            "sha256": "0ef19c91d3eb66ec94ee506630c4037757686ccc565ee96d63d7f20ccd28c890"
+          },
+          "main": {
+            "path": "evidence/s3b/s3b-main.png",
+            "bytes": 272243,
+            "sha256": "af5b2c5abfde9939ef5fac491aa90ce050b52ba03bbef6f853bf8d7420e686ca"
+          }
+        },
+        "unique_frames": 4
+      }
+    },
+    "host.s3b_undo": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "ranA": true,
+          "sourceHas3": true,
+          "sourceScenarioId": true,
+          "undoSuccess": true,
+          "newLedgerTwoSteps": true,
+          "prefixRecordsMatch": true,
+          "undoCountVisible": true,
+          "stateDigestVerifiedVisible": true,
+          "undoStatusSuccess": true,
+          "editorTwoSteps": true,
+          "rerunGenerationIncrement": true,
+          "invalidCountRejected": true,
+          "invalidCountLedgerUnchanged": true
+        },
+        "detail": {
+          "source": {
+            "records": [
+              {
+                "call_id": "call_1_1",
+                "status": "ok",
+                "result": null,
+                "memory_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b",
+                "text": "#1 step 0 reset() status ok 结果 — memory 53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b"
+              },
+              {
+                "call_id": "call_1_2",
+                "status": "ok",
+                "result": "0",
+                "memory_digest": "19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1",
+                "text": "#2 step 1 bus_register(1) status ok 结果 0 memory 19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1 DEFAULT_ROUTE@57 #1 STORE_ROUTE@47 #3 route_defaults · 读取 routes · 写入 / 修改"
+              },
+              {
+                "call_id": "call_1_3",
+                "status": "ok",
+                "result": "0",
+                "memory_digest": "2b34d0d64694207443ed6cb6d9e8b0c42ebad1e6c4e4833651a4e24bf44d60ea",
+                "text": "#3 step 2 bus_send(1, 48) status ok 结果 0 memory 2b34d0d64694207443ed6cb6d9e8b0c42ebad1e6c4e4833651a4e24bf44d60ea REQUEST@154 #4 LOOKUP@92 #5 CHECK_LENGTH@99 #6 LOCK@169 #15 TRANSFER@146 #9 DIRECT@132 #13 COMMIT@118 #12 ENCODE@106 #11 DOORBELL@112 #19 LIBRARY@21 #16 WRITE@26 #7 LOCK@172 #15 routes · 读取 routes · 读取 transfer_lock · 写入 / 修改 platform_status · 读取 simulated_doorbell · 写入 / 修改"
+              }
+            ],
+            "ids": [
+              "scn_06ff06bc9060"
+            ],
+            "generation": 1,
+            "step_count": 3,
+            "selection": {
+              "workspace_id": "code-view-bus-demo",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "repo_id": "bus",
+              "entry_id": "f_afa8298f2d197e5fd110e49a",
+              "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+              "callsite_ids": [],
+              "callsite_path": [],
+              "resource_ids": [
+                "s_0860e6738eaa8c95f37d0d03"
+              ],
+              "resource_status": "partial",
+              "evidence_ids": [
+                "e_231505a73a485bc1d8c9249d"
+              ],
+              "run_id": null,
+              "event_id": null,
+              "focus_resource_id": null,
+              "focus_callsite_id": null,
+              "group_id": null,
+              "interface_id": null,
+              "subflow_root_id": null,
+              "scenario_id": "scn_06ff06bc9060",
+              "run_generation": 1,
+              "call_id": null
+            }
+          },
+          "undo": {
+            "after": {
+              "records": [
+                {
+                  "call_id": "call_1_1",
+                  "status": "ok",
+                  "stubbed": null,
+                  "result": null,
+                  "text": "#1 step 0 reset() status ok 结果 — memory 53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b",
+                  "events": [],
+                  "affects": [],
+                  "memory_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b"
+                },
+                {
+                  "call_id": "call_1_2",
+                  "status": "ok",
+                  "stubbed": null,
+                  "result": "0",
+                  "text": "#2 step 1 bus_register(1) status ok 结果 0 memory 19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1 DEFAULT_ROUTE@57 #1 STORE_ROUTE@47 #3 route_defaults · 读取 routes · 写入 / 修改",
+                  "events": [
+                    {
+                      "kind": "DEFAULT_ROUTE",
+                      "text": "DEFAULT_ROUTE@57 #1",
+                      "title": "DEFAULT_ROUTE code=1 a=1 b=2 c=64 line=57",
+                      "a": 1,
+                      "b": 2,
+                      "c": 64
+                    },
+                    {
+                      "kind": "STORE_ROUTE",
+                      "text": "STORE_ROUTE@47 #3",
+                      "title": "STORE_ROUTE code=3 a=1 b=2 c=64 line=47",
+                      "a": 1,
+                      "b": 2,
+                      "c": 64
+                    }
+                  ],
+                  "affects": [
+                    {
+                      "resource_id": "s_df7e9ea6246145b01953fcaa",
+                      "text": "route_defaults · 读取"
+                    },
+                    {
+                      "resource_id": "s_0860e6738eaa8c95f37d0d03",
+                      "text": "routes · 写入 / 修改"
+                    }
+                  ],
+                  "memory_digest": "19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1"
+                }
+              ],
+              "steps": [
+                {
+                  "index": 0,
+                  "interface_value": "reset",
+                  "interface_text": "接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset",
+                  "args": [],
+                  "text": "#1 接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset 上移 下移 移除"
+                },
+                {
+                  "index": 1,
+                  "interface_value": "bus_register",
+                  "interface_text": "接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset",
+                  "args": [
+                    {
+                      "value": "1",
+                      "min": "0",
+                      "max": "3"
+                    }
+                  ],
+                  "text": "#2 接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset channel:u32 [0,3] 上移 下移 移除"
+                }
+              ],
+              "ids": [
+                "scn_4686ecddf868"
+              ],
+              "scenario_selector": null
+            },
+            "prefixScenarioId": "scn_4686ecddf868",
+            "status": {
+              "text": "回退 1 步：前缀重放状态摘要一致（scenario scn_4686ecddf868 generation 1）",
+              "ok": true
+            },
+            "replayed": [
+              {
+                "call_id": "call_1_1",
+                "memory_digest": "53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b",
+                "result": null,
+                "status": "ok",
+                "text": "#1 step 0 reset() status ok 结果 — memory 53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b"
+              },
+              {
+                "call_id": "call_1_2",
+                "memory_digest": "19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1",
+                "result": "0",
+                "status": "ok",
+                "text": "#2 step 1 bus_register(1) status ok 结果 0 memory 19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1 DEFAULT_ROUTE@57 #1 STORE_ROUTE@47 #3 route_defaults · 读取 routes · 写入 / 修改"
+              }
+            ],
+            "rerunPrefix": {
+              "records": 2,
+              "generation": 2,
+              "status": ""
+            },
+            "invalidUndoStatus": "回退失败： INVALID_ARGUMENT：回退步数必须在 1..2 之间（当前 99）。"
+          },
+          "traceImport": null,
+          "observed": null,
+          "chrome": null
+        }
+      }
+    },
+    "host.s3b_trace_import": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "importSuccess": true,
+          "importedLedgerVisible": true,
+          "importedLabelVisible": true,
+          "importedLimitations": true,
+          "importedUndoDisabled": true,
+          "selectionUpdated": true
+        },
+        "detail": {
+          "source": null,
+          "undo": {
+            "after": null,
+            "prefixScenarioId": null,
+            "status": null,
+            "replayed": null,
+            "rerunPrefix": null,
+            "invalidUndoStatus": null
+          },
+          "traceImport": {
+            "ids": [
+              "scn_982682c88e20"
+            ],
+            "text": "打桩模拟（Wasm 隔离执行） 可信 profile → 有序接口调用 → 隔离 worker 执行 → 只追加运行台账；仅在点击「运行」时执行。 模拟 profile （未选择） Demo bus/platform Wasm 隔离模拟 · bus-demo-wasm Demo bus/platform Wasm 隔离模拟 binding code-view-bus-demo / semantic-x86_64 / bus / ed326d554334432b907de21297207eb8 module sha256 69c8622d3522… · 1547 B 接口 7 · limits timeout 10000 ms · steps 20 · events/step 256 局限：Wasm 模拟器为 Demo 构建产物，不证明真实设备/内核行为；执行在 Host worker 隔离内完成，不联网、不写源码 场景步骤（2/20） #1 接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset 上移 下移 移除 #2 接口… bus_register · 入口 stub_route · 入口 bus_unregister · 入口 bus_send · 入口 bus_irq · 入口 set_platform_stub reset channel:u32 [0,3] 上移 下移 移除 新增步骤 失败即停止（stop_on_error） 运行会真实调用隔离 Wasm worker；超时/取消返回 OUTCOME_UNKNOWN 且不落台账。 运行场景 plan plan_00353a5… · 代次 2 · timeout 10000 ms 运行记录（只追加台账） scenario scn_982682c88e20 台账当前代 1 records_digest 503f53e6a3aa… profile bus-demo-wasm imported · 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例） 导入台账局限：imported_trace_not_executed_by_host、resource_effects_unknown_for_imported_trace #1 step 0 reset() status ok 结果 — memory 53baa02fa55ced37e88712785796e5c4d3de53bfaf8d0a19b4a90199f2931c4b #2 step 1 bus_register(1) status ok 结果 0 memory 19bce65ed7fc7e7579e8b61c50dfe872cc3440c0ca37b82683bfab4404547ac1 DEFAULT_ROUTE@57 #1 STORE_ROUTE@47 #3 #3 step 2 bus_send(1, 48) status ok 结果 0 memory 2b34d0d64694207443ed6cb6d9e8b0c42ebad1e6c4e4833651a4e24bf44d60ea REQUEST@154 #4 LOOKUP@92 #5 CHECK_LENGTH@99 #6 LOCK@169 #15 TRANSFER@146 #9 DIRECT@132 #13 COMMIT@118 #12 ENCODE@106 #11 DOORBELL@112 #19 LIBRARY@21 #16 WRITE@26 #7 LOCK@172 #15 回退末尾 N 步（前缀重放） 回退步数 N 回退末尾 N 步 当前台账来自导入轨迹，无法重放，因此不可回退。 回退会重放前缀并逐条核验 memory digest；导入台账不可回退。 导入轨迹（inbox 只读台账） 输入可信 inbox 内的轨迹文件名（仅 A-Za-z0-9._-，不做路径选择/文件上传）。 导入轨迹 已导入轨迹台账：scenario scn_982682c88e20 generation 1（外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）） real_device_dispatch 真实设备下发需单独授权与运行验证；编译器/构建未启用（不在插件内编译）",
+            "importedScenarioId": "scn_982682c88e20",
+            "importDone": {
+              "text": "已导入轨迹台账：scenario scn_982682c88e20 generation 1（外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例））",
+              "ok": true
+            },
+            "selection": {
+              "workspace_id": "code-view-bus-demo",
+              "variant_id": "semantic-x86_64",
+              "snapshot_id": "ed326d554334432b907de21297207eb8",
+              "repo_id": "bus",
+              "entry_id": "f_afa8298f2d197e5fd110e49a",
+              "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+              "callsite_ids": [],
+              "callsite_path": [],
+              "resource_ids": [
+                "s_0860e6738eaa8c95f37d0d03"
+              ],
+              "resource_status": "partial",
+              "evidence_ids": [
+                "e_231505a73a485bc1d8c9249d"
+              ],
+              "run_id": null,
+              "event_id": null,
+              "focus_resource_id": null,
+              "focus_callsite_id": null,
+              "group_id": null,
+              "interface_id": null,
+              "subflow_root_id": null,
+              "scenario_id": "scn_982682c88e20",
+              "run_generation": 1,
+              "call_id": null
+            }
+          },
+          "observed": null,
+          "chrome": null
+        }
+      }
+    },
+    "host.s3b_observed_scenarios": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "sequenceView": true,
+          "observedMode": true,
+          "selectorPresent": true,
+          "selectorListsScenarios": true,
+          "importedSelected": true,
+          "importedMarker": true,
+          "importedMessages": true,
+          "importedLabelVisible": true,
+          "prefixSelected": true,
+          "prefixSelectionFollows": true,
+          "prefixImportedMarkerAbsent": true,
+          "messagesFollow": true,
+          "selectionFields": true
+        },
+        "detail": {
+          "source": null,
+          "undo": {
+            "after": null,
+            "prefixScenarioId": null,
+            "status": null,
+            "replayed": null,
+            "rerunPrefix": null,
+            "invalidUndoStatus": null
+          },
+          "traceImport": null,
+          "observed": {
+            "selector": {
+              "tag": "select",
+              "options": [
+                {
+                  "value": "scn_4686ecddf868",
+                  "text": "scn_4686ecddf868 · gen 2 · 2 步 · 2026-11-15T12:35:19Z",
+                  "selected": false
+                },
+                {
+                  "value": "scn_06ff06bc9060",
+                  "text": "scn_06ff06bc9060 · gen 1 · 3 步 · 2026-11-15T12:35:13Z",
+                  "selected": false
+                },
+                {
+                  "value": "scn_982682c88e20",
+                  "text": "scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T12:34:45Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）",
+                  "selected": true
+                }
+              ],
+              "value": "scn_982682c88e20",
+              "text": "scn_4686ecddf868 · gen 2 · 2 步 · 2026-11-15T12:35:19Z scn_06ff06bc9060 · gen 1 · 3 步 · 2026-11-15T12:35:13Z scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T12:34:45Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）"
+            },
+            "options": [
+              {
+                "value": "scn_4686ecddf868",
+                "text": "scn_4686ecddf868 · gen 2 · 2 步 · 2026-11-15T12:35:19Z",
+                "selected": false
+              },
+              {
+                "value": "scn_06ff06bc9060",
+                "text": "scn_06ff06bc9060 · gen 1 · 3 步 · 2026-11-15T12:35:13Z",
+                "selected": false
+              },
+              {
+                "value": "scn_982682c88e20",
+                "text": "scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T12:34:45Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）",
+                "selected": true
+              }
+            ],
+            "importedOption": {
+              "value": "scn_982682c88e20",
+              "text": "scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T12:34:45Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例）",
+              "selected": true
+            },
+            "importedId": "scn_982682c88e20",
+            "importedState": {
+              "sequence_text": "时序图 mode observed observed true scenario scn_982682c88e20 代次 1 时序模式 静态预测 运行观测 台账场景 scn_4686ecddf868 · gen 2 · 2 步 · 2026-11-15T12:35:19Z scn_06ff06bc9060 · gen 1 · 3 步 · 2026-11-15T12:35:13Z scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T12:34:45Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例） 运行观测（observed） · observed=true（运行台账） imported · 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例） imported_trace_not_executed_by_host、resource_effects_unknown_for_imported_trace scenario_id scn_982682c88e20 generation 1 profile bus-demo-wasm records_digest 503f53e6a3aa… created 2026-11-15T12:34:45Z 消息来自模拟运行台账，observed=true；只代表隔离 Wasm 模拟，不等同真实设备/内核行为。 调用方 驱动 驱动资源 平台/设备边界 #1 调用方 → 驱动 reset() 调用 运行观测 call call_1_1 status ok imported #2 驱动 → 调用方 返回 null 返回 运行观测 call call_1_1 status ok imported #3 调用方 → 驱动 bus_register(1) 调用 运行观测 call call_1_2 status ok 结果 0 imported #4 驱动 → 驱动 DEFAULT_ROUTE 调用 运行观测 call call_1_2 imported event DEFAULT_ROUTE #1 #5 驱动 → 驱动 STORE_ROUTE 调用 运行观测 call call_1_2 imported event STORE_ROUTE #3 #6 驱动 → 调用方 返回 0 返回 运行观测 call call_1_2 status ok 结果 0 imported #7 调用方 → 驱动 bus_send(1, 48) 调用 运行观测 call call_1_3 status ok 结果 0 imported #8 驱动 → 驱动 REQUEST 调用 运行观测 call call_1_3 imported event REQUEST #4 #9 驱动 → 驱动 LOOKUP 调用 运行观测 call call_1_3 imported event LOOKUP #5 #10 驱动 → 驱动 CHECK_LENGTH 调用 运行观测 call call_1_3 imported event CHECK_LENGTH #6 #11 驱动 → 驱动 LOCK 调用 运行观测 call call_1_3 imported event LOCK #15 #12 驱动 → 驱动 TRANSFER 调用 运行观测 call call_1_3 imported event TRANSFER #9 #13 驱动 → 驱动 DIRECT 调用 运行观测 call call_1_3 imported event DIRECT #13 #14 驱动 → 驱动 COMMIT 调用 运行观测 call call_1_3 imported event COMMIT #12 #15 驱动 → 驱动 ENCODE 调用 运行观测 call call_1_3 imported event ENCODE #11 #16 驱动 → 驱动 DOORBELL 调用 运行观测 call call_1_3 imported event DOORBELL #19 #17 驱动 → 平台/设备边界 LIBRARY 调用 运行观测 call call_1_3 imported event LIBRARY #16 #18 驱动 → 平台/设备边界 WRITE 调用 运行观测 call call_1_3 imported event WRITE #7 #19 驱动 → 驱动 LOCK 调用 运行观测 call call_1_3 imported event LOCK #15 #20 驱动 → 调用方 返回 0 返回 运行观测 call call_1_3 status ok 结果 0 imported",
+              "selection": {
+                "workspace_id": "code-view-bus-demo",
+                "variant_id": "semantic-x86_64",
+                "snapshot_id": "ed326d554334432b907de21297207eb8",
+                "repo_id": "bus",
+                "entry_id": "f_afa8298f2d197e5fd110e49a",
+                "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+                "callsite_ids": [],
+                "callsite_path": [],
+                "resource_ids": [
+                  "s_0860e6738eaa8c95f37d0d03"
+                ],
+                "resource_status": "partial",
+                "evidence_ids": [
+                  "e_231505a73a485bc1d8c9249d"
+                ],
+                "run_id": null,
+                "event_id": null,
+                "focus_resource_id": null,
+                "focus_callsite_id": null,
+                "group_id": null,
+                "interface_id": null,
+                "subflow_root_id": null,
+                "scenario_id": "scn_982682c88e20",
+                "run_generation": 1,
+                "call_id": null
+              },
+              "imported_marker": true
+            },
+            "prefixState": {
+              "selection": {
+                "workspace_id": "code-view-bus-demo",
+                "variant_id": "semantic-x86_64",
+                "snapshot_id": "ed326d554334432b907de21297207eb8",
+                "repo_id": "bus",
+                "entry_id": "f_afa8298f2d197e5fd110e49a",
+                "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+                "callsite_ids": [],
+                "callsite_path": [],
+                "resource_ids": [
+                  "s_0860e6738eaa8c95f37d0d03"
+                ],
+                "resource_status": "partial",
+                "evidence_ids": [
+                  "e_231505a73a485bc1d8c9249d"
+                ],
+                "run_id": null,
+                "event_id": null,
+                "focus_resource_id": null,
+                "focus_callsite_id": null,
+                "group_id": null,
+                "interface_id": null,
+                "subflow_root_id": null,
+                "scenario_id": "scn_4686ecddf868",
+                "run_generation": 2,
+                "call_id": null
+              },
+              "imported_marker": false,
+              "text": "时序图 mode observed observed true scenario scn_4686ecddf868 代次 2 时序模式 静态预测 运行观测 台账场景 scn_4686ecddf868 · gen 2 · 2 步 · 2026-11-15T12:35:19Z scn_06ff06bc9060 · gen 1 · 3 步 · 2026-11-15T12:35:13Z scn_982682c88e20 · gen 1 · 3 步 · 2026-11-15T12:34:45Z · imported 外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例） 运行观测（observed） · observed=true（运行台账） observed_wasm_simulation_not_real_device scenario_id scn_4686ecddf868 generation 2 profile bus-demo-wasm records_digest 45bc9b4bcb3f… created 2026-11-15T12:35:19Z 消息来自模拟运行台账，observed=true；只代表隔离 Wasm 模拟，不等同真实设备/内核行为。 调用方 驱动 驱动资源 平台/设备边界 #1 调用方 → 驱动 reset() 调用 运行观测 call call_2_1 status ok #2 驱动 → 调用方 返回 null 返回 运行观测 call call_2_1 status ok #3 调用方 → 驱动 bus_register(1) 调用 运行观测 call call_2_2 status ok 结果 0 #4 驱动 → 驱动资源 DEFAULT_ROUTE: read route_defaults 资源访问 运行观测 call call_2_2 event DEFAULT_ROUTE #1 route_defaults · 读取 #5 驱动 → 驱动资源 STORE_ROUTE: write routes 资源访问 运行观测 call call_2_2 event STORE_ROUTE #3 routes · 写入 / 修改 #6 驱动 → 调用方 返回 0 返回 运行观测 call call_2_2 status ok 结果 0"
+            }
+          },
+          "chrome": {
+            "undo": {
+              "tag": "button",
+              "value": "",
+              "disabled": true,
+              "text": "回退末尾 N 步"
+            },
+            "undoStatus": {
+              "tag": "p",
+              "value": null,
+              "disabled": false,
+              "text": "当前台账来自导入轨迹，无法重放，因此不可回退。"
+            },
+            "trace": {
+              "tag": "p",
+              "value": null,
+              "disabled": false,
+              "text": "已导入轨迹台账：scenario scn_982682c88e20 generation 1（外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例））"
+            }
+          }
+        }
+      }
+    },
+    "host.s3b_chrome": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "steps": {
+          "undoVisible": true,
+          "undoCountVisible": true,
+          "undoStatusVisible": true,
+          "traceInputVisible": true,
+          "traceButtonVisible": true,
+          "traceStatusVisible": true,
+          "gaps": true,
+          "importedLimitations": true
+        },
+        "detail": {
+          "source": null,
+          "undo": {
+            "after": null,
+            "prefixScenarioId": null,
+            "status": null,
+            "replayed": null,
+            "rerunPrefix": null,
+            "invalidUndoStatus": null
+          },
+          "traceImport": null,
+          "observed": {
+            "importedState": null,
+            "prefixState": null
+          },
+          "chrome": {
+            "undo": {
+              "tag": "button",
+              "value": "",
+              "disabled": true,
+              "text": "回退末尾 N 步"
+            },
+            "undoStatus": {
+              "tag": "p",
+              "value": null,
+              "disabled": false,
+              "text": "当前台账来自导入轨迹，无法重放，因此不可回退。"
+            },
+            "trace": {
+              "tag": "p",
+              "value": null,
+              "disabled": false,
+              "text": "已导入轨迹台账：scenario scn_982682c88e20 generation 1（外部采集 bus_send 轨迹（Demo Wasm 构建产物导出，示例））"
+            }
+          }
+        }
+      }
+    },
+    "host.s3b_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_error_count": 0,
+        "console_errors": []
+      }
+    },
+    "host.s3b_no_absolute_paths": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "leak": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "host.s3a_regression_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 1,
+        "failed_steps": [
+          "stubChrome"
+        ],
+        "residual_failed_steps": [],
+        "ignored_superseded": [
+          "s3bGap",
+          "traceImportGap",
+          "capabilityGaps",
+          "undoDisabled"
+        ],
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "sidebarEntry": true,
+          "panelOpened": true,
+          "statusReady": true,
+          "entryListed": true,
+          "entryClicked": true,
+          "workbenchOpened": true,
+          "stubPanelOpened": true,
+          "stubRun": true,
+          "observedSequence": true,
+          "stubChrome": false,
+          "mainScreenshot": true,
+          "selectionFields": true,
+          "noAbsolutePaths": true,
+          "noConsoleErrors": true
+        },
+        "console_error_count": 0,
+        "screenshots": {
+          "stub-run": {
+            "path": "evidence/s3b/s3a-regression-stub-run.png",
+            "bytes": 333869,
+            "sha256": "9be9d8a764159741330a262fe8325b08d149480cc45681f12c59ca1f7f481b20"
+          },
+          "stub-stub": {
+            "path": "evidence/s3b/s3a-regression-stub-stub.png",
+            "bytes": 289516,
+            "sha256": "8fdeed2e975479ad59c3d76e6f38e63619cc20a9b167981202a818540e47045a"
+          },
+          "sequence-observed": {
+            "path": "evidence/s3b/s3a-regression-sequence-observed.png",
+            "bytes": 290920,
+            "sha256": "fcd188091c0fc31a2656e3e7c828ec0cacb542c5f0d8105debda5f8bdf890e51"
+          },
+          "main": {
+            "path": "evidence/s3b/s3a-regression-main.png",
+            "bytes": 327895,
+            "sha256": "48c688c68384a1689cb9d24951edae617467c100b9734e329ef0cb0952410523"
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "host.s3a_regression_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_error_count": 0
+      }
+    },
+    "regression.s2b_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "failed_steps": [],
+        "steps": {
+          "pageLoaded": true,
+          "windowShownInvisible": true,
+          "bodySettled": true,
+          "sidebarEntry": true,
+          "panelOpened": true,
+          "statusReady": true,
+          "snapshotClicked": true,
+          "entryListed": true,
+          "entryClicked": true,
+          "s1SourceLine": true,
+          "tabsFive": true,
+          "workbenchOpened": true,
+          "endToEndReady": true,
+          "groups": true,
+          "interfaces": true,
+          "mainScreenshot": true,
+          "subflow": true,
+          "selectionExtensionFields": true,
+          "gapsIncludeOutOfScope": true,
+          "noAbsolutePaths": true,
+          "noConsoleErrors": true
+        },
+        "console_error_count": 0,
+        "screenshots": {
+          "groups": {
+            "path": "evidence/s3b/s2b-groups.png",
+            "bytes": 211589,
+            "sha256": "1026d7a8b8609bc0fe6586c3fe89a0a970d34e4eccfb09b617720ea847f33a13"
+          },
+          "interfaces": {
+            "path": "evidence/s3b/s2b-interfaces.png",
+            "bytes": 219339,
+            "sha256": "4256549abf6c6f64ef16e326fbe7d2332343bde0f2ce94d056cd71a839499afd"
+          },
+          "subflow": {
+            "path": "evidence/s3b/s2b-subflow.png",
+            "bytes": 134377,
+            "sha256": "d27b794d89f09ac204d801a886b68aee3ac8d1ea4bfd8182bd061977559d3a9b"
+          },
+          "main": {
+            "path": "evidence/s3b/s2b-main.png",
+            "bytes": 216426,
+            "sha256": "7365f7d909eeae7396fe563032581707e14c20cc94628464d087bee57fbc7221"
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "regression.s2b_console_clean": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "console_error_count": 0
+      }
+    },
+    "regression.s2a_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 1,
+        "failed_steps": [
+          "view_coupling_assertions"
+        ],
+        "coupling_failed": [],
+        "coupling_ignored_superseded": [
+          "gapsOriginal",
+          "stubPanel"
+        ],
+        "other_views": {
+          "tree": true,
+          "end_to_end": true,
+          "sequence": true,
+          "file": true
+        },
+        "console_error_count": 0,
+        "screenshots": {
+          "coupling": {
+            "path": "evidence/s3b/s2a-coupling.png",
+            "bytes": 182129,
+            "sha256": "a55e8ab58992388c2474cbfd778bf8c901a24d7b9c7ac4cad94f26ed210c4f89"
+          },
+          "tree": {
+            "path": "evidence/s3b/s2a-tree.png",
+            "bytes": 274485,
+            "sha256": "35a1d28c273af1c689aee09c44d0991051c153629f64c5cb1d3df6a8d3d880f6"
+          },
+          "end_to_end": {
+            "path": "evidence/s3b/s2a-end_to_end.png",
+            "bytes": 221552,
+            "sha256": "cf52c9d65ca3e20d6e0b70332173686e02dddca5d2b48a8d7c8d9a162739b4e3"
+          },
+          "sequence": {
+            "path": "evidence/s3b/s2a-sequence.png",
+            "bytes": 295669,
+            "sha256": "a81b75169273f3fb260b3e60859fb847c91be3ffc6fd8366502843a97604955e"
+          },
+          "file": {
+            "path": "evidence/s3b/s2a-file.png",
+            "bytes": 201962,
+            "sha256": "970e2345b2e54832eddc75950c89c19232b4d62169dd4be2e2d9c3096b6a5b2c"
+          },
+          "main": {
+            "path": "evidence/s3b/s2a-main.png",
+            "bytes": 224615,
+            "sha256": "f7044f8c6b7af913faae8affc1eef197be31ea018fabcf1a7fed2523138c8f1d"
+          }
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "regression.s1_probe": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 1,
+        "required_steps": [
+          "pageLoaded",
+          "sidebarEntry",
+          "panelOpened",
+          "snapshotClicked",
+          "entryListed",
+          "entryClicked",
+          "sourceLineOk",
+          "sourceBoundsOk",
+          "evidenceClassesPresent",
+          "resourcesReadPresent",
+          "selectionEntrySelected",
+          "selectionMatchesClickedEntry",
+          "returnToChat",
+          "chatRestored",
+          "panelReopened",
+          "reopenedSourceKept",
+          "reopenSelectionKept",
+          "writeEntryClicked",
+          "writeSourceLineOk",
+          "writeExactResource",
+          "writeSelectionEntry",
+          "noConsoleErrors",
+          "screenshotCaptured"
+        ],
+        "failed_steps": [],
+        "console_error_count": 0,
+        "screenshot": {
+          "path": "evidence/s3b/s1-regression.png",
+          "bytes": 164066,
+          "sha256": "3371a3fd1c34227712dbcb838cae925901f6bbf8e7a6658b5dd2be6c6428eae9"
+        },
+        "log_tail": "\r\n(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.\n"
+      }
+    },
+    "dsh_host.summary_host_runtime": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 0,
+        "tap_summary": {
+          "tests": 1,
+          "pass": 1,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "duration_ms": 1233,
+        "evidence": "evidence/ai-summary/host-runtime.json",
+        "tap": "evidence/ai-summary/host-runtime.tap",
+        "stdout_tail": "",
+        "stderr_tail": ""
+      }
+    },
+    "demo.code_view_demo_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "demo_observed",
+      "detail": {
+        "command": "node --test demo/code-view/demo.test.cjs",
+        "status": 0,
+        "summary": {
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "TAP version 13\n# Subtest: interface registration selects the default route and observes the C write\nok 1 - interface registration selects the default route and observes the C write\n  ---\n  duration_ms: 2.6483\n  type: 'test'\n  ...\n# Subtest: a stub route changes the write and resetting discards the previous state\nok 2 - a stub route changes the write and resetting discards the previous state\n  ---\n  duration_ms: 0.5699\n  type: 'test'\n  ...\n# Subtest: unregistered keys, invalid input and long payloads return without a write\nok 3 - unregistered keys, invalid input and long payloads return without a write\n  ---\n  duration_ms: 0.2966\n  type: 'test'\n  ...\n# Subtest: call graph and embedded code map to fixture source\nok 4 - call graph and embedded code map to fixture source\n  ---\n  duration_ms: 0.1754\n  type: 'test'\n  ...\n# Subtest: 48 bytes take the direct branch and 49 bytes stage before encoding\nok 5 - 48 bytes take the direct branch and 49 bytes stage before encoding\n  ---\n  duration_ms: 1.0378\n  type: 'test'\n  ...\n# Subtest: nested folding reconnects edges and merges duplicate boundary links\nok 6 - nested folding reconnects edges and merges duplicate boundary links\n  ---\n  duration_ms: 0.3262\n  type: 'test'\n  ...\n# Subtest: a shared implementation does not borrow observations from the other caller\nok 7 - a shared implementation does not borrow observations from the other caller\n  ---\n  duration_ms: 0.0698\n  type: 'test'\n  ...\n# Subtest: platform return stubs propagate to the entry and release the transfer lock\nok 8 - platform return stubs propagate to the entry and release the transfer lock\n  ---\n  duration_ms: 0.4408\n  type: 'test'\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 110.7902\n\n"
+      }
+    },
+    "dsh_host.repo_node_tests": {
+      "ok": true,
+      "required": true,
+      "layer": "dsh_host",
+      "detail": {
+        "files": [
+          "tests/node/bridge.test.mjs",
+          "tests/node/client.test.mjs",
+          "tests/node/plugin.test.mjs",
+          "tests/node/scenario.test.mjs",
+          "tests/node/sim-runner.test.mjs",
+          "tests/node/view-rpc.test.mjs"
+        ],
+        "status": 0,
+        "summary": {
+          "tests": 164,
+          "pass": 164,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "output_tail": "s\n  ---\n  duration_ms: 0.1427\n  type: 'test'\n  ...\n# Subtest: view.coupling maps to the fixed argv with an optional entry\nok 151 - view.coupling maps to the fixed argv with an optional entry\n  ---\n  duration_ms: 0.6605\n  type: 'test'\n  ...\n# Subtest: view.tree maps to the fixed argv and requires a bounded entry\nok 152 - view.tree maps to the fixed argv and requires a bounded entry\n  ---\n  duration_ms: 0.4675\n  type: 'test'\n  ...\n# Subtest: view.endToEnd maps to the fixed argv and supports the optional S2b root\nok 153 - view.endToEnd maps to the fixed argv and supports the optional S2b root\n  ---\n  duration_ms: 0.5525\n  type: 'test'\n  ...\n# Subtest: view.fileTree maps to the fixed argv and rejects entry input\nok 154 - view.fileTree maps to the fixed argv and rejects entry input\n  ---\n  duration_ms: 0.3738\n  type: 'test'\n  ...\n# Subtest: view.fileRead validates the repository path and maps to the fixed argv\nok 155 - view.fileRead validates the repository path and maps to the fixed argv\n  ---\n  duration_ms: 1.0622\n  type: 'test'\n  ...\n# Subtest: view.sequence maps to the fixed static argv and rejects invalid modes\nok 156 - view.sequence maps to the fixed static argv and rejects invalid modes\n  ---\n  duration_ms: 0.671\n  type: 'test'\n  ...\n# Subtest: view.sequence observed mode maps to view-sequence-observed from the ledger\nok 157 - view.sequence observed mode maps to view-sequence-observed from the ledger\n  ---\n  duration_ms: 0.5097\n  type: 'test'\n  ...\n# Subtest: view.interfaces maps to the fixed argv with an optional entry\nok 158 - view.interfaces maps to the fixed argv with an optional entry\n  ---\n  duration_ms: 0.5183\n  type: 'test'\n  ...\n# Subtest: view.summary maps to the fixed argv with an optional subject pair\nok 159 - view.summary maps to the fixed argv with an optional subject pair\n  ---\n  duration_ms: 0.6632\n  type: 'test'\n  ...\n# Subtest: view.summary passes engine error documents through unchanged\nok 160 - view.summary passes engine error documents through unchanged\n  ---\n  duration_ms: 0.5923\n  type: 'test'\n  ...\n# Subtest: view endpoints map BridgeError without leaking host paths\nok 161 - view endpoints map BridgeError without leaking host paths\n  ---\n  duration_ms: 0.5597\n  type: 'test'\n  ...\n# Subtest: the 512 KiB response cap still applies to five-view responses\nok 162 - the 512 KiB response cap still applies to five-view responses\n  ---\n  duration_ms: 0.8585\n  type: 'test'\n  ...\n# Subtest: plugin identity is unchanged and the UI fiber stays pending without host services\nok 163 - plugin identity is unchanged and the UI fiber stays pending without host services\n  ---\n  duration_ms: 0.8138\n  type: 'test'\n  ...\n# Subtest: plugin mounts the /code-view prefix route when host services are available\nok 164 - plugin mounts the /code-view prefix route when host services are available\n  ---\n  duration_ms: 1.2004\n  type: 'test'\n  ...\n1..164\n# tests 164\n# suites 0\n# pass 164\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 6766.1411\n\n"
+      }
+    }
+  },
+  "not_verified": [
+    {
+      "item": "plugin/model-side AI text generation",
+      "reason": "the plugin never calls a model; summaries are written by the Agent through code_summary/summary-put (verified as an Agent driver would)",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild + CFG/locks/aliases deep analysis",
+      "reason": "CW-T4 follow-up; this slice uses the imported Atlas snapshot",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "real device dispatch / graph source write-back",
+      "reason": "not part of the summary slice",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+      "reason": "CW-T4 scope",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "OS-wide egress certification",
+      "reason": "verifier only performs loopback HTTP and local process/worker observation",
+      "layer": null,
+      "out_of_scope": true
+    }
+  ],
+  "commands": [
+    {
+      "at": "2026-11-15T12:34:44.559Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\tools\\verify-summary.mjs",
+        "--with-repo-tests"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "note": "self (S3b verifier entry point)",
+      "display": "C:\\Program Files\\nodejs\\node.exe E:\\dsh\\plugin\\04-code-learning\\tools\\verify-summary.mjs --with-repo-tests"
+    },
+    {
+      "at": "2026-11-15T12:34:45.037Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "workspace-import",
+        "--manifest",
+        "workspace.json",
+        "--expected-revision",
+        "0",
+        "--operation-id",
+        "ec77c222-7260-47b9-9135-01e2b45b1b7c"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json workspace-import --manifest workspace.json --expected-revision 0 --operation-id ec77c222-7260-47b9-9135-01e2b45b1b7c [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:45.190Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "snapshot-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--snapshot",
+        "snapshot-bus",
+        "--operation-id",
+        "1af2511b-1b83-4434-a774-29d0fc8ab13e"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json snapshot-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --snapshot snapshot-bus --operation-id 1af2511b-1b83-4434-a774-29d0fc8ab13e [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:45.309Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-entries",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-entries --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:45.451Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--variant",
+        "semantic-x86_64",
+        "--repo",
+        "bus",
+        "--profile",
+        "sim-profile.json",
+        "--operation-id",
+        "9b6d6b6c-a00e-48db-a768-9f52dfcdf3d9"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --profile sim-profile.json --operation-id 9b6d6b6c-a00e-48db-a768-9f52dfcdf3d9 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:45.569Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "sim-profile-list",
+        "--workspace",
+        "code-view-bus-demo"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json sim-profile-list --workspace code-view-bus-demo [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:45.703Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-plan",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--profile",
+        "bus-demo-wasm",
+        "--scenario-json",
+        "eyJnZW5lcmF0aW9uIjowLCJzdG9wX29uX2Vycm9yIjp0cnVlLCJzdGVwcyI6W3siaW50ZXJmYWNlIjoicmVzZXQiLCJhcmdzIjpbXX0seyJpbnRlcmZhY2UiOiJidXNfcmVnaXN0ZXIiLCJhcmdzIjpbMl19LHsiaW50ZXJmYWNlIjoiYnVzX3NlbmQiLCJhcmdzIjpbMiw0OF19XX0="
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-plan --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --profile bus-demo-wasm --scenario-json eyJnZW5lcmF0aW9uIjowLCJzdG9wX29uX2Vycm9yIjp0cnVlLCJzdGVwcyI6W3siaW50ZXJmYWNlIjoicmVzZXQiLCJhcmdzIjpbXX0seyJpbnRlcmZhY2UiOiJidXNfcmVnaXN0ZXIiLCJhcmdzIjpbMl19LHsiaW50ZXJmYWNlIjoiYnVzX3NlbmQiLCJhcmdzIjpbMiw0OF19XX0= [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:45.827Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-module",
+        "--plan",
+        "plan_82e1ce703689a5a6a858e6eef66ac9bb"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-module --plan plan_82e1ce703689a5a6a858e6eef66ac9bb [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:45.964Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "trace-bus-send.json",
+        "--operation-id",
+        "ffb2dba5-70db-4225-8c7c-a10ade1851e8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input trace-bus-send.json --operation-id ffb2dba5-70db-4225-8c7c-a10ade1851e8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:46.091Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "trace-import",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--input",
+        "trace-bus-send.json",
+        "--operation-id",
+        "f8c1f801-68d6-4c29-9872-ca6af6d21490"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json trace-import --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --input trace-bus-send.json --operation-id f8c1f801-68d6-4c29-9872-ca6af6d21490 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:46.225Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-sequence-observed",
+        "--workspace",
+        "code-view-bus-demo",
+        "--scenario",
+        "scn_982682c88e20"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-sequence-observed --workspace code-view-bus-demo --scenario scn_982682c88e20 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:46.354Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "scenario-undo-plan",
+        "--workspace",
+        "code-view-bus-demo",
+        "--scenario",
+        "scn_982682c88e20",
+        "--count",
+        "1",
+        "--expected-generation",
+        "1"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json scenario-undo-plan --workspace code-view-bus-demo --scenario scn_982682c88e20 --count 1 --expected-generation 1 [exit 2]"
+    },
+    {
+      "at": "2026-11-15T12:34:48.198Z",
+      "executable": "E:/dsh/DeepSeek Harness.exe",
+      "args": [
+        "E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js",
+        "web",
+        "--no-open",
+        "--port",
+        "0"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\scratch",
+      "note": "isolated dsh web boot (one-time URL token redacted)",
+      "display": "E:/dsh/DeepSeek Harness.exe E:/dsh/resources/app.asar/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js web --no-open --port 0"
+    },
+    {
+      "at": "2026-11-15T12:34:55.783Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\summary-probe-gap",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\summary-probe-gap --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:55.926Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-end-to-end",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-end-to-end --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_afa8298f2d197e5fd110e49a [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.052Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-end-to-end",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--entry",
+        "f_afa8298f2d197e5fd110e49a"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-end-to-end --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --entry f_afa8298f2d197e5fd110e49a [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.175Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "summary-put",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--payload-json",
+        "eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6ImJ1c19zZW5kIOWFiOagoemqjOmAmumBk+S4jumVv+W6pu+8jOWGjeafpei3r+eUseihqO+8m+mVv+W6puS4iumZkOWPliByb3V0ZS0+bWF4X2xlbu+8jOi2hemVv+i/lOWbniAtMjLjgILlrp7njrDku6UgdHJhY2UoUkVRVUVTVCkg6K6w5b2V5YWl5Y+j77yM5oiQ5Yqf5ZCOIGRvb3JiZWxsIOWGmeWbnuW5s+WPsOi+ueeVjOOAguatpOW9kue6s+WfuuS6jumdmeaAgee7k+aehOS4jua6kOeggeaWh+acrO+8jOacquWQq+i/kOihjOingua1i+OAgiIsImZhY3RzIjpbeyJraW5kIjoiZXZpZGVuY2UiLCJyZWYiOiJlXzIzMTUwNWE3M2E0ODViYzFkOGM5MjQ5ZCJ9XSwiZ2VuZXJhdG9yIjp7ImtpbmQiOiJhZ2VudCIsInJlZiI6InZlcmlmeS1zdW1tYXJ5In0sImluZmVyZW5jZV9sYWJlbHMiOlsiZnJvbV9zdGF0aWNfc3RydWN0dXJlIl19"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json summary-put --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --payload-json eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6ImJ1c19zZW5kIOWFiOagoemqjOmAmumBk+S4jumVv+W6pu+8jOWGjeafpei3r+eUseihqO+8m+mVv+W6puS4iumZkOWPliByb3V0ZS0+bWF4X2xlbu+8jOi2hemVv+i/lOWbniAtMjLjgILlrp7njrDku6UgdHJhY2UoUkVRVUVTVCkg6K6w5b2V5YWl5Y+j77yM5oiQ5Yqf5ZCOIGRvb3JiZWxsIOWGmeWbnuW5s+WPsOi+ueeVjOOAguatpOW9kue6s+WfuuS6jumdmeaAgee7k+aehOS4jua6kOeggeaWh+acrO+8jOacquWQq+i/kOihjOingua1i+OAgiIsImZhY3RzIjpbeyJraW5kIjoiZXZpZGVuY2UiLCJyZWYiOiJlXzIzMTUwNWE3M2E0ODViYzFkOGM5MjQ5ZCJ9XSwiZ2VuZXJhdG9yIjp7ImtpbmQiOiJhZ2VudCIsInJlZiI6InZlcmlmeS1zdW1tYXJ5In0sImluZmVyZW5jZV9sYWJlbHMiOlsiZnJvbV9zdGF0aWNfc3RydWN0dXJlIl19 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.291Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-summary",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-summary --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.406Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "summary-put",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--payload-json",
+        "eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6IkFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQSIsImZhY3RzIjpbeyJraW5kIjoiZXZpZGVuY2UiLCJyZWYiOiJlXzIzMTUwNWE3M2E0ODViYzFkOGM5MjQ5ZCJ9XSwiZ2VuZXJhdG9yIjp7ImtpbmQiOiJhZ2VudCIsInJlZiI6InZlcmlmeS1zdW1tYXJ5In0sImluZmVyZW5jZV9sYWJlbHMiOlsiZnJvbV9zdGF0aWNfc3RydWN0dXJlIl19"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json summary-put --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --payload-json eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6IkFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQSIsImZhY3RzIjpbeyJraW5kIjoiZXZpZGVuY2UiLCJyZWYiOiJlXzIzMTUwNWE3M2E0ODViYzFkOGM5MjQ5ZCJ9XSwiZ2VuZXJhdG9yIjp7ImtpbmQiOiJhZ2VudCIsInJlZiI6InZlcmlmeS1zdW1tYXJ5In0sImluZmVyZW5jZV9sYWJlbHMiOlsiZnJvbV9zdGF0aWNfc3RydWN0dXJlIl19 [exit 2]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.539Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "summary-put",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--payload-json",
+        "eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6ImJhZFx1MDAwMXRleHQiLCJmYWN0cyI6W3sia2luZCI6ImV2aWRlbmNlIiwicmVmIjoiZV8yMzE1MDVhNzNhNDg1YmMxZDhjOTI0OWQifV0sImdlbmVyYXRvciI6eyJraW5kIjoiYWdlbnQiLCJyZWYiOiJ2ZXJpZnktc3VtbWFyeSJ9LCJpbmZlcmVuY2VfbGFiZWxzIjpbImZyb21fc3RhdGljX3N0cnVjdHVyZSJdfQ=="
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json summary-put --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --payload-json eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6ImJhZFx1MDAwMXRleHQiLCJmYWN0cyI6W3sia2luZCI6ImV2aWRlbmNlIiwicmVmIjoiZV8yMzE1MDVhNzNhNDg1YmMxZDhjOTI0OWQifV0sImdlbmVyYXRvciI6eyJraW5kIjoiYWdlbnQiLCJyZWYiOiJ2ZXJpZnktc3VtbWFyeSJ9LCJpbmZlcmVuY2VfbGFiZWxzIjpbImZyb21fc3RhdGljX3N0cnVjdHVyZSJdfQ== [exit 2]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.659Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "summary-put",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--payload-json",
+        "eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6ImJ1c19zZW5kIOWFiOagoemqjOmAmumBk+S4jumVv+W6pu+8jOWGjeafpei3r+eUseihqO+8m+mVv+W6puS4iumZkOWPliByb3V0ZS0+bWF4X2xlbu+8jOi2hemVv+i/lOWbniAtMjLjgILlrp7njrDku6UgdHJhY2UoUkVRVUVTVCkg6K6w5b2V5YWl5Y+j77yM5oiQ5Yqf5ZCOIGRvb3JiZWxsIOWGmeWbnuW5s+WPsOi+ueeVjOOAguatpOW9kue6s+WfuuS6jumdmeaAgee7k+aehOS4jua6kOeggeaWh+acrO+8jOacquWQq+i/kOihjOingua1i+OAgiIsImZhY3RzIjpbeyJraW5kIjoiZXZpZGVuY2UiLCJyZWYiOiIuLi9ldGMvcGFzc3dkIn1dLCJnZW5lcmF0b3IiOnsia2luZCI6ImFnZW50IiwicmVmIjoidmVyaWZ5LXN1bW1hcnkifSwiaW5mZXJlbmNlX2xhYmVscyI6WyJmcm9tX3N0YXRpY19zdHJ1Y3R1cmUiXX0="
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 2,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json summary-put --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --payload-json eyJzdWJqZWN0Ijp7InR5cGUiOiJmdW5jdGlvbiIsImlkIjoiZl9hZmE4Mjk4ZjJkMTk3ZTVmZDExMGU0OWEifSwidGV4dCI6ImJ1c19zZW5kIOWFiOagoemqjOmAmumBk+S4jumVv+W6pu+8jOWGjeafpei3r+eUseihqO+8m+mVv+W6puS4iumZkOWPliByb3V0ZS0+bWF4X2xlbu+8jOi2hemVv+i/lOWbniAtMjLjgILlrp7njrDku6UgdHJhY2UoUkVRVUVTVCkg6K6w5b2V5YWl5Y+j77yM5oiQ5Yqf5ZCOIGRvb3JiZWxsIOWGmeWbnuW5s+WPsOi+ueeVjOOAguatpOW9kue6s+WfuuS6jumdmeaAgee7k+aehOS4jua6kOeggeaWh+acrO+8jOacquWQq+i/kOihjOingua1i+OAgiIsImZhY3RzIjpbeyJraW5kIjoiZXZpZGVuY2UiLCJyZWYiOiIuLi9ldGMvcGFzc3dkIn1dLCJnZW5lcmF0b3IiOnsia2luZCI6ImFnZW50IiwicmVmIjoidmVyaWZ5LXN1bW1hcnkifSwiaW5mZXJlbmNlX2xhYmVscyI6WyJmcm9tX3N0YXRpY19zdHJ1Y3R1cmUiXX0= [exit 2]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.780Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-summary",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-summary --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:56.900Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "summary-put",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--payload-json",
+        "eyJzdWJqZWN0Ijp7InR5cGUiOiJncm91cCIsImlkIjoiZ3JvdXA6Zl9lYzYxMTQwMjQ5ZjM5MzU1MGViOTc5NDY6Mjk0ZDQwZDgifSwidGV4dCI6ImJ1c19yZWdpc3RlciDkuIvmuLjlrZDmtYHnqIvvvJrkuKTmnaHnp4HmnInlrZDot6/lvoTvvIhkaXJlY3QvYnVmZmVyZWTvvInvvIznlLHljZXlhaXlj6Pnu5PmnoTlvZLnurPvvIzlkI3np7Dlj6/kv67orqLjgIIiLCJmYWN0cyI6W3sia2luZCI6InNlbGVjdGlvbiIsInJlZiI6Imdyb3VwOmZfZWM2MTE0MDI0OWYzOTM1NTBlYjk3OTQ2OjI5NGQ0MGQ4In1dLCJnZW5lcmF0b3IiOnsia2luZCI6ImFnZW50IiwicmVmIjoidmVyaWZ5LXN1bW1hcnkifSwiaW5mZXJlbmNlX2xhYmVscyI6WyJmcm9tX3N0YXRpY19zdHJ1Y3R1cmUiXX0="
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json summary-put --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --payload-json eyJzdWJqZWN0Ijp7InR5cGUiOiJncm91cCIsImlkIjoiZ3JvdXA6Zl9lYzYxMTQwMjQ5ZjM5MzU1MGViOTc5NDY6Mjk0ZDQwZDgifSwidGV4dCI6ImJ1c19yZWdpc3RlciDkuIvmuLjlrZDmtYHnqIvvvJrkuKTmnaHnp4HmnInlrZDot6/lvoTvvIhkaXJlY3QvYnVmZmVyZWTvvInvvIznlLHljZXlhaXlj6Pnu5PmnoTlvZLnurPvvIzlkI3np7Dlj6/kv67orqLjgIIiLCJmYWN0cyI6W3sia2luZCI6InNlbGVjdGlvbiIsInJlZiI6Imdyb3VwOmZfZWM2MTE0MDI0OWYzOTM1NTBlYjk3OTQ2OjI5NGQ0MGQ4In1dLCJnZW5lcmF0b3IiOnsia2luZCI6ImFnZW50IiwicmVmIjoidmVyaWZ5LXN1bW1hcnkifSwiaW5mZXJlbmNlX2xhYmVscyI6WyJmcm9tX3N0YXRpY19zdHJ1Y3R1cmUiXX0= [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:34:57.018Z",
+      "executable": "E:/Anaconda-main/python.exe",
+      "args": [
+        "-m",
+        "code_learning.cli",
+        "--bootstrap",
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+        "view-summary",
+        "--workspace",
+        "code-view-bus-demo",
+        "--snapshot",
+        "ed326d554334432b907de21297207eb8",
+        "--subject-type",
+        "group",
+        "--subject-id",
+        "group:f_ec61140249f393550eb97946:294d40d8"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning\\engine",
+      "exit_code": 0,
+      "display": "E:/Anaconda-main/python.exe -m code_learning.cli --bootstrap E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json view-summary --workspace code-view-bus-demo --snapshot ed326d554334432b907de21297207eb8 --subject-type group --subject-id group:f_ec61140249f393550eb97946:294d40d8 [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:35:06.375Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\summary-probe-written",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\summary-probe-written --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:35:35.231Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s3b-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s3b-probe-app --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:36:13.703Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s3a-regression-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 1,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s3a-regression-app --no-sandbox --disable-gpu [exit 1]"
+    },
+    {
+      "at": "2026-11-15T12:36:44.466Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s2b-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s2b-probe-app --no-sandbox --disable-gpu [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:37:06.520Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s2a-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 1,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s2a-probe-app --no-sandbox --disable-gpu [exit 1]"
+    },
+    {
+      "at": "2026-11-15T12:37:11.951Z",
+      "executable": "C:/Users/admin/.dsh/electron/electron.exe",
+      "args": [
+        "E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s1-probe-app",
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 1,
+      "display": "C:/Users/admin/.dsh/electron/electron.exe E:\\dsh\\plugin\\04-code-learning\\scratch\\summary\\s1-probe-app --no-sandbox --disable-gpu [exit 1]"
+    },
+    {
+      "at": "2026-11-15T12:37:13.187Z",
+      "executable": "E:/dsh/DeepSeek Harness.exe",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\ai-summary\\host-runtime.tap",
+        "tools/summary-host-runtime.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "E:/dsh/DeepSeek Harness.exe --test --test-concurrency=1 --test-reporter=tap --test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\ai-summary\\host-runtime.tap tools/summary-host-runtime.test.mjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:37:13.409Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "demo/code-view/demo.test.cjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 demo/code-view/demo.test.cjs [exit 0]"
+    },
+    {
+      "at": "2026-11-15T12:37:20.278Z",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "tests/node/bridge.test.mjs",
+        "tests/node/client.test.mjs",
+        "tests/node/plugin.test.mjs",
+        "tests/node/scenario.test.mjs",
+        "tests/node/sim-runner.test.mjs",
+        "tests/node/view-rpc.test.mjs"
+      ],
+      "cwd": "E:\\dsh\\plugin\\04-code-learning",
+      "exit_code": 0,
+      "display": "C:\\Program Files\\nodejs\\node.exe --test --test-reporter=tap --test-concurrency=1 tests/node/bridge.test.mjs tests/node/client.test.mjs tests/node/plugin.test.mjs tests/node/scenario.test.mjs tests/node/sim-runner.test.mjs tests/node/view-rpc.test.mjs [exit 0]"
+    }
+  ],
+  "environment": {
+    "node": "26.13.0",
+    "platform": "win32",
+    "workspace": "E:\\dsh\\plugin\\04-code-learning"
+  },
+  "limitations": [
+    "Uses the locally installed generic Electron binary only as the Chromium test instrument; it is not a shipped dependency.",
+    "The isolated fresh DSH_HOME may show the host first-run overlay in screenshots; S3a DOM assertions are recorded independently of host UI (captures close host overlays first).",
+    "The Wasm profile is the Demo build artifact executed in the Host sandboxed worker: it is not evidence of real device/kernel behavior. Imported trace ledgers are never executed.",
+    "No OS-wide egress certification; only loopback HTTP and local process/worker observation.",
+    "DEMO layer is the Wasm/JS demo model, ATLAS is the real imported snapshot + engine projections, DSH_HOST is the pinned local rc.5; the three are never mixed.",
+    "S3b does not add async/IRQ causal refinement, real device dispatch, AI summary text, or S4 (real Linux/Kbuild, CFG/locks, performance); these remain gaps."
+  ],
+  "in_scope_not_verified": [],
+  "out_of_scope_not_verified": [
+    {
+      "item": "plugin/model-side AI text generation",
+      "reason": "the plugin never calls a model; summaries are written by the Agent through code_summary/summary-put (verified as an Agent driver would)",
+      "layer": "dsh_host",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild + CFG/locks/aliases deep analysis",
+      "reason": "CW-T4 follow-up; this slice uses the imported Atlas snapshot",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "real device dispatch / graph source write-back",
+      "reason": "not part of the summary slice",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "real Linux/Kbuild index, CFG/locks/aliases/dataflow, target verification, performance budget (S4)",
+      "reason": "CW-T4 scope",
+      "layer": "atlas_snapshot",
+      "out_of_scope": true
+    },
+    {
+      "item": "OS-wide egress certification",
+      "reason": "verifier only performs loopback HTTP and local process/worker observation",
+      "layer": null,
+      "out_of_scope": true
+    }
+  ],
+  "checks_summary": {
+    "total": 49,
+    "passed": 49,
+    "failed": 0,
+    "in_scope_not_verified": 0,
+    "out_of_scope_not_verified": 5
+  },
+  "ok": true,
+  "verified": true,
+  "finished_at_utc": "2026-11-15T12:37:20.487Z",
+  "duration_ms": 155930
+}

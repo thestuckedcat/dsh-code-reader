@@ -340,9 +340,10 @@ test('view.status reports host/engine facts and slice gaps without starting the 
     trace_import: true,
     real_device_dispatch: false,
     ai_summary: false,
+    ai_summary_store: true,
   })
   assert.deepEqual(value.gaps.map((gap) => gap.code), ['ai_summary', 'real_device_dispatch'])
-  // S1/S2a/S2b/S3a/S3b implemented capabilities must not remain gaps.
+  // S1/S2a/S2b/S3a/S3b/S4-prep implemented capabilities must not remain gaps.
   const implementedCapabilities = [
     'five_views',
     'resource_graph',
@@ -353,6 +354,7 @@ test('view.status reports host/engine facts and slice gaps without starting the 
     'run_observation',
     'scenario_undo',
     'trace_import',
+    'ai_summary_store',
   ]
   assert.equal(
     value.gaps.some((gap) => implementedCapabilities.includes(gap.code)),
@@ -627,7 +629,7 @@ test('createViewDispatch fails closed for unknown endpoints', async () => {
 const WORKSPACE = 'code-view-bus-demo'
 const ENTRY = 'f_afa8298f2d197e5fd110e49a'
 
-test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the five-view and S2b endpoints', () => {
+test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the increment endpoints', () => {
   assert.deepEqual(VIEW_ENDPOINTS, [
     'view.status',
     'view.listSnapshots',
@@ -640,6 +642,7 @@ test('VIEW_ENDPOINTS keeps the read-only endpoints and appends the five-view and
     'view.fileRead',
     'view.sequence',
     'view.interfaces',
+    'view.summary',
   ])
   const service = createViewService({ bridge: createBridgeStub(), settings: testSettings() })
   assert.deepEqual(Object.keys(service), [...VIEW_ENDPOINTS])
@@ -1039,6 +1042,94 @@ test('view.interfaces maps to the fixed argv with an optional entry', async () =
   assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
 })
 
+// ---------------------------------------------------------------------------
+// S4-prep: AI summary cache (ai-summary-perf-contract §1.3)
+// ---------------------------------------------------------------------------
+test('view.summary maps to the fixed argv with an optional subject pair', async () => {
+  const engineJson = {
+    schema_version: 1,
+    summaries: [],
+    gaps: [{ code: 'ai_summary_not_generated', status: 'unavailable', reason: 'no summary stored for this subject' }],
+    stale_count: 0,
+  }
+  const bridge = createBridgeStub(async () => engineOk(engineJson))
+  const { route } = mount({ bridge })
+  let result = await invoke(route, {
+    endpoint: 'view.summary',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID },
+  })
+  assert.equal(result.json.result.ok, true)
+  assert.deepEqual(result.json.result.value, engineJson)
+  assert.deepEqual(bridge.calls.at(-1).argv, ['view-summary', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID])
+
+  // subject_type + subject_id must be supplied together for a single subject.
+  await invoke(route, {
+    endpoint: 'view.summary',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: ENTRY },
+  })
+  assert.deepEqual(bridge.calls.at(-1).argv, [
+    'view-summary', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID, '--subject-type', 'function', '--subject-id', ENTRY,
+  ])
+  await invoke(route, {
+    endpoint: 'view.summary',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'group', subject_id: 'group:f_1' },
+  })
+  assert.deepEqual(bridge.calls.at(-1).argv.slice(-4), ['--subject-type', 'group', '--subject-id', 'group:f_1'])
+  // Explicit nulls count as "omitted".
+  await invoke(route, {
+    endpoint: 'view.summary',
+    payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: null, subject_id: null },
+  })
+  assert.deepEqual(bridge.calls.at(-1).argv, ['view-summary', '--workspace', WORKSPACE, '--snapshot', SNAPSHOT_ID])
+
+  const before = bridge.calls.length
+  const rejected = [
+    [{}, /workspace is required/],
+    [{ workspace: WORKSPACE }, /snapshot is required/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'function' }, /must be provided together/],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_id: ENTRY }, /must be provided together/],
+    [
+      { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'file', subject_id: ENTRY },
+      /subject_type must be one of: function, group, entry/,
+    ],
+    [
+      { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: 'bad id!' },
+      /subject_id must match/,
+    ],
+    [
+      { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: 'f'.repeat(513) },
+      /at most 512 characters/,
+    ],
+    [{ workspace: WORKSPACE, snapshot: SNAPSHOT_ID, extra: 1 }, /unknown payload field: extra/],
+  ]
+  for (const [payload, message] of rejected) {
+    const bad = await invoke(route, { endpoint: 'view.summary', payload })
+    assert.equal(bad.json.result.error.code, 'INVALID_ARGUMENT')
+    assert.match(bad.json.result.error.message, message)
+  }
+  assert.equal(bridge.calls.length, before, 'invalid payloads must not reach the engine')
+})
+
+test('view.summary passes engine error documents through unchanged', async () => {
+  for (const code of ['LIMIT_EXCEEDED', 'INVALID_ARGUMENT', 'NOT_FOUND', 'SCOPE_DENIED']) {
+    const errorDoc = {
+      schema_version: 1,
+      error: { code, message: `${code} summary failure`, details_ref: null, retryable: false },
+      operation_id: null,
+    }
+    const bridge = createBridgeStub(async () => ({ schema_version: 1, ok: false, exit_code: 2, cli: errorDoc }))
+    const { route } = mount({ bridge })
+    const result = await invoke(route, {
+      endpoint: 'view.summary',
+      payload: { workspace: WORKSPACE, snapshot: SNAPSHOT_ID },
+    })
+    assert.equal(result.response.statusCode, 200, code)
+    assert.equal(result.json.result.ok, true, code)
+    assert.deepEqual(result.json.result.value, errorDoc, code)
+    assert.equal(result.json.result.error, undefined, code)
+  }
+})
+
 test('view endpoints map BridgeError without leaking host paths', async () => {
   const bridge = createBridgeStub(async () => {
     throw new BridgeError('DEPENDENCY_UNAVAILABLE', 'engine at C:\\Users\\admin\\python.exe failed')
@@ -1054,6 +1145,8 @@ test('view endpoints map BridgeError without leaking host paths', async () => {
     ['view.sequence', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
     ['view.interfaces', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
     ['view.interfaces', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, entry: ENTRY }],
+    ['view.summary', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID }],
+    ['view.summary', { workspace: WORKSPACE, snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: ENTRY }],
   ]
   for (const [endpoint, payload] of calls) {
     const result = await invoke(route, { endpoint, payload })
@@ -1128,7 +1221,7 @@ test('plugin identity is unchanged and the UI fiber stays pending without host s
   assert.deepEqual(inject, ['tools', 'skills'])
   const { ctx, state } = createPluginHost({ services: false })
   apply(ctx, {})
-  // Old behaviour is untouched: six tools plus the skill provider register.
+  // Old behaviour is untouched: seven tools plus the skill provider register.
   assert.deepEqual(
     state.effects.filter((effect) => /register tool/.test(effect.label)).map((effect) => effect.label).sort(),
     [
@@ -1137,6 +1230,7 @@ test('plugin identity is unchanged and the UI fiber stays pending without host s
       'dsh-code-reader: register tool code_path',
       'dsh-code-reader: register tool code_snapshot',
       'dsh-code-reader: register tool code_source',
+      'dsh-code-reader: register tool code_summary',
       'dsh-code-reader: register tool code_workspace',
     ],
   )
@@ -1164,7 +1258,7 @@ test('plugin mounts the /code-view prefix route when host services are available
   // The nested route's whitelist covers the S2a/S2b view endpoints and the S3a
   // scenario endpoints: an invalid payload is rejected before the bridge (no
   // engine spawn) and the method list is accepted by the carrier.
-  for (const endpoint of ['view.coupling', 'view.tree', 'view.endToEnd', 'view.fileTree', 'view.fileRead', 'view.sequence', 'view.interfaces']) {
+  for (const endpoint of ['view.coupling', 'view.tree', 'view.endToEnd', 'view.fileTree', 'view.fileRead', 'view.sequence', 'view.interfaces', 'view.summary']) {
     const rejected = await invoke(route, {
       endpoint,
       payload: { workspace: 'NOT A WORKSPACE', snapshot: SNAPSHOT_ID, entry: 'bad entry', mode: 'observed' },

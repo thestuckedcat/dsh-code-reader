@@ -40,4 +40,13 @@
 | stale | workspace revision、BuildIdentity 或证据 hash 变化 | 先重核 safe_cursor，再重走受影响路径 |
 | unknown | 输入缺失/不可读，或 revision 变化但摘要相同（保守） | 补证据或请用户确认，不猜 |
 
-静态证据不是运行时行为的证明；任何结论都必须能回到 evidence_ref 与文件/行号。
+静态证据不是运行时行为的保证；任何结论都必须能回到 evidence_ref 与文件/行号。
+
+## 6. 工作台 AI 归纳（code_summary）
+
+- 归纳正文由 Agent 写入（`code_summary put`），插件不调用模型；写入后工作台详情展示，带 generator/facts/
+  生成时间/推断标签。
+- 归纳 ≤500 字；每条结论须能回到 `facts`（evidence/节点引用）；候选/未知用 `inference_labels`
+  （`may_speculative` 等）标注，不得写成 exact 或已观察。
+- 只有存在运行台账时才可用 `from_observation`；不得伪造运行观测或把导入轨迹写成已执行。
+- 快照 graph hash 变化后旧归纳标 stale（“基于旧快照，待复核”），不继续当当前事实。

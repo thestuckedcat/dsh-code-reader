@@ -41,6 +41,10 @@ import {
   makeStatusPayload,
   makeSubflowPayload,
   makeStubProfilesPayload,
+  makeSummaryGapPayload,
+  makeSummaryPayload,
+  makeSummaryRecord,
+  makeSummaryStalePayload,
   makeScenarioLedgerPayload,
   makeScenarioPlanPayload,
   makeScenarioRunPayload,
@@ -96,6 +100,7 @@ function bootHarness(overrides = {}) {
     'view.fileTree': () => makeFileTreePayload(),
     'view.fileRead': (payload) => makeFileReadPayload({path: payload.path, repo_id: payload.repo}),
     'view.interfaces': () => makeInterfacesPayload(),
+    'view.summary': (payload) => makeSummaryGapPayload(),
     ...overrides,
   };
   for (const [endpoint, handler] of Object.entries(handlers)) h.rpc.setResponse(endpoint, handler);
@@ -957,7 +962,13 @@ test('details panel shows function source, resources, evidence and the AI gap', 
   assert.ok(h.textOf(details).includes('函数详情'));
   assert.ok(h.nodeByData('data-code-view', 'source'));
   assert.ok(h.nodeByData('data-code-view', 'resources'));
-  assert.ok(h.textOf(details).includes('AI 归纳在 S2b 后置'));
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  await h.settle();
+  const summaryGap = h.findAll((node) => node.props && node.props['data-ai-summary-gap'] !== undefined)[0];
+  assert.ok(summaryGap, 'AI summary gap hook is missing');
+  assert.ok(h.textOf(summaryGap).includes('AI 归纳未生成（Agent 可通过 code_summary 写入）'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-text'] !== undefined).length, 0);
+  assert.deepEqual(h.rpc.lastPayload('view.summary'), {workspace: 'code-view-bus-demo', snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: BUS_SEND_ID});
   assert.ok(h.textOf(details).includes('bus_send'));
   const jump = h.findAll((node) => node.tag === 'button' && h.textOf(node).includes('定位源码'))[0];
   assert.ok(jump);
@@ -2263,4 +2274,197 @@ test('observed mode exposes a scenario selector from the ledger, switches reques
   await h.settle();
   assert.equal(h.findAll((node) => node.props && node.props['data-sequence-imported'] === 'true').length, 0);
   assert.equal(selectionJson(h).scenario_id, 'scn_0123456789ab');
+});
+
+// ---------------------------------------------------------------------------
+// 13. S4-prep: AI summary in the details panel
+// ---------------------------------------------------------------------------
+
+async function waitSummary(h) {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  await h.settle();
+}
+
+test('AI summary loads lazily after a <=200ms debounce and shows a gap when there is no record', async (t) => {
+  const h = bootHarness();
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  await switchView(h, 'coupling');
+  h.clickNode(h.nodeByData('data-function-node', STORE_ROUTE_ID));
+  assert.equal(h.rpc.callsFor('view.summary').length, 0, 'summary request must be debounced, not immediate');
+  await waitSummary(h);
+  assert.equal(h.rpc.callsFor('view.summary').length, 1);
+  assert.deepEqual(h.rpc.lastPayload('view.summary'), {workspace: 'code-view-bus-demo', snapshot: SNAPSHOT_ID, subject_type: 'function', subject_id: STORE_ROUTE_ID});
+  const gap = h.findAll((node) => node.props && node.props['data-ai-summary-gap'] !== undefined)[0];
+  assert.ok(gap, 'missing ai-summary gap hook');
+  assert.ok(h.textOf(gap).includes('AI 归纳未生成（Agent 可通过 code_summary 写入）'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-text'] !== undefined).length, 0, 'gap must not fabricate summary text');
+  assert.equal(h.findAll((node) => node.props && node.props['data-code-view'] === 'ai-summary').length, 0);
+});
+
+test('AI summary record renders text/generator/generated-at/facts/labels/stale and coexists with tabs', async (t) => {
+  const longText = '归纳正文'.repeat(125);
+  assert.ok(longText.length <= 500);
+  const h = bootHarness({
+    'view.summary': (payload) => makeSummaryPayload({
+      summaries: [makeSummaryRecord({
+        subject: {type: payload.subject_type, id: payload.subject_id},
+        text: longText,
+        facts: [
+          {kind: 'evidence', ref: 'e_231505a73a485bc1d8c9249d'},
+          {kind: 'evidence', ref: 'e_ret'},
+          {kind: 'node', ref: 'fn:' + BUS_SEND_ID},
+        ],
+      })],
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  const section = h.nodeByData('data-code-view', 'ai-summary');
+  assert.ok(section, 'ai-summary container is missing');
+  assert.equal(section.props['data-ai-summary-stale'], 'false');
+  const text = h.nodeByData('data-ai-summary-text', '');
+  assert.ok(text);
+  assert.equal(h.textOf(text), longText, 'summary text is rendered verbatim');
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-generator', '')).includes('agent'));
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-generator', '')).includes('skill:code-view'));
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-generated-at', '')).includes('2026-11-15T10:00:00Z'));
+  const factsText = h.textOf(h.nodeByData('data-ai-summary-facts', ''));
+  assert.ok(factsText.includes('3'), factsText);
+  assert.ok(factsText.includes('evidence×2'), factsText);
+  assert.ok(factsText.includes('node×1'), factsText);
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-labels', '')).includes('from_static_structure'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab').length, 3);
+  h.clickNode(h.findAll((node) => node.props && node.props['data-code-view'] === 'details-tab' && node.props['data-tab'] === 'resources')[0]);
+  await h.settle();
+  assert.ok(h.nodeByData('data-code-view', 'ai-summary'), 'AI summary stays visible when switching tabs');
+  assert.ok(h.nodeByData('data-code-view', 'resources'));
+  const selectionText = h.textOf(h.nodeByData('data-code-view', 'selection'));
+  assert.equal(selectionText.includes(longText.slice(0, 20)), false, 'summary text must not leak into Selection');
+});
+
+test('stale summary shows 基于旧快照，待复核 and limitations', async (t) => {
+  const h = bootHarness({'view.summary': () => makeSummaryStalePayload()});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  const section = h.nodeByData('data-code-view', 'ai-summary');
+  assert.ok(section);
+  assert.equal(section.props['data-ai-summary-stale'], 'true');
+  assert.ok(h.textOf(section).includes('基于旧快照，待复核'));
+  assert.ok(h.textOf(section).includes('summary_stale_against_current_snapshot'));
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-text', '')).includes('旧快照'));
+});
+
+test('summary errors expose data-error-code without leaking paths', async (t) => {
+  const h = bootHarness({'view.summary': () => failResult('NOT_FOUND', 'summary store is empty')});
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  const errorNode = h.findAll((node) => node.props && node.props['data-ai-summary-error'] !== undefined)[0];
+  assert.ok(errorNode, 'summary error hook is missing');
+  assert.equal(errorNode.props['data-error-code'], 'NOT_FOUND');
+  assert.ok(h.textOf(errorNode).includes('NOT_FOUND'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-text'] !== undefined).length, 0);
+  assert.equal(h.text().includes('E:/'), false);
+});
+
+test('debounced summary requests discard stale responses when the subject changes', async (t) => {
+  const deferreds = [];
+  const h = bootHarness({
+    'view.summary': (payload) => {
+      const pending = deferred();
+      deferreds.push({payload, pending});
+      return pending.promise;
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openSnapshot(h);
+  await switchView(h, 'coupling');
+  h.clickNode(h.nodeByData('data-function-node', STORE_ROUTE_ID));
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  await h.settle();
+  assert.equal(deferreds.length, 1, 'first subject request is pending');
+  assert.equal(deferreds[0].payload.subject_id, STORE_ROUTE_ID);
+  h.clickNode(h.nodeByData('data-function-node', BUS_SEND_ID));
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  await h.settle();
+  assert.equal(deferreds.length, 2, 'second subject request after debounce');
+  assert.equal(deferreds[1].payload.subject_id, BUS_SEND_ID);
+  const firstCall = h.rpc.callsFor('view.summary')[0];
+  assert.equal(firstCall.signal && firstCall.signal.aborted, true, 'superseded request is aborted');
+
+  deferreds[0].pending.resolve(makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'function', id: STORE_ROUTE_ID}, text: 'OLD stale summary'})]}));
+  await h.settle();
+  assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-text'] !== undefined).length, 0, 'stale response must not render');
+  deferreds[1].pending.resolve(makeSummaryPayload({summaries: [makeSummaryRecord({subject: {type: 'function', id: BUS_SEND_ID}, text: 'NEW summary'})]}));
+  await h.settle();
+  const text = h.nodeByData('data-ai-summary-text', '');
+  assert.ok(text);
+  assert.equal(h.textOf(text), 'NEW summary');
+  assert.equal(h.text().includes('OLD stale summary'), false);
+});
+
+test('group subject selection opens group details and loads group AI summary', async (t) => {
+  const h = bootHarness({
+    'view.summary': (payload) => makeSummaryPayload({
+      summaries: [makeSummaryRecord({
+        subject: {type: payload.subject_type, id: payload.subject_id},
+        text: '组归纳：dispatch_transfer 下游由两个私有子流程组成，均只被该函数调用。',
+        facts: [{kind: 'node', ref: 'group:' + 'x'}],
+        inference_labels: ['from_static_structure'],
+      })],
+    }),
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await switchView(h, 'end_to_end');
+  const groupBox = h.nodeByData('data-graph-group', GROUP_DISPATCH);
+  assert.ok(groupBox);
+  h.clickNode(groupBox);
+  await waitSummary(h);
+  const payload = h.rpc.lastPayload('view.summary');
+  assert.equal(payload.subject_type, 'group');
+  assert.equal(payload.subject_id, GROUP_DISPATCH);
+  const details = detailsNode(h);
+  assert.ok(details);
+  assert.ok(h.textOf(details).includes('组详情'));
+  assert.ok(h.textOf(details).includes('dispatch_transfer 下游子流程'));
+  assert.ok(h.textOf(h.nodeByData('data-ai-summary-text', '')).includes('组归纳'));
+  assert.equal(h.findAll((node) => node.props && node.props['data-ai-summary-gap'] !== undefined).length, 0);
+});
+
+test('refresh and closing/reopening details reload the summary', async (t) => {
+  let version = 0;
+  const h = bootHarness({
+    'view.summary': (payload) => {
+      version += 1;
+      return makeSummaryPayload({
+        summaries: [makeSummaryRecord({subject: {type: payload.subject_type, id: payload.subject_id}, text: 'summary version ' + String(version)})],
+      });
+    },
+  });
+  t.after(() => h.dispose());
+  await h.boot();
+  await openEntry(h);
+  await waitSummary(h);
+  assert.equal(h.textOf(h.nodeByData('data-ai-summary-text', '')), 'summary version 1');
+  h.clickButton('重新读取');
+  await h.settle();
+  await waitSummary(h);
+  assert.equal(h.textOf(h.nodeByData('data-ai-summary-text', '')), 'summary version 2');
+  h.clickNode(h.findAll((node) => node.tag === 'button' && h.textOf(node).includes('关闭详情'))[0]);
+  await h.settle();
+  assert.equal(detailsNode(h), null);
+  assert.equal(h.nodeByData('data-code-view', 'ai-summary'), null);
+  h.clickNode(h.nodeByData('data-function-node', BUS_SEND_ID));
+  await waitSummary(h);
+  assert.equal(h.textOf(h.nodeByData('data-ai-summary-text', '')), 'summary version 3');
 });

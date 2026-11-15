@@ -303,6 +303,25 @@ def build_parser() -> argparse.ArgumentParser:
         "--operation-id", dest="operation_id", required=True, metavar="ID"
     )
 
+    summary_put = subparsers.add_parser(
+        "summary-put",
+        help="Validate and store one signed AI summary record for a snapshot subject.",
+    )
+    summary_put.add_argument("--workspace", required=True, metavar="WID")
+    summary_put.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    summary_put.add_argument(
+        "--payload-json", dest="payload_json", required=True, metavar="B64"
+    )
+
+    view_summary = subparsers.add_parser(
+        "view-summary",
+        help="Cached AI summaries of one snapshot (with gaps and staleness).",
+    )
+    view_summary.add_argument("--workspace", required=True, metavar="WID")
+    view_summary.add_argument("--snapshot", dest="snapshot_ref", required=True, metavar="SID")
+    view_summary.add_argument("--subject-type", dest="subject_type", default=None, metavar="T")
+    view_summary.add_argument("--subject-id", dest="subject_id", default=None, metavar="ID")
+
     # -- paths and relations -------------------------------------------------
     query_path = subparsers.add_parser("path", help="Bounded call-path query inside one variant.")
     query_path.add_argument("--workspace", required=True, metavar="WID")
@@ -567,6 +586,23 @@ def _dispatch(args: argparse.Namespace, state: Any) -> Dict[str, Any]:
             )
         return scenario.view_sequence_observed(
             state, args.workspace, args.scenario_ref
+        )
+    if command in ("summary-put", "view-summary"):
+        from . import summary
+
+        if command == "summary-put":
+            return summary.summary_put(
+                state,
+                args.workspace,
+                args.snapshot_ref,
+                args.payload_json,
+            )
+        return summary.view_summary(
+            state,
+            args.workspace,
+            args.snapshot_ref,
+            args.subject_type,
+            args.subject_id,
         )
     if command == "path":
         return service.query_path(

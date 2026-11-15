@@ -29,6 +29,7 @@ whenToUse: 用户要快速理清或学习某个 Linux 驱动或用户态仓库�
 | `code_snapshot` | import / status | workspace、variant、repo、snapshot（import 的 inbox 目录名）、operation_id；snapshot_ref（status） | 导入已核验的 Atlas 0.1 快照，查看覆盖与 freshness |
 | `code_path` | path / relation | workspace、variant、from、to、budget、max_depth、direction；snapshot_ref、mode、selector | 取有界路径或关系查询（flow/locks/aliases） |
 | `code_learn` | save / get / resume / export | workspace、input（inbox 内记录草稿文件名）、expected_generation、operation_id；record；format=markdown 或 json | 保存/读取/续读/导出学习记录（导出仅在用户要求时） |
+| `code_summary` | get / put | workspace、snapshot、subject_type（function/group/entry）、subject_id、text（≤500 字）、facts（≤32 条证据/节点引用）、generator（kind=agent/user、ref）、inference_labels | 写入/读取详情面板的 AI 归纳（≤500 字）；**插件不自动生成正文**，由 Agent 基于已核验证据写 |
 
 ## 标准工作流
 
@@ -41,6 +42,7 @@ whenToUse: 用户要快速理清或学习某个 Linux 驱动或用户态仓库�
 7. **最小授权核验**：只做用户已授权的最小只读观察或查询；没有证据就保留待验证，不自动运行目标构建或测试。
 8. **规则与未知**：留下 1–3 条可迁移规则（candidate 或 supported）和未解问题；不把推测写成事实。
 9. **记录或停止**：用户要保存或暂停时用 `code_learn` save；没有剩余价值时直接停。普通问答可只解释并在此结束，不必创建完整记录。
+10. **详情归纳（可选）**：用户要工作台详情出现归纳时，用 `code_summary put` 写 ≤500 字：必须基于已核验证据、把 evidence/节点引用放进 `facts`、候选/未知用 `inference_labels`（如 `may_speculative`）标注；无运行台账不得用 `from_observation`；不得伪造正文或把候选写成 exact。
 
 ## 复盘（完整流程）
 

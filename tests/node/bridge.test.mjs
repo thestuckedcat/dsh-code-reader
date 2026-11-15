@@ -98,7 +98,7 @@ test('bridge reports missing interpreter and non-JSON failures as tool values', 
 test('tool argv mapping is fixed and does not shell-interpolate', async () => {
   const records = []
   const tools = Object.fromEntries(buildTools(fakeBridge(records)).map((tool) => [tool.name, tool]))
-  assert.deepEqual(Object.keys(tools).sort(), ['code_learn', 'code_overview', 'code_path', 'code_snapshot', 'code_source', 'code_workspace'])
+  assert.deepEqual(Object.keys(tools).sort(), ['code_learn', 'code_overview', 'code_path', 'code_snapshot', 'code_source', 'code_summary', 'code_workspace'])
 
   const workspace = await tools.code_workspace.execute(
     { action: 'import', manifest: 'workspace.json', expected_revision: 0 },

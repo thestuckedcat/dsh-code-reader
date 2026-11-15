@@ -280,5 +280,41 @@ python -m code_learning.cli --bootstrap <bootstrap.json> sim-profile-import \
 - 台账只追加、带签名/plan_id/module_sha256/records_digest/代次；同一场景重复运行代次 +1；不同场景各自从 0 开始。
   回退发布的是**前缀场景**的新 generation（带 `undo.of_scenario_id/of_generation/count/state_digest_verified`）；
   前缀不可重放（如导入轨迹）时不提供回退，只保留只读历史。
-- 未提供：异步/IRQ 因果细化、真实设备下发、图内源码写回、AI 归纳正文（gap 显示；S4/后续验收）。
+- 未提供：异步/IRQ 因果细化、真实设备下发、图内源码写回（gap 显示；S4/后续验收）。
   Wasm 模拟不证明真实设备/内核行为。
+
+## 9. AI 归纳（CW-09）
+
+工作台详情面板（函数/组）会显示 **AI 归纳区**；正文不是插件生成，而是 **Agent 通过 `code_summary` 工具写入**
+（插件无模型出口，不自动调用模型）：
+
+```
+code_summary action=put workspace=<id> snapshot=<snapshot_id>
+  subject_type=function|group|entry subject_id=<f_…|group:…>
+  text="≤500 字，基于已核验证据" facts=[{kind:"evidence",ref:"e_…"},{kind:"node",ref:"f_…"}]
+  generator={kind:"agent",ref:"session/…"} inference_labels=["from_static_structure"]
+```
+
+- 归纳写入引擎缓存（签名、绑定快照 graph sha）；快照变化后旧归纳标 `stale`（“基于旧快照，待复核”），
+  不继续当当前事实。
+- 写入约束：≤500 字、facts ≤32 条证据/节点引用、候选/未知用 `inference_labels` 标注、无运行台账不得用
+  `from_observation`、不得伪造运行观测；Host/引擎双重校验。`action=get` 读取当前归纳。
+- UI 只读展示正文/事实引用数/generator/生成时间/stale；未写入时显示 gap，不伪造正文。RPC 只读端点
+  `view.summary` 供面板使用。
+
+## 10. 性能实测（A11）
+
+仓库提供可复现的实测工具（不属于产品运行路径）：
+
+```bash
+node tools/verify-perf.mjs --with-repo-tests
+```
+
+- 合成 500 节点/800 边与 2,000 节点/1 万事件 Atlas 0.1 fixture（明确标注 SYNTHETIC，非真实仓库），经真实
+  引擎导入与视图投影；真实 dsh-web 测量首屏（点击入口→视图 ready）、跨视图定位（资源→函数高亮）、拖动
+  反馈（pointermove→rAF）、大图截断/搜索/事件序列反馈。
+- 当前实测（2026-11-15，i7-13700F/34GB/Win10/Node 26）：跨视图 coupling p95 **3 ms**（预算 120ms）达标；
+  首屏 hot p95 **1078/1141 ms**（预算 500ms）**未达标**（verifier 早前 run 为 646/704 ms，两次均未达标），工具如实记录；tree 定位/拖动/冷启动在合成夹具上不可测，
+  记 not_verified 并保留原始样本/失败数；2000/10k 图 e2e 1175 ms 且显示「已截断」，搜索/事件序列 p95 3–4 ms。
+- 证据：`evidence/perf/verification.json`（机器信息/原始样本/p50/p95/预算判定/覆盖/失败数）+ README。
+  合成图只作规模与截断证据，不代表真实仓库或 Linux/Kbuild 证据；性能预算为“拟验收基线，待实测校准”。

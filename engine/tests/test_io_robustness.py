@@ -57,5 +57,67 @@ class LocalJsonEncodingTest(unittest.TestCase):
             self.assertEqual(caught.exception.code, "INVALID_ARGUMENT")
 
 
+class SigningKeyBinaryIO(unittest.TestCase):
+    """Windows CRT text-mode must not corrupt the signing key.
+
+    Regression: ``os.open`` without ``O_BINARY`` expands 0x0A bytes into CRLF.
+    A random 32-byte key contains 0x0A about 12% of the time, which made signed
+    references intermittently fail with SCOPE_DENIED (profile registrations,
+    ledgers, plans and summaries all stop verifying), as observed while
+    verifying the S3/S4 stages.
+    """
+
+    def _bootstrap(self, root: Path) -> Path:
+        root.mkdir(parents=True, exist_ok=True)
+        bootstrap = {
+            "schema_version": 1,
+            "profile_ref": "unittest",
+            "scope_ref": "local",
+            "scope_generation": 1,
+            "state_dir": str(root / "state"),
+            "import_inbox_dir": str(root / "inbox"),
+            "output_root": str(root / "output"),
+            "candidate_roots": [
+                {"root_ref": "root", "absolute_path": str(root), "read_grant_ref": "grant"}
+            ],
+        }
+        path = root / "bootstrap.json"
+        path.write_text(json.dumps(bootstrap), encoding="utf-8")
+        return path
+
+    def test_signing_key_round_trips_binary_bytes(self) -> None:
+        from unittest import mock
+
+        from code_learning.state import load_state
+
+        # 32 bytes full of the two bytes a text-mode CRT would translate.
+        tricky_key = bytes([0x0A, 0x0D] * 16)
+        with tempfile.TemporaryDirectory() as tmp:
+            bootstrap = self._bootstrap(Path(tmp))
+            with mock.patch("code_learning.state.os.urandom", return_value=tricky_key):
+                state = load_state(str(bootstrap))
+                token = state.sign({"kind": "unittest", "value": 1, "g": 1})
+            key_path = Path(tmp) / "state" / "secret.key"
+            self.assertEqual(32, len(key_path.read_bytes()))
+            self.assertEqual(tricky_key, key_path.read_bytes())
+            reloaded = load_state(str(bootstrap))
+            payload = reloaded.verify(token, kind="unittest")
+            self.assertEqual(1, payload["value"])
+
+    def test_corrupted_key_file_is_reported_not_used(self) -> None:
+        from code_learning.errors import CodeLearningError
+        from code_learning.state import load_state
+
+        with tempfile.TemporaryDirectory() as tmp:
+            bootstrap = self._bootstrap(Path(tmp))
+            state_dir = Path(tmp) / "state"
+            state_dir.mkdir(parents=True)
+            (state_dir / "secret.key").write_bytes(b"x" * 33)
+            state = load_state(str(bootstrap))
+            with self.assertRaises(CodeLearningError) as caught:
+                state.sign({"kind": "unittest"})
+            self.assertEqual("DEPENDENCY_UNAVAILABLE", caught.exception.code)
+
+
 if __name__ == "__main__":
     unittest.main()

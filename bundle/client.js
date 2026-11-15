@@ -146,11 +146,24 @@ legendEvidence:'证据分级',
 legendAccess:'资源访问方向',
 legendShapes:'图形形状',
 legendBoundary:'边界与异常',
-legendAi:'AI 归纳（S2b 后置）',
+legendAi:'AI 归纳（Agent 写入，只读展示）',
 detailsTitle:'详情',
 detailsClose:'关闭详情',
 detailsHint:'点空白关闭；拖动/平移保留选择。',
-aiSummaryGap:'AI 归纳在 S2b 后置：S2a 不伪造归纳正文。',
+aiSummaryGap:'归纳正文由 Agent 经 code_summary 写入；插件不调用模型。',
+aiSummaryTitle:'AI 归纳（只读）',
+aiSummaryLoading:'正在读取 AI 归纳…',
+aiSummaryNotGenerated:'AI 归纳未生成（Agent 可通过 code_summary 写入）',
+aiSummaryStale:'基于旧快照，待复核',
+aiSummaryGenerator:'generator',
+aiSummaryGeneratedAt:'生成于',
+aiSummaryFacts:'事实引用',
+aiSummaryLabels:'推断标签',
+aiSummaryFailed:'AI 归纳读取失败：',
+aiSummarySubjectFunction:'函数',
+aiSummarySubjectGroup:'组',
+groupDetailTitle:'组详情',
+summaryTabLabel:'AI 归纳',
 railResources:'全局资源',
 railStub:'打桩模拟',
 railLabel:'工作台左栏',
@@ -778,7 +791,7 @@ var statusCapabilities=isRecord(statusData)&&isRecord(statusData.capabilities)?s
 if(!hasObservedEvidence(view)&&observedLedger!==true&&stubRecords!==true&&statusCapabilities.run_observation!==true){
 addDerived({code:'run_observation',status:'unavailable',reason:'运行观测尚未开启：需先由「打桩模拟」运行场景并写入台账。'});
 }
-addDerived({code:'ai_summary',status:'unavailable',reason:'AI 归纳正文尚未接入；S3a 只显示已核验事实、运行台账与缺口。'});
+addDerived({code:'ai_summary',status:'unavailable',reason:'归纳正文由 Agent 经 code_summary 写入；插件不调用模型、不伪造正文。'});
 return gaps;
 }
 function computeState(view){
@@ -1561,6 +1574,87 @@ of_generation:toSignedInteger(value.of_generation),
 count:toInteger(value.count),
 state_digest_verified:value.state_digest_verified===true,
 };
+}
+function normalizeSummaryFacts(value){
+var facts=[];
+if(!Array.isArray(value))return facts;
+for(var index=0;index<value.length&&index<32;index+=1){
+var item=value[index];
+if(!isRecord(item))continue;
+var kind=copyNullableString(item.kind);
+var ref=copyNullableString(item.ref);
+if(kind===null||ref===null)continue;
+facts.push({kind:kind.slice(0,32),ref:ref.slice(0,512)});
+}
+return facts;
+}
+function normalizeSummaryRecord(value){
+if(!isRecord(value))return null;
+var subject=isRecord(value.subject)?value.subject:{};
+var subjectType=copyNullableString(subject.type);
+var subjectId=copyNullableString(subject.id);
+if(subjectType===null||subjectId===null)return null;
+if(subjectType!=='function'&&subjectType!=='group'&&subjectType!=='entry')subjectType='unknown';
+var generator=isRecord(value.generator)?value.generator:{};
+var text=typeof value.text==='string'?value.text:'';
+if(text.length>2000)text=text.slice(0,2000);
+return{
+subject_type:subjectType,
+subject_id:subjectId,
+text:text,
+facts:normalizeSummaryFacts(value.facts),
+generator:{kind:copyNullableString(generator.kind),ref:copyNullableString(generator.ref),model_ref:copyNullableString(generator.model_ref)},
+inference_labels:copyStringArray(value.inference_labels,8),
+generated_at:copyNullableString(value.generated_at),
+snapshot_graph_sha256:copyNullableString(value.snapshot_graph_sha256),
+stale:value.stale===true,
+limitations:copyStringArray(value.limitations,32),
+};
+}
+function normalizeSummaryPayload(payload){
+var source=isRecord(payload)?payload:{};
+var raw=Array.isArray(source.summaries)?source.summaries:(Array.isArray(source.items)?source.items:(normalizeSummaryRecord(payload)===null?[]:[payload]));
+var summaries=[];
+for(var index=0;index<raw.length&&index<32;index+=1){
+var record=normalizeSummaryRecord(raw[index]);
+if(record!==null)summaries.push(record);
+}
+return{
+summaries:summaries,
+gaps:Array.isArray(source.gaps)?source.gaps:[],
+stale_count:toInteger(source.stale_count),
+};
+}
+function createInitialSummaryState(){
+return{key:null,state:'idle',payload:null,error:null};
+}
+function findSummaryForSubject(payload,subjectType,subjectId){
+var normalized=normalizeSummaryPayload(payload);
+for(var index=0;index<normalized.summaries.length;index+=1){
+var record=normalized.summaries[index];
+if(record.subject_type===subjectType&&record.subject_id===subjectId)return record;
+}
+if(normalized.summaries.length===1)return normalized.summaries[0];
+return null;
+}
+function groupInfoForId(view,groupId){
+var entry=view.data?view.data.end_to_end:null;
+if(!entry||!isRecord(entry.payload))return null;
+var normalized=normalizeEndToEnd(entry.payload);
+var model=buildGroupModel(normalized.groups);
+if(model.byId[groupId]===undefined)return null;
+var group=model.byId[groupId];
+return{group_id:groupId,label:groupLabelOf(group,view.groupOverrides),description:groupDescriptionOf(group,view.groupOverrides),member_count:collectGroupNodeIds(model,groupId).length};
+}
+function summarySubjectFor(view,ui){
+if(ui.details!==null&&ui.details!==undefined&&ui.details.kind==='function'&&copyNullableString(ui.details.function_id)!==null){
+return{type:'function',id:ui.details.function_id,label:copyNullableString(view.selectedFunctionName)||ui.details.function_id};
+}
+if(ui.details!==null&&ui.details!==undefined&&ui.details.kind==='group'&&copyNullableString(ui.details.group_id)!==null){
+var info=groupInfoForId(view,ui.details.group_id);
+return{type:'group',id:ui.details.group_id,label:info!==null?info.label:ui.details.group_id,info:info};
+}
+return null;
 }
 function viewPayloadState(name,payload){
 if(name==='coupling'){
@@ -3778,6 +3872,14 @@ var target=event&&event.target;
 if(target&&typeof target.closest==='function'&&target.closest('button,input'))return;
 onGroupPointerDown(event,entry.groupId,collectGroupNodeIds(groupModel,entry.groupId));
 },
+onClick:function(event){
+var target=event&&event.target;
+if(target&&typeof target.closest==='function'&&target.closest('button,input,select,textarea'))return;
+if(event&&event.stopPropagation)event.stopPropagation();
+if(typeof props.onSelectGroup==='function')props.onSelectGroup(entry.groupId);
+},
+tabIndex:0,
+role:'button',
 },
 el('div',{className:'dcr-group-header'},renderGroupHeader(entry)),
 description!==''?el('span',{className:'dcr-graph-node-sub dcr-group-description'},truncateLabel(description,90)):null,
@@ -4287,12 +4389,64 @@ renderedNodes
 gaps.length>0?el('div',null,gaps):null
 );
 }
+function summaryFactsText(record){
+var counts={};
+for(var index=0;index<record.facts.length;index+=1){
+var kind=record.facts[index].kind;
+counts[kind]=(counts[kind]||0)+1;
+}
+var kinds=[];
+for(var kindKey in counts){
+if(Object.prototype.hasOwnProperty.call(counts,kindKey))kinds.push(kindKey+'×'+String(counts[kindKey]));
+}
+var refs=record.facts.slice(0,8).map(function(fact){return fact.ref;});
+return String(record.facts.length)+'（'+(kinds.length>0?kinds.join('、'):'无')+'）'+(refs.length>0?'：'+refs.join('、'):'');
+}
+function AISummarySection(props){
+var summary=props.summary===null||props.summary===undefined?createInitialSummaryState():props.summary;
+var subject=props.subject===null||props.subject===undefined?null:props.subject;
+var subjectChip=subject!==null?el('span',{className:'dcr-chip'},(subject.type==='group'?TEXT.aiSummarySubjectGroup:TEXT.aiSummarySubjectFunction)+' '+String(subject.label||subject.id)):null;
+var head=el('div',{className:'dcr-section-head'},el('h3',{className:'dcr-heading'},TEXT.aiSummaryTitle),subjectChip);
+if(summary.state==='loading'||summary.state==='idle'){
+return el('section',{className:'dcr-section dcr-ai-summary','data-ai-summary-loading':''},head,el('p',{className:'dcr-muted',role:'status'},TEXT.aiSummaryLoading));
+}
+if(summary.state==='error'){
+var errorCode=summary.error!==null&&summary.error!==undefined?summary.error.code:'UNKNOWN_ERROR';
+return el('section',{className:'dcr-section dcr-ai-summary'},head,el('p',{className:'dcr-error','data-ai-summary-error':'','data-error-code':errorCode},TEXT.aiSummaryFailed+String(errorCode)));
+}
+var record=findSummaryForSubject(summary.payload,subject!==null?subject.type:null,subject!==null?subject.id:null);
+if(record===null){
+return el('section',{className:'dcr-section dcr-ai-summary'},head,el('p',{className:'dcr-muted','data-ai-summary-gap':''},TEXT.aiSummaryNotGenerated),el('p',{className:'dcr-muted'},TEXT.aiSummaryGap));
+}
+var stale=record.stale===true;
+return el('section',{className:'dcr-section dcr-ai-summary','data-code-view':'ai-summary','data-ai-summary-stale':stale?'true':'false'},
+head,
+stale?el('p',{className:'dcr-warning dcr-ai-summary-stale'},TEXT.aiSummaryStale):null,
+el('p',{className:'dcr-ai-summary-text','data-ai-summary-text':''},record.text),
+el('p',{className:'dcr-meta','data-ai-summary-generator':''},TEXT.aiSummaryGenerator+'：'+String(record.generator.kind||'—')+' / '+String(record.generator.ref||'—')+(record.generator.model_ref!==null?' · model '+String(record.generator.model_ref):'')),
+el('p',{className:'dcr-meta','data-ai-summary-generated-at':''},TEXT.aiSummaryGeneratedAt+' '+String(record.generated_at||'—')),
+el('p',{className:'dcr-meta','data-ai-summary-facts':''},TEXT.aiSummaryFacts+' '+summaryFactsText(record)),
+el('p',{className:'dcr-meta','data-ai-summary-labels':''},TEXT.aiSummaryLabels+'：'+(record.inference_labels.length>0?record.inference_labels.join('、'):'—')),
+record.limitations.length>0?el('p',{className:'dcr-muted'},'局限：'+record.limitations.join('、')):null,
+el('p',{className:'dcr-muted'},TEXT.aiSummaryGap)
+);
+}
 function DetailsPanel(props){
 var details=props.details;
 if(details===null)return null;
 var title;
 var body;
-if(details.kind==='resource'){
+if(details.kind==='group'){
+var groupInfo=props.groupInfo;
+title=TEXT.groupDetailTitle+'：'+(groupInfo!==null&&groupInfo!==undefined?groupInfo.label:details.group_id);
+body=el('div',{className:'dcr-details-body'},
+el('p',{className:'dcr-meta'},'组 id '+String(details.group_id)),
+groupInfo!==null&&groupInfo!==undefined
+?el('p',{className:'dcr-meta'},'成员 '+String(groupInfo.member_count)+' · '+String(groupInfo.description||'—'))
+:el('p',{className:'dcr-muted'},'组信息暂不可用（等待端到端图投影）。'),
+el(AISummarySection,{summary:props.summary,subject:props.summarySubject})
+);
+}else if(details.kind==='resource'){
 var resource=props.selectedResource;
 title=TEXT.resourceDetailTitle+'：'+(resource!==null?resource.name:details.resource_id);
 if(resource===null){
@@ -4363,12 +4517,10 @@ el(SourceView,{source:isRecord(entryData)?entryData.source:null}),
 el(ResourceSection,{resources:resources}),
 el(EdgeList,{title:TEXT.callsTitle,edges:calls,emptyText:TEXT.callsEmpty,truncated:isRecord(entryData)&&entryData.truncated===true}),
 el(EdgeList,{title:TEXT.callersTitle,edges:callers,emptyText:TEXT.callersEmpty,truncated:isRecord(entryData)&&entryData.truncated===true}),
-el(EvidenceList,{evidence:evidence}),
-el('p',{className:'dcr-muted'},TEXT.aiSummaryGap)
+el(EvidenceList,{evidence:evidence})
 );
 var resourcesContent=el('div',null,
-el(ResourceSection,{resources:resources}),
-el('p',{className:'dcr-muted'},TEXT.aiSummaryGap)
+el(ResourceSection,{resources:resources})
 );
 var subflowContent=el(SubflowView,{
 subflow:props.subflow,
@@ -4376,7 +4528,7 @@ onCrumbClick:props.onCrumbClick,
 onSelectSubflowNode:props.onSelectSubflowNode,
 });
 var content=activeTab==='subflow'?subflowContent:activeTab==='resources'?resourcesContent:sourceContent;
-body=el('div',{className:'dcr-details-body'},tabs,content);
+body=el('div',{className:'dcr-details-body'},tabs,content,el(AISummarySection,{summary:props.summary,subject:props.summarySubject}));
 }
 }
 return el('section',{className:'dcr-details','data-code-view':'details','aria-label':TEXT.detailsTitle},
@@ -4391,6 +4543,7 @@ el('p',{className:'dcr-muted'},TEXT.detailsHint),
 body
 );
 }
+
 var remembered={
 snapshot:null,
 entry:null,
@@ -4635,6 +4788,7 @@ selectedFunctionId:null,
 selectedFunctionName:null,
 data:{},
 interfaces:{key:null,state:'idle',payload:null,error:null},
+summary:createInitialSummaryState(),
 groupCollapsed:assign({},sessionUi.groupCollapsed),
 groupOverrides:assign({},sessionUi.groupOverrides),
 addedInterfaces:assign({},sessionUi.addedInterfaces),
@@ -4663,6 +4817,7 @@ sequenceMode:sessionUi.sequenceMode==='observed'?'observed':'static',
 focus_scenario_id:sessionUi.scenarioId,
 focus_run_generation:sessionUi.runGeneration,
 focus_call_id:sessionUi.callId,
+summaryEpoch:0,
 };
 }
 function findResourceById(payload,resourceId){
@@ -4716,14 +4871,71 @@ return map[name];
 function isCurrent(name,seq){
 return seqRef.current[name]===seq;
 }
-function request(name,endpoint,payload){
+function request(name,endpoint,payload,signal){
 var seq=nextSeq(name);
-return callCodeView(ctx?ctx.connection:null,endpoint,payload,undefined).then(function(result){
+return callCodeView(ctx?ctx.connection:null,endpoint,payload,signal).then(function(result){
 if(!isCurrent(name,seq))return null;
 if(!aliveRef.current)return null;
 return result;
 });
 }
+var summaryReqRef=useRef({key:null,timer:null,controller:null});
+var summaryEpochRef=useRef(-1);
+var activeSummarySubject=summarySubjectFor(getViewState(),getUiState());
+var activeSummaryKey=activeSummarySubject===null?null:activeSummarySubject.type+'|'+activeSummarySubject.id;
+function requestSummary(subject,key,controller){
+var snapshot=currentSnapshot();
+if(snapshot===null||!aliveRef.current){
+patchView({summary:{key:key,state:'idle',payload:null,error:null}});
+return;
+}
+patchView({summary:{key:key,state:'loading',payload:null,error:null}});
+request('summary','view.summary',{workspace:snapshot.workspace_id,snapshot:snapshot.snapshot_id,subject_type:subject.type,subject_id:subject.id},controller!==null?controller.signal:undefined).then(function(result){
+if(!result||result.kind==='aborted')return;
+var current=getViewState().summary;
+if(current===null||current===undefined||current.key!==key)return;
+if(result.kind==='error'){
+patchView({summary:{key:key,state:'error',payload:null,error:result}});
+return;
+}
+patchView({summary:{key:key,state:'ready',payload:result.value,error:null}});
+});
+}
+useEffect(function(){
+var req=summaryReqRef.current;
+if(req.timer!==null){clearTimeout(req.timer);req.timer=null;}
+if(req.controller!==null){try{req.controller.abort();}catch(error){}req.controller=null;}
+var epoch=getsUiEpoch();
+var force=summaryEpochRef.current!==epoch;
+summaryEpochRef.current=epoch;
+if(activeSummaryKey===null){
+req.key=null;
+patchView({summary:createInitialSummaryState()});
+return;
+}
+var currentSummary=getViewState().summary;
+if(!force&&currentSummary!==null&&currentSummary!==undefined&&currentSummary.key===activeSummaryKey&&(currentSummary.state==='loading'||currentSummary.state==='ready'||currentSummary.state==='error'))return;
+var subject=activeSummarySubject;
+var key=activeSummaryKey;
+req.key=key;
+if(force&&currentSummary!==null&&currentSummary!==undefined&&currentSummary.key===key)patchView({summary:createInitialSummaryState()});
+req.timer=setTimeout(function(){
+req.timer=null;
+if(!aliveRef.current)return;
+var controller=null;
+if(typeof AbortController==='function'){
+controller=new AbortController();
+req.controller=controller;
+}
+requestSummary(subject,key,controller);
+},120);
+return function(){
+var cleanupReq=summaryReqRef.current;
+if(cleanupReq.timer!==null){clearTimeout(cleanupReq.timer);cleanupReq.timer=null;}
+if(cleanupReq.controller!==null){try{cleanupReq.controller.abort();}catch(error){}cleanupReq.controller=null;}
+};
+},[activeSummaryKey,ui.summaryEpoch]);
+function getsUiEpoch(){return toInteger(getUiState().summaryEpoch)||0;}
 function setData(name,patch){
 patchView(function(previous){
 var data=assign({},previous.data);
@@ -4786,7 +4998,7 @@ sessionUi.callId=currentUi.focus_call_id;
 }
 function openPanel(){
 patchView(createInitialPanelView());
-patchUi({rail:'resources',subflow:{key:null,state:'idle',payload:null,error:null,entryId:null,rootId:null}});
+patchUi(function(previous){return{rail:'resources',subflow:{key:null,state:'idle',payload:null,error:null,entryId:null,rootId:null},summaryEpoch:(previous.summaryEpoch||0)+1};});
 request('status','view.status',{}).then(function(result){
 if(!result)return;
 var status=result.kind==='ok'?result.value:null;
@@ -4855,6 +5067,7 @@ selectedFunctionId:null,
 selectedFunctionName:null,
 data:{},
 interfaces:{key:null,state:'idle',payload:null,error:null},
+summary:createInitialSummaryState(),
 stub:createInitialStubState(),
 file:createInitialFileState(),
 actionError:null,
@@ -5780,12 +5993,21 @@ loadData(name);
 }
 function onBlankCanvas(){
 patchUi({details:null,focus_resource_id:null,focus_callsite_id:null,focus_group_id:null,focus_interface_id:null});
+patchView({summary:createInitialSummaryState()});
 sessionUi.focusGroupId=null;
 sessionUi.focusInterfaceId=null;
 remembered.details=null;
 remembered.resource_id=null;
 remembered.callsite_id=null;
 patchView({selectedFunctionId:null,selectedFunctionName:null});
+}
+function onSelectGroup(groupId){
+var id=copyNullableString(groupId);
+if(id===null)return;
+patchUi({details:{kind:'group',group_id:id},focus_group_id:id,focus_interface_id:null});
+sessionUi.focusGroupId=id;
+remembered.details={kind:'group',group_id:id};
+patchView({notice:''});
 }
 function onSelectInterface(interfaceId,candidate){
 patchUi({focus_interface_id:interfaceId});
@@ -5848,6 +6070,7 @@ function detailsFileTarget(){
 var currentUi=getUiState();
 var current=getViewState();
 if(currentUi.details===null)return null;
+if(currentUi.details.kind==='group')return null;
 if(currentUi.details.kind==='resource'){
 var resource=currentUi.focus_resource_id===null?null:findResourceById(current.data.coupling&&current.data.coupling.payload,currentUi.focus_resource_id);
 if(resource!==null&&resource.file!==null)return{file:resource.file,line:resource.line};
@@ -5903,6 +6126,8 @@ var railCoupling=couplingViewModel===null?null:normalizeCoupling(couplingViewMod
 var railResources=railCoupling===null?[]:railCoupling.resources;
 var selectedResource=ui.focus_resource_id===null?null:findResourceById(couplingViewModel,ui.focus_resource_id);
 var detailsTarget=detailsFileTarget();
+var activeSummarySubject=summarySubjectFor(view,ui);
+var activeGroupInfo=ui.details!==null&&ui.details.kind==='group'?groupInfoForId(view,ui.details.group_id):null;
 function renderActiveView(){
 if(ui.view==='coupling'){
 return el(CouplingView,{
@@ -5946,6 +6171,7 @@ onSelectNode:onSelectGraphNode,
 onBlank:onBlankCanvas,
 onToggleGroup:function(groupId){setGroupCollapsed(groupId,getViewState().groupCollapsed[groupId]!==true);},
 onFocusGroup:function(groupId){patchUi({focus_group_id:groupId});sessionUi.focusGroupId=groupId;},
+onSelectGroup:onSelectGroup,
 onSaveGroupOverride:saveGroupOverride,
 onCollapseAll:function(){setAllGroupsCollapsed(true);},
 onExpandAll:function(){setAllGroupsCollapsed(false);},
@@ -6110,6 +6336,9 @@ jumpFile:detailsTarget,
 detailsTab:ui.detailsTab,
 onSelectTab:switchDetailsTab,
 subflow:ui.subflow,
+summary:view.summary,
+summarySubject:activeSummarySubject,
+groupInfo:activeGroupInfo,
 onCrumbClick:onCrumbClick,
 onSelectSubflowNode:onSelectSubflowNode,
 onJumpFile:onJumpDetailsFile,

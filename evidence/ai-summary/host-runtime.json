@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "layer": "dsh_host",
+  "started_at_utc": "2026-11-15T12:37:11.954Z",
+  "duration_ms": 1233,
+  "host": {
+    "executable_path": "E:/dsh/DeepSeek Harness.exe",
+    "executable_sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4",
+    "archive_path": "E:/dsh/resources/app.asar",
+    "archive_sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+    "dsh_version": "0.2.1-rc.5",
+    "embedded_node": "24.21.0",
+    "electron": "44.7.0"
+  },
+  "command": {
+    "executable": "E:/dsh/DeepSeek Harness.exe",
+    "args": [
+      "--test",
+      "--test-concurrency=1",
+      "--test-reporter=tap",
+      "--test-reporter-destination=E:\\dsh\\plugin\\04-code-learning\\evidence\\ai-summary\\host-runtime.tap",
+      "tools/summary-host-runtime.test.mjs"
+    ],
+    "env_subset": {
+      "ELECTRON_RUN_AS_NODE": "1",
+      "DSH_HOME": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home",
+      "CODE_READER_BOOTSTRAP": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json"
+    }
+  },
+  "isolated_home": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home",
+  "exit_code": 0,
+  "timed_out": false,
+  "tap_summary": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "tap_sha256": "2e9c2356814c510abff087e5b8b9ecf2481af6be14a74133cd988ca750dd9439",
+  "stdout_tail": "",
+  "stderr_tail": "",
+  "ok": true,
+  "verified": true
+}

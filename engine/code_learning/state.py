@@ -313,12 +313,16 @@ class State:
             ensure_dir(self.state_root)
             if path.exists():
                 data = path.read_bytes()
-                if len(data) < 32:
-                    fail("DEPENDENCY_UNAVAILABLE", "local signing key is malformed")
+                if len(data) != 32:
+                    fail("DEPENDENCY_UNAVAILABLE", "local signing key is malformed; remove the state directory to re-initialize")
                 self._secret = data
             else:
                 key = os.urandom(32)
-                fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                # BINARY is required on Windows: the CRT would otherwise expand
+                # 0x0A into CRLF and silently corrupt the key file, which made
+                # signed references intermittently fail with SCOPE_DENIED.
+                flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0)
+                fd = os.open(str(path), flags, 0o600)
                 try:
                     os.write(fd, key)
                     os.fsync(fd)

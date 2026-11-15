@@ -1751,6 +1751,60 @@ export function makeImportedObservedSequencePayload(overrides = {}) {
   return {...base, ...overrides};
 }
 
+export function makeSummaryRecord(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    workspace_id: 'code-view-bus-demo',
+    snapshot_id: SNAPSHOT_ID,
+    subject: {type: 'function', id: BUS_SEND_ID},
+    text: 'bus_send 先校验 channel 与 length，再查询路由并检查长度；通过后写入平台模拟门铃。该归纳基于静态结构与源码证据。',
+    facts: [
+      {kind: 'evidence', ref: 'e_231505a73a485bc1d8c9249d'},
+      {kind: 'node', ref: 'fn:' + BUS_SEND_ID},
+      {kind: 'selection', ref: 'entry:' + BUS_SEND_ID},
+    ],
+    generator: {kind: 'agent', ref: 'skill:code-view', model_ref: null},
+    inference_labels: ['from_static_structure', 'from_source_text'],
+    generated_at: '2026-11-15T10:00:00Z',
+    snapshot_graph_sha256: 'a'.repeat(64),
+    stale: false,
+    limitations: [],
+  };
+  return {...base, ...overrides};
+}
+
+export function makeSummaryPayload(overrides = {}) {
+  const base = {
+    schema_version: 1,
+    workspace_id: 'code-view-bus-demo',
+    snapshot_id: SNAPSHOT_ID,
+    summaries: [],
+    gaps: [],
+    stale_count: 0,
+  };
+  return {...base, ...overrides};
+}
+
+export function makeSummaryGapPayload(overrides = {}) {
+  return makeSummaryPayload({
+    summaries: [],
+    gaps: [{code: 'ai_summary_not_generated', status: 'unavailable', reason: '该 subject 还没有 AI 归纳记录'}],
+    ...overrides,
+  });
+}
+
+export function makeSummaryStalePayload(overrides = {}) {
+  return makeSummaryPayload({
+    summaries: [makeSummaryRecord({
+      stale: true,
+      limitations: ['summary_stale_against_current_snapshot'],
+      text: '这是基于旧快照的归纳：bus_send 会写入门铃。',
+    })],
+    stale_count: 1,
+    ...overrides,
+  });
+}
+
 export function makeBusFileLines(start, end) {
   const lines = [];
   for (let number = start; number <= end; number += 1) {
