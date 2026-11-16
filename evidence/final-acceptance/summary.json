@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "final-acceptance-summary",
   "project": "04-code-learning (CL-VIEW-T1..T4A)",
-  "generated_at": "2026-11-15T23:33:00+08:00",
+  "generated_at": "2026-11-17T01:01:00+08:00",
   "objective": "参考 demo 以及设计文档完成所有开发，并逐阶段在 dsh-web 完成测试",
   "staged_acceptance": [
     {
@@ -473,12 +473,47 @@
         "bytes": 46736,
         "sha256": "3808090963607283cf329cad263f83d75a44d82a9d636fcf6bbe4a88fe3dcf94"
       }
+    },
+    {
+      "stage": "S4-prep-linux",
+      "evidence_dir": "evidence/linux-atlas",
+      "label": "Linux 构建的 Atlas 0.8 快照经 bootstrap path_aliases 导入 Windows DSH；跨 OS 图/字段访问等价 + 隔离 dsh-web 五视图探针",
+      "command": "node tools/verify-linux-snapshot.mjs",
+      "ok": true,
+      "verified": true,
+      "checks": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 3
+      },
+      "layers": {
+        "linux_atlas": true,
+        "atlas_snapshot": true,
+        "dsh_host": true
+      },
+      "expected_layers": [
+        "linux_atlas",
+        "atlas_snapshot",
+        "dsh_host"
+      ],
+      "in_scope_not_verified": [],
+      "out_of_scope_not_verified": [
+        "真实 Linux/Kbuild 内核或驱动源码分析（本轮 Demo C 用户态源码）",
+        "native CFG / locks / aliases 深度分析（Atlas Linux runtime 报告 cfg=unsupported；本轮仅验证数据字段与路径映射）",
+        "跨参考机审计与复核数据"
+      ],
+      "verification_json": {
+        "bytes": 27826,
+        "sha256": "f7e4165568a0297e422d9671c6d293a503a93965d10e1f52603eabd85452f8d2"
+      }
     }
   ],
   "s4_feasibility": {
     "stage": "S4-feasibility",
     "evidence_dir": "evidence/s4-feasibility",
-    "label": "Linux 可移植性探测（非 S4 门禁通过）：Node 契约 164/164、真实 Wasm worker 8/8、引擎 CLI 可用；Python 3.8<3.11、Windows 快照 manifest 被拒",
+    "label": "早期 Linux 可移植性探测（非 S4 门禁通过）：Node 契约 164/164、真实 Wasm worker 8/8、引擎 CLI 可用；Python 3.8<3.11、Windows 快照 manifest 被拒。已被 S4-prep-linux（WSL/QEMU 引擎测试 + Linux 快照导入）补充",
     "command": "WSL2 Ubuntu 20.04 probe（见 evidence/s4-feasibility/README.md）",
     "ok": true,
     "verified": false,
@@ -563,11 +598,11 @@
     }
   },
   "totals": {
-    "stages_all_green": 8,
-    "stage_count": 8,
-    "checks_total": 320,
-    "checks_passed": 320,
-    "python_tests": 323,
+    "stages_all_green": 9,
+    "stage_count": 9,
+    "checks_total": 332,
+    "checks_passed": 332,
+    "python_tests": 331,
     "node_tests": 200,
     "demo_tests": 8
   },
@@ -587,8 +622,9 @@
       "observed 异步标记只表示声明为异步触发，不推断中断发生/因果完成",
       "性能达标仅限合成 500/800 夹具+本机，跨参考机校准未做；cold UI 20 冷样本/tree→file/拖动/2000-10k UI 截断文本仍 not_verified",
       "真实设备/硬件行为、跨进程异步调度、ABI 字节布局仍为 unknown/未验证",
-      "历史 S3a/S3b 证据使用 rev1 profile；异步证据使用 rev2（async_events:[\"IRQ\"]），版本差异已在 evidence/scenario-sim/README.md 记录",
-      "分层阅读 skill 合同测试只证明规则可被机器检查，不证明真实 Agent 对话遵守（需独立对话评审）"
+      "历史 S3a/S3b 证据使用 rev1 profile；异步证据使用 rev2（async_events:[IRQ]），版本差异已在 evidence/scenario-sim/README.md 记录",
+      "分层阅读 skill 合同测试只证明规则可被机器检查，不证明真实 Agent 对话遵守（需独立对话评审）",
+      "S4-prep-linux 使用 Demo C 用户态源码与 WSL/QEMU 本地 Linux；Kbuild/生成头/native CFG/locks/aliases/复核/OS 出口与真实 Samba 远端构建仍未验证"
     ],
     "out_of_scope": [
       "真实 Linux/Kbuild 环境（外部前置）",
@@ -606,22 +642,22 @@
     "0098942 S4-prep 首屏优化+Linux 可移植性探测",
     "69a1173 S4-prep 批量首屏+coupling_aux（首屏预算达标）+机制文档"
   ],
-  "verdict": "已实现并逐阶段在隔离 dsh-web 验证：只读工作台/五视图/组折叠/接口库/子流程/场景执行/打桩/台账/回退/轨迹导入/observed/AI 归纳（含入口归纳）/批量首屏/异步 IRQ/分层阅读与函数定位。S4 目标门禁（真实 Linux/Kbuild、CFG/locks/aliases、复核、OS 出口）因环境前置不具备而未验证、不可声明；真实设备下发与图内源码写回未授权/待产品确认。",
+  "verdict": "已实现并逐阶段在隔离 dsh-web 验证：只读工作台/五视图/组折叠/接口库/子流程/场景执行/打桩/台账/回退/轨迹导入/observed/AI 归纳（含入口归纳）/批量首屏/异步 IRQ/分层阅读；另以 Linux 构建的 Atlas 快照完成跨 OS 导入与 dsh-web 五视图验收，引擎 331 tests 在 WSL 与 QEMU Ubuntu 24.04 通过。S4 目标门禁（真实 Linux/Kbuild、CFG/locks/aliases、复核、OS 出口）仍因目标环境前置不具备而未验证、不可声明；真实设备下发与图内源码写回未授权/待产品确认。",
   "compatibility_supplement": {
-    "stage": "S4-prep-compat",
-    "evidence_dir": "docs + skills + engine tests",
-    "label": "CL-PF-02/03 分层阅读与函数定位补充：skill references/layered-reading.md + SKILL.md 工作流“先定位再解释” + 合同测试 test_20..24（skill 可调，不提升证据等级）",
-    "command": "cd engine && python -m unittest tests.test_skill_contract -v",
+    "stage": "S4-prep-linux-qemu",
+    "evidence_dir": "evidence/linux-atlas/qemu-verification.json",
+    "label": "本地 QEMU Ubuntu 24.04.5 guest：SSH 验证、Python 3.12.3、引擎 331 tests OK（2 项 Windows junction skip）；guest 无编译器/网络，Atlas 分析在 WSL 完成",
+    "command": "ssh lab@127.0.0.1:2222 + python3 -m unittest discover -s tests (see qemu-verification.json)",
     "ok": true,
     "verified": true,
     "checks": {
-      "tests": 24,
-      "passed": 24,
-      "python_total": 323
+      "tests": 331,
+      "passed": 331,
+      "skipped": 2
     },
     "in_scope_not_verified": [],
     "out_of_scope_not_verified": [
-      "机械合同测试不证明真实 Agent 对话中遵守该流程（需独立对话评审）"
+      "QEMU guest 无编译器（gcc/make/clang 未安装、网络 restrict=on），未在 QEMU 上执行 Atlas compdb 探针/Kbuild"
     ]
   }
 }

@@ -18,8 +18,9 @@
 | CW-09 | AI 归纳（Agent 经 `code_summary` 写入/签名/失效；函数/组/**入口 subject** 展示与“入口归纳”子块；插件不调用模型） | 56/56 | ✅ ok/verified | `evidence/ai-summary/` |
 | A11 | 性能实测：合成 500/800、2000/10k；首屏 hot p95 382–387 ms ≤500 ms 预算、coupling p95 3–4 ms | 25/25 | ✅ ok/verified（4 项 not_verified 如实保留） | `evidence/perf/` |
 | S4-prep-async | 异步/IRQ 事件边界：`async_events` 声明 + observed `async:true` + “异步”chip；真实 Wasm `bus_irq` 与导入异步轨迹 | 34/34 | ✅ ok/verified | `evidence/async-irq/` |
+| S4-prep-linux | Linux 构建的 Atlas 0.8 快照经 bootstrap `path_aliases` 导入 Windows DSH；跨 OS 图/字段访问等价 + 隔离 dsh-web 五视图探针（残差失败 0） | 12/12 | ✅ ok/verified | `evidence/linux-atlas/` |
 
-合计 **8/8 阶段全绿、320/320 项检查通过**；仓库测试 **323 Python / 200 Node / Demo 8/8**。
+合计 **9/9 阶段全绿、332/332 项检查通过**；仓库测试 **331 Python / 200 Node / Demo 8/8**（Linux 引擎测试在 WSL + QEMU Ubuntu 24.04 另计，见兼容补充）。
 S1–S4-prep 均在与用户桌面宿主无关的**隔离 rc.5 dsh web profile**（隔离 DSH_HOME、真实 Electron/Chromium
 探针、真实 Cordis、固定宿主 sha256）中运行并留证；关键 dsh-web 证据含截图、`verification.json`、
 `host-runtime` TAP/JSON、`commands.log`。
@@ -33,14 +34,17 @@ S1–S4-prep 均在与用户桌面宿主无关的**隔离 rc.5 dsh web profile**
 5. 批量首屏端点 `view.firstScreen`（entry+interfaces+当前视图+coupling_aux；逐字段等于单独端点；480 KiB 预算；失败回退）+ 性能实测口径与达标（A11）。
 6. 分层阅读与函数定位（CL-007-D1..D3 / CL-PF-02/03 补充）：skill 四层流程与“先定位再解释”工作流 + 合同测试（`skills/learn-code-workspace/references/layered-reading.md`、`engine/tests/test_skill_contract.py`）。
 7. 真实 Atlas 0.8 只读产物的导入/投影证据；Linux 可移植性探测（`evidence/s4-feasibility/`）。
+8. 跨 OS 快照：Atlas 0.8 Linux runtime 在 WSL2 Ubuntu 构建 Demo C 快照，bootstrap `path_aliases` 映射构建机根路径后由 Windows 插件导入，图计数/字段访问 certainty 与 Windows 快照一致；隔离 dsh-web 五视图通过。引擎 331 tests 在 WSL 与本地 QEMU Ubuntu 24.04 guest 通过（`evidence/linux-atlas/`，`tools/build-linux-atlas-snapshot.sh`，`tools/verify-linux-snapshot.mjs`）。
 
 ## 3. 未验证/不可声明（如实保留）
 
 - **S4 目标门禁**：真实 Linux 内核索引与 Kbuild 编译（生成头）、native CFG/locks/aliases、复核
   precision/recall、OS 出口认证——需要固定 Linux 目标（Python≥3.11、Linux 构建的 Atlas 快照、内核源码/
-  compdb/生成头、复核数据），当前环境不具备。`evidence/s4-feasibility/` 只记录可移植性探测：
-  Node 契约 164/164、真实 Wasm worker 8/8、引擎 CLI status/import 可用；引擎要求 Python≥3.11（Ubuntu
-  20.04 默认 3.8 不满足）、Windows 构建的 manifest 路径绑定被 Linux 拒绝。
+  compdb/生成头、复核数据）。**已补充**：引擎 331 tests 在 WSL + 本地 QEMU Ubuntu 24.04.5 通过；Atlas
+  0.8 Linux runtime 生成的 Demo C 快照经 `path_aliases` 导入 Windows 插件并在隔离 dsh-web 五视图通过
+  （`evidence/linux-atlas/`）。早期探测 `evidence/s4-feasibility/` 记录 Node 契约 164/164、真实 Wasm
+  worker 8/8；Windows 构建的 manifest 路径绑定被 Linux 拒绝（跨 OS 导入需显式 alias）。真实 Kbuild/
+  CFG/locks/aliases/复核/OS 出口仍不可声明。
 - **产品范围待确认/未授权**：真实设备下发、图内源码写回。
 - **已知限制**：AI 归纳正文由 Agent 写入（插件不调用模型）；
   observed 异步标记仅表示声明为异步触发，不推断中断发生；性能达标仅限合成 500/800 夹具+本机（cold UI
@@ -61,8 +65,10 @@ node tools/verify-s3b.mjs --with-repo-tests           # S3b
 node tools/verify-summary.mjs --with-repo-tests       # CW-09
 node tools/verify-perf.mjs --with-repo-tests          # A11
 node tools/verify-irq.mjs --with-repo-tests           # async/IRQ
+node tools/verify-linux-snapshot.mjs                  # Linux 构建快照 → Windows 插件（需先构建快照）
+bash tools/build-linux-atlas-snapshot.sh              # 在 Linux/WSL 生成 Demo C 的 Atlas Linux 快照
 node tools/perf-regressions.mjs                       # 跨阶段回归（S3b/S3a/S2b/summary）
-cd engine && python -m unittest discover -s tests     # 323 tests
+cd engine && python -m unittest discover -s tests     # 331 tests
 node --test tests/node/*.test.mjs                     # 200 tests
 node --test demo/code-view/demo.test.cjs              # Demo 8/8
 ```

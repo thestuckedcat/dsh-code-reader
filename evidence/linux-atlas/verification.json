@@ -1,0 +1,772 @@
+{
+  "schema_version": 1,
+  "stage": "S4-prep-linux-atlas",
+  "objective": "Linux 构建的 Atlas 0.8 快照经 bootstrap path_aliases 导入 Windows DSH 插件并在隔离 dsh-web 通过五视图验收",
+  "generated_at": "2026-11-16T16:58:24.231Z",
+  "environment": {
+    "linux_build": "WSL2 Ubuntu 20.04 + Atlas bundled Python 3.12.14 (Atlas 0.8.0 Linux runtime)",
+    "linux_analyzed_root": "/root/atlas-demo/repo",
+    "windows_plugin": "DSH rc.5 isolated profile, plugin @local/dsh-code-reader",
+    "bootstrap_alias": "/root/atlas-demo/repo -> slice-root"
+  },
+  "snapshots": {
+    "linux": {
+      "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+      "graph_sha256": "67aa438f7be00ec5c76370b4795db4466f26ecd816dcb358cfe3f5bde0bae795"
+    },
+    "windows_fixture": {
+      "snapshot_dir": "snapshot-bus"
+    }
+  },
+  "checks": [
+    {
+      "name": "pinned_host_baseline",
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "executable": {
+          "path": "E:/dsh/DeepSeek Harness.exe",
+          "sha256": "7ae939b5a82b220fbd8ad04dfbafaaedb5a49ab43dc884a5db6381f678dd0cc4"
+        },
+        "archive": {
+          "path": "E:/dsh/resources/app.asar",
+          "sha256": "e1b6f25fa937da98086c3e77af77aa14791105963c4d337a1c42179d232c6915",
+          "dsh_version": "0.2.1-rc.5"
+        },
+        "failures": []
+      }
+    },
+    {
+      "name": "fixture_workspace_import",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "argv": [
+          "-m",
+          "code_learning.cli",
+          "--bootstrap",
+          "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\home\\code-reader\\bootstrap.json",
+          "workspace-import",
+          "--manifest",
+          "workspace.json",
+          "--expected-revision",
+          "0",
+          "--operation-id",
+          "e276b2eb-639f-4d25-8ada-aa3c9cce37e2"
+        ],
+        "exit_code": 0,
+        "duration_ms": 124,
+        "stdout_json": {
+          "schema_version": 1,
+          "workspace_id": "code-view-bus-demo",
+          "workspace_revision": 1,
+          "scope_ref": "local",
+          "scope_generation": 1,
+          "manifest_digest": "15993cdcfcd2cc364a3bfc2cee542cf4fc0476649c687d45467cc4bfb0bfd5b4",
+          "repositories": [
+            {
+              "repo_id": "bus",
+              "root_ref": "slice-root",
+              "role": "other",
+              "vcs": {
+                "kind": "none",
+                "commit": null,
+                "dirty_digest": null,
+                "untracked_digest": null
+              }
+            }
+          ],
+          "variants": [
+            {
+              "variant_id": "semantic-x86_64",
+              "analysis_mode": "semantic",
+              "architecture": "x86_64",
+              "target_triple": null,
+              "semantic_status": "blocked",
+              "missing_inputs": [
+                "compdb_refs",
+                "config_refs",
+                "generated_header_sets",
+                "toolchain_ref"
+              ],
+              "build_identity": {
+                "workspace_revision": 1,
+                "variant_id": "semantic-x86_64",
+                "roots_digest": "3db485cb428c08c95b15205a8885054f79c3b35ec3b60b2e51509384ce5faef4",
+                "source_manifest_digest": "a38624a28a28f0941973ddd3e6be0b243ca0a27ebb8587b7b326ab927b64e943",
+                "compdb_digests": {
+                  "bus:compile_commands.json": "8cb56ee1b4fc310ffdc294990915360066b2b89bd8f2b891484cdf3a4cf01f27"
+                },
+                "config_digests": {},
+                "generated_header_digests": {},
+                "toolchain_digest": null,
+                "atlas_lock_digest": null,
+                "sysroot_manifest_digest": null,
+                "binding_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+              }
+            }
+          ],
+          "bindings": [],
+          "semantic_status_by_variant": {
+            "semantic-x86_64": "blocked"
+          },
+          "missing_inputs": [
+            "compdb_refs",
+            "config_refs",
+            "generated_header_sets",
+            "toolchain_ref"
+          ],
+          "freshness": "fresh"
+        },
+        "stdout_tail": "{\"schema_version\":1,\"workspace_id\":\"code-view-bus-demo\",\"workspace_revision\":1,\"scope_ref\":\"local\",\"scope_generation\":1,\"manifest_digest\":\"15993cdcfcd2cc364a3bfc2cee542cf4fc0476649c687d45467cc4bfb0bfd5b4\",\"repositories\":[{\"repo_id\":\"bus\",\"root_ref\":\"slice-root\",\"role\":\"other\",\"vcs\":{\"kind\":\"none\",\"commit\":null,\"dirty_digest\":null,\"untracked_digest\":null}}],\"variants\":[{\"variant_id\":\"semantic-x86_64\",\"analysis_mode\":\"semantic\",\"architecture\":\"x86_64\",\"target_triple\":null,\"semantic_status\":\"blocked\",\"missing_inputs\":[\"compdb_refs\",\"config_refs\",\"generated_header_sets\",\"toolchain_ref\"],\"build_identity\":{\"workspace_revision\":1,\"variant_id\":\"semantic-x86_64\",\"roots_digest\":\"3db485cb428c08c95b15205a8885054f79c3b35ec3b60b2e51509384ce5faef4\",\"source_manifest_digest\":\"a38624a28a28f0941973ddd3e6be0b243ca0a27ebb8587b7b326ab927b64e943\",\"compdb_digests\":{\"bus:compile_commands.json\":\"8cb56ee1b4fc310ffdc294990915360066b2b89bd8f2b891484cdf3a4cf01f27\"},\"config_digests\":{},\"generated_header_digests\":{},\"toolchain_digest\":null,\"atlas_lock_digest\":null,\"sysroot_manifest_digest\":null,\"binding_digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\"}}],\"bindings\":[],\"semantic_status_by_variant\":{\"semantic-x86_64\":\"blocked\"},\"missing_inputs\":[\"compdb_refs\",\"config_refs\",\"generated_header_sets\",\"toolchain_ref\"],\"freshness\":\"fresh\"}\r\n",
+        "stderr_tail": "",
+        "ok": true
+      }
+    },
+    {
+      "name": "linux_snapshot_import",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "exit_code": 0,
+        "stdout_json": {
+          "schema_version": 1,
+          "snapshot_ref": "2ffddd4400b6400b8bdc55ffcd33bf76",
+          "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+          "atlas_schema": "0.1",
+          "tool_version": "0.8.0",
+          "analysis_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+          "manifest_sha256": "e2ef2ab2fec3861380ae0d3c310aa350bf9347c66f49d730c972708bfee1c5c0",
+          "graph_sha256": "67aa438f7be00ec5c76370b4795db4466f26ecd816dcb358cfe3f5bde0bae795",
+          "build_identity": {
+            "workspace_revision": 1,
+            "variant_id": "semantic-x86_64",
+            "digest": "3eeb0005905147bab48e3721e5556bf8973ed52c26d82b2863fb0ada1a9aee41"
+          },
+          "coverage": {
+            "boundary_policy": {
+              "glibc_roots": [],
+              "linux_roots": []
+            },
+            "candidate_index": {
+              "reused_files": 0,
+              "scanned_files": 2
+            },
+            "capabilities": {
+              "callback_targets": "bounded_same_function_state",
+              "cfg": "unsupported",
+              "data_flow": "partial_path_insensitive",
+              "direct_calls": "ready",
+              "field_alias": "bounded_nested_multi_target",
+              "global_objects": "ready",
+              "kernel_boundary_rules": "not_implemented",
+              "locks": "lexical_and_simple_wrapper_projection",
+              "shared_state_parallelism": "conservative_may",
+              "types": "ready"
+            },
+            "complete_call_chain": false,
+            "completed_requested_search": true,
+            "completeness": "requested_scope_complete_with_open_world_boundaries",
+            "failed": [],
+            "parsed": 2,
+            "pending_units": [],
+            "processed_units": 2,
+            "requested_scope_complete": true,
+            "reused": 0,
+            "selected_scope": {
+              "direction": "down",
+              "interface": null,
+              "mode": "repository",
+              "target": null
+            },
+            "total_available_units": 2,
+            "truncated": false,
+            "whole_program_complete": false,
+            "failed_count": 0
+          },
+          "failed_count": 0,
+          "freshness": "fresh",
+          "capabilities": {
+            "callback_targets": "bounded_same_function_state",
+            "cfg": "unsupported",
+            "data_flow": "partial_path_insensitive",
+            "direct_calls": "ready",
+            "field_alias": "bounded_nested_multi_target",
+            "global_objects": "ready",
+            "kernel_boundary_rules": "not_implemented",
+            "locks": "lexical_and_simple_wrapper_projection",
+            "shared_state_parallelism": "conservative_may",
+            "types": "ready"
+          },
+          "limitations": [],
+          "workspace_id": "code-view-bus-demo",
+          "variant_id": "semantic-x86_64",
+          "repo_id": "bus",
+          "imported_at": "2026-11-16T16:57:58Z"
+        },
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "linux_snapshot_entries",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "exit_code": 0,
+        "entries": 19,
+        "bus_send": {
+          "entry_id": "f_7d95aefe1ae37d3ef60fca8e",
+          "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+          "name": "bus_send",
+          "display_name": "bus_send(unsigned int, unsigned int)",
+          "kind": "function",
+          "storage": "NONE",
+          "signature": "int (unsigned int, unsigned int)",
+          "file": "bus.c",
+          "line": 152,
+          "is_entry": true,
+          "callers": 0,
+          "callees": 3,
+          "file_status": "ok"
+        }
+      }
+    },
+    {
+      "name": "linux_snapshot_coupling",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "exit_code": 0,
+        "resources": 1,
+        "functions": 5,
+        "edges": 11,
+        "routes": {
+          "resource_id": "s_0860e6738eaa8c95f37d0d03",
+          "name": "routes",
+          "type": "struct Route[4]",
+          "storage": "STATIC",
+          "lifetime": "static",
+          "file": "bus.c",
+          "line": 26,
+          "evidence_ids": [
+            "e_4fd3ff82c4b5865f99a80351"
+          ],
+          "fields": [
+            {
+              "field_id": "s_88f4fb0de10c49ea2fa8ceb0",
+              "field_name": "lane",
+              "field_path": [
+                "lane"
+              ]
+            },
+            {
+              "field_id": "s_8df6ff0e8e3fe13550d4621b",
+              "field_name": "max_len",
+              "field_path": [
+                "max_len"
+              ]
+            }
+          ],
+          "write_count": 4,
+          "read_count": 7,
+          "related_function_ids": [
+            "f_fb7f6288a46f74ca9177d707",
+            "f_5db207a12d0d0679973b6789",
+            "f_853ee38417887d937c0c5c48",
+            "f_29d39fba5cb4233be354eb5e",
+            "f_c0c1008db5dc37f89ebd8271"
+          ],
+          "accesses": [
+            {
+              "access_id": "field_e014c6d4b33f8ff7fc6c2ba3",
+              "access": "write",
+              "certainty": "may",
+              "function_id": "f_fb7f6288a46f74ca9177d707",
+              "function_name": "reset",
+              "function_file": "bus.c",
+              "function_line": 31,
+              "location": {
+                "file": "bus.c",
+                "line": 34
+              },
+              "field_name": "lane",
+              "expression": "routes[channel].lane",
+              "object_ids": [
+                "s_0860e6738eaa8c95f37d0d03",
+                "s_6ffc6325b678e1d51da6eac2"
+              ],
+              "evidence_ids": [
+                "e_7f3dbf95caff045214c280d6"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_f19c8c919046b9564c7dd3d5",
+              "access": "write",
+              "certainty": "may",
+              "function_id": "f_fb7f6288a46f74ca9177d707",
+              "function_name": "reset",
+              "function_file": "bus.c",
+              "function_line": 31,
+              "location": {
+                "file": "bus.c",
+                "line": 35
+              },
+              "field_name": "max_len",
+              "expression": "routes[channel].max_len",
+              "object_ids": [
+                "s_0860e6738eaa8c95f37d0d03",
+                "s_6ffc6325b678e1d51da6eac2"
+              ],
+              "evidence_ids": [
+                "e_3a2e74484245cf1909678262"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_835106df795d3fdae5eac35f",
+              "access": "write",
+              "certainty": "exact",
+              "function_id": "f_5db207a12d0d0679973b6789",
+              "function_name": "store_route",
+              "function_file": "bus.c",
+              "function_line": 43,
+              "location": {
+                "file": "bus.c",
+                "line": 45
+              },
+              "field_name": "lane",
+              "expression": "routes[channel].lane",
+              "object_ids": [
+                "s_0860e6738eaa8c95f37d0d03"
+              ],
+              "evidence_ids": [
+                "e_f2d3462d844d873b24e91fc4"
+              ],
+              "limitations": []
+            },
+            {
+              "access_id": "field_5fbf046b3f387ab2a646fbf4",
+              "access": "write",
+              "certainty": "exact",
+              "function_id": "f_5db207a12d0d0679973b6789",
+              "function_name": "store_route",
+              "function_file": "bus.c",
+              "function_line": 43,
+              "location": {
+                "file": "bus.c",
+                "line": 46
+              },
+              "field_name": "max_len",
+              "expression": "routes[channel].max_len",
+              "object_ids": [
+                "s_0860e6738eaa8c95f37d0d03"
+              ],
+              "evidence_ids": [
+                "e_69f9ecbe3a6eba13585cec76"
+              ],
+              "limitations": []
+            },
+            {
+              "access_id": "field_a0ccc68263860059961abdea",
+              "access": "read",
+              "certainty": "may",
+              "function_id": "f_853ee38417887d937c0c5c48",
+              "function_name": "lookup_route",
+              "function_file": "bus.c",
+              "function_line": 89,
+              "location": {
+                "file": "bus.c",
+                "line": 92
+              },
+              "field_name": "lane",
+              "expression": null,
+              "object_ids": [
+                "s_0860e6738eaa8c95f37d0d03",
+                "s_94384493ae9333256ae051c1"
+              ],
+              "evidence_ids": [
+                "e_8cbd9ff213ca5706e0441dae"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_b9db8aee5cde41b18d451d07",
+              "access": "read",
+              "certainty": "may",
+              "function_id": "f_853ee38417887d937c0c5c48",
+              "function_name": "lookup_route",
+              "function_file": "bus.c",
+              "function_line": 89,
+              "location": {
+                "file": "bus.c",
+                "line": 92
+              },
+              "field_name": "max_len",
+              "expression": null,
+              "object_ids": [
+                "s_0860e6738eaa8c95f37d0d03",
+                "s_94384493ae9333256ae051c1"
+              ],
+              "evidence_ids": [
+                "e_8cbd9ff213ca5706e0441dae"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_21dda5b93f9221276e6c64d4",
+              "access": "read",
+              "certainty": "may",
+              "function_id": "f_853ee38417887d937c0c5c48",
+              "function_name": "lookup_route",
+              "function_file": "bus.c",
+              "function_line": 89,
+              "location": {
+                "file": "bus.c",
+                "line": 93
+              },
+              "field_name": "max_len",
+              "expression": "route->max_len",
+              "object_ids": [
+                "s_0860e6738eaa8c95f37d0d03",
+                "s_94384493ae9333256ae051c1"
+              ],
+              "evidence_ids": [
+                "e_55686c6b74c301815821439d"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_72cb78780139f9c35d6d87eb",
+              "access": "read",
+              "certainty": "may",
+              "function_id": "f_29d39fba5cb4233be354eb5e",
+              "function_name": "check_length",
+              "function_file": "bus.c",
+              "function_line": 96,
+              "location": {
+                "file": "bus.c",
+                "line": 98
+              },
+              "field_name": "max_len",
+              "expression": "route->max_len",
+              "object_ids": [],
+              "evidence_ids": [
+                "e_beba06434dd2e2cdaef4bcb3"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_1058032d502de9ec08be4a4d",
+              "access": "read",
+              "certainty": "may",
+              "function_id": "f_29d39fba5cb4233be354eb5e",
+              "function_name": "check_length",
+              "function_file": "bus.c",
+              "function_line": 96,
+              "location": {
+                "file": "bus.c",
+                "line": 99
+              },
+              "field_name": "max_len",
+              "expression": null,
+              "object_ids": [],
+              "evidence_ids": [
+                "e_6343a79bc92c8f3f1012fa1c"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_ea6e02d12129b9c303d5f6cf",
+              "access": "read",
+              "certainty": "may",
+              "function_id": "f_c0c1008db5dc37f89ebd8271",
+              "function_name": "dispatch_transfer",
+              "function_file": "bus.c",
+              "function_line": 143,
+              "location": {
+                "file": "bus.c",
+                "line": 148
+              },
+              "field_name": "lane",
+              "expression": "route->lane",
+              "object_ids": [],
+              "evidence_ids": [
+                "e_80ae771e52ec36281523cbdd"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            },
+            {
+              "access_id": "field_6e31b2af6174280b7aaffe7e",
+              "access": "read",
+              "certainty": "may",
+              "function_id": "f_c0c1008db5dc37f89ebd8271",
+              "function_name": "dispatch_transfer",
+              "function_file": "bus.c",
+              "function_line": 143,
+              "location": {
+                "file": "bus.c",
+                "line": 149
+              },
+              "field_name": "lane",
+              "expression": "route->lane",
+              "object_ids": [],
+              "evidence_ids": [
+                "e_0b724c10fd4248d8e8083aeb"
+              ],
+              "limitations": [
+                "unresolved_or_multiple_base_objects"
+              ]
+            }
+          ]
+        },
+        "gaps": [
+          {
+            "code": "ai_summary",
+            "status": "unavailable",
+            "reason": "暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）"
+          },
+          {
+            "code": "run_observation",
+            "status": "unavailable",
+            "reason": "静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账"
+          }
+        ]
+      }
+    },
+    {
+      "name": "linux_snapshot_source_read",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "exit_code": 0,
+        "sha256": "b2ec232896c2680d4eb3e68e3c34681d2ceb9f0fe5fa17a1d32be9ea77f1c6cf"
+      }
+    },
+    {
+      "name": "cross_os_graph_counts_match",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "windows": {
+          "functions": 19,
+          "call_targets": 15,
+          "objects": 18,
+          "field_accesses": 15,
+          "flow_edges": 90,
+          "lock_events": 0,
+          "alias_relations": 3
+        },
+        "linux": {
+          "functions": 19,
+          "call_targets": 15,
+          "objects": 18,
+          "field_accesses": 15,
+          "flow_edges": 90,
+          "lock_events": 0,
+          "alias_relations": 3
+        }
+      }
+    },
+    {
+      "name": "cross_os_field_access_certainty_match",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "rows": 15,
+        "max_len_writes": [
+          [
+            null,
+            null,
+            "max_len",
+            "write",
+            "exact"
+          ],
+          [
+            null,
+            null,
+            "max_len",
+            "write",
+            "may"
+          ]
+        ],
+        "max_len_reads": 6
+      }
+    },
+    {
+      "name": "linux_snapshot_coverage_parsed",
+      "ok": true,
+      "layer": "atlas_snapshot",
+      "detail": {
+        "parsed": 2,
+        "failed": []
+      }
+    },
+    {
+      "name": "dsh_web_boot",
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "url": "http://127.0.0.1:5682/?token=<redacted>"
+      }
+    },
+    {
+      "name": "dsh_web_five_views_probe",
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "exit_code": 1,
+        "probe_ok": false,
+        "failed_steps": [
+          "view_coupling_assertions"
+        ],
+        "residual_failed_steps": [],
+        "superseded_steps": [
+          "view_coupling_assertions.gapsOriginal"
+        ],
+        "top_level_failed_steps": [],
+        "console_error_count": 0,
+        "log_tail": null
+      }
+    },
+    {
+      "name": "dsh_web_screenshots",
+      "ok": true,
+      "layer": "dsh_host",
+      "detail": {
+        "copied": {
+          "coupling": {
+            "path": "evidence/linux-atlas/linux-coupling.png",
+            "bytes": 182024,
+            "sha256": "ef6e0dad18c557cdd9ae3a67cf6c98d1d0492ac17695e7126043bcb30120571c"
+          },
+          "tree": {
+            "path": "evidence/linux-atlas/linux-tree.png",
+            "bytes": 272918,
+            "sha256": "ff83c64750b7574089f606eaf0c28a74bcbc06e6ea3e209a40ca960fd80055cb"
+          },
+          "end_to_end": {
+            "path": "evidence/linux-atlas/linux-end_to_end.png",
+            "bytes": 221879,
+            "sha256": "4ff80776185f4b7e8e81ac421b7e9bc1aa0159d9a53f8d50190f6d18630e8f12"
+          },
+          "sequence": {
+            "path": "evidence/linux-atlas/linux-sequence.png",
+            "bytes": 302713,
+            "sha256": "832ec03ee7fcfb41bab26fc1b19a55d73be11c9b185d1a15637a39898c872573"
+          },
+          "file": {
+            "path": "evidence/linux-atlas/linux-file.png",
+            "bytes": 201834,
+            "sha256": "c13dd454edf70cbea726a51ab42a2968884cf282737d90554003bf7b9683febe"
+          },
+          "main": {
+            "path": "evidence/linux-atlas/linux-main.png",
+            "bytes": 224705,
+            "sha256": "a3dd48049ad10bd61899abc9f5ec04af7f2ec249a1bb7db267231adf58ced654"
+          }
+        }
+      }
+    }
+  ],
+  "checks_summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "in_scope_not_verified": 0,
+    "out_of_scope_not_verified": 3
+  },
+  "in_scope_not_verified": [],
+  "out_of_scope_not_verified": [
+    "真实 Linux/Kbuild 内核或驱动源码分析（本轮 Demo C 用户态源码）",
+    "native CFG / locks / aliases 深度分析（Atlas Linux runtime 报告 cfg=unsupported；本轮仅验证数据字段与路径映射）",
+    "跨参考机审计与复核数据"
+  ],
+  "measurements": {
+    "windows": {
+      "functions": 19,
+      "call_targets": 15,
+      "objects": 18,
+      "field_accesses": 15,
+      "flow_edges": 90,
+      "lock_events": 0,
+      "alias_relations": 3
+    },
+    "linux": {
+      "functions": 19,
+      "call_targets": 15,
+      "objects": 18,
+      "field_accesses": 15,
+      "flow_edges": 90,
+      "lock_events": 0,
+      "alias_relations": 3
+    },
+    "field_access_rows": 15
+  },
+  "screenshots": {
+    "coupling": {
+      "path": "evidence/linux-atlas/linux-coupling.png",
+      "bytes": 182024,
+      "sha256": "ef6e0dad18c557cdd9ae3a67cf6c98d1d0492ac17695e7126043bcb30120571c"
+    },
+    "tree": {
+      "path": "evidence/linux-atlas/linux-tree.png",
+      "bytes": 272918,
+      "sha256": "ff83c64750b7574089f606eaf0c28a74bcbc06e6ea3e209a40ca960fd80055cb"
+    },
+    "end_to_end": {
+      "path": "evidence/linux-atlas/linux-end_to_end.png",
+      "bytes": 221879,
+      "sha256": "4ff80776185f4b7e8e81ac421b7e9bc1aa0159d9a53f8d50190f6d18630e8f12"
+    },
+    "sequence": {
+      "path": "evidence/linux-atlas/linux-sequence.png",
+      "bytes": 302713,
+      "sha256": "832ec03ee7fcfb41bab26fc1b19a55d73be11c9b185d1a15637a39898c872573"
+    },
+    "file": {
+      "path": "evidence/linux-atlas/linux-file.png",
+      "bytes": 201834,
+      "sha256": "c13dd454edf70cbea726a51ab42a2968884cf282737d90554003bf7b9683febe"
+    },
+    "main": {
+      "path": "evidence/linux-atlas/linux-main.png",
+      "bytes": 224705,
+      "sha256": "a3dd48049ad10bd61899abc9f5ec04af7f2ec249a1bb7db267231adf58ced654"
+    }
+  },
+  "commands": [
+    "prepareIsolatedHome workspace=0 snapshot=0",
+    "bootstrap import_inbox_dir=E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\linux-atlas\\inbox path_aliases[slice-root] = /root/atlas-demo/repo",
+    "engine snapshot-import --workspace code-view-bus-demo --variant semantic-x86_64 --repo bus --snapshot snapshot-linux --operation-id e9807442-82ab-4bad-b158-956efc7986e3 -> exit 0",
+    "engine view-entries --workspace code-view-bus-demo --snapshot 2ffddd4400b6400b8bdc55ffcd33bf76 -> exit 0",
+    "engine view-coupling --workspace code-view-bus-demo --snapshot 2ffddd4400b6400b8bdc55ffcd33bf76 --entry f_7d95aefe1ae37d3ef60fca8e -> exit 0",
+    "engine view-file-read --workspace code-view-bus-demo --snapshot 2ffddd4400b6400b8bdc55ffcd33bf76 --repo bus --path bus.c --max-lines 2000 -> exit 0",
+    "compare windows snapshot vs linux snapshot: {\"windows\":{\"functions\":19,\"call_targets\":15,\"objects\":18,\"field_accesses\":15,\"flow_edges\":90,\"lock_events\":0,\"alias_relations\":3},\"linux\":{\"functions\":19,\"call_targets\":15,\"objects\":18,\"field_accesses\":15,\"flow_edges\":90,\"lock_events\":0,\"alias_relations\":3}}",
+    "started isolated dsh web http://127.0.0.1:5682/?token=<redacted>",
+    "five-views probe exit=1"
+  ],
+  "limitations": [
+    "Demo C（bus.c/platform.c）是用户态风格源码；Linux 构建仅证明 Atlas Linux runtime + 跨 OS 路径映射链路，不代表已分析目标内核/驱动（Kbuild 仍需目标环境）。",
+    "graph/evidence 的绝对路径通过 bootstrap path_aliases 显式映射；未声明 alias 时导入会以 workspace_roots 不匹配拒绝（测试 test_cross_os_snapshot.py）。",
+    "Atlas Linux runtime 报告 native_cfg=unsupported、data_flow=partial_path_insensitive、locks=lexical projection；CFG/locks/aliases 深度仍是 out_of_scope。"
+  ],
+  "ok": true,
+  "verified": true
+}

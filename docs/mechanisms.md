@@ -1,16 +1,16 @@
 # dsh-code-reader 机制说明（04 代码学习，当前整体交付）
 
-版本 `MECH-04-2`，2026-11-15。本文按[机制说明合同](../../docs/mechanism-document-contract.md)交付：以 **场景→触发→输入与前置条件→判断规则→工具动作→状态/输出→证据→失败与恢复** 为主线，解释为什么这样设计、代价与已知限制，并区分 **skill 可调策略** 与 **plugin/Host/引擎必须执行的硬边界**。
+版本 `MECH-04-3`，2026-11-17。本文按[机制说明合同](../../docs/mechanism-document-contract.md)交付：以 **场景→触发→输入与前置条件→判断规则→工具动作→状态/输出→证据→失败与恢复** 为主线，解释为什么这样设计、代价与已知限制，并区分 **skill 可调策略** 与 **plugin/Host/引擎必须执行的硬边界**。
 
-**覆盖的交付**：首版 `CL-IMPL-1`（2026-11-07，登记/源码证据/快照/路径/记录/resume/6 工具/skill）+ `CL-VIEW-T1` 只读工作台切片（CW-T1）+ `CW-T2` 五视图 S2a / 组折叠·接口库·子流程 S2b + `CW-T3` 受控场景 S3a / 回退·轨迹导入 S3b + `CW-T4A` S4-prep（AI 归纳 CW-09 含函数/组/**入口 subject**、性能实测 A11、异步/IRQ 事件边界、Linux 可移植性探测）+ 分层阅读补充（CL-PF-02/03）。本文覆盖 2026-11-15 最终交付（基线提交 `3751203`，含 T44 入口归纳与 T45 分层阅读/最终验收汇总增量）；最终验收汇总 `evidence/final-acceptance/`：**8/8 阶段、320/320 检查**；`view.firstScreen` 已**验证通过**、首屏预算已达标（M-04-22、§12.2）；AI 归纳（含入口 subject）已**验证通过**（M-04-29、CW-09 56/56）；异步/IRQ 事件边界已**验证通过**（M-04-33）；分层阅读见 M-04-34；**S4 目标门禁仍未验证**，见证据边界。
+**覆盖的交付**：首版 `CL-IMPL-1`（2026-11-07，登记/源码证据/快照/路径/记录/resume/6 工具/skill）+ `CL-VIEW-T1` 只读工作台切片（CW-T1）+ `CW-T2` 五视图 S2a / 组折叠·接口库·子流程 S2b + `CW-T3` 受控场景 S3a / 回退·轨迹导入 S3b + `CW-T4A` S4-prep（AI 归纳 CW-09 含函数/组/**入口 subject**、性能实测 A11、异步/IRQ 事件边界、Linux 可移植性探测）+ 分层阅读补充（CL-PF-02/03）+ **S4-prep Linux/跨 OS 快照**（Linux 构建 → Windows 插件导入，M-04-35）。本文覆盖 2026-11-17 最终交付（基线提交 `bb1c329` + T47 Linux/跨 OS 快照增量）；最终验收汇总 `evidence/final-acceptance/`：**9/9 阶段、332/332 检查**；`view.firstScreen` 已**验证通过**（M-04-22）；AI 归纳（含入口 subject）已**验证通过**（M-04-29、CW-09 56/56）；异步/IRQ 事件边界已**验证通过**（M-04-33）；分层阅读见 M-04-34；**Linux 构建快照跨 OS 导入已验证**（M-04-35、`evidence/linux-atlas/` 12/12；Linux 引擎 331 tests 在 WSL + QEMU Ubuntu 24.04 通过）；**S4 目标门禁仍未完成**（Kbuild/生成头/native CFG/locks/aliases/复核/OS 出口/真实 Samba 远端构建不可声明），见证据边界。
 
 ## 证据边界（先读，不得改写为已通过）
 
-1. **本版只覆盖 2026-11-15 最终交付**。已知测试：**323 Python unittest、200 Node 测试、Demo 8/8**（本轮独立复跑：引擎 `Ran 323 tests, OK`、Node `200/200`）；隔离 dsh-web 阶段验收 S1 `26/26`、S2a `37/37`、S2b `41/41`、S3a `43/43`、S3b `58/58`、CW-09 AI 归纳 **`56/56`**（含入口 subject）、A11 性能 `25/25`、异步/IRQ `34/34`；**最终验收汇总 `evidence/final-acceptance/`：8/8 阶段全绿、320/320 检查通过**，均 `ok=true, verified=true`。
-2. **S4 目标门禁未验证**：真实 Linux/Kbuild 索引与生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证全部**未验证**。`evidence/s4-feasibility/` 只是 Linux 可移植性探测，`verification.json` 明确 `verified=false`；不得据 Node/Wasm 在 Linux 上跑通推断内核分析已通过。
+1. **本版只覆盖 2026-11-17 最终交付**。已知测试：**331 Python unittest、200 Node 测试、Demo 8/8**（本轮独立复跑：引擎 `Ran 331 tests, OK`、Node `200/200`）；隔离 dsh-web 阶段验收 S1 `26/26`、S2a `37/37`、S2b `41/41`、S3a `43/43`、S3b `58/58`、CW-09 AI 归纳 **`56/56`**（含入口 subject）、A11 性能 `25/25`、异步/IRQ `34/34`、S4-prep-linux `12/12`；**最终验收汇总 `evidence/final-acceptance/`：9/9 阶段全绿、332/332 检查通过**，均 `ok=true, verified=true`。Linux 引擎测试另在 WSL 与 QEMU Ubuntu 24.04 guest 通过（331 tests、2 项 Windows junction skip）。
+2. **S4 目标门禁未验证（部分补充）**：真实 Linux/Kbuild 索引与生成头、native CFG/locks/aliases 深度、复核 precision/recall、OS 出口认证、真实 Samba 远端云构建仍**未验证/不可声明**。本版新增的 S4-prep Linux/跨 OS 快照只证明 **Demo C** 上的 Linux 引擎可移植性（WSL + QEMU Ubuntu 24.04 → 331 tests OK）与 **Linux 构建快照经 `path_aliases` 导入 Windows 插件**的路径（`evidence/linux-atlas/` 12/12）；Atlas Linux runtime 自报 `cfg=unsupported`、`locks=lexical projection`，不改变 Kbuild/CFG 门禁状态；不得据 Demo C 推断内核/驱动分析已通过。
 3. **首屏性能预算已达标（最终验收）**：500/800 图 hot 首屏 p50/p95 = **328–330/382–387 ms ≤ 500 ms**（历史：T27 基线 1078/1141 → T28 优化 646/704 → T33 批量首屏无 aux 455/527 → T37 `coupling_aux` 后 328–330/382–387）；`verify-perf` **25/25 全绿**、layers 全 true、`ok=true/verified=true`，预算未调整。剩余 not_verified 4 项（cold UI 20 冷样本、tree→file 行高亮、拖动反馈、2000/10k UI「已截断」文本）如实保留；本轮数字只对本机/本版本有效。
 4. **批量首屏 `view.firstScreen` 已验证**（[五视图契约 §12/§12.4](five-view-contract.md)）：最终 `node tools/verify-perf.mjs --with-repo-tests` **25/25 全绿**；20/20 hot 样本中 `[data-first-screen]` 共 60 处全部 `batch`（fallback=0）；`coupling_aux` 一致性 **8/8**（view!=coupling 时 CLI 5/5 视图与单独 `view-coupling` 逐字段一致、RPC 5/5 一致；view==coupling 省略 aux 且 `sizes.coupling_aux=0`；`sizes` 4 键精确、aux 计入 480 KiB；未知 view→`INVALID_ARGUMENT`（优先于 entry）、未知 entry→`NOT_FOUND`；CLI/RPC 无绝对路径）；client 消费 aux 后 0 次单独 coupling RPC，缺失/格式错回退。证据 `evidence/perf/{verification.json,first-screen-consistency.json}`。
-5. **已验证范围的边界**：所有 `dsh_host` 层证据来自本机 pinned DSH `0.2.1-rc.5` 的**隔离 profile**（独立 `DSH_HOME`，不改真实 `~/.dsh`、不重启桌面宿主，Windows）；`atlas_snapshot` 层来自 Atlas 0.8.0 自带 Windows runtime 对**合成 C/Demo C** 的产物；`demo_observed` 层来自 Demo 的 Wasm 模拟。真实用户仓库、真实设备/硬件、目标 ABI、Linux 桌面宿主、桌面宿主热更新、OS 级出口认证均**未验证**；异步/IRQ 只做**声明式边界标记**（profile/导入轨迹声明→`async` 标记→UI chip），**不推断**真实硬件中断/因果（`out_of_scope`）。
+5. **已验证范围的边界**：所有 `dsh_host` 层证据来自本机 pinned DSH `0.2.1-rc.5` 的**隔离 profile**（独立 `DSH_HOME`，不改真实 `~/.dsh`、不重启桌面宿主，Windows）；`atlas_snapshot` 层来自 Atlas 0.8.0 自带 **Windows runtime** 对合成 C/Demo C 的产物，以及 **Linux runtime**（WSL2 Ubuntu 20.04）对同一 Demo C 的产物（跨 OS 快照导入，M-04-35）；`demo_observed` 层来自 Demo 的 Wasm 模拟。真实用户仓库、真实内核/驱动、真实设备/硬件、目标 ABI、Linux 桌面宿主、桌面宿主热更新、OS 级出口认证均**未验证**；异步/IRQ 只做**声明式边界标记**（不推断真实中断/因果）；跨 OS 快照只验证 Demo C 与显式 alias 映射，不证明真实 Kbuild/远端构建。
 6. **三层证据不得互相冒充**：`demo_observed`（Wasm/JS 行为模型）、`atlas_snapshot`（真实 Atlas 0.1 静态快照 + 真实 Python 投影）、`dsh_host`（隔离真实宿主/浏览器行为）分层记录在任何证据 JSON 与 UI 标签中；没有运行的项只进 `not_verified`。
 7. 设计文档中的“未来合同”不等于已实现；本文对每个机制给出实际证据与未验证项，候选改进只写成假设。
 
@@ -27,7 +27,7 @@
 | M-04-05 | 签名 path_ref/evidence_ref 与安全路径 | 硬边界 | `state.py`、`scope.py`、`source.py` | `test_source.py`、`test_io_robustness.py`（Windows O_BINARY 密钥回归）；证据引用全链路复验 |
 | M-04-06 | 有界源码 find（预算/游标/脱敏） | 预算可调，边界硬 | `source.py` | `test_source.py`、`test_verifier_regressions.py::BoundedProjectionTest` |
 | M-04-07 | 有界源码 read/evidence（hash/UTF-8/ref_only） | 硬边界 | `source.py` | `test_source.py`（read/evidence/秘密 ref_only） |
-| M-04-08 | Atlas 0.1 快照导入与复核 | 硬边界 | `atlas.py`、`snapshot.py` | `test_snapshot.py`（22）、`test_real_atlas_product.py`；`evidence/real-atlas/`、`evidence/code-view-slice/`（`ed326d55…`，19 函数/15 调用边） |
+| M-04-08 | Atlas 0.1 快照导入与复核 | 硬边界 | `atlas.py`、`snapshot.py` | `test_snapshot.py`（22）、`test_real_atlas_product.py`；`evidence/real-atlas/`、`evidence/code-view-slice/`（`ed326d55…`，19 函数/15 调用边）；`evidence/linux-atlas/`（Linux 构建快照经 `path_aliases` 导入，M-04-35） |
 | M-04-09 | 快照 freshness 与只读隔离 | 硬边界 | `snapshot.py`、`state.py` | `test_snapshot.py`（stale/unknown/current 漂移）；`evidence/readonly-slice/verification.json`（verified/fresh/19 entries） |
 | M-04-10 | 路径查询与 certainty 回连 | 查询策略可调 | `paths.py`、`atlas.py` | `test_paths.py`（31）；`test_real_atlas_product.py`；`evidence/readonly-slice/`（bus_send 三条 exact） |
 | M-04-11 | 跨仓 Binding 评估与 abi_bridge | 硬边界（不得升 exact） | `bindings.py`、`paths.py` | `test_bindings.py`（19）；Host 旅程 umd→kmd `abi_bridge may` |
@@ -39,7 +39,7 @@
 | M-04-17 | 工具注册、固定 argv 桥、技能分发 | 硬边界 + 预算可调 | `index.js`、`lib/{bridge,config,skills,tools}.mjs` | `tests/node/{bridge,plugin}.test.mjs`；7 个 `code_*` 工具（首版 6 个 + S4-prep `code_summary`）、200 Node 测试；Cordis `host-runtime.tap` 1/1；`evidence/plugin-install-verification.json`（首版安装旅程） |
 | M-04-18 | 学习编排 skill（分层定位/阅读顺序/讲解/停止/归纳写入） | skill 可调 | `skills/learn-code-workspace/` | `test_skill_contract.py`（24 条款，含 test_20..24 分层阅读）；`evidence/*/verification.json` 的回归层 |
 | M-04-19 | 只读工作台 RPC 载体与准入 | 硬边界 | `index.js`、`lib/http-rpc.mjs`、`lib/view-service.mjs`、`bundle/client.js` | `evidence/readonly-slice/verification.json`（26/26、401 准入、71 boot 条目、bundle 精确前缀）；`host-runtime.tap` 1/1 |
-| M-04-20 | 只读读模型、五视图投影与共享 Selection | 硬边界（派生/预算）+ 展示可调 | `engine/code_learning/views.py`、`five_views.py`、`lib/view-service.mjs`、`bundle/client.js` | `evidence/five-views/verification.json`（37/37）；五视图截图；`test_views.py`（18）、`test_five_views.py`（31） |
+| M-04-20 | 只读读模型、五视图投影与共享 Selection | 硬边界（派生/预算）+ 展示可调 | `engine/code_learning/views.py`、`five_views.py`、`lib/view-service.mjs`、`bundle/client.js` | `evidence/five-views/verification.json`（37/37）；五视图截图；`test_views.py`（18）、`test_five_views.py`（31）；`evidence/linux-atlas/`（Linux 构建快照的五视图 Chromium 探针） |
 | M-04-21 | 组折叠/接口库/黑盒/子流程面包屑 | 可调策略（结构启发式，不升级事实） | `five_views.py`、`bundle/client.js` | `evidence/s2b/verification.json`（41/41：2 组/4 成员、10 候选、31 边元数据保留、面包屑） |
 | M-04-22 | 批量首屏 `view.firstScreen`（含 `coupling_aux`） | 硬边界 + 性能优化（**已验收**） | `docs/five-view-contract.md §12`、`lib/view-service.mjs`、`engine/code_learning/{cli,five_views}.py`、`bundle/client.js` | `evidence/perf/verification.json`（25/25；hot p50/p95 328–330/382–387 ms ≤500 ✅；20/20 hot 60 处 batch/fallback=0）；`first-screen-consistency.json`（8/8；38,950 B sha256 `8bb859f9…`）；client 消费 aux→0 次单独 coupling RPC |
 | M-04-23 | 受控 Wasm 模拟 profile 与隔离 worker | 硬边界 | `engine/code_learning/scenario.py`、`lib/sim-runner.mjs`、`lib/sim-worker.mjs` | `evidence/s3/verification.json`（43/43：profile 7 接口、bus.wasm 1547 B sha256 `69c8622d…`）；`evidence/s4-feasibility/`（真实 Wasm worker 8/8） |
@@ -50,10 +50,11 @@
 | M-04-28 | 运行观测时序（observed） | 硬边界（证据分级）+ 展示可调 | `scenario.py`（`view-sequence-observed`）、`lib/scenario-service.mjs`、`bundle/client.js` | `evidence/s3/`（observed 20 消息）；`evidence/s3b/`（多场景选择/imported 标记/前缀 6 消息）；`evidence/async-irq/`（IRQ async 标记，M-04-33） |
 | M-04-29 | AI 归纳（Agent 写入/签名/失效，含入口 subject） | 硬边界 + 内容 skill 可调 | `engine/code_learning/summary.py`、`lib/tools.mjs`（`code_summary`）、`lib/view-service.mjs`、`bundle/client.js` | `evidence/ai-summary/verification.json`（**56/56**：function/group/**entry** subject；gap→put→UI、entry 子块/缺失静默、非法 put 拒绝、Cordis TAP 1/1；证据 sha256 见 §12.3） |
 | M-04-30 | 性能实测口径与首屏预算 | 测量机制（非产品路径，**已验收**） | `tools/verify-perf.mjs`、`tools/perf-probe.cjs`、`tools/perf/*`、`tools/firstscreen-consistency.mjs` | `evidence/perf/verification.json`（25/25 全绿；hot p50/p95 328–330/382–387 ms ≤500 ✅；coupling p95 3 ms；历史 646/704→455/527→328–330/382–387；not_verified 4 项如实） |
-| M-04-31 | S4 Linux 可移植性探测与不可声明项 | 待验证门禁（只记录） | `evidence/s4-feasibility/`、`source.lock.json` | `evidence/s4-feasibility/verification.json`（Node 164/164、Wasm worker 8/8、Python 3.8 引擎单测 255 errors、Windows 快照被拒绝；`ok=true, verified=false`） |
-| M-04-32 | 分层证据与隔离 dsh-web 验收门禁 | 硬边界（证据纪律） | `tools/verify-*.mjs`、`tools/*-probe.cjs`、`evidence/*/verification.json` | **8/8 阶段、320/320 检查**（S1 26/S2a 37/S2b 41/S3a 43/S3b 58/CW-09 56/A11 25/async 34）均 `ok=true, verified=true`；`in_scope_not_verified` 如实；pinned 宿主 SHA 门禁；汇总 `evidence/final-acceptance/` |
+| M-04-31 | S4 Linux 可移植性与目标门禁记录（只记录，不声明通过） | 待验证门禁（只记录） | `evidence/s4-feasibility/`、`evidence/linux-atlas/`、`source.lock.json` | 早期探测 `evidence/s4-feasibility/`（Node 164/164、Wasm worker 8/8、Python 3.8 引擎单测失败）；本轮 `evidence/linux-atlas/`（Linux 引擎 331 tests 在 WSL + QEMU Ubuntu 24.04 通过、Linux 构建快照跨 OS 导入 12/12）；S4 门禁（Kbuild/生成头/CFG/复核/OS 出口/真实 Samba 远端构建）仍未验证 |
+| M-04-32 | 分层证据与隔离 dsh-web 验收门禁 | 硬边界（证据纪律） | `tools/verify-*.mjs`、`tools/*-probe.cjs`、`evidence/*/verification.json` | **9/9 阶段、332/332 检查**（S1 26/S2a 37/S2b 41/S3a 43/S3b 58/CW-09 56/A11 25/async 34/linux 12）均 `ok=true, verified=true`；`in_scope_not_verified` 如实；pinned 宿主 SHA 门禁；汇总 `evidence/final-acceptance/` |
 | M-04-33 | 异步/IRQ 事件边界（声明→校验→observed 标记→UI；不推断中断发生） | 硬边界 + 展示可调（**已验收**） | `engine/code_learning/scenario.py`、`bundle/client.js`、`tools/verify-irq.mjs` | `evidence/async-irq/verification.json`（34/34、layers 全 true、`in_scope_not_verified=0`；真实 Wasm `bus_irq`→IRQ、observed `async:true`、dsh-web `[data-sequence-async]`+“异步”chip/说明；非法声明拒绝不写）；sha256 `38080909…` |
 | M-04-34 | 分层阅读与函数定位（skill 四层 + 先定位再解释） | skill 可调（不升级事实） | `skills/learn-code-workspace/references/layered-reading.md`、`SKILL.md`、`engine/tests/test_skill_contract.py` | CL-007-D1..D3 / CL-PF-02/03；`test_20..24`（5 例，合同测试共 24 条）；四层顺序/单函数定位步骤/输出模板/边界 |
+| M-04-35 | 跨 OS 快照根映射（`path_aliases`：Linux/远端构建 → 本地插件导入） | 硬边界（插件/引擎执行；skill 不可绕过） | `engine/code_learning/state.py`、`snapshot.py`、`views.py`；`engine/tests/test_cross_os_snapshot.py` | Linux 构建快照 `2ffddd44…`（graph `67aa438f…`，workspace_roots `/root/atlas-demo/repo`）经 bootstrap `candidate_roots[].path_aliases` 导入 Windows；`verify-linux-snapshot` 12/12、8 项 cross-OS 测试；无 alias/错 root_ref 拒绝；T48/T49 独立复核通过（`independent-review.json`）；`evidence/linux-atlas/` |
 
 ---
 
@@ -66,6 +67,7 @@
 3. **受控模拟观测**：在没有真实设备/编译器的情况下，对**已登记且可信**的 Wasm 模拟 profile 执行用户在 UI 里编排的有序接口调用，落不可变台账，得到 observed 时序；支持边界打桩、失败传播、回退前缀重放与只读轨迹导入（CW-T3）；另支持异步/IRQ 事件的声明式边界标记（M-04-33，不推断中断发生）。
 4. **AI 归纳缓存**：Agent 基于已核验证据写 ≤500 字归纳（function/group/**entry** subject；入口归纳在函数归纳下方独立子块），工作台详情展示并标 generator/事实引用/stale；**插件自身不调用模型**（CW-09）。
 5. **可复核的证据链**：所有能力按阶段在隔离 dsh-web 中黑盒验收，输出分层 `verification.json`，未验证项单列（CW-11/A11、S4-prep）。
+6. **跨 OS 快照**：在 Linux（WSL2/远端）用 Atlas Linux runtime 生成的快照，通过 bootstrap `candidate_roots[].path_aliases` 显式映射构建机绝对根到本地 root_ref 后，由 Windows 插件导入并投影五视图（M-04-35；Demo C，非内核）。
 
 ### 1.2 分层职责（谁做什么、谁掌握凭据/数据、生命周期）
 
@@ -83,7 +85,7 @@
 
 | 数据 | 位置 | 写入者 | 出口 |
 |---|---|---|---|
-| bootstrap（候选根/HMAC secret） | 人工指定文件（默认 `$DSH_HOME/code-reader/bootstrap.json`） | 人工 `bootstrap-init`（模型不可写） | 只本地 |
+| bootstrap（候选根含可选 `path_aliases`/HMAC secret） | 人工指定文件（默认 `$DSH_HOME/code-reader/bootstrap.json`） | 人工 `bootstrap-init`（模型不可写） | 只本地 |
 | workspace 登记/快照副本/记录/模拟 profile/台账/归纳 | `state_dir`（引擎） | 引擎校验后原子写 | 只本地；无上传/云出口 |
 | 人工输入 | `import_inbox_dir`（manifest、snapshot 目录、`sim-profile.json`+Wasm、轨迹、记录草稿） | 人工/外部工具 | 引擎按文件名读取，禁止任意路径 |
 | 验收证据 | 仓库内 `evidence/`、`tools/` | 验收工具（非产品运行路径） | 仓库内；不含 token/凭据（已 redact） |
@@ -102,6 +104,7 @@
 1  install bundle ─────────────► apply: 注册 7 tools + skill；嵌套 UI 子插件等 connection/webServer
 2  code_workspace import ──────► 固定 argv 桥 ──────────────────► 校验 manifest/CAS → registration.json
 3  code_snapshot import ───────► 固定 argv 桥 ──────────────────► envelope/graph_hash/workspace_roots → state 只读副本
+   （跨 OS 构建快照需 bootstrap `path_aliases` 把构建机绝对根映射到目标 root_ref；无 alias/错 root_ref 拒绝，M-04-35）
 4  code_overview/source/path ──► 固定 argv 桥 ──────────────────► 签名引用/预算/关系查询 → 证据 JSON
    （skill：单函数问答先按 M-04-34 四层定位再解释；业务图与局部图分开）
 5  code_learn save/resume ─────► 固定 argv 桥 ──────────────────► Draft 校验/CAS/证据重核 → 记录 revision
@@ -133,7 +136,7 @@
 
 | 来源（固定基线） | 借鉴机制 | 采用方式 |
 |---|---|---|
-| SDK Code Atlas `0.8.0` / schema `0.1`（`H:/VSCODE_READER`，git `c33320a98face14c5f6e5e817beaccf52b9bbb93`，只读） | 0.1 envelope、`graph_hash`=`graph.json` 原始字节 SHA256、`coverage.failed`/`pending_units`/`whole_program_complete=false` 原样语义、`call_targets` 上的 certainty、trace BFS 形状、`objects`/`field_accesses`/`flow_edges`/`boundaries`/`issues` 词汇 | **只读消费 + 本仓薄适配**：`atlas.py`/`snapshot.py`/`paths.py`/`views.py`/`five_views.py` 自行实现消费者；**不 vendor** Atlas 源码/runtime/DB，不执行 Atlas（真实产物由人工用其自带 Windows runtime 在 2026-11-08/11-15 生成）；SHA 见 `source.lock.json`（`redistributed:false`） |
+| SDK Code Atlas `0.8.0` / schema `0.1`（`H:/VSCODE_READER`，git `c33320a98face14c5f6e5e817beaccf52b9bbb93`，只读） | 0.1 envelope、`graph_hash`=`graph.json` 原始字节 SHA256、`coverage.failed`/`pending_units`/`whole_program_complete=false` 原样语义、`call_targets` 上的 certainty、trace BFS 形状、`objects`/`field_accesses`/`flow_edges`/`boundaries`/`issues` 词汇 | **只读消费 + 本仓薄适配**：`atlas.py`/`snapshot.py`/`paths.py`/`views.py`/`five_views.py` 自行实现消费者；**不 vendor** Atlas 源码/runtime/DB，不执行 Atlas（真实产物由人工用其自带 Windows runtime 在 2026-11-08/11-15 生成；2026-11-17 另用其 **Linux runtime** 在 WSL2 Ubuntu 20.04 对 Demo C 生成跨 OS 快照，M-04-35）；SHA 见 `source.lock.json`（`redistributed:false`） |
 | 本仓 CL-DESIGN-2 / CL-VIEW-D2 设计文档 | DTO 字段、CLI 合同、pending 字段、resume 失效顺序、五视图/场景/归纳的端点、预算、DOM 钩子 | **直接实现**（模块级）；偏差记录在 `docs/implementation-route.md` §偏离与本文 §10.1 |
 | 用户 `C:/Users/admin/.codex/行为守则.md` | 普通问答不强制考试、明确学完才复盘、先预测后验证、K2/K3 无 G/Q 可停、Next Action 最多一条 | **直接实现**为 skill 文本 + `learning.py` 硬规则 |
 | 本机 DSH Host `0.2.1-rc.5`（build `d4db512a…`；exe SHA `7ae939b5…`、asar `e1b6f25f…`） | `ctx.tools.register`、`ctx.skills.registerProvider`、`ctx.effect`、rc.5 `__ModuleLoader__` client、`sidebar.panellist`+keyed main、`layout.selectPanel`、`connection.admit`+`webServer.register` | **按本机实际签名自行实现**；UI 子插件依赖缺失时 pending；pinned 版本门禁见 `evidence/readonly-slice/` |
@@ -151,9 +154,9 @@
 
 ### 4.1 基础机制 M-04-01..18（保留并更新证据）
 
-以下机制在 2026-11-15 仍有效；测试计数统一更新为 **323 Python / 200 Node / Demo 8/8**，每节列出场景/判断/证据/失败恢复/可调与限制。**类别与主要代码位置见 §0 总表**；**参数范围见 §6**、**规则间依赖见 §7**、**最小验证命令见 §8**（按节内文件名即可定位到对应测试模块）。
+以下机制在 2026-11-17 仍有效；测试计数统一更新为 **331 Python / 200 Node / Demo 8/8**，每节列出场景/判断/证据/失败恢复/可调与限制。**类别与主要代码位置见 §0 总表**；**参数范围见 §6**、**规则间依赖见 §7**、**最小验证命令见 §8**（按节内文件名即可定位到对应测试模块）。
 
-- **M-04-01 可信 bootstrap 与 scope 根表（硬边界）**。**场景**：Agent 要读“某个仓库”，但不能自决读整块磁盘。**触发**：每次 CLI 调用前由 `--bootstrap`/`CODE_READER_BOOTSTRAP`/`$DSH_HOME/code-reader/bootstrap.json` 解析。**输入与前置**：`BootstrapConfigV1{schema_version:1, profile_ref, scope_ref, scope_generation, state_dir, import_inbox_dir, output_root, candidate_roots[{root_ref,absolute_path,read_grant_ref}]}`，由人工 `bootstrap-init` 创建，已存在拒绝覆盖（`STATE_CONFLICT`）。**判断**：绝对路径/字段白名单、`root_ref` 唯一、state/inbox/output 必须存在；模型参数永不出现绝对路径。**动作/状态**：`State` 持有 layout、HMAC secret（首次 0600）、workspace 锁、operation 幂等文件、snapshot 索引。**输出**：`state_root`/`inbox_dir`/`output_root`/candidate roots。**失败恢复**：缺失→`CONFIG_UNAVAILABLE`(exit 2)，人工修 bootstrap，不自动重建。**可调**：何时调用；**不可调**：根表/secret。**最小验证**：`cd engine && python -m unittest discover -s tests -p "test_workspace.py" -v`。**代价**：一次人工配置换“模型无法扩权”。
+- **M-04-01 可信 bootstrap 与 scope 根表（硬边界）**。**场景**：Agent 要读“某个仓库”，但不能自决读整块磁盘。**触发**：每次 CLI 调用前由 `--bootstrap`/`CODE_READER_BOOTSTRAP`/`$DSH_HOME/code-reader/bootstrap.json` 解析。**输入与前置**：`BootstrapConfigV1{schema_version:1, profile_ref, scope_ref, scope_generation, state_dir, import_inbox_dir, output_root, candidate_roots[{root_ref,absolute_path,read_grant_ref,path_aliases?}]}`（`path_aliases` 可选，见 M-04-35），由人工 `bootstrap-init` 创建，已存在拒绝覆盖（`STATE_CONFLICT`）。**判断**：绝对路径/字段白名单、`root_ref` 唯一、state/inbox/output 必须存在；模型参数永不出现绝对路径；`path_aliases` ≤16 条绝对路径、去重、拒绝控制字符，**仅用于跨 OS 快照身份匹配，不参与文件读取**。**动作/状态**：`State` 持有 layout、HMAC secret（首次 0600）、workspace 锁、operation 幂等文件、snapshot 索引。**输出**：`state_root`/`inbox_dir`/`output_root`/candidate roots。**失败恢复**：缺失→`CONFIG_UNAVAILABLE`(exit 2)，人工修 bootstrap，不自动重建。**可调**：何时调用；**不可调**：根表/secret。**最小验证**：`cd engine && python -m unittest discover -s tests -p "test_workspace.py" -v`。**代价**：一次人工配置换“模型无法扩权”。
 
 - **M-04-02 Workspace 登记与 revision CAS（硬边界 + 触发可调）**。**触发**：`workspace-import --manifest NAME --expected-revision N --operation-id UUID`（`code_workspace action=import`）。**输入**：inbox 单层 manifest（`WorkspaceManifestV1`），引用 `root_ref+relative_path`。**判断**：schema 严格校验、`scope_ref` 匹配、根 realpath 一致/不嵌套/不重复/拒绝 symlink-junction；`expected_revision` 必须等于当前 revision（首次 0）；相同 operation 摘要幂等返回原结果，不同摘要 `OPERATION_CONFLICT`。**动作/状态**：workspace 锁内原子写 `workspaces/<id>/registration.json`，revision+1；manifest 与 roots 摘要入登记。**输出**：`WorkspaceProjectionV1`（不含绝对路径），含 variant `semantic_status/missing_inputs/build_identity`。**失败恢复**：`STATE_CONFLICT`→先 `status` 取当前 revision 再试；`SCOPE_DENIED`→修根/清单，不扫父目录。**证据**：`test_workspace.py`、`evidence/code-view-slice/verification.json`（revision=1/fresh）。**可调**：何时登记/重登记；**不可调**：CAS 与根校验。
 
@@ -167,7 +170,7 @@
 
 - **M-04-07 有界源码 read/evidence（硬边界）**。**规则**：仅接受签名 `path_ref`+`expected_sha256`+区间；0≤start<end、单次 ≤16 KiB；先核 hash 再核区间（文件被改短→`STALE_SOURCE`，hash 相符但区间越界→`INVALID_ARGUMENT`）；UTF-8 边界安全调整；二进制/疑似秘密→`ref_only`。**输出**：`evidence`+`safe_text|ref_only`+实际区间；`origin='source_text'`、`semantic_status='blocked'`。**证据**：`test_source.py::test_read_source_*`、`test_read_evidence_roundtrip_limits_and_staleness`、`test_suspected_secret_returns_ref_only`。**恢复**：`STALE_SOURCE`→重新 find/read。**限制**：文本证据永不升级为编译器事实，行号仅导航。
 
-- **M-04-08 Atlas 0.1 快照导入与复核（硬边界）**。**场景**：复用 Atlas 编译事实，但不能信任任意传入快照目录。**触发**：`snapshot-import --workspace --variant --repo --snapshot NAME --operation-id`（`code_snapshot action=import`）。**规则**：NAME 只能是 inbox 内单层目录；读 `graph.json`/`analysis_manifest.json` 两 envelope；校验 `schema_version='0.1'`、`record_kind`、payload 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`、严格图引用（call_targets 的 callsite/source/target/evidence id 必须存在）；**`workspace_roots` 必须至少一个条目指回本次导入的目标 repo**（只命中同 workspace 其它 repo 不够），避免把别的仓库快照 exact 边记到本仓；同 snapshot_id 不同内容→`STATE_CONFLICT`；operation 幂等。多根 Atlas 快照列出全部被分析根，因此同一对已核验快照可在每个根对应 repo 下分别导入。**动作/状态**：原子复制到 `state/snapshots/<id>/`，写 `import.json`（workspace/variant/repo/两 hash/build_identity/imported_at）与 `current.json` 只读 view，更新索引（key=workspace+variant+repo）。**输出**：`SnapshotEvidence`（coverage 原样保留，`failed` 数组/`pending_units` 路径数组不改数字，另加 `failed_count`；`whole_program_complete` 不升级）。**证据**：`test_snapshot.py`（22：hash/schema 篡改、整数 coverage 拒绝、missing copy 修复、current/inbox 漂移不影响已导入副本）、`test_real_atlas_product.py`；真实产物：`evidence/real-atlas/`（quickstart `00fb…`、mini `22a7c4…`，`graph_hash` 逐字节相等）与 `evidence/code-view-slice/`（Demo C：snapshot `ed326d554334432b907de21297207eb8`，19 functions/15 call_targets，coverage failed=[]）。**本轮修复的真实适配缺陷**：真实 Atlas 为文件级初始化产生 `flow_edges.owner=null`、`sources=[]`，旧校验要求非空而拒绝；已放宽为“owner 可为 null、sources 可为空 id 数组”，其余恒等字段/确定性检查不变，回归 `engine/tests/test_atlas_flow_shape.py`（4）。**失败恢复**：`UNSUPPORTED_SCHEMA`/`STALE_SNAPSHOT`→重新导出/导入；损坏副本可同 hash 重导修复；**不**改 Atlas DB/current。
+- **M-04-08 Atlas 0.1 快照导入与复核（硬边界）**。**场景**：复用 Atlas 编译事实，但不能信任任意传入快照目录。**触发**：`snapshot-import --workspace --variant --repo --snapshot NAME --operation-id`（`code_snapshot action=import`）。**规则**：NAME 只能是 inbox 内单层目录；读 `graph.json`/`analysis_manifest.json` 两 envelope；校验 `schema_version='0.1'`、`record_kind`、payload 必填字段、`payload.graph_hash == sha256(graph.json 原始字节)`、严格图引用（call_targets 的 callsite/source/target/evidence id 必须存在）；**`workspace_roots` 必须至少一个条目指回本次导入的目标 repo**（只命中同 workspace 其它 repo 不够），避免把别的仓库快照 exact 边记到本仓；**跨 OS**：`workspace_roots` 可能是构建机（如 Linux）的绝对根，可通过 bootstrap 对应 `candidate_roots[].path_aliases` 显式映射到本地 root_ref 后才满足 provenance（alias 只参与身份匹配；未声明或挂错 root_ref 不满足，M-04-35）；同 snapshot_id 不同内容→`STATE_CONFLICT`；operation 幂等。多根 Atlas 快照列出全部被分析根，因此同一对已核验快照可在每个根对应 repo 下分别导入。**动作/状态**：原子复制到 `state/snapshots/<id>/`，写 `import.json`（workspace/variant/repo/两 hash/build_identity/imported_at）与 `current.json` 只读 view，更新索引（key=workspace+variant+repo）。**输出**：`SnapshotEvidence`（coverage 原样保留，`failed` 数组/`pending_units` 路径数组不改数字，另加 `failed_count`；`whole_program_complete` 不升级）。**证据**：`test_snapshot.py`（22：hash/schema 篡改、整数 coverage 拒绝、missing copy 修复、current/inbox 漂移不影响已导入副本）、`test_real_atlas_product.py`；真实产物：`evidence/real-atlas/`（quickstart `00fb…`、mini `22a7c4…`，`graph_hash` 逐字节相等）与 `evidence/code-view-slice/`（Demo C：snapshot `ed326d554334432b907de21297207eb8`，19 functions/15 call_targets，coverage failed=[]）。**本轮修复的真实适配缺陷**：真实 Atlas 为文件级初始化产生 `flow_edges.owner=null`、`sources=[]`，旧校验要求非空而拒绝；已放宽为“owner 可为 null、sources 可为空 id 数组”，其余恒等字段/确定性检查不变，回归 `engine/tests/test_atlas_flow_shape.py`（4）。**失败恢复**：`UNSUPPORTED_SCHEMA`/`STALE_SNAPSHOT`→重新导出/导入；损坏副本可同 hash 重导修复；**不**改 Atlas DB/current。
 
 - **M-04-09 快照 freshness 与只读隔离（硬边界）**。**规则**：每次 `load_snapshot`/`snapshot_evidence` 重新核两文件 hash 与 schema；freshness：导入后 workspace revision 或 `source_manifest_digest` 变化→`stale`；文件缺失/不可读→`unknown`；否则 `fresh`。查询只读 state 内副本，不读 Atlas `current` 指针，故不会被另一次 run 漂移影响。**输出**：`SnapshotEvidence`、`freshness`、`capabilities`、`limitations`。**证据**：`test_snapshot.py::test_freshness_*`、`test_current_and_inbox_drift_do_not_change_loaded_snapshot`、`test_tampered_copy_is_rejected_on_load`；`evidence/readonly-slice/verification.json`（verified/fresh/19 entries）。**恢复**：stale/unknown 时重新导入或重跑分析（本版不执行）；skill/UI 必须先提示 freshness。
 
@@ -189,7 +192,7 @@
 
 - **M-04-18 学习编排 skill（skill 可调）**。**规则**：workspace 优先 **11 步**（登记/校验→概览→选一个问题→一条证据路径→**先定位再解释**（分层阅读四层，M-04-34）→解释→先预测→最小授权核验→规则/未知→记录/停止→可选详情归纳）；普通问答直接答、不强制记录/测验；仅用户明确“学完了/复盘”才走完整 11 阶段，未完成字段保持 pending；Next Action ≤1（动作+分钟+完成标准）；K2/K3 无 G/Q 可停；证据分级 exact/may/unknown/source_text；不自动跑构建/测试、不自动写 05、不代填预测。**S4-prep 增量**：可选第 11 步“详情归纳”——用户要工作台详情出现归纳时用 `code_summary put` 写 ≤500 字（function/group/entry subject），必须基于已核验证据、facts 放 evidence/节点引用、候选/未知用 `inference_labels` 标注、无运行台账不得用 `from_observation`、不得伪造正文或把候选写成 exact；插件不会自动调用模型。**可调**：阅读顺序、分层阅读展开深度/篇幅、每次讲多少、何时建记录、是否总结、预算内查询范围、是否/如何写归纳、停止时机。**不可调**：M-04-01/05/08/11/12/13/14/15/16/19/20/23..29/33 的硬边界（skill 不能绕过 scope、不能把文本当编译事实、不能把 pending 写成 user、不能执行 run、不能伪造 observed/async/归纳、不能声称未验证通过）。**证据**：`test_skill_contract.py`（**24 条款**：六工具/证据分级/resume/复盘/停止/秘密 ref_only + test_20..24 分层阅读四层顺序/定位步骤/输出模板/边界）；`skills/learn-code-workspace/references/layered-reading.md`；各阶段 dsh-web 验收把 S1..S4-prep 回归层作为 skill 行为的护栏。**仍需**：独立对话评审实际学习质量（结构测试不等于效果证明）。**打包范围**：仅 `skills/learn-code-workspace/`（SKILL.md + references/workflow.md/evidence-and-limits.md/layered-reading.md）；`docs/dsh-code-view-ui/SKILL.md` 是 UI 指导 skill 草案，未打包。
 
-### 4.2 本轮新增机制 M-04-19..34
+### 4.2 本轮新增机制 M-04-19..35
 
 #### M-04-19 只读工作台 RPC 载体与准入（硬边界）
 
@@ -393,7 +396,7 @@
 | 输入与前置 | 本机 **pinned** DSH 基线（`DeepSeek Harness.exe` SHA256 `7ae939b5…`、`app.asar` SHA256 `e1b6f25f…`、dsh `0.2.1-rc.5`、内嵌 Node 24.21.0/Electron 44.7.0、6 个已核 seam 文件）——版本/SHA 不符即失败；隔离 `DSH_HOME`（`scratch/readonly-home/home`，非真实 `~/.dsh`）与隔离 web profile（bundles=base+web-app+`@local/dsh-code-reader`）；隔离 bootstrap + 真实 Python 3.11.4；本机 Electron 仅作 Chromium 探针（不随包分发）。 |
 | 判断规则 | 每次运行重新生成 `evidence/<stage>/verification.json`（layers/checks/not_verified/commands/limitations），以**三层**（`demo_observed`/`atlas_snapshot`/`dsh_host`）分别记录、互不冒充；无 cookie 直连 `/code-view` 必须 401；Chromium 探针必须 console error=0、无绝对路径、按 DOM 钩子断言并截图；`in_scope_not_verified` 与 `out_of_scope_not_verified` 分开、不隐藏；被后续阶段正当取代的旧断言（如 S2a 的 `gapsOriginal`、打桩占位）显式记录 ignored/superseded，不静默通过。 |
 | 工具动作与状态 | 只读验收：不改插件实现、不联网（仅本机回环 HTTP）、不写真实 `%USERPROFILE%\.dsh`、不重启桌面宿主、不 git 提交；探针窗口 `opacity=0 + showInactive` 截当前 composited 帧，截图前滚动/invalidate/连拍；token redact；失败保留 `scratch/<stage>/*-probe.json` 与日志供复核。 |
-| 输出/证据 | **8/8 阶段、320/320 检查**均 `ok=true, verified=true`：`evidence/readonly-slice/` 26/26、`five-views/` 37/37、`s2b/` 41/41、`s3/` 43/43、`s3b/` 58/58、`ai-summary/` **56/56**（含入口 subject）、`perf/` 25/25（hot p50/p95 328–330/382–387 ms ≤500 ✅；4 项 not_verified 如实）、`async-irq/` 34/34；`in_scope_not_verified` 如实（perf 4 项、async 0 项）；每阶段 `host-runtime.tap` 1/1、`commands.log` 记录实际命令/exit code/cwd；`evidence/final-acceptance/` 提供聚合索引（summary.json 含各阶段 sha256）。 |
+| 输出/证据 | **9/9 阶段、332/332 检查**均 `ok=true, verified=true`：`evidence/readonly-slice/` 26/26、`five-views/` 37/37、`s2b/` 41/41、`s3/` 43/43、`s3b/` 58/58、`ai-summary/` **56/56**（含入口 subject）、`perf/` 25/25（hot p50/p95 328–330/382–387 ms ≤500 ✅；4 项 not_verified 如实）、`async-irq/` 34/34、`linux-atlas/` 12/12；`in_scope_not_verified` 如实（perf 4 项、async 0 项、linux 0 项）；每阶段 `host-runtime.tap` 1/1、`commands.log` 记录实际命令/exit code/cwd；`evidence/final-acceptance/` 提供聚合索引（summary.json 含各阶段 sha256）。 |
 | 参数与范围 | 固定宿主 SHA/版本、固定隔离路径（Windows 本机；换机需同步调整，门禁会立即暴露差异）；探针超时（每视图 ≤45 s、整体 360–420 s）与截图口径固定；不联网。 |
 | 依赖与冲突 | 依赖 Host rc.5 实际接缝（M-04-19）；与开发机真实桌面宿主隔离——**桌面宿主热更新未验证**（验收用独立 profile）；`demo_observed` 层依赖 Demo Wasm/JS 行为，但不证明真实设备。 |
 | 失败与恢复 | 门禁失败→整批失败（不继续产出“通过”）；探针失败→保留中间 JSON/日志；`not_verified` 不得改写为通过；阶段回退保留旧证据目录不覆盖（S1..S4-prep 各自目录未改动）。 |
@@ -423,12 +426,27 @@
 | 输入与前置 | 已登记 workspace/variant 与已核验快照（或 source-only）；问题明确到某个函数/行为；可用既有只读工具：`code_overview`、`view.fileTree`/`view.tree`、`view.getEntry`、`view.coupling`、`view.endToEnd`、`code_source`、`code_path`，有台账时 observed 时序。 |
 | 判断规则 | **四层顺序固定**：① 业务总框架（谁和谁通信、本流程解决什么、从哪进入/在哪完成；先一句话定位 + 用户态/UAPI/内核/设备边界与开始→收发→完成→通知位置）→ ② 文件与函数职责（文件→主要函数→职责→关键调用；标出当前函数涉及的入口/完成/状态/设备交互）→ ③ 关键数据与状态（结构体/字段/软表/硬件资源的读写方；区分 exact 编译事实与 may 候选，软表/寄存器/设备内存标明谁读谁写、是否缺设备文档）→ ④ 实现证据（guard/锁/等待/完成/失败路径；IRQ/workqueue/异步完成点要有 observed 或明确源码证据才展开）。默认展开第 2–3 层，按需到第 4 层；用户要细节时只展开 1–2 个关键点，不做全图漫游；业务图与局部图分开，通过当前入口/Selection 关联。**不得把 may/unknown 说成 exact，不得伪造运行观测。** |
 | 工具动作与状态 | skill 只产出解释/提问/呈现（不新增工具、不写 state），按需调用既有只读工具；单函数定位步骤：先 `view.listEntries` 或 `code_source find` 选入口 → `view.getEntry` 取文件/行号/签名/调用者/被调用者/资源摘要 → 放回 `code_overview` 的组件/仓库/接口候选给一句业务定位 → `view.coupling`/`view.endToEnd` 找数据与判断/异常路径 → 需要“谁调用它/它调用谁到哪结束”时 `code_path path` 取一条有界路径并逐边 `code_source` 读源码；跨仓用 binding 候选（最多 may）。 |
-| 输出/证据 | 输出模板（短）：一句话（`<函数> 位于 <用户态/内核/设备边界>，负责 <做什么>，从 <入口> 到 <完成/通知>`）+ 3–6 行“文件→主要函数→职责”+ 关键数据读写方（标 exact/may/unknown）+ 证据与未知（文件:行号或 evidence id；缺 build/ABI/设备文档写 unknown）。证据：`skills/learn-code-workspace/references/layered-reading.md`（四层/定位步骤/输出模板/边界）；`SKILL.md` 第 5 步“先定位再解释”与 references 链接；`engine/tests/test_skill_contract.py::test_20..24`（5 例，合同测试共 24 条）；最终验收 `evidence/final-acceptance/` 8/8 阶段、320/320 检查（skill 行为由各阶段回归层护栏）。 |
+| 输出/证据 | 输出模板（短）：一句话（`<函数> 位于 <用户态/内核/设备边界>，负责 <做什么>，从 <入口> 到 <完成/通知>`）+ 3–6 行“文件→主要函数→职责”+ 关键数据读写方（标 exact/may/unknown）+ 证据与未知（文件:行号或 evidence id；缺 build/ABI/设备文档写 unknown）。证据：`skills/learn-code-workspace/references/layered-reading.md`（四层/定位步骤/输出模板/边界）；`SKILL.md` 第 5 步“先定位再解释”与 references 链接；`engine/tests/test_skill_contract.py::test_20..24`（5 例，合同测试共 24 条）；最终验收 `evidence/final-acceptance/` **9/9 阶段、332/332 检查**（skill 行为由各阶段回归层护栏）。 |
 | 参数与范围 | 默认四层顺序固定；层数/篇幅/展开点由 skill 按用户问题调整；无新增 schema/端点/参数；不改变证据等级与工具预算。 |
 | 依赖与冲突 | 依赖 M-04-18（skill 编排）、M-04-01/05/10/12/19/20（工具与证据边界）、M-04-29（如需写归纳）；与“直接堆调用链/全图漫游”冲突时按 M-04-34 先业务定位再局部；不替代静态/运行证据，不新增证据来源。 |
 | 失败与恢复 | 缺入口/符号→先 `code_source find` 或列候选并显式多候选；缺快照→source-only + `semantic_status=blocked`；证据不足/跨仓边界→写 unknown/may，不猜；用户要细节时才展开第 4 层，超预算时截断并说明。 |
 | 最小验证 | `cd engine && python -m unittest discover -s tests -p "test_skill_contract.py" -v`（24 条，含 test_20..24）；`node tools/verify-readonly.mjs --with-repo-tests` 等各阶段回归（skill 行为护栏）；人工对话评审四层顺序/定位质量（结构测试不等于效果证明）。 |
 | 限制/改进假设 | skill 文本与合同测试只证明流程/结构存在，**不证明实际解释质量**；需独立对话评审。四层默认顺序可按具体问题调整，但不能改变证据等级；真实硬件/ABI/线程事实仍需专门证据（S4 未验证）。 |
+
+#### M-04-35 跨 OS 快照根映射 `path_aliases`（硬边界：plugin/引擎执行；skill 不可绕过）
+
+| 项 | 内容 |
+|---|---|
+| 场景/触发 | 快照在 Linux（WSL2/远端构建机）用 Atlas Linux runtime 生成，manifest 的 `workspace_roots` 记录构建机绝对根（如 `/root/atlas-demo/repo`）；插件运行在 Windows 时该路径无法直接读取，原实现会以 `analysis_manifest.workspace_roots does not identify this registered workspace` 拒绝导入。触发：`snapshot-import` 的 provenance 校验无法把 manifest root 匹配到本地登记仓库。 |
+| 输入与前置 | bootstrap `candidate_roots[]` 新增可选 `path_aliases`：≤16 条、绝对路径（POSIX 或 Windows）、去重（大小写/斜杠归一后比较）、拒绝控制字符；每条 alias 声明“这个本地 `root_ref` 在构建机上对应哪个分析根”。同根仍保留 `absolute_path`/`read_grant_ref`。由人工 `bootstrap-init` 写入，模型/浏览器不可写。 |
+| 判断规则 | ① alias 只在**快照身份匹配**阶段参与：`workspace_roots` 与目标仓库的 `absolute_path` **或该 root_ref 声明的 alias** 匹配才算 provenance 满足；② 未声明 alias → 拒绝（`INVALID_ARGUMENT`，信息含 target repository）；③ alias 挂在**非目标** root_ref 上不满足目标仓库校验；④ alias 不参与文件读取——源码仍严格在本地 `absolute_path` 下按签名引用读取；⑤ 本地绝对根直接匹配路径不变（不需要 alias）。 |
+| 工具动作与状态 | `state.validate_bootstrap` 校验/归一化 `path_aliases`；`State.candidate_root_aliases()` 暴露 `{root_ref: aliases}`；`snapshot._check_manifest_provenance` 在导入时把 manifest root 与本地根/alias 合并匹配；`views._repo_roots` 把 alias 作为 `foreign_roots` 用于把 graph/evidence 里的分析机绝对路径转换为仓库相对路径（`/root/.../bus.c` → `bus.c`），源码再按本地 root 读取。 |
+| 输出/证据 | `engine/tests/test_cross_os_snapshot.py`（8 项：无 alias 拒绝、正确 root_ref 接受、错 root_ref 拒绝、本地绝对根仍匹配、POSIX/Windows alias 归一、默认无 alias、相对/重复/超 16/控制字符拒绝）；`node tools/verify-linux-snapshot.mjs` **12/12**（Linux 快照 `2ffddd4400b6400b8bdc55ffcd33bf76`，graph_hash `67aa438f7be00ec5c76370b4795db4466f26ecd816dcb358cfe3f5bde0bae795`，coverage parsed 2/failed 0，workspace_roots `["/root/atlas-demo/repo"]`）；Windows vs Linux 快照 functions/call_targets/objects/field_accesses/flow_edges/lock_events/alias_relations = 19/15/18/15/90/0/3 一致，15 条字段访问 `(function,object,field,access,certainty)` 集合一致；entries 19、`bus_send` `bus.c:152`、coupling routes/5 functions/11 edges、source read sha256 `b2ec2328…`；隔离 dsh-web 五视图 Chromium 探针通过（残差失败 0；冻结于 S2a 的 `gapsOriginal` 按已实现能力记 superseded；T48/T49 独立复核后**过期 S2a/CW-T3 文案已修复**（AI 归纳需 Agent 写入、运行观测在 observed、场景需可信 Wasm profile），Windows fixture 与 Linux 快照 gap 列表逐项一致）。证据 `evidence/linux-atlas/`（T49 最终值）：`verification.json` 27,826 B sha256 `f7e41655…`（含 `checks_summary` 12/12）、`README.md` 9,531 B `39a11bc3…`（含 §7 独立复核）、`independent-review.json` 14,513 B `64ca50eb…`（T49 final）、`five-views-probe.json` 124,190 B `426e5704…`、`qemu-verification.json` 1,914 B `c6ed4927…`、`linux-*.png` 六张（哈希与 T47 相同）。 |
+| 参数与范围 | `path_aliases` ≤16 条、绝对路径、去重、拒绝控制字符；alias 仅跨 OS 身份匹配，不扩大读取范围；同一快照多根导入行为与 M-04-08 一致。 |
+| 依赖与冲突 | 依赖 M-04-01（bootstrap 根表）、M-04-08（快照 provenance）、M-04-20（读模型相对路径）；与 M-04-05/07 的本地读取边界不冲突（alias 不参与读取）；不改变 M-04-09 freshness 判定（导入后 stale 规则不变）。 |
+| 失败与恢复 | 未声明 alias/alias 挂错 root_ref→`INVALID_ARGUMENT`（不落快照副本）；修正 bootstrap 对应 root_ref 的 alias 后重新导入；**不能靠 skill/prompt 绕过 alias 校验**；远端构建机根变化→更新 alias 并重新导入。 |
+| 最小验证 | `cd engine && python -m unittest discover -s tests -p "test_cross_os_snapshot.py" -v`（8）；`node tools/verify-linux-snapshot.mjs`（12/12）；Linux 侧构建 `bash tools/build-linux-atlas-snapshot.sh`（需 Atlas Linux runtime + gcc）。 |
+| 限制/改进假设 | 目标代码是 **Demo C 用户态风格源码**，不是内核/驱动；Kbuild/生成头/目标 ABI/Kconfig 未覆盖；Atlas Linux runtime 自报 `cfg=unsupported`、`locks=lexical projection`，CFG/locks/aliases 深分析仍未验证；未做真实 Samba 远端云构建（本会话无远端凭据）；QEMU guest 无编译器/网络，Atlas 分析在 WSL 完成；alias 是人工显式信任声明，不解决真实构建机与本地源码不同步的问题。 |
 
 ---
 
@@ -448,6 +466,7 @@
 | 回退必须前缀重放 + memory_digest 逐条核验 | `scenario.py` | 不能“声称回退成功”；不一致 `STATE_CONFLICT` 不发布 |
 | 轨迹导入只读、不执行 | `scenario.py`/`lib/scenario-service.mjs` | 外部轨迹不能作为“已执行”证据；无 undo/重放 |
 | 异步/IRQ 只做声明标记 | `scenario.py`（profile/轨迹校验、observed）+ `bundle/client.js` | `async:true` 只表示该事件被声明为异步触发，**不推断**硬件中断已发生/完成；skill/UI 不得写成运行事实 |
+| 跨 OS 根映射 alias 仅身份匹配 | `state.py`（bootstrap 校验）/`snapshot.py`（provenance）/`views.py`（foreign_roots） | alias 只用于匹配构建机分析根，**不参与文件读取**；未声明/错 root_ref 拒绝；skill 不能绕过 alias 校验 |
 | AI 归纳由 Agent 写入、签名、绑定 graph sha、无模型出口 | `summary.py`/`lib/tools.mjs`/`lib/view-service.mjs` | 插件不得自动生成正文；快照变化必须 stale；`from_observation` 需台账 |
 | 性能/门禁声明 | `tools/verify-perf.mjs`/`evidence/*/verification.json` | 未达标必须 `ok=false`；skill/文档不得把未验证写成通过 |
 | 分层证据不互相冒充 | 验收工具 + 证据 JSON + 后端/UI 标签 | `demo_observed`/`atlas_snapshot`/`dsh_host` 各自标注；`observed`（台账）不得冒充静态 exact |
@@ -474,6 +493,7 @@
 | `view.firstScreen` 响应/`coupling_aux` | ≤480 KiB（含 aux）；sizes 4 键；view 5 枚举 | 固定 | 引擎；超限 `LIMIT_EXCEEDED`（附 sizes），client 回退单端点 |
 | 场景 steps / args / 参数总量 / JSON | 20 / 8 / 4 KiB / scenario 8 KiB、records 32 KiB | 固定 | 引擎；超限 `LIMIT_EXCEEDED`/`INVALID_ARGUMENT` |
 | `async_events` 声明 | 空 | ≤16、去重、必须属事件表（profile/导入轨迹） | 引擎校验；非法 `INVALID_ARGUMENT` 且不写 |
+| bootstrap `path_aliases` | 空 | ≤16 条绝对路径、去重、拒绝控制字符 | 人工 `bootstrap-init`；仅跨 OS 快照身份匹配，不参与文件读取（M-04-35） |
 | worker 超时 / 内存 | 10 s（≤30 s）/ 64 MB；Host 总 15 s | 固定 | Host/引擎；超时 `OUTCOME_UNKNOWN`，不落台账 |
 | undo count | 1 | 1..源步数（Host ≤200） | UI 输入 + 引擎校验；越界拒绝 |
 | summary text / facts / labels | 500 码点 / 32 / 8 | 固定 | Host+引擎双重校验；超限 `LIMIT_EXCEEDED` |
@@ -500,13 +520,14 @@
 11. `coupling_aux`（M-04-22）→ coupling 视图/左栏资源 rail 与单独 `view.coupling` 同源；sizes 4 键含 aux、总预算 480 KiB；client 消费后跳过单独 coupling RPC（0 次），aux 缺失/格式错回退。
 12. 异步声明（M-04-33）→ profile/导入轨迹 `async_events` → observed event 消息 `async` 与顶层 `async_events`；只影响标记，不改台账顺序/静态投影；rev1 无声明保持 S3b 旧行为。
 13. 分层阅读（M-04-34）→ 依赖 M-04-18/10/12/19/20 的只读工具与证据等级；只改变解释顺序/深度（先业务定位再局部下钻），不新增证据、不改变 exact/may/unknown；归纳写入仍走 M-04-29。
+14. 跨 OS `path_aliases`（M-04-35）→ M-04-08 快照 provenance 与 M-04-20 读模型 `foreign_roots` 路径转换；只影响跨 OS 快照的身份/相对路径映射，不改变本地文件读取边界（M-04-05/07）与 freshness（M-04-09）。
 
 ---
 
 ## 8. 最小验证清单（改 skill/机制后至少重跑）
 
 ```bash
-# 引擎（合成 fixture + 真实 Atlas fixture；当前 323 tests；含 test_skill_contract 24 条）
+# 引擎（合成 fixture + 真实 Atlas fixture；当前 331 tests；含 test_skill_contract 24 条与 cross-OS 8 条）
 cd engine && python -m unittest discover -s tests -v
 
 # 插件 Host/Client 合同（当前 200 tests）
@@ -524,10 +545,11 @@ node tools/verify-s3b.mjs --with-repo-tests             # S3b 回退/轨迹导�
 node tools/verify-summary.mjs --with-repo-tests         # AI 归纳（当前 56/56；含入口 subject）
 node tools/verify-perf.mjs --with-repo-tests            # 性能实测（当前 25/25 全绿；首屏 hot p50/p95 328–330/382–387 ≤500 ✅）
 node tools/firstscreen-consistency.mjs                  # 批量首屏/aux/sizes 一致性（8/8；verify-perf 内含）
-node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边界（34/34；真实 Wasm IRQ + dsh-web async 标记）
+node tools/verify-irq.mjs --with-repo-tests               # 异步/IRQ 事件边界（34/34；真实 Wasm IRQ + dsh-web async 标记）
+node tools/verify-linux-snapshot.mjs                     # Linux 构建快照跨 OS 导入（12/12；需先用 Linux 侧构建脚本生成快照）
 ```
 
-对照关系：CL-001（M-04-01/02/03/05/06/07）、CL-003（M-04-08/09）、CL-004（M-04-10/11/12）、CL-005（M-04-13/14）、CL-006（M-04-15）、CL-009（M-04-16/17）、CL-007（M-04-18 文档条款）；CL-VIEW-T1（M-04-19、部分 20）、CW-T2（M-04-20/21）、CW-T3（M-04-23..28）、CW-T4A（M-04-29/30/31、M-04-32、M-04-33 异步/IRQ）；CL-PF-02/03 分层阅读（M-04-34，`test_skill_contract.py` 24 条）；**最终验收汇总 `evidence/final-acceptance/`：8/8 阶段、320/320 检查**；S4 目标门禁仍不在此清单的“通过”含义内（M-04-22 批量首屏、M-04-29 入口归纳、M-04-33 异步/IRQ 已验收）。
+对照关系：CL-001（M-04-01/02/03/05/06/07）、CL-003（M-04-08/09）、CL-004（M-04-10/11/12）、CL-005（M-04-13/14）、CL-006（M-04-15）、CL-009（M-04-16/17）、CL-007（M-04-18 文档条款）；CL-VIEW-T1（M-04-19、部分 20）、CW-T2（M-04-20/21）、CW-T3（M-04-23..28）、CW-T4A（M-04-29/30/31、M-04-32、M-04-33 异步/IRQ）；CL-PF-02/03 分层阅读（M-04-34，`test_skill_contract.py` 24 条）；S4-prep Linux/跨 OS 快照（M-04-35、`test_cross_os_snapshot.py` 8 条）；**最终验收汇总 `evidence/final-acceptance/`：9/9 阶段、332/332 检查**；S4 目标门禁（Kbuild/生成头/native CFG/locks/aliases/复核/OS 出口/真实 Samba 远端构建）仍不在此清单的“通过”含义内（M-04-22 批量首屏、M-04-29 入口归纳、M-04-33 异步/IRQ、M-04-35 跨 OS 快照已验收）。
 
 ---
 
@@ -553,6 +575,7 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 | 导入轨迹不可回退 | `CAPABILITY_UNAVAILABLE` | 只读历史；重跑新场景 |
 | 非法 `async_events`（重复/未知/超 16/非数组） | `INVALID_ARGUMENT`（profile 与 trace-import 均拒绝） | 修正声明；profile/台账不写 |
 | 入口归纳无记录/请求失败 | 静默不显示 entry 子块（契约行为，不新增 gap） | 刷新/重选；函数归纳缺口逻辑不变 |
+| Linux/跨 OS 构建快照的 manifest root 未声明 alias 或 alias 挂错 root_ref | `INVALID_ARGUMENT`（snapshot provenance，不落副本） | 在 bootstrap 对应 root_ref 声明 `path_aliases` 后重新导入；不靠改 skill |
 | 归纳超长/控制字符/非法 facts | `LIMIT_EXCEEDED`/`INVALID_ARGUMENT` | 修正 payload；原文不被覆盖 |
 | 快照变化后的旧归纳 | `stale:true` + `summary_stale_against_current_snapshot` | UI 显示“基于旧快照，待复核”；重写归纳 |
 | 性能预算未达标（历史） | 验收 `ok=false`（首屏，历史 run） | 优化后复测；不得调预算。当前已达标：hot p95 387 ms、25/25 全绿 |
@@ -564,8 +587,8 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 323 引擎测试 + 200 Node 测试 + 安装后 Host 工具旅程 |
-| 真实 Atlas 0.8 产物适配（Windows runtime，合成 C） | **actual（非 Linux 门禁）** | `evidence/real-atlas/`、`evidence/code-view-slice/`：envelope/graph_hash/coverage/真实 file/line/exact 边/flow_legacy |
+| 合成 fixture 上 workspace/source/snapshot/path/binding/record/resume/CLI/Host 工具旅程 | **actual** | 331 引擎测试 + 200 Node 测试 + 安装后 Host 工具旅程 |
+| 真实 Atlas 0.8 产物适配（Windows + Linux runtime，合成 C/Demo C） | **actual（非 Linux 门禁）** | `evidence/real-atlas/`、`evidence/code-view-slice/`、`evidence/linux-atlas/`：envelope/graph_hash/coverage/真实 file/line/exact 边/flow_legacy；跨 OS 见下条 |
 | 只读工作台 RPC/面板/五视图/组折叠/接口库/子流程 | **actual** | S1 26/26、S2a 37/37、S2b 41/41 隔离 dsh-web 验收 |
 | 受控 Wasm 场景/打桩/台账/observed/回退/轨迹导入 | **actual** | S3a 43/43、S3b 58/58 隔离 dsh-web 验收（Demo Wasm，非真实设备） |
 | 异步/IRQ 事件边界（observed `async` 标记） | **actual（已验证）** | `verify-irq` 34/34：真实 Wasm `bus_irq`→IRQ、observed `async_events:["IRQ"]`/IRQ `async:true`、dsh-web `[data-sequence-async]`+“异步”chip/说明；static/rev1 无标记；非法声明拒绝不写（M-04-33） |
@@ -573,8 +596,10 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 | 分层阅读与函数定位（CL-007-D1..D3 / CL-PF-02/03） | **actual（结构/合同）** | `layered-reading.md` 四层 + SKILL 第 5 步；`test_20..24`（合同测试共 24 条）；实际解释质量待独立对话评审（M-04-34） |
 | 性能实测与大图规模证据 | **actual，首屏预算已达标** | `evidence/perf/`：25/25 全绿，首屏 hot p50/p95 328–330/382–387 ms ≤500；coupling p95 3 ms；not_verified 4 项（cold UI/tree→file/拖动/2000-10k 截断文本）如实 |
 | 批量首屏 `view.firstScreen`（含 `coupling_aux`） | **actual（已验证）** | `verify-perf` 25/25；一致性 8/8；20/20 hot 60 处 batch、fallback=0；client 消费 aux→0 次单独 coupling RPC（M-04-22） |
-| 最终验收汇总（8 阶段 dsh-web） | **actual** | `evidence/final-acceptance/`：8/8 阶段、320/320 检查、tests 323/200/8；**S4 门禁仍未验证** |
-| 真实 Linux/Kbuild 索引/生成头/目标 ABI | **blocked（未验证）** | 需 Linux 工具链 + Linux 构建的 Atlas 快照；`evidence/s4-feasibility/` 只做探测 |
+| 最终验收汇总（9 阶段 dsh-web） | **actual** | `evidence/final-acceptance/`：9/9 阶段、332/332 检查、tests 331/200/8；**S4 门禁仍未完成**（Kbuild/CFG/复核/OS 出口/真实 Samba 远端构建） |
+| S4-prep-linux 跨 OS 快照（Linux 构建 → Windows 插件导入） | **actual（已验证）** | `verify-linux-snapshot` 12/12：Linux 快照 `2ffddd44…`（graph `67aa438f…`，coverage parsed 2/failed 0）经 bootstrap `path_aliases` 导入；跨 OS 计数/字段访问 certainty 一致；五视图 Chromium probe 通过；`evidence/linux-atlas/`（M-04-35） |
+| Linux 引擎可移植性（WSL2 + QEMU Ubuntu 24.04） | **actual** | 331 tests OK（QEMU：Python 3.12.3、2 项 Windows junction 按设计 skip）；guest 无编译器/网络，Atlas 分析在 WSL 完成（`evidence/linux-atlas/qemu-verification.json`） |
+| 真实 Linux/Kbuild 索引/生成头/目标 ABI | **blocked（未验证）** | 跨 OS 快照已补充验证（Demo C、`evidence/linux-atlas/`），但真实内核/驱动 Kbuild、生成头、目标 ABI/Kconfig 仍 blocked；需 Linux 工具链 + 真内核源码/compdb |
 | native CFG / 数据流 / 锁 / 别名深分析 | **blocked（未验证）** | 快照 `cfg=unsupported`；关系查询返回 unavailable |
 | 真实设备/硬件/线程重叠/字节布局/真实设备下发 | **blocked（未验证）** | 静态证据与 Wasm 模拟均不证明；需单独授权与运行验证 |
 | 复核 precision/recall、OS 出口认证 | **blocked（未验证）** | 无复核数据；只有本机回环 HTTP 观测 |
@@ -586,7 +611,7 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 
 1. **载体**：设计主形态是 skill + Python CLI 薄适配，DSH Host plugin 后置；实际先交付可安装 Host plugin + 嵌套 UI 子插件。Python 引擎保持设计模块划分与 CLI JSON 合同，插件是薄桥（固定 argv、无 shell），不是第二套解析器。
 2. **runtime**：用系统 Python 3.11+（本机 3.11.4），不 vendor 固定解释器/Atlas 包；`source.lock.json` 记录依赖与来源，后续补固定 runtime 时 CLI 合同不变。
-3. **Atlas 执行**：`run` 恒阻断；真实产物由人工用 Atlas 自带 Windows runtime 在合成 C 上生成并消费（2026-11-08/11-15），不分析用户仓库/Linux Kbuild、不联网、不运行 H 盘 launcher。
+3. **Atlas 执行**：`run` 恒阻断；真实产物由人工用 Atlas 自带 **Windows runtime** 在合成 C 上生成并消费（2026-11-08/11-15），2026-11-17 另用 **Linux runtime**（WSL2 Ubuntu 20.04）对同一 Demo C 生成跨 OS 快照并导入 Windows 插件（M-04-35）；不分析用户仓库/Linux Kbuild、不联网、不运行 H 盘 launcher。
 4. **关系查询**：flow_legacy 用快照内 flow_edges 投影；flow_cfg/locks/aliases 在 capability 不足时一律 `status=unavailable` 并列出 unknowns，不以空数组伪装完整。
 5. **记录存储**：SQLite（标准库）+ 不可变 revision JSON，未引入 FTS/外部依赖。
 6. **测试**：设计列出的 `test_runner.py`/`test_egress.py` 改为等价边界测试（无执行后端→blocked；无外发路径断言）。
@@ -596,6 +621,7 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 10. **异步/IRQ 边界（M-04-33）**：按 profile/导入轨迹的 `async_events` 声明给事件加 `async` 标记与 UI chip/说明，**不推断**真实硬件中断/因果；rev1/rev2 兼容，静态投影与台账语义不变；out_of_scope 5 项已列在证据。
 11. **入口归纳（T44）**：entry subject 与 function subject 同用入口函数 id，按 `subject.type` 区分；无记录/请求失败**静默不显示 entry 子块、不新增 gap**（契约行为）；函数归纳/缺口逻辑不变。
 12. **分层阅读（CL-PF-02/03，T45）**：skill 文本/参考文件 + 合同测试，默认四层顺序与“先定位再解释”；只改变解释顺序/深度，不新增证据/参数；实际解释质量仍需独立对话评审。
+13. **跨 OS 快照（M-04-35，T47）**：Linux 构建的 Atlas 快照经 bootstrap `path_aliases` 显式映射导入 Windows；alias 仅参与快照身份匹配、不参与文件读取；验证目标为 Demo C 且仅本机 WSL/QEMU 路径，不改变 S4 门禁（Kbuild/生成头/native CFG/locks/aliases/复核/OS 出口/真实 Samba 远端构建仍未验证）。
 
 ---
 
@@ -603,7 +629,7 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 
 以下大多需要真实环境/额外授权，只能作为假设与下一步验证；已达成项单独标注，不能把未完成项写成已通过：
 
-1. **真实 Linux Kbuild + 固定 Atlas 0.8 runtime**：graph/manifest 字段与 fixtures 一致；失败 TU 诊断可保留并解释；生成头/目标 ABI 覆盖；Linux 构建快照可通过 `workspace_roots` 校验。前置：Linux 目标（Python≥3.11、工具链）、Linux 构建 Atlas 快照、内核源码/compdb/生成头。
+1. **真实 Linux Kbuild + 固定 Atlas 0.8 runtime**：graph/manifest 字段与 fixtures 一致；失败 TU 诊断可保留并解释；生成头/目标 ABI 覆盖；Linux 构建快照可通过 `workspace_roots` 校验。**已补充**：Linux 引擎 331 tests 在 WSL + QEMU Ubuntu 24.04 通过；Linux 构建的 Demo C 快照经 `path_aliases` 跨 OS 导入 Windows 并通过五视图（M-04-35）。**仍未验证**：真实内核/驱动 Kbuild 索引与生成头、目标 ABI/Kconfig 组合、真实 Samba 远端云构建。前置：固定 Linux 目标（Python≥3.11、工具链、内核源码/compdb/生成头）、远端构建凭据。
 2. **强制隔离 runner**（bwrap/OCI）能挡住 compiler probe 越根写/网络；负例通过前 `run` 保持阻断。
 3. **native CFG（Clang18 extractor）** 可用时 flow_cfg 结果正确；缺失时 `capability=false` 分支保持。
 4. **大仓库下 find/overview/五视图性能与预算**；当前“候选枚举不计入读取预算”可能成为热点。
@@ -614,6 +640,7 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 9. **skill 实际学习质量**：独立对话评审（结构测试不能证明学习效果；分层阅读 M-04-34、入口归纳 M-04-29 均只证结构与流程）；AI 归纳语义质量（是否把候选写成确定）需评审。
 10. **OS 出口认证**：需要目标 OS 的网络策略证据，当前只有“不联网”的代码事实与本机回环观测。
 11. **入口归纳/归纳竞态压测**：本轮入口成功与无记录两条路径已验，未构造网络层失败注入、未做长期竞态/刷新压力测试；需后续验证。
+12. **真实 Samba/远端云构建**：本会话无远端凭据，只验证“Linux（WSL）构建 → Windows 插件导入”的路径与机制；需在目标构建机执行等价 `tools/build-linux-atlas-snapshot.sh` 流程并复核，不能据本机路径推断远端可用。
 
 ---
 
@@ -634,7 +661,7 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 
 二次复核结论 **PASS WITH FINDINGS**（两项原始 blocking 已关闭；`prediction` 作者身份与少量 NIT 保留为非阻塞）。2026-11-08 真实 Atlas 0.8 产物对照（quickstart + 三函数 C 仓库）修复“真实 function 无 file/line、位置在 evidence”的适配缺口，并给函数名/显示名/文件名截断与 `safe_cursor.evidence_refs` 封顶加显式 marker（`evidence/real-atlas/`）。
 
-### 12.2 本轮（2026-11-15）阶段验收与真实缺陷修复
+### 12.2 本轮（2026-11-15/17）阶段验收与真实缺陷修复
 
 | 阶段 | 验收 | 期间发现并修复的真实缺陷 / 记录 |
 |---|---|---|
@@ -643,20 +670,22 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 | S2b 组/接口库/子流程 | `verify-s2b` 41/41 | 组折叠必须边不合并（31 条原边元数据 before/after 全量比对）；接口候选全部 may；组修订仅会话 |
 | S3a 场景/打桩/observed | `verify-s3` 43/43 | 契约 §5 DOM 示例与实际差异如实记录（如 `data-code-view="stub-panel"` 实际为容器类名）；observed 默认最近台账、跨场景 CAS 限制记录为交互改进候选 |
 | S3b 回退/轨迹导入/多场景 | `verify-s3b` 58/58 | imported 台账 undo 实际返回 `CAPABILITY_UNAVAILABLE`（契约只写“不提供”），按实际码记录；S3a 回归探针新增 `RV_SCENARIO_CHANNEL` 避免共享台账 CAS 冲突 |
-| S4-prep AI 归纳 + 入口 subject（T44） | `verify-summary` **56/56 全绿**（原 49）、layers 全 true、`ok/verified=true`、`in_scope_not_verified=0`、out_of_scope 5 | **Windows 签名密钥文本模式损坏**：`State.secret` 用 `os.open` 未带 `O_BINARY`，CRT 文本模式把随机密钥中的 `0x0A` 扩展为 CRLF，导致签名文件约 12% 概率损坏、已签 profile/台账/plan/summary 随机 `SCOPE_DENIED`（S3/S4 偶发失败根因）。修复为二进制打开+严格 32 字节校验，回归 `test_io_robustness.py`（含 0x0A/0x0D 密钥 round-trip 与损坏文件报错）；修复后引擎套件稳定（最终 323 tests）。**T44 入口归纳**：真实 `summary-put/view-summary subject_type=entry`（bus_send `f_afa…`）+ dsh-web `[data-ai-summary-entry]` 子块（文本/generator/facts/labels/stale）与函数归纳并存；无 entry 归纳的入口无子块/无新增 gap（静默契约）；`view.summary {subject_type:'entry'}` RPC；Cordis TAP 1/1；回归 S1..S3b + Node 200/200 + Demo 8/8；证据 sha256 见 §12.3 |
+| S4-prep AI 归纳 + 入口 subject（T44） | `verify-summary` **56/56 全绿**（原 49）、layers 全 true、`ok/verified=true`、`in_scope_not_verified=0`、out_of_scope 5 | **Windows 签名密钥文本模式损坏**：`State.secret` 用 `os.open` 未带 `O_BINARY`，CRT 文本模式把随机密钥中的 `0x0A` 扩展为 CRLF，导致签名文件约 12% 概率损坏、已签 profile/台账/plan/summary 随机 `SCOPE_DENIED`（S3/S4 偶发失败根因）。修复为二进制打开+严格 32 字节校验，回归 `test_io_robustness.py`（含 0x0A/0x0D 密钥 round-trip 与损坏文件报错）；修复后引擎套件稳定（最终 331 tests）。**T44 入口归纳**：真实 `summary-put/view-summary subject_type=entry`（bus_send `f_afa…`）+ dsh-web `[data-ai-summary-entry]` 子块（文本/generator/facts/labels/stale）与函数归纳并存；无 entry 归纳的入口无子块/无新增 gap（静默契约）；`view.summary {subject_type:'entry'}` RPC；Cordis TAP 1/1；回归 S1..S3b + Node 200/200 + Demo 8/8；证据 sha256 见 §12.3 |
 | S4-prep 性能 + 首屏批量（T27–T37） | `verify-perf` **25/25 全绿**，`ok=true/verified=true` | 首屏链路：T27 基线 1078/1141 → T28 并行/预取/缓存 646/704 → T33 批量首屏 455/527 → T37 `coupling_aux` **328–330/382–387 ms ≤500 ✅**；coupling p95 3 ms；`data-first-screen` 20/20 样本 60 处 batch、fallback=0；`coupling_aux` 一致性 8/8；剩余 not_verified 4 项（cold UI/tree→file/拖动/2000-10k 截断文本）如实；`LIMIT_EXCEEDED` 路径本 run 未触发（引擎/Node 测试覆盖） |
 | S4-prep 异步/IRQ 边界（T39–T41） | `verify-irq` **34/34 全绿**、layers 全 true、`ok/verified=true`、`in_scope_not_verified=0` | 真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`；dsh-web `[data-sequence-async="true"]`+“异步”chip/说明；static/rev1 导入台账无标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195（当次；最终 200/200）+ Demo 8/8；证据 sha256 见 §12.3 |
+| S4-prep Linux/跨 OS 快照（T47，M-04-35） | `verify-linux-snapshot` **12/12 全绿**（`ok=true, verified=true`）；QEMU Ubuntu 24.04.5 引擎 **331 tests OK**（2 项 Windows junction skip） | Linux 构建快照 `2ffddd4400b6400b8bdc55ffcd33bf76`（graph_hash `67aa438f…`，coverage parsed 2/failed 0，workspace_roots `/root/atlas-demo/repo`）经 bootstrap `candidate_roots[].path_aliases` 显式映射导入 Windows；无 alias 拒绝、错 root_ref 拒绝（`test_cross_os_snapshot.py` 8 项）；Windows vs Linux 快照 functions/call_targets/objects/field_accesses/flow_edges/lock_events/alias_relations = 19/15/18/15/90/0/3 一致，15 条字段访问 certainty 集合一致；entries 19、`bus_send` `bus.c:152`、coupling routes/5 functions/11 edges、source read sha256 `b2ec2328…`；隔离 dsh-web 五视图 Chromium probe 通过（残差失败 0；`gapsOriginal` 按 S2b/S3a/CW-09 已实现记 superseded）；构建脚本 `tools/build-linux-atlas-snapshot.sh`；证据（T49 最终 sha256）见 §12.3 |
 | CL-007 分层阅读（CL-PF-02/03，T45） | 合同测试 `test_skill_contract.py` **24/24**（含 test_20..24） | 新增 `references/layered-reading.md`（四层/单函数定位/输出模板/边界）；SKILL.md 工作流第 5 步“先定位再解释”；只改 skill 文本+合同测试，不新增运行时能力；实际解释质量待独立对话评审（M-04-34） |
-| 最终验收汇总（T45） | `evidence/final-acceptance/`：**8/8 阶段、320/320 检查**、tests **323/200/8** | 由各阶段 `verification.json` 聚合（含 sha256）；CW-09 49→56、总检查 313→320；S4 门禁/产品范围待确认项如实保留；**不替代** S4 目标门禁 |
+| 最终验收汇总（T47） | `evidence/final-acceptance/`：**9/9 阶段、332/332 检查**、tests **331/200/8** | 由各阶段 `verification.json` 聚合（含 sha256）；CW-09 49→56、新增 S4-prep-linux 12（总检查 320→332）；S4 门禁/产品范围待确认项如实保留；**不替代** S4 目标门禁 |
 | S4 可行性 | `evidence/s4-feasibility/`（`ok=true, verified=false`） | Linux 可移植性探测：Node 164/164、真实 Wasm worker 8/8、引擎 CLI status/import 可用；Python 3.8 引擎套件 255 errors；Windows 构建快照被拒绝——Kbuild/CFG/复核/OS 出口保持不可声明 |
 
-### 12.3 最终验收收口（2026-11-15）
+### 12.3 最终验收收口（2026-11-15 / 11-17）
 
 - **M-04-22 批量首屏 `view.firstScreen`（含 `coupling_aux`）已完成最终验收**：`node tools/verify-perf.mjs --with-repo-tests` → 25/25 全绿、layers 全 true、`ok=true/verified=true`；首屏 hot p50/p95 = **328–330/382–387 ms ≤500 ✅**（历史：batch 前 646/704、无 aux 455/527）；20/20 hot 样本 `[data-first-screen]` 60 处全部 batch（fallback=0）；一致性 8/8（CLI 5/5 视图 + RPC 5/5 逐字段一致、sizes 4 键、aux 计入 480 KiB、未知 view→INVALID_ARGUMENT/未知 entry→NOT_FOUND、无绝对路径）；回归 perf-regressions（S3b/S3a residual=[]/S2b/summary）+ Node 191/191（当次；最终 200/200）+ Demo 8/8 全绿。证据 sha256：`verification.json` `e350ed99…`、`first-screen-consistency.json` `8bb859f9…`、`README.md` `f2d39214…`、`commands.log` `a62f8942…`。
 - **M-04-33 异步/IRQ 事件边界已完成最终验收（T41）**：`node tools/verify-irq.mjs --with-repo-tests` → **34/34 全绿**（layers 全 true、`ok=true/verified=true`、`in_scope_not_verified=0`、out_of_scope 5）；真实 Wasm `reset→bus_register(1)→bus_irq()` 台账 `[null,0,0]` 且 `bus_irq` 真实产生 `IRQ`（`scn_7b5258892e19`）；observed/`view.sequence` 顶层 `async_events:["IRQ"]`、IRQ 消息 `async:true`（label `IRQ: write irq_count`）；dsh-web `[data-sequence-async="true"]`=1 + `[data-sequence-async-chip]`“异步” + `[data-sequence-async-note]` 说明；static 与 rev1 导入台账 0 标记（旧行为不变）；非法 async_events（duplicate/unknown/non_array/>16）对 profile/trace import 均 `INVALID_ARGUMENT` 且不写；回归 S3b/S3a(residual=[])/S2b/summary + Node 195/195（当次；最终 200/200）+ Demo 8/8。证据 sha256：`verification.json` `38080909…`、`README.md` `5914291e…`、`async-irq.png` `36907e95…`、`commands.log` `bf493784…`。
 - **M-04-29 AI 归纳（含入口 subject）已完成最终验收（T44）**：`node tools/verify-summary.mjs --with-repo-tests` → **56/56 全绿**（layers 全 true、`ok=true/verified=true`、`in_scope_not_verified=0`、out_of_scope 5）；function/group 归纳路径不变；真实 `summary-put subject_type=entry`（bus_send `f_afa…`）+ `view-summary --subject-type entry` 读回一致；dsh-web 选中 bus_send 出现 `[data-ai-summary-entry]` 子块（`-entry-text/-entry-generator/-entry-generated-at/-entry-facts/-entry-labels`、`data-ai-summary-entry-stale="false"`）且函数归纳仍正常；无 entry 归纳的 bus_register 无子块、无新增 gap（`[data-ai-summary-gap]` 仍 1 个，静默契约）；`view.summary {subject_type:'entry'}` RPC 读回；console=0、无绝对路径；回归 S1..S3b + Cordis TAP 1/1 + Node 200/200 + Demo 8/8。证据：`verification.json` 206,895 B sha256 `398279282ede…`、`README.md` 7,440 B `d1a217a3…`、`commands.log` 14,694 B `f05c14d1…`、`entry.png` 167,954 B `dc151ab7…`、`written.png` 185,829 B `3983b541…`、`gap.png` 141,363 B `50a5f79c…`（不变）、`host-runtime.tap` 364 B `43bd8381…`。
-- **CL-007 分层阅读补充已交付（T45）**：新增 `skills/learn-code-workspace/references/layered-reading.md`（四层：业务总框架→文件与函数职责→关键数据与状态→实现证据；单函数定位步骤；输出模板；边界），`SKILL.md` 工作流第 5 步“先定位再解释”并链接该文件；合同测试 `test_skill_contract.py` 新增 test_20..24（5 例，合同测试共 24 条）；最终验收汇总 `evidence/final-acceptance/`：**8/8 阶段、320/320 检查**（S1 26/S2a 37/S2b 41/S3a 43/S3b 58/CW-09 56/A11 25/async 34）、tests **323/200/8**。
-- **S4 目标门禁**：在具备 Linux 内核源码/compdb/生成头、Linux 构建 Atlas 快照、固定 Atlas Linux runtime、复核数据的固定 Linux 目标上重跑同一验收口径；在此之前不得更新本文件的“未验证”结论。
+- **CL-007 分层阅读补充已交付（T45）**：新增 `skills/learn-code-workspace/references/layered-reading.md`（四层：业务总框架→文件与函数职责→关键数据与状态→实现证据；单函数定位步骤；输出模板；边界），`SKILL.md` 工作流第 5 步“先定位再解释”并链接该文件；合同测试 `test_skill_contract.py` 新增 test_20..24（5 例，合同测试共 24 条）；最终验收汇总 `evidence/final-acceptance/`（T47 后）：**9/9 阶段、332/332 检查**（S1 26/S2a 37/S2b 41/S3a 43/S3b 58/CW-09 56/A11 25/async 34/linux 12）、tests **331/200/8**。
+- **M-04-35 跨 OS 快照根映射已完成最终验收（T47）**：`node tools/verify-linux-snapshot.mjs` → **12/12 全绿**（`ok=true, verified=true`）；Linux 构建快照 `2ffddd4400b6400b8bdc55ffcd33bf76`（graph_hash `67aa438f7be00ec5c76370b4795db4466f26ecd816dcb358cfe3f5bde0bae795`，coverage parsed 2/failed 0，workspace_roots `["/root/atlas-demo/repo"]`）经 bootstrap `candidate_roots[].path_aliases` 映射 `slice-root` 后导入 Windows；`view-entries` 19、`bus_send` `bus.c:152`、coupling routes/5 functions/11 edges、source read sha256 `b2ec2328…`；Windows vs Linux 快照计数 19/15/18/15/90/0/3 一致、15 条字段访问 `(function,object,field,access,certainty)` 集合一致；隔离 dsh-web 五视图 Chromium probe 通过（残差失败 0；冻结于 S2a 的 `gapsOriginal` 记 superseded）；无 alias/错 root_ref 拒绝（`test_cross_os_snapshot.py` 8 项）；Linux 引擎在 WSL + QEMU Ubuntu 24.04.5 均 **331 tests OK**（2 项 Windows junction skip）。证据（T49 独立复核最终值）：`verification.json` 27,826 B sha256 `f7e4165568a0297e422d9671c6d293a503a93965d10e1f52603eabd85452f8d2`（`ok=true/verified=true`，含 `checks_summary` 12/12）、`README.md` 9,531 B `39a11bc3652a42258f343c3aafa071dc6331f058eedcb2ed69fa8216cca0c896`（含 §7 独立复核）、`independent-review.json` 14,513 B `64ca50ebc76777a23d62963274cc21674f661293bb35a41b3909097117ef8dc8`（T49 final，12 项、修复前后对比、not_verified）、`five-views-probe.json` 124,190 B `426e57049c669d48e51a009d454404735fb87e737529734f2363059b5f90a087`、`qemu-verification.json` 1,914 B `c6ed49272928b4fd1ff13cecd3717f484de5e85491371a807673f934d0dea51d`、`linux-*.png` 六张（哈希不变）。T48/T49 修复复核：`checks_summary` 已补齐；**过期 S2a/CW-T3 gap 文案已修复**（AI 归纳需 Agent 写入、运行观测在 observed、场景需可信 Wasm profile），probe gap 中不再出现“S2b / CW-T3 / 未接入 / 后置”，Windows fixture 与 Linux 快照 coupling/tree/end_to_end/sequence gap 列表逐项一致；`gapsOriginal` 的 superseded 审计仍成立。**这不等于 S4 门禁通过**：目标为 Demo C；真实 Kbuild/生成头/native CFG/locks/aliases/复核/OS 出口/真实 Samba 远端构建仍未验证（Atlas Linux runtime 自报 `cfg=unsupported`、`locks=lexical projection`）。
+- **S4 目标门禁（部分补充，仍未完成）**：本版已补充 **Linux 引擎可移植性**（WSL + QEMU Ubuntu 24.04，331 tests OK）与 **Linux 构建 Demo C 快照跨 OS 导入**（`path_aliases`，12/12）；以下仍不可声明：真实 Linux/Kbuild 内核或驱动索引与生成头、native CFG/locks/aliases 深度、复核 precision/recall、OS 出口认证、真实 Samba/远端云构建（本会话无远端凭据）。需在具备固定 Linux 目标（内核源码/compdb/生成头、Atlas Linux runtime、复核数据）与远端构建凭据时重跑同一验收口径；在此之前不得更新本文件的“未验证”结论。
 
 ---
 
@@ -674,8 +703,9 @@ node tools/verify-irq.mjs --with-repo-tests             # 异步/IRQ 事件边�
 | CL-007 分层阅读（CL-PF-02/03） | `cd engine && python -m unittest discover -s tests -p "test_skill_contract.py" -v`；各阶段回归 | `skills/learn-code-workspace/references/layered-reading.md`、`SKILL.md`（第 5 步）、`engine/tests/test_skill_contract.py`（24 条，含 test_20..24） | actual（结构/合同；解释质量待独立对话评审） |
 | CW-11/A11 性能（含首屏批量/aux） | `node tools/verify-perf.mjs --with-repo-tests`（内含 `tools/firstscreen-consistency.mjs`） | `evidence/perf/`（25/25 全绿、hot p50/p95 328–330/382–387 ≤500 ✅、一致性 8/8、60 处 batch/fallback=0、4 项 not_verified 如实） | **actual（已验证）** |
 | 异步/IRQ 事件边界（S4-prep 收尾） | `node tools/verify-irq.mjs --with-repo-tests` | `evidence/async-irq/`（34/34、layers 全 true、`in_scope_not_verified=0`/out_of_scope 5、真实 Wasm IRQ、async DOM、截图；4 个证据 sha256 见 §12.3） | **actual（已验证）** |
-| 最终验收汇总（8 阶段） | 见 `evidence/final-acceptance/README.md` | `evidence/final-acceptance/{README.md,summary.json}`（**8/8 阶段、320/320 检查**、tests 323/200/8；各阶段 sha256 索引） | **actual（聚合；S4 门禁仍未验证）** |
-| S4 可行性 | 见 `evidence/s4-feasibility/README.md` | `evidence/s4-feasibility/`（Node 164/164、worker 8/8、引擎限制） | **仅探测，门禁未验证** |
+| S4-prep Linux/跨 OS 快照（M-04-35） | `node tools/verify-linux-snapshot.mjs`（需先用 `tools/build-linux-atlas-snapshot.sh` 在 Linux 生成快照） | `evidence/linux-atlas/`（12/12、Linux 快照 `2ffddd44…`、跨 OS 计数/字段访问一致、五视图 Chromium probe、`qemu-verification.json` 331 tests、T48/T49 独立复核 `independent-review.json` 通过；最终 sha256 见 §12.3） | **actual（已验证；Linux 可移植性 + Demo C 跨 OS 导入）** |
+| 最终验收汇总（9 阶段） | 见 `evidence/final-acceptance/README.md` | `evidence/final-acceptance/{README.md,summary.json}`（**9/9 阶段、332/332 检查**、tests 331/200/8；各阶段 sha256 索引） | **actual（聚合；S4 门禁仍未完成）** |
+| S4 可行性（早期探测） | 见 `evidence/s4-feasibility/README.md` | `evidence/s4-feasibility/`（Node 164/164、worker 8/8、引擎限制；早期 Python 3.8 探测） | **仅探测；本轮已补充跨 OS 验证（见上），Kbuild/CFG/复核/OS 出口仍未验证** |
 | 首屏批量端点（`view.firstScreen`+aux） | `node tools/verify-perf.mjs --with-repo-tests` | `evidence/perf/{verification.json,first-screen-consistency.json}`（25/25；8/8；sha256 见 §12.3） | **actual（已验证）** |
 
-**结论**：本交付可作为“合成 fixture + 真实 Atlas 产物对照 + 隔离 rc.5 dsh-web 上可安装、可自测、边界清晰”的当前整体实现；最终验收汇总 `evidence/final-acceptance/`：**8/8 阶段、320/320 检查、tests 323/200/8**。但不得据此声称已读懂用户真实驱动或通过 Linux/Kbuild/CFG/locks/aliases/复核/OS 出口门禁：**S4 目标门禁仍未验证**（真实 Linux/Kbuild、CFG/locks/aliases、复核 precision/recall、OS 出口）。首屏性能已在**合成 500/800 夹具 + 本机**上达标（hot p50/p95 328–330/382–387 ms ≤500，25/25 全绿），但不代表真实仓库/其它机器；异步/IRQ 边界仅做声明式标记（34/34），**不推断**真实中断/因果；AI 归纳含入口子块（56/56）但正文仍由 Agent 写入、插件不调用模型；分层阅读为 skill 参考+合同测试（24 条），实际解释质量待独立对话评审。改 skill 只能调整阅读/提问/呈现/何时写归纳等策略，不能绕过硬边界，也不能把未验证结果（Linux/CFG/真实设备/异步因果）提升为事实。
+**结论**：本交付可作为“合成 fixture + 真实 Atlas 产物对照（Windows 与 Linux runtime）+ 隔离 rc.5 dsh-web 上可安装、可自测、边界清晰”的当前整体实现；最终验收汇总 `evidence/final-acceptance/`：**9/9 阶段、332/332 检查、tests 331/200/8**。但**不得**据此声称 S4 目标门禁通过：**真实 Linux/Kbuild 内核或驱动索引与生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证、真实 Samba 远端云构建仍未验证**。本版已验证的是：Linux 引擎可移植性（WSL + QEMU Ubuntu 24.04，331 tests）与 **Linux 构建 Demo C 快照经 `path_aliases` 导入 Windows**（12/12，跨 OS 计数/字段访问一致、五视图 probe 通过）——目标代码为 Demo C，非内核/驱动；Atlas Linux runtime 自报 `cfg=unsupported`、`locks=lexical projection`。首屏性能在合成 500/800 夹具+本机达标（hot p50/p95 328–330/382–387 ms ≤500，25/25 全绿），不代表真实仓库/其它机器；异步/IRQ 仅声明式标记（34/34），不推断真实中断；AI 归纳含入口子块（56/56）但正文仍由 Agent 写入、插件不调用模型；分层阅读为 skill 参考+合同测试（24 条），实际解释质量待独立对话评审。改 skill 只能调整阅读/提问/呈现/何时写归纳等策略，不能绕过硬边界（含跨 OS `path_aliases` 校验），也不能把未验证结果提升为事实。

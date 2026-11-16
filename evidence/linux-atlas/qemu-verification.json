@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "stage": "S4-prep-linux-atlas",
+  "purpose": "在本地 QEMU Ubuntu 24.04 lab 上验证引擎与 Linux 可移植性；该 guest 无编译器/无网络，Atlas 快照构建使用 WSL2 Linux。",
+  "environment": {
+    "guest": "autoenv-ubuntu (Ubuntu 24.04.5 LTS)",
+    "kernel": "Linux 6.8.0-139-generic #139-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug 1 03:52:05 UTC 2026 x86_64",
+    "python": "Python 3.12.3",
+    "ssh": "DSH remote-env target-ubuntu-lab-ssh (127.0.0.1:2222, key auth, strict known_hosts) via local QEMU user networking",
+    "compilers": "none (gcc-14-base runtime libs only; no gcc/make/clang; network restrict=on so no install)"
+  },
+  "commands": [
+    "ssh lab@127.0.0.1:2222 uname -srvmo && lsb_release -ds && python3 --version",
+    "scp repo-src2.tgz -> /home/lab; tar -xzf; cd engine && python3 -m unittest discover -s tests",
+    "cd engine && python3 -m unittest discover -s tests -v (skip identification)"
+  ],
+  "checks": [
+    {
+      "name": "qemu_ssh_identity",
+      "ok": true,
+      "detail": "Ubuntu 24.04.5 LTS, kernel 6.8.0-139-generic x86_64, lab user, key auth"
+    },
+    {
+      "name": "qemu_python_312",
+      "ok": true,
+      "detail": "Python 3.12.3 >= 3.11 (engine requirement)"
+    },
+    {
+      "name": "qemu_engine_tests",
+      "ok": true,
+      "detail": "Ran 331 tests OK (skipped=2 Windows-only junction regressions) in 22.6 s"
+    },
+    {
+      "name": "qemu_skips_expected",
+      "ok": true,
+      "detail": "test_final_junction_is_rejected / test_resume_ignores_junction_inside_repository skipped: Windows junction regression"
+    }
+  ],
+  "not_verified_on_qemu": [
+    "Atlas 分析：guest 无编译器（gcc/make/clang 未安装）且网络 restrict=on，无法执行 compdb 探针/Kbuild。",
+    "内核/Kbuild、生成头、native CFG/locks/aliases 仍需目标 Linux 构建环境。"
+  ],
+  "ok": true,
+  "verified": true
+}

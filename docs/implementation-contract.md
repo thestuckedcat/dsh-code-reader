@@ -51,8 +51,11 @@
 ```json
 {"schema_version":1,"profile_ref":"desktop","scope_ref":"local","scope_generation":1,
  "state_dir":"<abs>","import_inbox_dir":"<abs>","output_root":"<abs>",
- "candidate_roots":[{"root_ref":"synthetic-root","absolute_path":"<abs>","read_grant_ref":"grant-1"}]}
+ "candidate_roots":[{"root_ref":"synthetic-root","absolute_path":"<abs>","read_grant_ref":"grant-1",
+                     "path_aliases":["<foreign analyzed root>"]}]}
 ```
+
+`candidate_roots[].path_aliases`（可选，≤16 条绝对路径）只用于**跨机器快照的身份匹配**：Atlas 在另一台机器/OS 上构建快照时，manifest `workspace_roots` 记录构建机绝对路径；插件通过该字段显式声明“这个本地 root_ref 对应构建机的哪个分析根”。alias 不参与文件读取（读取仍在注册 root 内做越界检查），未声明 alias 时导入仍拒绝，alias 挂错 root_ref 不满足目标仓库校验；回归见 `engine/tests/test_cross_os_snapshot.py`。
 
 `State` 提供（签名固定）：
 

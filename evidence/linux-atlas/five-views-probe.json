@@ -1,0 +1,3621 @@
+{
+  "ok": false,
+  "probe": "five-views",
+  "url": "http://127.0.0.1:5682/?token=<redacted>",
+  "entry_name": "bus_send",
+  "expected_line": 152,
+  "expected_snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+  "views": {
+    "coupling": {
+      "ok": false,
+      "columns": [
+        "writer",
+        "resource",
+        "reader"
+      ],
+      "steps": {
+        "columns": true,
+        "resourceNodeRoutes": true,
+        "functionNodes": true,
+        "writeExactMaxLen46": true,
+        "readMay929398": true,
+        "railResources": true,
+        "stubPanel": true,
+        "railClickHighlights": true,
+        "gapsOriginal": false
+      },
+      "resourceNodes": [
+        {
+          "resource_id": "s_0860e6738eaa8c95f37d0d03",
+          "text": "routesstruct Route[4] · STATIC字段：lane、max_len写 4 / 读 7"
+        }
+      ],
+      "routesNode": {
+        "resource_id": "s_0860e6738eaa8c95f37d0d03",
+        "text": "routesstruct Route[4] · STATIC字段：lane、max_len写 4 / 读 7"
+      },
+      "functionNodes": [
+        {
+          "function_id": "f_fb7f6288a46f74ca9177d707",
+          "text": "reset()bus.c:31 · writer访问 exact 0 / may 2"
+        },
+        {
+          "function_id": "f_5db207a12d0d0679973b6789",
+          "text": "store_route()bus.c:43 · writer访问 exact 2 / may 0"
+        },
+        {
+          "function_id": "f_29d39fba5cb4233be354eb5e",
+          "text": "check_length()bus.c:96 · reader访问 exact 0 / may 2"
+        },
+        {
+          "function_id": "f_c0c1008db5dc37f89ebd8271",
+          "text": "dispatch_transfer()bus.c:143 · reader访问 exact 0 / may 2"
+        },
+        {
+          "function_id": "f_853ee38417887d937c0c5c48",
+          "text": "lookup_route()bus.c:89 · reader访问 exact 0 / may 3"
+        }
+      ],
+      "accessEdges": [
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:98"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:99"
+        },
+        {
+          "access": "write",
+          "certainty": "exact",
+          "text": "写入 / 修改 lane @ bus.c:45"
+        },
+        {
+          "access": "write",
+          "certainty": "exact",
+          "text": "写入 / 修改 max_len @ bus.c:46"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 lane @ bus.c:92"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:92"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:93"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 lane @ bus.c:148"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 lane @ bus.c:149"
+        },
+        {
+          "access": "write",
+          "certainty": "may",
+          "text": "写入 / 修改 lane @ bus.c:34"
+        },
+        {
+          "access": "write",
+          "certainty": "may",
+          "text": "写入 / 修改 max_len @ bus.c:35"
+        }
+      ],
+      "writeExact": [
+        {
+          "access": "write",
+          "certainty": "exact",
+          "text": "写入 / 修改 max_len @ bus.c:46"
+        }
+      ],
+      "readMay": [
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:98"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:99"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:92"
+        },
+        {
+          "access": "read",
+          "certainty": "may",
+          "text": "读取 max_len @ bus.c:93"
+        }
+      ],
+      "readLines": [
+        92,
+        93,
+        98,
+        99
+      ],
+      "rail": {
+        "rail_present": true,
+        "resource_tab_text": "全局资源",
+        "stub_rail": true
+      },
+      "railRows": [
+        {
+          "resource_id": "s_0860e6738eaa8c95f37d0d03",
+          "text": "routes struct Route[4] · STATIC · bus.c:26 字段：lane、max_len 读取 7 写入 / 修改 4"
+        }
+      ],
+      "stubClick": {
+        "ok": true
+      },
+      "stubPanel": {
+        "text": "打桩模拟（Wasm 隔离执行） 可信 profile → 有序接口调用 → 隔离 worker 执行 → 只追加运行台账；仅在点击「运行」时执行。 模拟 profile （未选择） 未导入模拟 profile：请把 sim-profile.json 与对应 .wasm 放入 bootstrap import_inbox_dir，由 Host 校验/签名后再使用。 先选择模拟 profile。 运行会真实调用隔离 Wasm worker；超时/取消返回 OUTCOME_UNKNOWN 且不落台账。 运行场景 先选择模拟 profile。 尚未运行；运行成功后在这里显示每步结果、事件与受影响资源。 回退末尾 N 步（前缀重放） 回退步数 N 回退末尾 N 步 暂无可回退台账：先运行一次场景。 回退会重放前缀并逐条核验 memory digest；导入台账不可回退。 导入轨迹（inbox 只读台账） 输入可信 inbox 内的轨迹文件名（仅 A-Za-z0-9._-，不做路径选择/文件上传）。 导入轨迹 sim_profile_missing 未导入模拟 profile：请把 sim-pro",
+        "disabled_placeholder": true
+      },
+      "railRoutesRow": {
+        "resource_id": "s_0860e6738eaa8c95f37d0d03",
+        "text": "routes struct Route[4] · STATIC · bus.c:26 字段：lane、max_len 读取 7 写入 / 修改 4"
+      },
+      "railClick": {
+        "ok": true
+      },
+      "railHighlight": {
+        "before": {
+          "attributes": {
+            "class": "dcr-coupling-node dcr-resource-node dcr-dim",
+            "data-resource-node": "s_0860e6738eaa8c95f37d0d03",
+            "data-resource-id": "s_0860e6738eaa8c95f37d0d03",
+            "tabindex": "0",
+            "role": "button",
+            "aria-label": "资源 routes",
+            "style": "left: 326px; top: 56px; width: 236px; height: 86px;"
+          },
+          "className": "dcr-coupling-node dcr-resource-node dcr-dim",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "stroke": "none"
+        },
+        "after": {
+          "attributes": {
+            "class": "dcr-coupling-node dcr-resource-node dcr-selected dcr-highlight",
+            "data-resource-node": "s_0860e6738eaa8c95f37d0d03",
+            "data-resource-id": "s_0860e6738eaa8c95f37d0d03",
+            "tabindex": "0",
+            "role": "button",
+            "aria-label": "资源 routes",
+            "style": "left: 326px; top: 56px; width: 236px; height: 86px;"
+          },
+          "className": "dcr-coupling-node dcr-resource-node dcr-selected dcr-highlight",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "stroke": "none"
+        },
+        "matched": true
+      },
+      "gaps": [
+        {
+          "code": "",
+          "text": "ai_summary"
+        },
+        {
+          "code": "",
+          "text": "real_device_dispatch"
+        },
+        {
+          "code": "",
+          "text": "resource_object_unresolved"
+        },
+        {
+          "code": "",
+          "text": "run_observation"
+        },
+        {
+          "code": "ai_summary",
+          "text": "ai_summary\n状态 unavailable\n归纳正文由 Agent 经 code_summary 写入；插件不调用模型"
+        },
+        {
+          "code": "real_device_dispatch",
+          "text": "real_device_dispatch\n状态 unavailable\n真实设备下发需单独授权与运行验证"
+        },
+        {
+          "code": "resource_object_unresolved",
+          "text": "resource_object_unresolved\n状态 degraded\n1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+        },
+        {
+          "code": "ai_summary",
+          "text": "ai_summary\n状态 unavailable\n暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）"
+        },
+        {
+          "code": "run_observation",
+          "text": "run_observation\n状态 unavailable\n静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账"
+        }
+      ],
+      "gapTextSamples": [
+        {
+          "code": "",
+          "text": "ai_summary"
+        },
+        {
+          "code": "",
+          "text": "real_device_dispatch"
+        },
+        {
+          "code": "",
+          "text": "resource_object_unresolved"
+        },
+        {
+          "code": "",
+          "text": "run_observation"
+        },
+        {
+          "code": "ai_summary",
+          "text": "ai_summary\n状态 unavailable\n归纳正文由 Agent 经 code_summary 写入；插件不调用模型"
+        },
+        {
+          "code": "real_device_dispatch",
+          "text": "real_device_dispatch\n状态 unavailable\n真实设备下发需单独授权与运行验证"
+        },
+        {
+          "code": "resource_object_unresolved",
+          "text": "resource_object_unresolved\n状态 degraded\n1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+        },
+        {
+          "code": "ai_summary",
+          "text": "ai_summary\n状态 unavailable\n暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）"
+        },
+        {
+          "code": "run_observation",
+          "text": "run_observation\n状态 unavailable\n静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账"
+        }
+      ]
+    },
+    "tree": {
+      "ok": true,
+      "steps": {
+        "root": true,
+        "expanded": true,
+        "guardText": true,
+        "treeClickLocatesFile": true,
+        "treeClickFileLine": true
+      },
+      "targets": [
+        "lookup_route",
+        "check_length",
+        "dispatch_transfer"
+      ],
+      "rootNodes": [
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e",
+          "text": "− bus_send() 入口 返回 -22 返回 -2 返回 -90 返回 status"
+        }
+      ],
+      "nodes": [
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e",
+          "depth": 0,
+          "text": "− bus_send() 入口 返回 -22 返回 -2 返回 -90 返回 status",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_24eea864048f716ad071ee09>external:trace",
+          "depth": 1,
+          "text": "trace() 外部边界 调用点 bus.c:154 · TRACE(REQUEST, channel, length, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_d884d0c833026b664a0a192e>external:trace",
+          "depth": 1,
+          "text": "trace() 外部边界 调用点 bus.c:156 · TRACE(INVALID, channel, length, 0) 条件：if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { TRACE(INVALID, channel, length, 0); return -22; } 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_7cc4223615bcd1539ff470c9>f_853ee38417887d937c0c5c48",
+          "depth": 1,
+          "text": "− lookup_route() 调用点 bus.c:160 · lookup_route(channel) 返回 route->max_len ? route : 0",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_7cc4223615bcd1539ff470c9>f_853ee38417887d937c0c5c48/c_6b0b5e97fc7cdf925e6c2b30>external:trace",
+          "depth": 2,
+          "text": "trace() 外部边界 调用点 bus.c:92 · TRACE(LOOKUP, channel, route->lane, route->max_len) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_978ef5321385ad6a44f446fd>f_29d39fba5cb4233be354eb5e",
+          "depth": 1,
+          "text": "− check_length() 调用点 bus.c:164 · check_length(route, length) 条件：if (!check_length(route, length)) return -90 返回 allowed",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_978ef5321385ad6a44f446fd>f_29d39fba5cb4233be354eb5e/c_1b71555f8d571fe4d772a677>external:trace",
+          "depth": 2,
+          "text": "trace() 外部边界 调用点 bus.c:99 · TRACE(CHECK_LENGTH, length, route->max_len, allowed) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_aea45559618c68f9ca127758>external:trace",
+          "depth": 1,
+          "text": "trace() 外部边界 调用点 bus.c:169 · TRACE(LOCK, transfer_lock, 0, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271",
+          "depth": 1,
+          "text": "− dispatch_transfer() 调用点 bus.c:170 · dispatch_transfer(route, length) 返回 submit_buffered(route->lane, length) 返回 submit_direct(route->lane, length)",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_30b4f80ce6282341350ecedb>external:trace",
+          "depth": 2,
+          "text": "trace() 外部边界 调用点 bus.c:146 · TRACE(TRANSFER, length, buffered, DIRECT_LIMIT) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999",
+          "depth": 2,
+          "text": "− submit_buffered() 调用点 bus.c:148 · submit_buffered(route->lane, length) 条件：if (buffered) return submit_buffered(route->lane, length) 返回 commit_transfer(lane, staged)",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_21b919282d9a3254756a287d>external:trace",
+          "depth": 3,
+          "text": "trace() 外部边界 调用点 bus.c:138 · TRACE(BUFFERED, lane, length, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_f6afc2ee7099a3b144340b21>f_005279472404037d2f6c01fe",
+          "depth": 3,
+          "text": "− stage_payload() 调用点 bus.c:139 · stage_payload(lane, length) 返回 staged_lengths[lane]",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_f6afc2ee7099a3b144340b21>f_005279472404037d2f6c01fe/c_7e3ddd0a071d76f8e06b02bc>external:trace",
+          "depth": 4,
+          "text": "trace() 外部边界 调用点 bus.c:126 · TRACE(STAGE, lane, staged_lengths[lane], 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954",
+          "depth": 3,
+          "text": "− commit_transfer() 调用点 bus.c:140 · commit_transfer(lane, staged) 返回 write_doorbell(value)",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_2b8d1c9b864537da4380c4cf>external:trace",
+          "depth": 4,
+          "text": "trace() 外部边界 调用点 bus.c:118 · TRACE(COMMIT, lane, length, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_72fe01a3cabee76cc342ea94>f_e5d43924ab1993b706dd4971",
+          "depth": 4,
+          "text": "− encode_doorbell() 调用点 bus.c:119 · encode_doorbell(lane, length) 返回 value",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_72fe01a3cabee76cc342ea94>f_e5d43924ab1993b706dd4971/c_6aeabbe607671586b99aeb2f>external:trace",
+          "depth": 5,
+          "text": "trace() 外部边界 调用点 bus.c:106 · TRACE(ENCODE, lane, length, value) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6",
+          "depth": 4,
+          "text": "− write_doorbell() 调用点 bus.c:120 · write_doorbell(value) 返回 platform_write(TX_DOORBELL, value)",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_d1f65721f937ab964fd733fd>external:trace",
+          "depth": 5,
+          "text": "trace() 外部边界 调用点 bus.c:112 · TRACE(DOORBELL, TX_DOORBELL, value, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_92d73664ed9e2b2c56412b5d>f_09576de8d56bce6d81bcb7c2",
+          "depth": 5,
+          "text": "− platform_write() 调用点 bus.c:113 · platform_write(TX_DOORBELL, value) 返回 platform_status 返回 0",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_92d73664ed9e2b2c56412b5d>f_09576de8d56bce6d81bcb7c2/c_669942153b02c754e4f2fd34>external:trace",
+          "depth": 6,
+          "text": "trace() 外部边界 调用点 platform.c:21 · trace(LIBRARY, address, value, (unsigned)platform_status, __LINE__) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_9370608aa0bc794043ce1e44>f_8047418a524a7e72eca55999/c_ffb567213e50536c0d2bd174>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_92d73664ed9e2b2c56412b5d>f_09576de8d56bce6d81bcb7c2/c_910ec87dae6ec4cd58d9c2d5>external:trace",
+          "depth": 6,
+          "text": "trace() 外部边界 调用点 platform.c:26 · trace(WRITE, address, simulated_doorbell, before, __LINE__) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6",
+          "depth": 2,
+          "text": "− submit_direct() 调用点 bus.c:149 · submit_direct(route->lane, length) 返回 commit_transfer(lane, length)",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_b4ee9b7bb7f7b890a928ce43>external:trace",
+          "depth": 3,
+          "text": "trace() 外部边界 调用点 bus.c:132 · TRACE(DIRECT, lane, length, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954",
+          "depth": 3,
+          "text": "− commit_transfer() 调用点 bus.c:133 · commit_transfer(lane, length) 返回 write_doorbell(value)",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_2b8d1c9b864537da4380c4cf>external:trace",
+          "depth": 4,
+          "text": "trace() 外部边界 调用点 bus.c:118 · TRACE(COMMIT, lane, length, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_72fe01a3cabee76cc342ea94>f_e5d43924ab1993b706dd4971",
+          "depth": 4,
+          "text": "− encode_doorbell() 调用点 bus.c:119 · encode_doorbell(lane, length) 返回 value",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_72fe01a3cabee76cc342ea94>f_e5d43924ab1993b706dd4971/c_6aeabbe607671586b99aeb2f>external:trace",
+          "depth": 5,
+          "text": "trace() 外部边界 调用点 bus.c:106 · TRACE(ENCODE, lane, length, value) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6",
+          "depth": 4,
+          "text": "− write_doorbell() 调用点 bus.c:120 · write_doorbell(value) 返回 platform_write(TX_DOORBELL, value)",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_d1f65721f937ab964fd733fd>external:trace",
+          "depth": 5,
+          "text": "trace() 外部边界 调用点 bus.c:112 · TRACE(DOORBELL, TX_DOORBELL, value, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_92d73664ed9e2b2c56412b5d>f_09576de8d56bce6d81bcb7c2",
+          "depth": 5,
+          "text": "− platform_write() 调用点 bus.c:113 · platform_write(TX_DOORBELL, value) 返回 platform_status 返回 0",
+          "visible": true,
+          "toggles": 1
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_92d73664ed9e2b2c56412b5d>f_09576de8d56bce6d81bcb7c2/c_669942153b02c754e4f2fd34>external:trace",
+          "depth": 6,
+          "text": "trace() 外部边界 调用点 platform.c:21 · trace(LIBRARY, address, value, (unsigned)platform_status, __LINE__) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_60bdf3a3e752598da6d08539>f_c0c1008db5dc37f89ebd8271/c_34fe4d36551002e04f7cd569>f_300d7bc2db3ab274595fd8d6/c_ebc3854688246be35cf8c93f>f_9396c93325f319ba5cd50954/c_d5ad66512ec295b4b39bc506>f_29acb68363785953b7744ab6/c_92d73664ed9e2b2c56412b5d>f_09576de8d56bce6d81bcb7c2/c_910ec87dae6ec4cd58d9c2d5>external:trace",
+          "depth": 6,
+          "text": "trace() 外部边界 调用点 platform.c:26 · trace(WRITE, address, simulated_doorbell, before, __LINE__) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        },
+        {
+          "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_efa9f438d4c6a9fd69e6aaec>external:trace",
+          "depth": 1,
+          "text": "trace() 外部边界 调用点 bus.c:172 · TRACE(LOCK, transfer_lock, 0, 0) 局限 implementation_not_found",
+          "visible": true,
+          "toggles": 0
+        }
+      ],
+      "checkLengthNode": {
+        "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_978ef5321385ad6a44f446fd>f_29d39fba5cb4233be354eb5e",
+        "depth": 1,
+        "text": "− check_length() 调用点 bus.c:164 · check_length(route, length) 条件：if (!check_length(route, length)) return -90 返回 allowed",
+        "visible": true,
+        "toggles": 1
+      },
+      "lookupNode": {
+        "node_id": "n:f_7d95aefe1ae37d3ef60fca8e/c_7cc4223615bcd1539ff470c9>f_853ee38417887d937c0c5c48",
+        "depth": 1,
+        "text": "− lookup_route() 调用点 bus.c:160 · lookup_route(channel) 返回 route->max_len ? route : 0",
+        "visible": true,
+        "toggles": 1
+      },
+      "lookupCallsiteLine": 160,
+      "lookupLine": 89,
+      "nodeClick": {
+        "ok": true
+      },
+      "fileAfterTreeClick": {
+        "ready": true,
+        "state": "ready",
+        "text_length": 5426
+      },
+      "fileLines": [
+        89
+      ],
+      "locationEvidence": {
+        "target_present": true,
+        "in_viewport": false,
+        "current_attrs": [
+          [
+            "DIV",
+            "data-highlight",
+            "true"
+          ]
+        ],
+        "row_visible": true
+      },
+      "fileSelectedLines": [
+        89
+      ]
+    },
+    "end_to_end": {
+      "ok": true,
+      "steps": {
+        "entryNode": true,
+        "decisionNode": true,
+        "errorExit": true,
+        "errorEdgeColor": true,
+        "externalPlatformWrite": true,
+        "externalEdgeDashed": true,
+        "guardEdge": true,
+        "noAbsolutePathNode": true,
+        "orthogonalEdges": true,
+        "orthogonalOnlyHV": true,
+        "directionDown": true,
+        "fitControl": true,
+        "relayoutControl": true,
+        "dragMoved": true,
+        "relayoutRestored": true
+      },
+      "nodes": [
+        {
+          "node_id": "entry:f_7d95aefe1ae37d3ef60fca8e",
+          "kind": "entry",
+          "shape": "ellipse",
+          "role": "normal",
+          "text": "bus_send bus.c:152",
+          "rect": {
+            "x": 953,
+            "y": 183,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "decision:c_978ef5321385ad6a44f446fd",
+          "kind": "decision",
+          "shape": "diamond",
+          "role": "normal",
+          "text": "if (!check_length(route, length)) re… bus.c:164 判断菱形",
+          "rect": {
+            "x": 647,
+            "y": 228,
+            "width": 70,
+            "height": 70
+          }
+        },
+        {
+          "node_id": "decision:c_d884d0c833026b664a0a192e",
+          "kind": "decision",
+          "shape": "diamond",
+          "role": "normal",
+          "text": "if (channel >= CHANNEL_COUNT || leng… bus.c:156 判断菱形",
+          "rect": {
+            "x": 734,
+            "y": 228,
+            "width": 70,
+            "height": 70
+          }
+        },
+        {
+          "node_id": "fn:f_c0c1008db5dc37f89ebd8271",
+          "kind": "process",
+          "shape": "rect",
+          "role": "normal",
+          "text": "dispatch_transfer bus.c:143 · 2 个返回",
+          "rect": {
+            "x": 822,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "fn:f_853ee38417887d937c0c5c48",
+          "kind": "process",
+          "shape": "rect",
+          "role": "normal",
+          "text": "lookup_route bus.c:89 · 1 个返回",
+          "rect": {
+            "x": 909,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_cc3a5f6f18eebba8a03fbbed",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "error",
+          "text": "返回 -2 bus.c:162 异常出口",
+          "rect": {
+            "x": 1355,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_d8b362f4fb3cf7f49304b168",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "error",
+          "text": "返回 -22 bus.c:157 异常出口",
+          "rect": {
+            "x": 1355,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_d3188e134d3f77712abfd011",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "error",
+          "text": "返回 -90 bus.c:165 异常出口",
+          "rect": {
+            "x": 1355,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_9ebce340bab5a7cacf7d677d",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "normal",
+          "text": "返回 status bus.c:173",
+          "rect": {
+            "x": 1258,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "decision:c_9370608aa0bc794043ce1e44",
+          "kind": "decision",
+          "shape": "diamond",
+          "role": "normal",
+          "text": "if (buffered) return submit_buffered… bus.c:148 判断菱形",
+          "rect": {
+            "x": 865,
+            "y": 294,
+            "width": 70,
+            "height": 70
+          }
+        },
+        {
+          "node_id": "fn:f_29d39fba5cb4233be354eb5e",
+          "kind": "process",
+          "shape": "rect",
+          "role": "normal",
+          "text": "check_length bus.c:96 · 1 个返回",
+          "rect": {
+            "x": 953,
+            "y": 314,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "fn:f_9396c93325f319ba5cd50954",
+          "kind": "process",
+          "shape": "rect",
+          "role": "normal",
+          "text": "commit_transfer bus.c:116 · 1 个返回",
+          "rect": {
+            "x": 909,
+            "y": 445,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "fn:f_005279472404037d2f6c01fe",
+          "kind": "process",
+          "shape": "rect",
+          "role": "normal",
+          "text": "stage_payload bus.c:123 · 1 个返回",
+          "rect": {
+            "x": 996,
+            "y": 445,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "external:callee:platform_write",
+          "kind": "external",
+          "shape": "rectangle",
+          "role": "boundary",
+          "text": "platform_write bus.c:113 分析域边界",
+          "rect": {
+            "x": 909,
+            "y": 576,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "external:callee:trace",
+          "kind": "external",
+          "shape": "rectangle",
+          "role": "boundary",
+          "text": "trace bus.c:92 分析域边界",
+          "rect": {
+            "x": 996,
+            "y": 576,
+            "width": 70,
+            "height": 29
+          }
+        }
+      ],
+      "edges": [
+        {
+          "edge_id": "external:c_24eea864048f716ad071ee09",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(REQUEST, channel, length, 0)"
+        },
+        {
+          "edge_id": "guard:c_d884d0c833026b664a0a192e",
+          "kind": "guard",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "guard · may · if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { TRACE(INVALID, channel, length, 0); return -22; }"
+        },
+        {
+          "edge_id": "external:c_d884d0c833026b664a0a192e",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(INVALID, channel, length, 0)"
+        },
+        {
+          "edge_id": "call:edge_cafb2322a630ef4ca6b2f565",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · lookup_route(channel)"
+        },
+        {
+          "edge_id": "guard:c_978ef5321385ad6a44f446fd",
+          "kind": "guard",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "guard · exact · if (!check_length(route, length)) return -90"
+        },
+        {
+          "edge_id": "call:edge_d80b07219adeb0cac0711827",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · check_length(route, length)"
+        },
+        {
+          "edge_id": "external:c_aea45559618c68f9ca127758",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(LOCK, transfer_lock, 0, 0)"
+        },
+        {
+          "edge_id": "call:edge_251d36608078ab1dfc4d7255",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · dispatch_transfer(route, length)"
+        },
+        {
+          "edge_id": "external:c_efa9f438d4c6a9fd69e6aaec",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(LOCK, transfer_lock, 0, 0)"
+        },
+        {
+          "edge_id": "external:c_6b0b5e97fc7cdf925e6c2b30",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(LOOKUP, channel, route->lane, route->max_len)"
+        },
+        {
+          "edge_id": "external:c_1b71555f8d571fe4d772a677",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(CHECK_LENGTH, length, route->max_len, allowed)"
+        },
+        {
+          "edge_id": "external:c_30b4f80ce6282341350ecedb",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(TRANSFER, length, buffered, DIRECT_LIMIT)"
+        },
+        {
+          "edge_id": "guard:c_9370608aa0bc794043ce1e44",
+          "kind": "guard",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "guard · exact · if (buffered) return submit_buffered(route->lane, length)"
+        },
+        {
+          "edge_id": "call:edge_d4d90f72511669cb2df0ff24",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · submit_buffered(route->lane, length) · 跨组端口"
+        },
+        {
+          "edge_id": "call:edge_5f052b0b7f32da6ba891e9c2",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · submit_direct(route->lane, length) · 跨组端口"
+        },
+        {
+          "edge_id": "external:c_21b919282d9a3254756a287d",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(BUFFERED, lane, length, 0) · 跨组端口"
+        },
+        {
+          "edge_id": "call:edge_5abd2eabafcd5dc810906168",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · stage_payload(lane, length) · 跨组端口"
+        },
+        {
+          "edge_id": "call:edge_e1c8ff8bda54959ebe641db2",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · commit_transfer(lane, staged) · 跨组端口"
+        },
+        {
+          "edge_id": "external:c_b4ee9b7bb7f7b890a928ce43",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(DIRECT, lane, length, 0) · 跨组端口"
+        },
+        {
+          "edge_id": "call:edge_65bb21d28fce45d1bddc80ae",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · commit_transfer(lane, length) · 跨组端口"
+        },
+        {
+          "edge_id": "external:c_7e3ddd0a071d76f8e06b02bc",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(STAGE, lane, staged_lengths[lane], 0)"
+        },
+        {
+          "edge_id": "external:c_2b8d1c9b864537da4380c4cf",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(COMMIT, lane, length, 0)"
+        },
+        {
+          "edge_id": "call:edge_22cce96e302bdf99fa90d4d2",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · encode_doorbell(lane, length) · 跨组端口"
+        },
+        {
+          "edge_id": "call:edge_6c7ff6644ea8f24e59a2be18",
+          "kind": "call",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "call · exact · write_doorbell(value) · 跨组端口"
+        },
+        {
+          "edge_id": "external:c_6aeabbe607671586b99aeb2f",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(ENCODE, lane, length, value) · 跨组端口"
+        },
+        {
+          "edge_id": "external:c_d1f65721f937ab964fd733fd",
+          "kind": "external",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · may · TRACE(DOORBELL, TX_DOORBELL, value, 0) · 跨组端口"
+        },
+        {
+          "edge_id": "external:edge_4146059008806bf66efc4d64",
+          "kind": "external",
+          "certainty": "exact",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "external · exact · platform_write(TX_DOORBELL, value) · 跨组端口"
+        },
+        {
+          "edge_id": "return:flow_d8b362f4fb3cf7f49304b168",
+          "kind": "return",
+          "certainty": "may",
+          "color": "exception",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-exception",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "return · may · 返回 -22"
+        },
+        {
+          "edge_id": "return:flow_cc3a5f6f18eebba8a03fbbed",
+          "kind": "return",
+          "certainty": "may",
+          "color": "exception",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-exception",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "return · may · 返回 -2"
+        },
+        {
+          "edge_id": "return:flow_d3188e134d3f77712abfd011",
+          "kind": "return",
+          "certainty": "may",
+          "color": "exception",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-exception",
+          "dashArray": "none",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "return · may · 返回 -90"
+        },
+        {
+          "edge_id": "return:flow_9ebce340bab5a7cacf7d677d",
+          "kind": "return",
+          "certainty": "may",
+          "color": "normal",
+          "line": "",
+          "className": "dcr-graph-edge dcr-graph-edge-dashed",
+          "dashArray": "5px, 4px",
+          "stroke": "rgb(15, 17, 21)",
+          "text": "return · may · 返回 status"
+        }
+      ],
+      "entryNode": {
+        "node_id": "entry:f_7d95aefe1ae37d3ef60fca8e",
+        "kind": "entry",
+        "shape": "ellipse",
+        "role": "normal",
+        "text": "bus_send bus.c:152",
+        "rect": {
+          "x": 953,
+          "y": 183,
+          "width": 70,
+          "height": 29
+        }
+      },
+      "decisionNodes": [
+        {
+          "node_id": "decision:c_978ef5321385ad6a44f446fd",
+          "kind": "decision",
+          "shape": "diamond",
+          "role": "normal",
+          "text": "if (!check_length(route, length)) re… bus.c:164 判断菱形",
+          "rect": {
+            "x": 647,
+            "y": 228,
+            "width": 70,
+            "height": 70
+          }
+        },
+        {
+          "node_id": "decision:c_d884d0c833026b664a0a192e",
+          "kind": "decision",
+          "shape": "diamond",
+          "role": "normal",
+          "text": "if (channel >= CHANNEL_COUNT || leng… bus.c:156 判断菱形",
+          "rect": {
+            "x": 734,
+            "y": 228,
+            "width": 70,
+            "height": 70
+          }
+        },
+        {
+          "node_id": "decision:c_9370608aa0bc794043ce1e44",
+          "kind": "decision",
+          "shape": "diamond",
+          "role": "normal",
+          "text": "if (buffered) return submit_buffered… bus.c:148 判断菱形",
+          "rect": {
+            "x": 865,
+            "y": 294,
+            "width": 70,
+            "height": 70
+          }
+        }
+      ],
+      "exitNodes": [
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_cc3a5f6f18eebba8a03fbbed",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "error",
+          "text": "返回 -2 bus.c:162 异常出口",
+          "rect": {
+            "x": 1355,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_d8b362f4fb3cf7f49304b168",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "error",
+          "text": "返回 -22 bus.c:157 异常出口",
+          "rect": {
+            "x": 1355,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_d3188e134d3f77712abfd011",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "error",
+          "text": "返回 -90 bus.c:165 异常出口",
+          "rect": {
+            "x": 1355,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_9ebce340bab5a7cacf7d677d",
+          "kind": "exit",
+          "shape": "ellipse",
+          "role": "normal",
+          "text": "返回 status bus.c:173",
+          "rect": {
+            "x": 1258,
+            "y": 248,
+            "width": 70,
+            "height": 29
+          }
+        }
+      ],
+      "externalNodes": [
+        {
+          "node_id": "external:callee:platform_write",
+          "kind": "external",
+          "shape": "rectangle",
+          "role": "boundary",
+          "text": "platform_write bus.c:113 分析域边界",
+          "rect": {
+            "x": 909,
+            "y": 576,
+            "width": 70,
+            "height": 29
+          }
+        },
+        {
+          "node_id": "external:callee:trace",
+          "kind": "external",
+          "shape": "rectangle",
+          "role": "boundary",
+          "text": "trace bus.c:92 分析域边界",
+          "rect": {
+            "x": 996,
+            "y": 576,
+            "width": 70,
+            "height": 29
+          }
+        }
+      ],
+      "errorExit": {
+        "node_id": "exit:f_7d95aefe1ae37d3ef60fca8e:return:flow_d3188e134d3f77712abfd011",
+        "kind": "exit",
+        "shape": "ellipse",
+        "role": "error",
+        "text": "返回 -90 bus.c:165 异常出口",
+        "rect": {
+          "x": 1355,
+          "y": 248,
+          "width": 70,
+          "height": 29
+        }
+      },
+      "errorEdge": {
+        "edge_id": "return:flow_d3188e134d3f77712abfd011",
+        "kind": "return",
+        "certainty": "may",
+        "color": "exception",
+        "line": "",
+        "className": "dcr-graph-edge dcr-graph-edge-exception",
+        "dashArray": "none",
+        "stroke": "rgb(15, 17, 21)",
+        "text": "return · may · 返回 -90"
+      },
+      "platformNode": {
+        "node_id": "external:callee:platform_write",
+        "kind": "external",
+        "shape": "rectangle",
+        "role": "boundary",
+        "text": "platform_write bus.c:113 分析域边界",
+        "rect": {
+          "x": 909,
+          "y": 576,
+          "width": 70,
+          "height": 29
+        }
+      },
+      "externalEdge": {
+        "edge_id": "external:edge_4146059008806bf66efc4d64",
+        "kind": "external",
+        "certainty": "exact",
+        "color": "normal",
+        "line": "",
+        "className": "dcr-graph-edge dcr-graph-edge-dashed",
+        "dashArray": "5px, 4px",
+        "stroke": "rgb(15, 17, 21)",
+        "text": "external · exact · platform_write(TX_DOORBELL, value) · 跨组端口"
+      },
+      "externalEdgeStyle": {
+        "dashArray": "5px, 4px",
+        "className": "dcr-graph-edge dcr-graph-edge-dashed"
+      },
+      "guardEdge": {
+        "edge_id": "guard:c_d884d0c833026b664a0a192e",
+        "kind": "guard",
+        "certainty": "may",
+        "color": "normal",
+        "line": "",
+        "className": "dcr-graph-edge",
+        "dashArray": "none",
+        "stroke": "rgb(15, 17, 21)",
+        "text": "guard · may · if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) { TRACE(INVALID, channel, length, 0); return -22; }"
+      },
+      "geometry": {
+        "segments": 105,
+        "orthogonal": 105,
+        "diagonal": 0,
+        "curves": 0,
+        "edge_sources": 31
+      },
+      "controls": {
+        "fit": true,
+        "relayout": true,
+        "search": true,
+        "buttons": [
+          {
+            "text": "",
+            "aria": "新建会话",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "",
+            "aria": "收起侧边栏",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "新会话Ctrl+Alt+N",
+            "aria": "新建会话",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "插件",
+            "aria": "插件",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "自动化任务",
+            "aria": "自动化任务",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "代码工作台",
+            "aria": "代码工作台",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "更多",
+            "aria": "更多",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "",
+            "aria": "搜索会话",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "",
+            "aria": "视图选项",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "",
+            "aria": "添加工作区",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "",
+            "aria": "工作区“默认工作区”的操作",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "",
+            "aria": "在“默认工作区”中新建会话",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "更多",
+            "aria": "账号菜单",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "返回聊天",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "重新读取",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "code-view-bus-demo → semantic-x86_64 → e",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "code-view-bus-demo → semantic-x86_64 → 2",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "reset（入口）bus.c:31 · void (void)",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "bus_register（入口）bus.c:50 · int (unsigned",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "stub_route（入口）bus.c:62 · int (unsigned i",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "bus_unregister（入口）bus.c:73 · int (unsign",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "bus_irq（入口）bus.c:82 · int (void)",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "bus_send（入口）bus.c:152 · int (unsigned in",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "set_platform_stub（入口）platform.c:14 · voi",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "store_routebus.c:43 · void (unsigned int",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "lookup_routebus.c:89 · const struct Rout",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "check_lengthbus.c:96 · int (const struct",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "encode_doorbellbus.c:103 · unsigned int ",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "write_doorbellbus.c:110 · int (unsigned ",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "commit_transferbus.c:116 · int (unsigned",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "stage_payloadbus.c:123 · unsigned int (u",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "submit_directbus.c:130 · int (unsigned i",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "submit_bufferedbus.c:136 · int (unsigned",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "dispatch_transferbus.c:143 · int (const ",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "platform_resetplatform.c:8 · void (void)",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "platform_writeplatform.c:19 · int (unsig",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "资源关系图",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "文字树",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "端到端图",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          },
+          {
+            "text": "时序图",
+            "aria": "",
+            "fit": false,
+            "relayout": false,
+            "search": false
+          }
+        ]
+      },
+      "dragTarget": {
+        "node_id": "fn:f_c0c1008db5dc37f89ebd8271",
+        "before": {
+          "x": 822,
+          "y": 248,
+          "width": 70,
+          "height": 29
+        }
+      },
+      "drag": {
+        "ok": true,
+        "method": "pointer-events",
+        "primary": {
+          "down": true,
+          "move_0.2": true,
+          "move_0.4": true,
+          "move_0.6": true,
+          "move_0.8": true,
+          "move_1": true,
+          "up": true
+        },
+        "before": {
+          "x": 822,
+          "y": 429
+        },
+        "moved": {
+          "x": 962,
+          "y": 519
+        }
+      },
+      "beforeDragRect": {
+        "x": 822,
+        "y": 429
+      },
+      "afterDragRect": {
+        "x": 962,
+        "y": 519
+      },
+      "relayoutClick": {
+        "ok": true,
+        "via": "text"
+      },
+      "afterRelayoutRect": {
+        "x": 822,
+        "y": 429
+      },
+      "relayoutRecord": {
+        "restored": true,
+        "after": {
+          "x": 822,
+          "y": 429
+        },
+        "before": {
+          "x": 822,
+          "y": 429
+        }
+      },
+      "fitClick": {
+        "ok": true,
+        "via": "attr"
+      }
+    },
+    "sequence": {
+      "ok": true,
+      "steps": {
+        "staticWarning": true,
+        "observedFalse": true,
+        "messages": true,
+        "kinds": true,
+        "externalKinds": true
+      },
+      "warning": "静态预测：无运行观测，不表示实际执行顺序或取值 · observed=false（静态预测，无运行观测）",
+      "observed": {
+        "value": "false",
+        "source": "attribute"
+      },
+      "messages": [
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#1 调用方 → 驱动 bus_send(unsigned int, unsigned int) 调用 静态确定 证据 e_584080ca09c2538431d9077a"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#2 驱动 → 未解析外部边界 TRACE(REQUEST, channel, length, 0) 分析域边界 候选 证据 e_8a567bc7569cf7540a1eaca2 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#3 驱动 → 未解析外部边界 TRACE(INVALID, channel, length, 0) 分析域边界 候选 证据 e_92bc0dd9c707c457b41b7a98 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#4 驱动 → 驱动 lookup_route(channel) 调用 静态确定 证据 e_0a244b0c0cb8146de5cf376f"
+        },
+        {
+          "message_id": null,
+          "kind": "access",
+          "text": "#5 驱动 → 全局资源 读取 routes.lane 资源访问 候选 证据 e_8cbd9ff213ca5706e0441dae 限制 unresolved_or_multiple_base_objects"
+        },
+        {
+          "message_id": null,
+          "kind": "access",
+          "text": "#6 驱动 → 全局资源 读取 routes.max_len 资源访问 候选 证据 e_8cbd9ff213ca5706e0441dae 限制 unresolved_or_multiple_base_objects"
+        },
+        {
+          "message_id": null,
+          "kind": "access",
+          "text": "#7 驱动 → 全局资源 读取 route->max_len 资源访问 候选 证据 e_55686c6b74c301815821439d 限制 unresolved_or_multiple_base_objects"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#8 驱动 → 未解析外部边界 TRACE(LOOKUP, channel, route->lane, route->max_len) 分析域边界 候选 证据 e_5355caa30e98a3dde6b087b8 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#9 驱动 → 驱动 check_length(route, length) 调用 静态确定 证据 e_e7a6c1712493f28fceb1274b"
+        },
+        {
+          "message_id": null,
+          "kind": "access",
+          "text": "#10 驱动 → 全局资源 读取 route->max_len 资源访问 候选 证据 e_beba06434dd2e2cdaef4bcb3 限制 unresolved_or_multiple_base_objects"
+        },
+        {
+          "message_id": null,
+          "kind": "access",
+          "text": "#11 驱动 → 全局资源 读取 max_len 资源访问 候选 证据 e_6343a79bc92c8f3f1012fa1c 限制 unresolved_or_multiple_base_objects"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#12 驱动 → 未解析外部边界 TRACE(CHECK_LENGTH, length, route->max_len, allowed) 分析域边界 候选 证据 e_4486ca5a9aeb408c52484450 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#13 驱动 → 未解析外部边界 TRACE(LOCK, transfer_lock, 0, 0) 分析域边界 候选 证据 e_d2012394ff4a2755c0067c31 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#14 驱动 → 驱动 dispatch_transfer(route, length) 调用 静态确定 证据 e_a6fd378ab841b40d3b287b07"
+        },
+        {
+          "message_id": null,
+          "kind": "access",
+          "text": "#15 驱动 → 全局资源 读取 route->lane 资源访问 候选 证据 e_80ae771e52ec36281523cbdd 限制 unresolved_or_multiple_base_objects"
+        },
+        {
+          "message_id": null,
+          "kind": "access",
+          "text": "#16 驱动 → 全局资源 读取 route->lane 资源访问 候选 证据 e_0b724c10fd4248d8e8083aeb 限制 unresolved_or_multiple_base_objects"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#17 驱动 → 未解析外部边界 TRACE(TRANSFER, length, buffered, DIRECT_LIMIT) 分析域边界 候选 证据 e_069454a2005b005faade27a4 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#18 驱动 → 驱动 submit_buffered(route->lane, length) 调用 静态确定 证据 e_84021e4a0eac688327a8f8d2"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#19 驱动 → 未解析外部边界 TRACE(BUFFERED, lane, length, 0) 分析域边界 候选 证据 e_1617b8e0a36320c9d8d31dde 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#20 驱动 → 驱动 stage_payload(lane, length) 调用 静态确定 证据 e_9265c79936ebb7a724fd3c6f"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#21 驱动 → 未解析外部边界 TRACE(STAGE, lane, staged_lengths[lane], 0) 分析域边界 候选 证据 e_16428459eb243f852bb4ca84 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#22 驱动 → 驱动 commit_transfer(lane, staged) 调用 静态确定 证据 e_ceec641d6bef5241fd2bb663"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#23 驱动 → 未解析外部边界 TRACE(COMMIT, lane, length, 0) 分析域边界 候选 证据 e_4c9739ab96782b6a96a5bd8f 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#24 驱动 → 驱动 encode_doorbell(lane, length) 调用 静态确定 证据 e_1a5682903bdf37f5e09dffaf"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#25 驱动 → 未解析外部边界 TRACE(ENCODE, lane, length, value) 分析域边界 候选 证据 e_ce5d09b99b6d345a1dbdc2de 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#26 驱动 → 驱动 write_doorbell(value) 调用 静态确定 证据 e_126ceba5a4faac207b21e391"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#27 驱动 → 未解析外部边界 TRACE(DOORBELL, TX_DOORBELL, value, 0) 分析域边界 候选 证据 e_4b6ceed8a5bc788fce499e5b 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#28 驱动 → 设备/库边界 platform_write(TX_DOORBELL, value) 分析域边界 静态确定 证据 e_c487be4da494e97aeeb3d0ec"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#29 驱动 → 驱动 submit_direct(route->lane, length) 调用 静态确定 证据 e_4b3f7e1e623b848a48748b6d"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#30 驱动 → 未解析外部边界 TRACE(DIRECT, lane, length, 0) 分析域边界 候选 证据 e_da38a1417a6d14b8c9f8940a 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#31 驱动 → 驱动 commit_transfer(lane, length) 调用 静态确定 证据 e_9cc1b86f71905c2ec16aa2b1"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#32 驱动 → 未解析外部边界 TRACE(COMMIT, lane, length, 0) 分析域边界 候选 证据 e_4c9739ab96782b6a96a5bd8f 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#33 驱动 → 驱动 encode_doorbell(lane, length) 调用 静态确定 证据 e_1a5682903bdf37f5e09dffaf"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#34 驱动 → 未解析外部边界 TRACE(ENCODE, lane, length, value) 分析域边界 候选 证据 e_ce5d09b99b6d345a1dbdc2de 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "call",
+          "text": "#35 驱动 → 驱动 write_doorbell(value) 调用 静态确定 证据 e_126ceba5a4faac207b21e391"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#36 驱动 → 未解析外部边界 TRACE(DOORBELL, TX_DOORBELL, value, 0) 分析域边界 候选 证据 e_4b6ceed8a5bc788fce499e5b 限制 implementation_not_found、external_boundary"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#37 驱动 → 设备/库边界 platform_write(TX_DOORBELL, value) 分析域边界 静态确定 证据 e_c487be4da494e97aeeb3d0ec"
+        },
+        {
+          "message_id": null,
+          "kind": "external",
+          "text": "#38 驱动 → 未解析外部边界 TRACE(LOCK, transfer_lock, 0, 0) 分析域边界 候选 证据 e_8e239277b6e137952bd43c97 限制 implementation_not_found、external_boundary"
+        }
+      ],
+      "messageKinds": [
+        "call",
+        "external",
+        "access"
+      ],
+      "participants": [
+        "调用方",
+        "驱动",
+        "全局资源",
+        "设备/库边界",
+        "未解析外部边界"
+      ],
+      "participants_found": true
+    },
+    "file": {
+      "ok": true,
+      "steps": {
+        "fileTree": true,
+        "lineCount": true,
+        "line46": true,
+        "line46Text": true,
+        "lineRange": true,
+        "fileLine46Hook": true,
+        "line46Highlight": true,
+        "resourceJump": true
+      },
+      "fileTree": [
+        {
+          "path": "bus.c",
+          "text": "bus.c"
+        },
+        {
+          "path": "platform.c",
+          "text": "platform.c"
+        }
+      ],
+      "clickFile": {
+        "ok": true
+      },
+      "lines": [
+        {
+          "line": 1,
+          "file_line_attr": "1",
+          "text": "1 enum Event {",
+          "selected": false
+        },
+        {
+          "line": 2,
+          "file_line_attr": "2",
+          "text": "2 DEFAULT_ROUTE = 1, STUB_ROUTE = 2, STORE_ROUTE = 3,",
+          "selected": false
+        },
+        {
+          "line": 3,
+          "file_line_attr": "3",
+          "text": "3 REQUEST = 4, LOOKUP = 5, CHECK_LENGTH = 6, WRITE = 7,",
+          "selected": false
+        },
+        {
+          "line": 4,
+          "file_line_attr": "4",
+          "text": "4 INVALID = 8, TRANSFER = 9, STAGE = 10, ENCODE = 11, COMMIT = 12,",
+          "selected": false
+        },
+        {
+          "line": 5,
+          "file_line_attr": "5",
+          "text": "5 DIRECT = 13, BUFFERED = 14, LOCK = 15, LIBRARY = 16, IRQ = 17, UNREGISTER = 18,",
+          "selected": false
+        },
+        {
+          "line": 6,
+          "file_line_attr": "6",
+          "text": "6 DOORBELL = 19",
+          "selected": false
+        },
+        {
+          "line": 7,
+          "file_line_attr": "7",
+          "text": "7 };",
+          "selected": false
+        },
+        {
+          "line": 8,
+          "file_line_attr": "8",
+          "text": "8",
+          "selected": false
+        },
+        {
+          "line": 9,
+          "file_line_attr": "9",
+          "text": "9 extern void trace(int event, unsigned a, unsigned b, unsigned c, unsigned line);",
+          "selected": false
+        },
+        {
+          "line": 10,
+          "file_line_attr": "10",
+          "text": "10 extern int platform_write(unsigned address, unsigned value);",
+          "selected": false
+        },
+        {
+          "line": 11,
+          "file_line_attr": "11",
+          "text": "11 extern void platform_reset(void);",
+          "selected": false
+        },
+        {
+          "line": 12,
+          "file_line_attr": "12",
+          "text": "12 #define TRACE(event, a, b, c) trace(event, a, b, c, __LINE__)",
+          "selected": false
+        },
+        {
+          "line": 13,
+          "file_line_attr": "13",
+          "text": "13",
+          "selected": false
+        },
+        {
+          "line": 14,
+          "file_line_attr": "14",
+          "text": "14 enum { CHANNEL_COUNT = 4, TX_DOORBELL = 0x1040, DIRECT_LIMIT = 48 };",
+          "selected": false
+        },
+        {
+          "line": 15,
+          "file_line_attr": "15",
+          "text": "15",
+          "selected": false
+        },
+        {
+          "line": 16,
+          "file_line_attr": "16",
+          "text": "16 struct Route {",
+          "selected": false
+        },
+        {
+          "line": 17,
+          "file_line_attr": "17",
+          "text": "17 unsigned lane;",
+          "selected": false
+        },
+        {
+          "line": 18,
+          "file_line_attr": "18",
+          "text": "18 unsigned max_len;",
+          "selected": false
+        },
+        {
+          "line": 19,
+          "file_line_attr": "19",
+          "text": "19 };",
+          "selected": false
+        },
+        {
+          "line": 20,
+          "file_line_attr": "20",
+          "text": "20",
+          "selected": false
+        },
+        {
+          "line": 21,
+          "file_line_attr": "21",
+          "text": "21 static const struct Route route_defaults[CHANNEL_COUNT] = {",
+          "selected": false
+        },
+        {
+          "line": 22,
+          "file_line_attr": "22",
+          "text": "22 {0, 32}, {2, 64}, {1, 96}, {3, 128}",
+          "selected": false
+        },
+        {
+          "line": 23,
+          "file_line_attr": "23",
+          "text": "23 };",
+          "selected": false
+        },
+        {
+          "line": 24,
+          "file_line_attr": "24",
+          "text": "24",
+          "selected": false
+        },
+        {
+          "line": 25,
+          "file_line_attr": "25",
+          "text": "25 /* A max_len of zero marks an unregistered channel. */",
+          "selected": false
+        },
+        {
+          "line": 26,
+          "file_line_attr": "26",
+          "text": "26 static struct Route routes[CHANNEL_COUNT];",
+          "selected": false
+        },
+        {
+          "line": 27,
+          "file_line_attr": "27",
+          "text": "27 static unsigned staged_lengths[CHANNEL_COUNT];",
+          "selected": false
+        },
+        {
+          "line": 28,
+          "file_line_attr": "28",
+          "text": "28 static unsigned transfer_lock;",
+          "selected": false
+        },
+        {
+          "line": 29,
+          "file_line_attr": "29",
+          "text": "29 static unsigned irq_count;",
+          "selected": false
+        },
+        {
+          "line": 30,
+          "file_line_attr": "30",
+          "text": "30",
+          "selected": false
+        },
+        {
+          "line": 31,
+          "file_line_attr": "31",
+          "text": "31 void reset(void)",
+          "selected": false
+        },
+        {
+          "line": 32,
+          "file_line_attr": "32",
+          "text": "32 {",
+          "selected": false
+        },
+        {
+          "line": 33,
+          "file_line_attr": "33",
+          "text": "33 for (unsigned channel = 0; channel < CHANNEL_COUNT; ++channel) {",
+          "selected": false
+        },
+        {
+          "line": 34,
+          "file_line_attr": "34",
+          "text": "34 routes[channel].lane = 0;",
+          "selected": false
+        },
+        {
+          "line": 35,
+          "file_line_attr": "35",
+          "text": "35 routes[channel].max_len = 0;",
+          "selected": false
+        },
+        {
+          "line": 36,
+          "file_line_attr": "36",
+          "text": "36 staged_lengths[channel] = 0;",
+          "selected": false
+        },
+        {
+          "line": 37,
+          "file_line_attr": "37",
+          "text": "37 }",
+          "selected": false
+        },
+        {
+          "line": 38,
+          "file_line_attr": "38",
+          "text": "38 transfer_lock = 0;",
+          "selected": false
+        },
+        {
+          "line": 39,
+          "file_line_attr": "39",
+          "text": "39 irq_count = 0;",
+          "selected": false
+        },
+        {
+          "line": 40,
+          "file_line_attr": "40",
+          "text": "40 platform_reset();",
+          "selected": false
+        },
+        {
+          "line": 41,
+          "file_line_attr": "41",
+          "text": "41 }",
+          "selected": false
+        },
+        {
+          "line": 42,
+          "file_line_attr": "42",
+          "text": "42",
+          "selected": false
+        },
+        {
+          "line": 43,
+          "file_line_attr": "43",
+          "text": "43 static void store_route(unsigned channel, unsigned lane, unsigned max_len)",
+          "selected": false
+        },
+        {
+          "line": 44,
+          "file_line_attr": "44",
+          "text": "44 {",
+          "selected": false
+        },
+        {
+          "line": 45,
+          "file_line_attr": "45",
+          "text": "45 routes[channel].lane = lane;",
+          "selected": false
+        },
+        {
+          "line": 46,
+          "file_line_attr": "46",
+          "text": "46 routes[channel].max_len = max_len;",
+          "selected": false
+        },
+        {
+          "line": 47,
+          "file_line_attr": "47",
+          "text": "47 TRACE(STORE_ROUTE, channel, lane, max_len);",
+          "selected": false
+        },
+        {
+          "line": 48,
+          "file_line_attr": "48",
+          "text": "48 }",
+          "selected": false
+        },
+        {
+          "line": 49,
+          "file_line_attr": "49",
+          "text": "49",
+          "selected": false
+        },
+        {
+          "line": 50,
+          "file_line_attr": "50",
+          "text": "50 int bus_register(unsigned channel)",
+          "selected": false
+        },
+        {
+          "line": 51,
+          "file_line_attr": "51",
+          "text": "51 {",
+          "selected": false
+        },
+        {
+          "line": 52,
+          "file_line_attr": "52",
+          "text": "52 if (channel >= CHANNEL_COUNT) {",
+          "selected": false
+        },
+        {
+          "line": 53,
+          "file_line_attr": "53",
+          "text": "53 TRACE(INVALID, channel, 0, 0);",
+          "selected": false
+        },
+        {
+          "line": 54,
+          "file_line_attr": "54",
+          "text": "54 return -22;",
+          "selected": false
+        },
+        {
+          "line": 55,
+          "file_line_attr": "55",
+          "text": "55 }",
+          "selected": false
+        },
+        {
+          "line": 56,
+          "file_line_attr": "56",
+          "text": "56 const struct Route *route = &route_defaults[channel];",
+          "selected": false
+        },
+        {
+          "line": 57,
+          "file_line_attr": "57",
+          "text": "57 TRACE(DEFAULT_ROUTE, channel, route->lane, route->max_len);",
+          "selected": false
+        },
+        {
+          "line": 58,
+          "file_line_attr": "58",
+          "text": "58 store_route(channel, route->lane, route->max_len);",
+          "selected": false
+        },
+        {
+          "line": 59,
+          "file_line_attr": "59",
+          "text": "59 return 0;",
+          "selected": false
+        },
+        {
+          "line": 60,
+          "file_line_attr": "60",
+          "text": "60 }",
+          "selected": false
+        },
+        {
+          "line": 61,
+          "file_line_attr": "61",
+          "text": "61",
+          "selected": false
+        },
+        {
+          "line": 62,
+          "file_line_attr": "62",
+          "text": "62 int stub_route(unsigned channel, unsigned lane, unsigned max_len)",
+          "selected": false
+        },
+        {
+          "line": 63,
+          "file_line_attr": "63",
+          "text": "63 {",
+          "selected": false
+        },
+        {
+          "line": 64,
+          "file_line_attr": "64",
+          "text": "64 if (channel >= CHANNEL_COUNT || lane > 3 || max_len == 0 || max_len > 65535) {",
+          "selected": false
+        },
+        {
+          "line": 65,
+          "file_line_attr": "65",
+          "text": "65 TRACE(INVALID, channel, lane, max_len);",
+          "selected": false
+        },
+        {
+          "line": 66,
+          "file_line_attr": "66",
+          "text": "66 return -22;",
+          "selected": false
+        },
+        {
+          "line": 67,
+          "file_line_attr": "67",
+          "text": "67 }",
+          "selected": false
+        },
+        {
+          "line": 68,
+          "file_line_attr": "68",
+          "text": "68 TRACE(STUB_ROUTE, channel, lane, max_len);",
+          "selected": false
+        },
+        {
+          "line": 69,
+          "file_line_attr": "69",
+          "text": "69 store_route(channel, lane, max_len);",
+          "selected": false
+        },
+        {
+          "line": 70,
+          "file_line_attr": "70",
+          "text": "70 return 0;",
+          "selected": false
+        },
+        {
+          "line": 71,
+          "file_line_attr": "71",
+          "text": "71 }",
+          "selected": false
+        },
+        {
+          "line": 72,
+          "file_line_attr": "72",
+          "text": "72",
+          "selected": false
+        },
+        {
+          "line": 73,
+          "file_line_attr": "73",
+          "text": "73 int bus_unregister(unsigned channel)",
+          "selected": false
+        },
+        {
+          "line": 74,
+          "file_line_attr": "74",
+          "text": "74 {",
+          "selected": false
+        },
+        {
+          "line": 75,
+          "file_line_attr": "75",
+          "text": "75 if (channel >= CHANNEL_COUNT)",
+          "selected": false
+        },
+        {
+          "line": 76,
+          "file_line_attr": "76",
+          "text": "76 return -22;",
+          "selected": false
+        },
+        {
+          "line": 77,
+          "file_line_attr": "77",
+          "text": "77 store_route(channel, 0, 0);",
+          "selected": false
+        },
+        {
+          "line": 78,
+          "file_line_attr": "78",
+          "text": "78 TRACE(UNREGISTER, channel, 0, 0);",
+          "selected": false
+        },
+        {
+          "line": 79,
+          "file_line_attr": "79",
+          "text": "79 return 0;",
+          "selected": false
+        },
+        {
+          "line": 80,
+          "file_line_attr": "80",
+          "text": "80 }",
+          "selected": false
+        },
+        {
+          "line": 81,
+          "file_line_attr": "81",
+          "text": "81",
+          "selected": false
+        },
+        {
+          "line": 82,
+          "file_line_attr": "82",
+          "text": "82 int bus_irq(void)",
+          "selected": false
+        },
+        {
+          "line": 83,
+          "file_line_attr": "83",
+          "text": "83 {",
+          "selected": false
+        },
+        {
+          "line": 84,
+          "file_line_attr": "84",
+          "text": "84 ++irq_count;",
+          "selected": false
+        },
+        {
+          "line": 85,
+          "file_line_attr": "85",
+          "text": "85 TRACE(IRQ, irq_count, 0, 0);",
+          "selected": false
+        },
+        {
+          "line": 86,
+          "file_line_attr": "86",
+          "text": "86 return 0;",
+          "selected": false
+        },
+        {
+          "line": 87,
+          "file_line_attr": "87",
+          "text": "87 }",
+          "selected": false
+        },
+        {
+          "line": 88,
+          "file_line_attr": "88",
+          "text": "88",
+          "selected": false
+        },
+        {
+          "line": 89,
+          "file_line_attr": "89",
+          "text": "89 static const struct Route *lookup_route(unsigned channel)",
+          "selected": false
+        },
+        {
+          "line": 90,
+          "file_line_attr": "90",
+          "text": "90 {",
+          "selected": false
+        },
+        {
+          "line": 91,
+          "file_line_attr": "91",
+          "text": "91 const struct Route *route = &routes[channel];",
+          "selected": false
+        },
+        {
+          "line": 92,
+          "file_line_attr": "92",
+          "text": "92 TRACE(LOOKUP, channel, route->lane, route->max_len);",
+          "selected": false
+        },
+        {
+          "line": 93,
+          "file_line_attr": "93",
+          "text": "93 return route->max_len ? route : 0;",
+          "selected": false
+        },
+        {
+          "line": 94,
+          "file_line_attr": "94",
+          "text": "94 }",
+          "selected": false
+        },
+        {
+          "line": 95,
+          "file_line_attr": "95",
+          "text": "95",
+          "selected": false
+        },
+        {
+          "line": 96,
+          "file_line_attr": "96",
+          "text": "96 static int check_length(const struct Route *route, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 97,
+          "file_line_attr": "97",
+          "text": "97 {",
+          "selected": false
+        },
+        {
+          "line": 98,
+          "file_line_attr": "98",
+          "text": "98 int allowed = length <= route->max_len;",
+          "selected": false
+        },
+        {
+          "line": 99,
+          "file_line_attr": "99",
+          "text": "99 TRACE(CHECK_LENGTH, length, route->max_len, allowed);",
+          "selected": false
+        },
+        {
+          "line": 100,
+          "file_line_attr": "100",
+          "text": "100 return allowed;",
+          "selected": false
+        },
+        {
+          "line": 101,
+          "file_line_attr": "101",
+          "text": "101 }",
+          "selected": false
+        },
+        {
+          "line": 102,
+          "file_line_attr": "102",
+          "text": "102",
+          "selected": false
+        },
+        {
+          "line": 103,
+          "file_line_attr": "103",
+          "text": "103 static unsigned encode_doorbell(unsigned lane, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 104,
+          "file_line_attr": "104",
+          "text": "104 {",
+          "selected": false
+        },
+        {
+          "line": 105,
+          "file_line_attr": "105",
+          "text": "105 unsigned value = (lane << 16) | length;",
+          "selected": false
+        },
+        {
+          "line": 106,
+          "file_line_attr": "106",
+          "text": "106 TRACE(ENCODE, lane, length, value);",
+          "selected": false
+        },
+        {
+          "line": 107,
+          "file_line_attr": "107",
+          "text": "107 return value;",
+          "selected": false
+        },
+        {
+          "line": 108,
+          "file_line_attr": "108",
+          "text": "108 }",
+          "selected": false
+        },
+        {
+          "line": 109,
+          "file_line_attr": "109",
+          "text": "109",
+          "selected": false
+        },
+        {
+          "line": 110,
+          "file_line_attr": "110",
+          "text": "110 static int write_doorbell(unsigned value)",
+          "selected": false
+        },
+        {
+          "line": 111,
+          "file_line_attr": "111",
+          "text": "111 {",
+          "selected": false
+        },
+        {
+          "line": 112,
+          "file_line_attr": "112",
+          "text": "112 TRACE(DOORBELL, TX_DOORBELL, value, 0);",
+          "selected": false
+        },
+        {
+          "line": 113,
+          "file_line_attr": "113",
+          "text": "113 return platform_write(TX_DOORBELL, value);",
+          "selected": false
+        },
+        {
+          "line": 114,
+          "file_line_attr": "114",
+          "text": "114 }",
+          "selected": false
+        },
+        {
+          "line": 115,
+          "file_line_attr": "115",
+          "text": "115",
+          "selected": false
+        },
+        {
+          "line": 116,
+          "file_line_attr": "116",
+          "text": "116 static int commit_transfer(unsigned lane, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 117,
+          "file_line_attr": "117",
+          "text": "117 {",
+          "selected": false
+        },
+        {
+          "line": 118,
+          "file_line_attr": "118",
+          "text": "118 TRACE(COMMIT, lane, length, 0);",
+          "selected": false
+        },
+        {
+          "line": 119,
+          "file_line_attr": "119",
+          "text": "119 unsigned value = encode_doorbell(lane, length);",
+          "selected": false
+        },
+        {
+          "line": 120,
+          "file_line_attr": "120",
+          "text": "120 return write_doorbell(value);",
+          "selected": false
+        },
+        {
+          "line": 121,
+          "file_line_attr": "121",
+          "text": "121 }",
+          "selected": false
+        },
+        {
+          "line": 122,
+          "file_line_attr": "122",
+          "text": "122",
+          "selected": false
+        },
+        {
+          "line": 123,
+          "file_line_attr": "123",
+          "text": "123 static unsigned stage_payload(unsigned lane, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 124,
+          "file_line_attr": "124",
+          "text": "124 {",
+          "selected": false
+        },
+        {
+          "line": 125,
+          "file_line_attr": "125",
+          "text": "125 staged_lengths[lane] = length;",
+          "selected": false
+        },
+        {
+          "line": 126,
+          "file_line_attr": "126",
+          "text": "126 TRACE(STAGE, lane, staged_lengths[lane], 0);",
+          "selected": false
+        },
+        {
+          "line": 127,
+          "file_line_attr": "127",
+          "text": "127 return staged_lengths[lane];",
+          "selected": false
+        },
+        {
+          "line": 128,
+          "file_line_attr": "128",
+          "text": "128 }",
+          "selected": false
+        },
+        {
+          "line": 129,
+          "file_line_attr": "129",
+          "text": "129",
+          "selected": false
+        },
+        {
+          "line": 130,
+          "file_line_attr": "130",
+          "text": "130 static int submit_direct(unsigned lane, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 131,
+          "file_line_attr": "131",
+          "text": "131 {",
+          "selected": false
+        },
+        {
+          "line": 132,
+          "file_line_attr": "132",
+          "text": "132 TRACE(DIRECT, lane, length, 0);",
+          "selected": false
+        },
+        {
+          "line": 133,
+          "file_line_attr": "133",
+          "text": "133 return commit_transfer(lane, length);",
+          "selected": false
+        },
+        {
+          "line": 134,
+          "file_line_attr": "134",
+          "text": "134 }",
+          "selected": false
+        },
+        {
+          "line": 135,
+          "file_line_attr": "135",
+          "text": "135",
+          "selected": false
+        },
+        {
+          "line": 136,
+          "file_line_attr": "136",
+          "text": "136 static int submit_buffered(unsigned lane, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 137,
+          "file_line_attr": "137",
+          "text": "137 {",
+          "selected": false
+        },
+        {
+          "line": 138,
+          "file_line_attr": "138",
+          "text": "138 TRACE(BUFFERED, lane, length, 0);",
+          "selected": false
+        },
+        {
+          "line": 139,
+          "file_line_attr": "139",
+          "text": "139 unsigned staged = stage_payload(lane, length);",
+          "selected": false
+        },
+        {
+          "line": 140,
+          "file_line_attr": "140",
+          "text": "140 return commit_transfer(lane, staged);",
+          "selected": false
+        },
+        {
+          "line": 141,
+          "file_line_attr": "141",
+          "text": "141 }",
+          "selected": false
+        },
+        {
+          "line": 142,
+          "file_line_attr": "142",
+          "text": "142",
+          "selected": false
+        },
+        {
+          "line": 143,
+          "file_line_attr": "143",
+          "text": "143 static int dispatch_transfer(const struct Route *route, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 144,
+          "file_line_attr": "144",
+          "text": "144 {",
+          "selected": false
+        },
+        {
+          "line": 145,
+          "file_line_attr": "145",
+          "text": "145 int buffered = length > DIRECT_LIMIT;",
+          "selected": false
+        },
+        {
+          "line": 146,
+          "file_line_attr": "146",
+          "text": "146 TRACE(TRANSFER, length, buffered, DIRECT_LIMIT);",
+          "selected": false
+        },
+        {
+          "line": 147,
+          "file_line_attr": "147",
+          "text": "147 if (buffered)",
+          "selected": false
+        },
+        {
+          "line": 148,
+          "file_line_attr": "148",
+          "text": "148 return submit_buffered(route->lane, length);",
+          "selected": false
+        },
+        {
+          "line": 149,
+          "file_line_attr": "149",
+          "text": "149 return submit_direct(route->lane, length);",
+          "selected": false
+        },
+        {
+          "line": 150,
+          "file_line_attr": "150",
+          "text": "150 }",
+          "selected": false
+        },
+        {
+          "line": 151,
+          "file_line_attr": "151",
+          "text": "151",
+          "selected": false
+        },
+        {
+          "line": 152,
+          "file_line_attr": "152",
+          "text": "152 int bus_send(unsigned channel, unsigned length)",
+          "selected": false
+        },
+        {
+          "line": 153,
+          "file_line_attr": "153",
+          "text": "153 {",
+          "selected": false
+        },
+        {
+          "line": 154,
+          "file_line_attr": "154",
+          "text": "154 TRACE(REQUEST, channel, length, 0);",
+          "selected": false
+        },
+        {
+          "line": 155,
+          "file_line_attr": "155",
+          "text": "155 if (channel >= CHANNEL_COUNT || length == 0 || length > 65535) {",
+          "selected": false
+        },
+        {
+          "line": 156,
+          "file_line_attr": "156",
+          "text": "156 TRACE(INVALID, channel, length, 0);",
+          "selected": false
+        },
+        {
+          "line": 157,
+          "file_line_attr": "157",
+          "text": "157 return -22;",
+          "selected": false
+        },
+        {
+          "line": 158,
+          "file_line_attr": "158",
+          "text": "158 }",
+          "selected": false
+        },
+        {
+          "line": 159,
+          "file_line_attr": "159",
+          "text": "159",
+          "selected": false
+        },
+        {
+          "line": 160,
+          "file_line_attr": "160",
+          "text": "160 const struct Route *route = lookup_route(channel);",
+          "selected": false
+        },
+        {
+          "line": 161,
+          "file_line_attr": "161",
+          "text": "161 if (!route)",
+          "selected": false
+        },
+        {
+          "line": 162,
+          "file_line_attr": "162",
+          "text": "162 return -2;",
+          "selected": false
+        },
+        {
+          "line": 163,
+          "file_line_attr": "163",
+          "text": "163",
+          "selected": false
+        },
+        {
+          "line": 164,
+          "file_line_attr": "164",
+          "text": "164 if (!check_length(route, length))",
+          "selected": false
+        },
+        {
+          "line": 165,
+          "file_line_attr": "165",
+          "text": "165 return -90;",
+          "selected": false
+        },
+        {
+          "line": 166,
+          "file_line_attr": "166",
+          "text": "166",
+          "selected": false
+        },
+        {
+          "line": 167,
+          "file_line_attr": "167",
+          "text": "167 /* Serial simulator: this flag records the protected scope, without threads. */",
+          "selected": false
+        },
+        {
+          "line": 168,
+          "file_line_attr": "168",
+          "text": "168 transfer_lock = 1;",
+          "selected": false
+        },
+        {
+          "line": 169,
+          "file_line_attr": "169",
+          "text": "169 TRACE(LOCK, transfer_lock, 0, 0);",
+          "selected": false
+        },
+        {
+          "line": 170,
+          "file_line_attr": "170",
+          "text": "170 int status = dispatch_transfer(route, length);",
+          "selected": false
+        },
+        {
+          "line": 171,
+          "file_line_attr": "171",
+          "text": "171 transfer_lock = 0;",
+          "selected": false
+        },
+        {
+          "line": 172,
+          "file_line_attr": "172",
+          "text": "172 TRACE(LOCK, transfer_lock, 0, 0);",
+          "selected": false
+        },
+        {
+          "line": 173,
+          "file_line_attr": "173",
+          "text": "173 return status;",
+          "selected": false
+        },
+        {
+          "line": 174,
+          "file_line_attr": "174",
+          "text": "174 }",
+          "selected": false
+        }
+      ],
+      "line46": {
+        "line": 46,
+        "file_line_attr": "46",
+        "text": "46 routes[channel].max_len = max_len;",
+        "selected": false
+      },
+      "line46Text": true,
+      "firstLine": {
+        "line": 1,
+        "file_line_attr": "1",
+        "text": "1 enum Event {",
+        "selected": false
+      },
+      "lastLine": {
+        "line": 174,
+        "file_line_attr": "174",
+        "text": "174 }",
+        "selected": false
+      },
+      "strictFileLineHook": {
+        "strict_found": true,
+        "legacy_found": true,
+        "sample_attr": "1"
+      },
+      "clickLine46": {
+        "ok": true
+      },
+      "line46Highlight": {
+        "selected": true,
+        "className": "dcr-line dcr-line-hit",
+        "dataHighlight": "true"
+      },
+      "resourceJump": {
+        "coupling_ready": true,
+        "select": {
+          "ok": true,
+          "line": 26,
+          "text": "routes struct Route[4] · STATIC · bus.c:26 字段：lane、max_len 读取 7 写入 / 修改 4"
+        },
+        "locate": {
+          "ok": true
+        },
+        "targetLine": 26
+      },
+      "fileAfterResourceJump": {
+        "ready": true,
+        "state": "ready",
+        "text_length": 5426
+      },
+      "resourceJumpLine": {
+        "target_present": true,
+        "marked": true,
+        "in_viewport": true,
+        "attrs": [
+          [
+            "class",
+            "dcr-line dcr-line-hit"
+          ],
+          [
+            "role",
+            "listitem"
+          ],
+          [
+            "tabindex",
+            "0"
+          ],
+          [
+            "data-file-line",
+            "26"
+          ],
+          [
+            "data-line",
+            "26"
+          ],
+          [
+            "data-highlight",
+            "true"
+          ]
+        ]
+      }
+    }
+  },
+  "screenshots": {
+    "coupling": {
+      "name": "coupling",
+      "ok": true,
+      "path": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\linux-atlas\\shots\\coupling.png",
+      "bytes": 182024,
+      "sha256": "ef6e0dad18c557cdd9ae3a67cf6c98d1d0492ac17695e7126043bcb30120571c"
+    },
+    "tree": {
+      "name": "tree",
+      "ok": true,
+      "path": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\linux-atlas\\shots\\tree.png",
+      "bytes": 272918,
+      "sha256": "ff83c64750b7574089f606eaf0c28a74bcbc06e6ea3e209a40ca960fd80055cb"
+    },
+    "end_to_end": {
+      "name": "end_to_end",
+      "ok": true,
+      "path": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\linux-atlas\\shots\\end_to_end.png",
+      "bytes": 221879,
+      "sha256": "4ff80776185f4b7e8e81ac421b7e9bc1aa0159d9a53f8d50190f6d18630e8f12"
+    },
+    "sequence": {
+      "name": "sequence",
+      "ok": true,
+      "path": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\linux-atlas\\shots\\sequence.png",
+      "bytes": 302713,
+      "sha256": "832ec03ee7fcfb41bab26fc1b19a55d73be11c9b185d1a15637a39898c872573"
+    },
+    "file": {
+      "name": "file",
+      "ok": true,
+      "path": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\linux-atlas\\shots\\file.png",
+      "bytes": 201834,
+      "sha256": "c13dd454edf70cbea726a51ab42a2968884cf282737d90554003bf7b9683febe"
+    },
+    "main": {
+      "name": "main",
+      "ok": true,
+      "path": "E:\\dsh\\plugin\\04-code-learning\\scratch\\readonly-home\\linux-atlas\\shots\\main.png",
+      "bytes": 224705,
+      "sha256": "a3dd48049ad10bd61899abc9f5ec04af7f2ec249a1bb7db267231adf58ced654"
+    }
+  },
+  "steps": {
+    "pageLoaded": true,
+    "windowShownInvisible": true,
+    "bodySettled": true,
+    "sidebarEntry": true,
+    "panelOpened": true,
+    "statusReady": true,
+    "snapshotClicked": true,
+    "entryListed": true,
+    "entryClicked": true,
+    "s1SourceLine": true,
+    "workbenchOpened": true,
+    "tabsVisible": true,
+    "tabsFive": true,
+    "view_coupling_ready": true,
+    "view_coupling_assertions": false,
+    "view_tree_ready": true,
+    "view_tree_assertions": true,
+    "view_end_to_end_ready": true,
+    "view_end_to_end_assertions": true,
+    "view_sequence_ready": true,
+    "view_sequence_assertions": true,
+    "view_file_ready": true,
+    "view_file_assertions": true,
+    "chrome": true,
+    "noConsoleErrors": true,
+    "panelStable": true,
+    "mainScreenshot": true
+  },
+  "checks": {},
+  "sidebarProbe": {
+    "aria_count": 2,
+    "text_content_has": true
+  },
+  "overlaysBeforeOpen": {
+    "dismissed": true,
+    "attempts": [
+      {
+        "done": true,
+        "clicked": false,
+        "dialogs": []
+      }
+    ]
+  },
+  "clickOpen": {
+    "ok": true,
+    "tag": "BUTTON",
+    "aria": "代码工作台"
+  },
+  "snapshotCandidates": [
+    {
+      "snapshot_id": "ed326d554334432b907de21297207eb8",
+      "status": "verified",
+      "text": "code-view-bus-demo → semantic-x86_64 → ed326d554334432b907de21297207eb8 状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false"
+    },
+    {
+      "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+      "status": "verified",
+      "text": "code-view-bus-demo → semantic-x86_64 → 2ffddd4400b6400b8bdc55ffcd33bf76 状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false"
+    }
+  ],
+  "chosenSnapshot": {
+    "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+    "status": "verified",
+    "text": "code-view-bus-demo → semantic-x86_64 → 2ffddd4400b6400b8bdc55ffcd33bf76 状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false"
+  },
+  "clickSnapshot": {
+    "ok": true
+  },
+  "clickEntry": {
+    "ok": true,
+    "entry_id": "f_7d95aefe1ae37d3ef60fca8e"
+  },
+  "s1SourceLine": {
+    "line": 152,
+    "text": "152 int bus_send(unsigned channel, unsigned length)"
+  },
+  "selectionOpen": {
+    "workspace_id": "code-view-bus-demo",
+    "variant_id": "semantic-x86_64",
+    "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+    "repo_id": "bus",
+    "entry_id": "f_7d95aefe1ae37d3ef60fca8e",
+    "symbol_id": "s_9a99bb2c95e28f92052a6d4b",
+    "callsite_ids": [],
+    "callsite_path": [],
+    "resource_ids": [
+      "s_0860e6738eaa8c95f37d0d03"
+    ],
+    "resource_status": "partial",
+    "evidence_ids": [
+      "e_584080ca09c2538431d9077a"
+    ],
+    "run_id": null,
+    "event_id": null,
+    "focus_resource_id": null,
+    "focus_callsite_id": null,
+    "group_id": null,
+    "interface_id": null,
+    "subflow_root_id": null,
+    "scenario_id": null,
+    "run_generation": null,
+    "call_id": null
+  },
+  "tabs": [
+    {
+      "view": "coupling",
+      "text": "资源关系图",
+      "selected": true,
+      "visible": true
+    },
+    {
+      "view": "tree",
+      "text": "文字树",
+      "selected": false,
+      "visible": true
+    },
+    {
+      "view": "end_to_end",
+      "text": "端到端图",
+      "selected": false,
+      "visible": true
+    },
+    {
+      "view": "sequence",
+      "text": "时序图",
+      "selected": false,
+      "visible": true
+    },
+    {
+      "view": "file",
+      "text": "文件视图",
+      "selected": false,
+      "visible": true
+    }
+  ],
+  "viewStates": {
+    "coupling": {
+      "click": {
+        "ok": true,
+        "view": "coupling",
+        "text": "资源关系图"
+      },
+      "state": "ready",
+      "ready": true
+    },
+    "tree": {
+      "click": {
+        "ok": true,
+        "view": "tree",
+        "text": "文字树"
+      },
+      "state": "ready",
+      "ready": true
+    },
+    "end_to_end": {
+      "click": {
+        "ok": true,
+        "view": "end_to_end",
+        "text": "端到端图"
+      },
+      "state": "ready",
+      "ready": true
+    },
+    "sequence": {
+      "click": {
+        "ok": true,
+        "view": "sequence",
+        "text": "时序图"
+      },
+      "state": "ready",
+      "ready": true
+    },
+    "file": {
+      "click": {
+        "ok": true,
+        "view": "file",
+        "text": "文件视图"
+      },
+      "state": "ready",
+      "ready": true
+    }
+  },
+  "recoveries": [],
+  "panelAfterView": {
+    "coupling": {
+      "panel": true,
+      "tabs": true
+    },
+    "tree": {
+      "panel": true,
+      "tabs": true
+    },
+    "end_to_end": {
+      "panel": true,
+      "tabs": true
+    },
+    "sequence": {
+      "panel": true,
+      "tabs": true
+    },
+    "file": {
+      "panel": true,
+      "tabs": true
+    }
+  },
+  "treeExpansionRounds": [
+    {
+      "round": 0,
+      "node_count": 35,
+      "missing": []
+    }
+  ],
+  "gaps": [
+    {
+      "code": "",
+      "text": "ai_summary"
+    },
+    {
+      "code": "",
+      "text": "real_device_dispatch"
+    },
+    {
+      "code": "",
+      "text": "resource_object_unresolved"
+    },
+    {
+      "code": "",
+      "text": "run_observation"
+    },
+    {
+      "code": "",
+      "text": "callee_returns_summarized"
+    },
+    {
+      "code": "",
+      "text": "domain_boundary_heuristic"
+    },
+    {
+      "code": "",
+      "text": "branch_conditions_partial"
+    },
+    {
+      "code": "",
+      "text": "scenario_execution"
+    },
+    {
+      "code": "",
+      "text": "group_semantics"
+    },
+    {
+      "code": "ai_summary",
+      "text": "ai_summary\n状态 unavailable\n归纳正文由 Agent 经 code_summary 写入；插件不调用模型"
+    },
+    {
+      "code": "real_device_dispatch",
+      "text": "real_device_dispatch\n状态 unavailable\n真实设备下发需单独授权与运行验证"
+    },
+    {
+      "code": "resource_object_unresolved",
+      "text": "resource_object_unresolved\n状态 degraded\n1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+    },
+    {
+      "code": "ai_summary",
+      "text": "ai_summary\n状态 unavailable\n暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）"
+    },
+    {
+      "code": "run_observation",
+      "text": "run_observation\n状态 unavailable\n静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账"
+    },
+    {
+      "code": "callee_returns_summarized",
+      "text": "callee_returns_summarized\n状态 degraded\n非入口函数共 10 条 return 汇总到 process 节点 returns_count，未单独展开"
+    },
+    {
+      "code": "domain_boundary_heuristic",
+      "text": "domain_boundary_heuristic\n状态 degraded\n跨文件且无已解析出边的函数按分析域边界（设备/库）显示；这是读模型启发式，不是 Atlas 事实"
+    },
+    {
+      "code": "branch_conditions_partial",
+      "text": "branch_conditions_partial\n状态 degraded\n分支条件仅来自带调用点的 callsite guard；无调用点的源码分支未建模（需 CFG，CW-T4）"
+    },
+    {
+      "code": "scenario_execution",
+      "text": "scenario_execution\n状态 unavailable\n本视图不执行场景；场景执行/打桩/回退由场景接口提供（需已登记可信 Wasm profile）"
+    },
+    {
+      "code": "group_semantics",
+      "text": "group_semantics\n状态 degraded\n组由单入口私有子图结构产生，名称/描述为结构归纳而非语义理解，可由用户修订"
+    }
+  ],
+  "chrome": {
+    "ok": true,
+    "steps": {
+      "details": true,
+      "legend": true,
+      "gapsVerbatim": true,
+      "noAbsolutePaths": true,
+      "selectionFocusFields": true
+    },
+    "details": {
+      "text": "资源详情：routes\n定位源码\n关闭详情\n\n点空白关闭；拖动/平移保留选择。\n\n类型 struct Route[4] · 存储 STATIC · 位置 bus.c:26\n\n字段：lane、max_len\n\n访问：读取 7 · 写入 / 修改 4\n\n候选\n写入 / 修改\nowner reset（bus.c:31）\n位置 bus.c:34\n字段 lane（routes[channel].lane）\n限制 unresolved_or_multiple_base_objects\n候选\n写入 / 修改\nowner reset（bus.c:31）\n位置 bus.c:35\n字段 max_len（routes[channel].max_len）\n限制 unresolved_or_multiple_base_objects\n静态确定\n写入 / 修改\nowner store_route（bus.c:43）\n位置 bus.c:45\n字段 lane（routes[channel].lane）\n静态确定\n写入 / 修改\nowner store_route（bus.c:43）\n位置 bus.c:46\n字段 max_len（routes[channel].max_len）\n候选\n读取\nowner lookup_route（bus.c:89）\n位置 bus.c:92\n字段 lane\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner lookup_route（bus.c:89）\n位置 bus.c:92\n字段 max_len\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner lookup_route（bus.c:89）\n位置 bus.c:93\n字段 max_len（route->max_len）\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner check_length（bus.c:96）\n位置 bus.c:98\n字段 max_len（route->max_len）\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner check_length（bus.c:96）\n位置 bus.c:99\n字段 max_len\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner dispatch_transfer（bus.c:143）\n位置 bus.c:148\n字段 lane（route->lane）\n限制 unresolved_or_multiple_base_objects\n候选\n读取\nowner dispatch_transfer（bus.c:143）\n位置 bus.c:149\n字段 lane（route->lane）\n限制 unresolved_or_multiple_base_objects\n\n归纳正文由 Agent 经 code_summary 写入；插件不调用模型。"
+    },
+    "legendClick": {
+      "found": true,
+      "text": "?",
+      "aria": "颜色图例"
+    },
+    "legend": {
+      "present": true,
+      "hidden": false,
+      "visible": true,
+      "text": "图例与标记\n\n颜色/形状/证据分级；继承宿主配色。\n\n证据分级\n静态确定\nexact\n候选\nmay\n未知\nunknown\n运行观测\nobserved\n源码证据\nsource_text（源码证据，仅证明文本存在）\n资源访问方向\n读取（read）\n写入 / 修改（write）\n读改写（rmw）\n初始化（init）\n去初始化（deinit）\n分配（alloc）\n释放（free）\n加锁（acquire）\n解锁（release）\n\n实线 = exact，虚线 = may，点线 = unknown；异常出口统一红色实线。\n\n图形形状\n椭圆端点（ellipse）\n矩形处理（rect）\n菱形判断（diamond）\n平行四边形输入 / 输出（parallelogram）\n矩形（rectangle）\n边界与异常\n外部边界：虚线框 / 虚线边\n异常返回：红色实线\nAI 归纳（Agent 写入，只读展示）：归纳正文由 Agent 经 code_summary 写入；插件不调用模型。\n运行观测\n运行观测\n运行观测记录（observed）：来自隔离 Wasm 模拟台账，不代表真实设备行为\n运行台账记录：scenario_id / generation / call_id\n组与黑盒\n矩形组框：折叠后成员/内部边隐藏，跨组边接组端口并保留原 edge_id\n黑盒接口：显示接口摘要并隐藏下游步骤，可展开恢复"
+    },
+    "gaps": [
+      {
+        "code": "",
+        "text": "ai_summary"
+      },
+      {
+        "code": "",
+        "text": "real_device_dispatch"
+      },
+      {
+        "code": "",
+        "text": "resource_object_unresolved"
+      },
+      {
+        "code": "",
+        "text": "run_observation"
+      },
+      {
+        "code": "",
+        "text": "callee_returns_summarized"
+      },
+      {
+        "code": "",
+        "text": "domain_boundary_heuristic"
+      },
+      {
+        "code": "",
+        "text": "branch_conditions_partial"
+      },
+      {
+        "code": "",
+        "text": "scenario_execution"
+      },
+      {
+        "code": "",
+        "text": "group_semantics"
+      },
+      {
+        "code": "ai_summary",
+        "text": "ai_summary\n状态 unavailable\n归纳正文由 Agent 经 code_summary 写入；插件不调用模型"
+      },
+      {
+        "code": "real_device_dispatch",
+        "text": "real_device_dispatch\n状态 unavailable\n真实设备下发需单独授权与运行验证"
+      },
+      {
+        "code": "resource_object_unresolved",
+        "text": "resource_object_unresolved\n状态 degraded\n1 candidate object id(s) referenced by field accesses are not present in the snapshot object layer"
+      },
+      {
+        "code": "ai_summary",
+        "text": "ai_summary\n状态 unavailable\n暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）"
+      },
+      {
+        "code": "run_observation",
+        "text": "run_observation\n状态 unavailable\n静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账"
+      },
+      {
+        "code": "callee_returns_summarized",
+        "text": "callee_returns_summarized\n状态 degraded\n非入口函数共 10 条 return 汇总到 process 节点 returns_count，未单独展开"
+      },
+      {
+        "code": "domain_boundary_heuristic",
+        "text": "domain_boundary_heuristic\n状态 degraded\n跨文件且无已解析出边的函数按分析域边界（设备/库）显示；这是读模型启发式，不是 Atlas 事实"
+      },
+      {
+        "code": "branch_conditions_partial",
+        "text": "branch_conditions_partial\n状态 degraded\n分支条件仅来自带调用点的 callsite guard；无调用点的源码分支未建模（需 CFG，CW-T4）"
+      },
+      {
+        "code": "scenario_execution",
+        "text": "scenario_execution\n状态 unavailable\n本视图不执行场景；场景执行/打桩/回退由场景接口提供（需已登记可信 Wasm profile）"
+      },
+      {
+        "code": "group_semantics",
+        "text": "group_semantics\n状态 degraded\n组由单入口私有子图结构产生，名称/描述为结构归纳而非语义理解，可由用户修订"
+      }
+    ],
+    "leak": {
+      "count": 0,
+      "samples": []
+    },
+    "selection": {
+      "workspace_id": "code-view-bus-demo",
+      "variant_id": "semantic-x86_64",
+      "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+      "repo_id": "bus",
+      "entry_id": "f_853ee38417887d937c0c5c48",
+      "symbol_id": "s_454f47252829fecdcf3eed87",
+      "callsite_ids": [],
+      "callsite_path": [],
+      "resource_ids": [
+        "s_0860e6738eaa8c95f37d0d03"
+      ],
+      "resource_status": "partial",
+      "evidence_ids": [
+        "e_ac220e4c91c53b2a71321aac"
+      ],
+      "run_id": null,
+      "event_id": null,
+      "focus_resource_id": "s_0860e6738eaa8c95f37d0d03",
+      "focus_callsite_id": null,
+      "group_id": null,
+      "interface_id": null,
+      "subflow_root_id": null,
+      "scenario_id": null,
+      "run_generation": null,
+      "call_id": null
+    }
+  },
+  "legendClosedBeforeMain": {
+    "closed": true,
+    "open": true
+  },
+  "panelSelection": {
+    "workspace_id": "code-view-bus-demo",
+    "variant_id": "semantic-x86_64",
+    "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+    "repo_id": "bus",
+    "entry_id": "f_853ee38417887d937c0c5c48",
+    "symbol_id": "s_454f47252829fecdcf3eed87",
+    "callsite_ids": [],
+    "callsite_path": [],
+    "resource_ids": [
+      "s_0860e6738eaa8c95f37d0d03"
+    ],
+    "resource_status": "partial",
+    "evidence_ids": [
+      "e_ac220e4c91c53b2a71321aac"
+    ],
+    "run_id": null,
+    "event_id": null,
+    "focus_resource_id": "s_0860e6738eaa8c95f37d0d03",
+    "focus_callsite_id": null,
+    "group_id": null,
+    "interface_id": null,
+    "subflow_root_id": null,
+    "scenario_id": null,
+    "run_generation": null,
+    "call_id": null
+  },
+  "panelTextTail": "代码工作台\n\n只读五视图：快照 → 入口 → 源码 / 资源 / 文件\n\n返回聊天\n重新读取\n工作台已就绪；快照 2ffddd4400b6400b8bdc55ffcd33bf76（code-view-bus-demo / semantic-x86_64 / fresh）；入口 19 个；当前入口 bus_send\n缺口 10\n快照\ncode-view-bus-demo → semantic-x86_64 → ed326d554334432b907de21297207eb8\n状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false\ncode-view-bus-demo → semantic-x86_64 → 2ffddd4400b6400b8bdc55ffcd33bf76\n状态 已核验（verified） · 新鲜度 最新（fresh） · 入口 19 · failed 0 · pending 0 · whole_program_complete false\n入口（入口优先）\nreset（入口）\nbus.c:31 · void (void)\nbus_register（入口）\nbus.c:50 · int (unsigned int)\nstub_route（入口）\nbus.c:62 · int (unsigned int, unsigned int, unsigned int)\nbus_unregister（入口）\nbus.c:73 · int (unsigned int)\nbus_irq（入口）\nbus.c:82 · int (void)\nbus_send（入口）\nbus.c:152 · int (unsigned int, unsigned int)\nset_platform_stub（入口）\nplatform.c:14 · void (int)\nstore_route\nbus.c:43 · void (unsigned int, unsigned int, unsigned int)\nlookup_route\nbus.c:89 · const struct Route *(unsigned int)\ncheck_length\nbus.c:96 · int (const struct Route *, unsigned int)\nencode_doorbell\nbus.c:103 · unsigned int (unsigned int, unsigned int)\nwrite_doorbell\nbus.c:110 · int (unsigned int)\ncommit_transfer\nbus.c:116 · int (unsigned int, unsigned int)\nstage_payload\nbus.c:123 · unsigned int (unsigned int, unsigned int)\nsubmit_direct\nbus.c:130 · int (unsigned int, unsigned int)\nsubmit_buffered\nbus.c:136 · int (unsigned int, unsigned int)\ndispatch_transfer\nbus.c:143 · int (const struct Route *, unsigned int)\nplatform_reset\nplatform.c:8 · void (void)\nplatform_write\nplatform.c:19 · int (unsigned int, unsigned int)\n资源关系图\n文字树\n端到端图\n时序图\n文件视图\n?\n全局资源\n打桩模拟\n全局资源\n\n与当前入口/选择相关 · 1 项\n\nroutes\nstruct Route[4] · STATIC · bus.c:26\n字段：lane、max_len\n读取 7\n写入 / 修改 4\n\n其他全局资源 · 0 项\n\n暂无其他资源。\n\n基础接口库（10）\n收起\nencode_doorbell\n候选\n独立接口（可黑盒）\n调用次数 1\n\n签名 unsigned int (unsigned int, unsigned int) · 返回 unsigned int\n\n入参：lane:unsigned int，length:unsigned int\n\nbus.c:103\n\n候选理由：无已解析出边签名/入参/返回值完整\n\n副作用：无写类副作用\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\ncheck_length\n候选\n独立接口（可黑盒）\n调用次数 1\n\n签名 int (const struct Route *, unsigned int) · 返回 int\n\n入参：route:const struct Route *，length:unsigned int\n\nbus.c:96\n\n候选理由：无已解析出边签名/入参/返回值完整调用点带条件 guard\n\n副作用：无写类副作用\n\n入参 guard：guard bus.c:164 · if (!check_length(route, length)) return -90\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\nlookup_route\n候选\n独立接口（可黑盒）\n调用次数 1\n\n签名 const struct Route *(unsigned int) · 返回 const struct Route *\n\n入参：channel:unsigned int\n\nbus.c:89\n\n候选理由：无已解析出边签名/入参/返回值完整\n\n副作用：无写类副作用\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\ncommit_transfer\n候选\n混合职责（有副作用）\n调用次数 2\n\n签名 int (unsigned int, unsigned int) · 返回 int\n\n入参：lane:unsigned int，length:unsigned int\n\nbus.c:116\n\n候选理由：签名/入参/返回值完整被多个调用点调用\n\n副作用：无写类副作用\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\nplatform_write\n候选\n混合职责（有副作用）\n调用次数 1\n\n签名 int (unsigned int, unsigned int) · 返回 int\n\n入参：address:unsigned int，value:unsigned int\n\nplatform.c:19\n\n候选理由：无已解析出边跨文件被调用签名/入参/返回值完整存在字段写副作用\n\n副作用：写入 / 修改 simulated_doorbell @ platform.c:25\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\nsubmit_buffered\n候选\n混合职责（有副作用）\n调用次数 1\n\n签名 int (unsigned int, unsigned int) · 返回 int\n\n入参：lane:unsigned int，length:unsigned int\n\nbus.c:136\n\n候选理由：签名/入参/返回值完整调用点带条件 guard\n\n副作用：无写类副作用\n\n入参 guard：guard bus.c:148 · if (buffered) return submit_buffered(route->lane, length)\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\nsubmit_direct\n候选\n混合职责（有副作用）\n调用次数 1\n\n签名 int (unsigned int, unsigned int) · 返回 int\n\n入参：lane:unsigned int，length:unsigned int\n\nbus.c:130\n\n候选理由：签名/入参/返回值完整\n\n副作用：无写类副作用\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\nwrite_doorbell\n候选\n混合职责（有副作用）\n调用次数 1\n\n签名 int (unsigned int) · 返回 int\n\n入参：value:unsigned int\n\nbus.c:110\n\n候选理由：签名/入参/返回值完整\n\n副作用：无写类副作用\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\ndispatch_transfer\n候选\n混合职责（有副作用）\n调用次数 1\n\n签名 int (const struct Route *, unsigned int) · 返回 int\n\n入参：route:const struct Route *，length:unsigned int\n\nbus.c:143\n\n候选理由：签名/入参/返回值完整\n\n副作用：无写类副作用\n\n局限：candidate_rule_based_not_semantic\n\n加入接口库\nstage_payload\n候选\n混合职责（有副作用）\n调用次数 1\n\n签名 unsigned int (unsigned",
+  "finalOverlay": {
+    "dialog_count": 0,
+    "texts": []
+  },
+  "required_steps": [
+    "pageLoaded",
+    "bodySettled",
+    "workbenchOpened",
+    "tabsVisible",
+    "tabsFive",
+    "noConsoleErrors",
+    "chrome",
+    "view_coupling_ready",
+    "view_tree_ready",
+    "view_end_to_end_ready",
+    "view_sequence_ready",
+    "view_file_ready",
+    "view_coupling_assertions",
+    "view_tree_assertions",
+    "view_end_to_end_assertions",
+    "view_sequence_assertions",
+    "view_file_assertions",
+    "mainScreenshot"
+  ],
+  "failed_steps": [
+    "view_coupling_assertions"
+  ],
+  "duration_ms": 22232,
+  "console_lines": [],
+  "console_error_count": 0
+}

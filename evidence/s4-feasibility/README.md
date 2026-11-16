@@ -3,6 +3,12 @@
 `S4-FEAS-1` · 2026-11-15 · **目的**：在现有环境内如实探测 CW-T4/S4 所需的目标 Linux 能力，记录哪些层
 已经能在 Linux 上运行、哪些仍缺外部前置。**本文件不声明 Kbuild/Atlas Linux/CFG/复核/OS 出口已通过。**
 
+> **2026-11-17 补充**：本轮已完成更进一步的 S4-prep Linux/跨 OS 快照验证——WSL2 Ubuntu 上用 Atlas 0.8.0
+> **Linux runtime** 生成 Demo C 快照并通过 bootstrap `path_aliases` 导入 Windows 插件、隔离 dsh-web 五视图
+> 验收；引擎 331 tests 在 WSL 与本地 QEMU Ubuntu 24.04 guest 通过。详见
+> [evidence/linux-atlas/README.md](../linux-atlas/README.md)。本页下方 2026-11-15 的探测仍作为历史记录；
+> Kbuild/生成头/native CFG/locks/aliases/复核/OS 出口与真实 Samba 远端构建仍未验证。
+
 ## 环境
 
 - WSL2 Ubuntu 20.04（`Linux Stuckedcat-4090 6.6.87.2-microsoft-standard-WSL2 x86_64`），Python 3.8.10

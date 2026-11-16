@@ -74,19 +74,19 @@ _CALLSITE_EXPRESSION_LIMIT = 120
 _GUARD_LABEL_LIMIT = 160
 _TREE_GUARD_LIMIT = 2048
 
-#: Product capabilities deliberately not provided in this slice (verbatim).
+#: Product capabilities deliberately not provided by a static view (verbatim).
 _DEFERRED_GAPS: Dict[str, Tuple[str, str]] = {
     "ai_summary": (
         "unavailable",
-        "S2b：AI 归纳（≤500 字）未接入；本切片不伪造说明文本",
+        "暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）",
     ),
     "run_observation": (
         "unavailable",
-        "本切片无运行观测；场景执行/轨迹导入在 CW-T3",
+        "静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账",
     ),
     "scenario_execution": (
         "unavailable",
-        "本切片未提供场景执行/打桩/回退（CW-T3）",
+        "本视图不执行场景；场景执行/打桩/回退由场景接口提供（需已登记可信 Wasm profile）",
     ),
 }
 
@@ -3095,7 +3095,7 @@ def sequence_static(
         {
             "code": "run_observation",
             "status": "unavailable",
-            "reason": "S2a 无运行观测；场景/轨迹导入在 CW-T3",
+            "reason": "静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账",
         }
     )
     gaps.extend(_deferred_gaps("scenario_execution"))

@@ -242,7 +242,7 @@ def _normalized_root(value: str) -> str:
     return value.replace("\\", "/").rstrip("/").lower()
 
 
-def _repo_root_tokens(repo: Dict[str, Any]) -> "set[str]":
+def _repo_root_tokens(repo: Dict[str, Any], aliases: "Optional[list]" = None) -> "set[str]":
     """Tokens that identify one registered repository in ``workspace_roots``."""
     tokens: "set[str]" = set()
     for key in ("repo_id", "relative_path", "root_ref", "absolute_path"):
@@ -252,26 +252,34 @@ def _repo_root_tokens(repo: Dict[str, Any]) -> "set[str]":
         tokens.add(_normalized_root(value))
         if key == "absolute_path":
             tokens.add(_normalized_root(os.path.realpath(value)))
+    for alias in aliases or []:
+        if isinstance(alias, str) and alias:
+            tokens.add(_normalized_root(alias))
     return tokens
 
 
-def _workspace_root_tokens(workspace: Dict[str, Any]) -> "set[str]":
+def _workspace_root_tokens(workspace: Dict[str, Any], aliases_by_root: Optional[dict] = None) -> "set[str]":
     """Tokens a manifest ``workspace_roots`` entry may legitimately name.
 
     Atlas writes absolute analyzed roots; the synthetic fixtures use the
     bootstrap ``root_ref``/repo-relative naming.  All of the following identify
     a registered repository for this purpose: absolute path (and its realpath),
-    ``root_ref``, ``repo_id`` and ``relative_path``.
+    ``root_ref``, ``repo_id``, ``relative_path`` and any bootstrap-configured
+    ``path_aliases`` (foreign analyzed roots for cross-machine snapshots).
     """
     tokens: "set[str]" = set()
+    aliases_by_root = aliases_by_root or {}
     for repo in workspace.get("repositories") or []:
         if isinstance(repo, dict):
-            tokens |= _repo_root_tokens(repo)
+            tokens |= _repo_root_tokens(repo, aliases_by_root.get(repo.get("root_ref")))
     return tokens
 
 
 def _check_manifest_provenance(
-    workspace: Dict[str, Any], manifest_payload: Dict[str, Any], repo_id: str
+    state: Any,
+    workspace: Dict[str, Any],
+    manifest_payload: Dict[str, Any],
+    repo_id: str,
 ) -> None:
     """Tie a snapshot's ``workspace_roots`` to the *target* repository.
 
@@ -282,12 +290,20 @@ def _check_manifest_provenance(
     list must be non-empty strings.  Multi-root Atlas snapshots legitimately
     list every analyzed root, so importing the same verified pair under each of
     those repos is still allowed.
+
+    Cross-machine snapshots record the analyzed roots of the *build* host; the
+    bootstrap may declare trusted ``path_aliases`` per candidate root so the
+    plugin can map e.g. ``/root/atlas-demo/repo`` to a local ``root_ref``.
+    Aliases only participate in identity matching; files are still read under
+    the local candidate root.
     """
     roots = manifest_payload.get("workspace_roots")
     if not isinstance(roots, list) or not roots:
         fail("UNSUPPORTED_SCHEMA", "analysis_manifest.workspace_roots must be a non-empty array")
-    target_tokens = _repo_root_tokens(_find_repository(workspace, repo_id))
-    workspace_tokens = _workspace_root_tokens(workspace)
+    aliases_by_root = state.candidate_root_aliases() if hasattr(state, "candidate_root_aliases") else {}
+    target_repo = _find_repository(workspace, repo_id)
+    target_tokens = _repo_root_tokens(target_repo, aliases_by_root.get(target_repo.get("root_ref")))
+    workspace_tokens = _workspace_root_tokens(workspace, aliases_by_root)
     matched_target = False
     matched_workspace = False
     for index, root in enumerate(roots):
@@ -369,7 +385,7 @@ def import_snapshot(
             "analysis_manifest.graph_hash does not match the raw graph.json bytes",
         )
     atlas.project_coverage(manifest_payload["coverage"], "analysis_manifest.coverage")
-    _check_manifest_provenance(workspace, manifest_payload, repo_id)
+    _check_manifest_provenance(state, workspace, manifest_payload, repo_id)
 
     snapshot_id = manifest_payload["snapshot_id"]
     _require_component(snapshot_id, "manifest snapshot_id")

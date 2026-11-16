@@ -197,8 +197,18 @@ def _relative_within(candidate_text: str, root: Optional[Path]) -> Optional[str]
 
 
 def _repo_roots(state: Any, workspace: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
-    """Map ``repo_id`` to the registered repository root (never emitted)."""
+    """Map ``repo_id`` to the registered repository root (never emitted).
+
+    Each entry may also carry ``foreign_roots`` from the bootstrap
+    ``path_aliases``: analyzed roots recorded by the machine that built the
+    Atlas snapshot.  They are only used to relativize graph/evidence paths; all
+    local reads still happen under the registered local root.
+    """
     roots: Dict[str, Dict[str, Any]] = {}
+    try:
+        aliases_by_root = state.candidate_root_aliases()
+    except AttributeError:
+        aliases_by_root = {}
     for repository in workspace.get("repositories") or []:
         if not isinstance(repository, dict):
             continue
@@ -219,9 +229,15 @@ def _repo_roots(state: Any, workspace: Dict[str, Any]) -> Dict[str, Dict[str, An
             stored = repository.get("absolute_path")
             if isinstance(stored, str) and stored:
                 root = Path(stored)
+        foreign_roots = [
+            Path(alias)
+            for alias in (aliases_by_root.get(root_ref) if isinstance(root_ref, str) else None) or []
+            if isinstance(alias, str) and alias
+        ]
         roots[repo_id] = {
             "root": root,
             "relative_path": relative if isinstance(relative, str) else "",
+            "foreign_roots": foreign_roots,
         }
     return roots
 
@@ -249,6 +265,10 @@ def _map_file(
             relative = _relative_within(text, info["root"])
             if relative is not None:
                 return relative, repo_id
+            for foreign_root in info.get("foreign_roots") or []:
+                relative = _relative_within(text, foreign_root)
+                if relative is not None:
+                    return relative, repo_id
         return None, None
     for repo_id, info in ordered:
         prefix = info["relative_path"].strip("/")

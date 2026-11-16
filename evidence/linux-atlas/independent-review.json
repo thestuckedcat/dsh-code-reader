@@ -1,0 +1,410 @@
+{
+  "schema_version": 1,
+  "task": "T49",
+  "reviewer": "verifier (independent black-box reviewer)",
+  "generated_at_utc": "2026-11-16T17:00:19Z",
+  "status": "pass",
+  "objective": "Refresh the independent T48 cross-OS Linux snapshot review to the final post-fix evidence (Lead fixes: checks_summary + stale gap texts).",
+  "environment": {
+    "host": "Windows DSH 0.2.1-rc.5 isolated profile (pinned host baseline verified in run)",
+    "linux_snapshot": "snapshot_id 2ffddd4400b6400b8bdc55ffcd33bf76, graph_sha256 67aa438f7be00ec5c76370b4795db4466f26ecd816dcb358cfe3f5bde0bae795",
+    "analyzed_root_alias": "/root/atlas-demo/repo -> slice-root",
+    "qemu_lab": "Ubuntu 24.04.5 LTS, kernel 6.8.0-139-generic x86_64, Python 3.12.3 (T48 verification; not rerun for T49 per task)"
+  },
+  "fixes_since_t48": {
+    "verification_checks_summary": {
+      "status": "fixed",
+      "value": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "in_scope_not_verified": 0,
+        "out_of_scope_not_verified": 3
+      }
+    },
+    "stale_gap_texts": {
+      "status": "fixed",
+      "legacy_markers_absent_in_probe_gaps": true,
+      "new_texts": {
+        "ai_summary": "ai_summary 状态 unavailable 归纳正文由 Agent 经 code_summary 写入；插件不调用模型",
+        "run_observation": "run_observation 状态 unavailable 静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账",
+        "scenario_execution": "scenario_execution 状态 unavailable 本视图不执行场景；场景执行/打桩/回退由场景接口提供（需已登记可信 Wasm profile）"
+      },
+      "windows_vs_linux_gap_lists_equal": true,
+      "evidence": "direct engine CLI on Windows fixture snapshot ed326d55… and Linux snapshot 2ffddd44…; coupling/tree/end_to_end/sequence gaps JSON identical"
+    }
+  },
+  "lead_evidence_reviewed": {
+    "files": {
+      "verification.json": {
+        "path": "evidence/linux-atlas/verification.json",
+        "bytes": 27826,
+        "sha256": "009003633a6565d1531d9798a5eb414e3696317762b7be1071b5e5481166bdd5"
+      },
+      "five-views-probe.json": {
+        "path": "evidence/linux-atlas/five-views-probe.json",
+        "bytes": 124190,
+        "sha256": "2de0641271ce6527c4c487bd8a3b0dcc246d893cde4001cd7b19efdc2981ccf7"
+      }
+    },
+    "verification_ok": true,
+    "checks_summary": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "in_scope_not_verified": 0,
+      "out_of_scope_not_verified": 3
+    },
+    "probe_raw_ok": false,
+    "probe_failed_steps": [
+      "view_coupling_assertions"
+    ]
+  },
+  "independent_rerun": {
+    "verify_linux_snapshot": {
+      "command": "node tools/verify-linux-snapshot.mjs",
+      "exit_code": 0,
+      "wall_ms": 27000,
+      "generated_at": "2026-11-16T16:58:24.231Z",
+      "result": {
+        "ok": true,
+        "verified": true,
+        "checks_total": 12,
+        "checks_passed": 12,
+        "checks_failed": 0,
+        "checks_summary": {
+          "total": 12,
+          "passed": 12,
+          "failed": 0,
+          "in_scope_not_verified": 0,
+          "out_of_scope_not_verified": 3
+        },
+        "checks": [
+          {
+            "name": "pinned_host_baseline",
+            "layer": "dsh_host",
+            "ok": true
+          },
+          {
+            "name": "fixture_workspace_import",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "linux_snapshot_import",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "linux_snapshot_entries",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "linux_snapshot_coupling",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "linux_snapshot_source_read",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "cross_os_graph_counts_match",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "cross_os_field_access_certainty_match",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "linux_snapshot_coverage_parsed",
+            "layer": "atlas_snapshot",
+            "ok": true
+          },
+          {
+            "name": "dsh_web_boot",
+            "layer": "dsh_host",
+            "ok": true
+          },
+          {
+            "name": "dsh_web_five_views_probe",
+            "layer": "dsh_host",
+            "ok": true
+          },
+          {
+            "name": "dsh_web_screenshots",
+            "layer": "dsh_host",
+            "ok": true
+          }
+        ]
+      }
+    },
+    "probe": {
+      "raw_ok": false,
+      "failed_steps": [
+        "view_coupling_assertions"
+      ],
+      "failed_view_substeps": {
+        "coupling": {
+          "gapsOriginal": false
+        },
+        "tree": {},
+        "end_to_end": {},
+        "sequence": {},
+        "file": {}
+      },
+      "only_failed_substep": "view_coupling_assertions.gapsOriginal",
+      "residual_failed_steps": [],
+      "console_error_count": 0,
+      "duration_ms": 22232,
+      "screenshots_identical_to_lead": true
+    },
+    "engine": {
+      "cross_os_unit": {
+        "command": "python -m unittest tests.test_cross_os_snapshot -v",
+        "exit_code": 0,
+        "tests": 8,
+        "ok": true,
+        "test_names": [
+          "test_foreign_root_without_alias_is_rejected",
+          "test_alias_on_target_root_accepts_foreign_root",
+          "test_alias_on_other_root_does_not_satisfy_target",
+          "test_local_absolute_root_still_matches_without_alias",
+          "test_posix_aliases_are_accepted_and_preserved",
+          "test_default_has_no_aliases",
+          "test_relative_alias_is_rejected",
+          "test_duplicate_or_oversized_aliases_are_rejected"
+        ],
+        "duration_s": 0.004
+      },
+      "full_suite": {
+        "command": "python -m unittest discover -s tests",
+        "exit_code": 0,
+        "tests": 331,
+        "ok": true,
+        "duration_s": 42.529
+      }
+    },
+    "node": {
+      "command": "node --test tests/node/*.test.mjs",
+      "exit_code": 0,
+      "tests": 200,
+      "pass": 200,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 10208.3543
+    },
+    "demo": {
+      "command": "node --test demo/code-view/demo.test.cjs",
+      "exit_code": 0,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 109.2468
+    },
+    "qemu": {
+      "status": "not rerun (per task)",
+      "t48_result": "Ubuntu 24.04.5 LTS / kernel 6.8.0-139 / Python 3.12.3; guest engine 331 tests OK (skipped=2 Windows junction); no compilers; DNS blocked; matches qemu-verification.json"
+    }
+  },
+  "checks": [
+    {
+      "name": "pinned_host_baseline",
+      "layer": "dsh_host",
+      "ok": true
+    },
+    {
+      "name": "fixture_workspace_import",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "linux_snapshot_import",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "linux_snapshot_entries",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "linux_snapshot_coupling",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "linux_snapshot_source_read",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "cross_os_graph_counts_match",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "cross_os_field_access_certainty_match",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "linux_snapshot_coverage_parsed",
+      "layer": "atlas_snapshot",
+      "ok": true
+    },
+    {
+      "name": "dsh_web_boot",
+      "layer": "dsh_host",
+      "ok": true
+    },
+    {
+      "name": "dsh_web_five_views_probe",
+      "layer": "dsh_host",
+      "ok": true
+    },
+    {
+      "name": "dsh_web_screenshots",
+      "layer": "dsh_host",
+      "ok": true
+    }
+  ],
+  "cross_os_equivalence": {
+    "measurements": {
+      "windows": {
+        "functions": 19,
+        "call_targets": 15,
+        "objects": 18,
+        "field_accesses": 15,
+        "flow_edges": 90,
+        "lock_events": 0,
+        "alias_relations": 3
+      },
+      "linux": {
+        "functions": 19,
+        "call_targets": 15,
+        "objects": 18,
+        "field_accesses": 15,
+        "flow_edges": 90,
+        "lock_events": 0,
+        "alias_relations": 3
+      },
+      "field_access_rows": 15
+    },
+    "snapshots": {
+      "linux": {
+        "snapshot_id": "2ffddd4400b6400b8bdc55ffcd33bf76",
+        "graph_sha256": "67aa438f7be00ec5c76370b4795db4466f26ecd816dcb358cfe3f5bde0bae795"
+      },
+      "windows_fixture": {
+        "snapshot_dir": "snapshot-bus"
+      }
+    },
+    "verdict": "Windows vs Linux graph counts and 15 field-access certainty rows identical"
+  },
+  "superseded_audit": {
+    "claim": "probe ok=false/failed view_coupling_assertions is superseded only for gapsOriginal",
+    "probe_rule": "five-views-probe.cjs: gapsOriginal requires all labels [组折叠,接口库,AI 归纳,运行观测] OR >=3 codes of [group_collapse,interface_library,ai_summary,run_observation]",
+    "observed": "with fixed texts, gap rail has ai_summary + run_observation (2 codes) and no group_collapse/interface_library; only failed substep gapsOriginal; residual_failed_steps=[]; console 0",
+    "feature_evidence": [
+      "S2b evidence ok: evidence/s2b/verification.json (groups/interfaces); client hooks data-graph-group/data-interface-candidate",
+      "S3a/S3b evidence ok: observed/scenario execution; client hook data-sequence-observed",
+      "CW-09/T44 evidence ok: AI summary store; client hooks data-ai-summary; view.status caps ai_summary_store=true",
+      "full engine 331 OK / Node 200 OK / Demo 8 OK; other four views all steps true"
+    ],
+    "verdict": "holds (frozen S2a expectation; only that substep ignored; no other residual failure)"
+  },
+  "differences_from_lead_evidence": [
+    {
+      "kind": "non-semantic",
+      "fields": [
+        "generated_at",
+        "operation-id/commands",
+        "probe url",
+        "duration_ms"
+      ],
+      "impact": "none; 12/12 checks and cross-OS values identical"
+    },
+    {
+      "kind": "resolved-since-t48",
+      "field": "checks_summary / stale gap text",
+      "lead": "both fixed; verification now has checks_summary; legacy gap markers absent in probe gaps and Windows/Linux gap lists equal",
+      "impact": "none; verified in this refresh"
+    },
+    {
+      "kind": "screenshot-observation",
+      "field": "linux-*.png hashes",
+      "detail": "screenshots remain byte-identical to T48/T49 Lead evidence despite gap-text changes (gap area not visible in captured crop); probe JSON carries the text evidence",
+      "impact": "none; no claim of visual diff"
+    }
+  ],
+  "not_verified": [
+    "真实 Linux/Kbuild 内核或驱动源码分析（本轮 Demo C 用户态源码）",
+    "native CFG / locks / aliases 深度分析（Atlas Linux runtime cfg=unsupported；仅验证数据字段与路径映射）",
+    "跨参考机审计与复核 precision/recall",
+    "QEMU guest 仅验证引擎测试；guest 无编译器/无网络，Atlas 分析未在 QEMU 执行",
+    "真实设备下发/写回、OS 出口认证"
+  ],
+  "conclusion": "T49 refresh: verify-linux-snapshot exit 0, 12/12 checks, checks_summary present, probe residual_failed_steps=[], console=0, gapsOriginal superseded still holds. The two T48 observations are confirmed fixed: checks_summary is emitted; stale gap texts (S2b/CW-T3) are gone, new texts describe current semantics, and Windows vs Linux gap lists are identical. engine 331 OK / Node 200 / Demo 8 unchanged. Screenshots remain byte-identical (gap text not in captured crop). No unexplained semantic differences. QEMU not rerun per task; T48 QEMU result remains valid.",
+  "artifacts_after_independent_review": {
+    "verification.json": {
+      "path": "evidence/linux-atlas/verification.json",
+      "bytes": 27826,
+      "sha256": "f7e4165568a0297e422d9671c6d293a503a93965d10e1f52603eabd85452f8d2"
+    },
+    "five-views-probe.json": {
+      "path": "evidence/linux-atlas/five-views-probe.json",
+      "bytes": 124190,
+      "sha256": "426e57049c669d48e51a009d454404735fb87e737529734f2363059b5f90a087"
+    },
+    "qemu-verification.json": {
+      "path": "evidence/linux-atlas/qemu-verification.json",
+      "bytes": 1914,
+      "sha256": "c6ed49272928b4fd1ff13cecd3717f484de5e85491371a807673f934d0dea51d"
+    },
+    "README.md": {
+      "path": "evidence/linux-atlas/README.md",
+      "bytes": 9531,
+      "sha256": "39a11bc3652a42258f343c3aafa071dc6331f058eedcb2ed69fa8216cca0c896"
+    },
+    "linux-coupling.png": {
+      "path": "evidence/linux-atlas/linux-coupling.png",
+      "bytes": 182024,
+      "sha256": "ef6e0dad18c557cdd9ae3a67cf6c98d1d0492ac17695e7126043bcb30120571c"
+    },
+    "linux-tree.png": {
+      "path": "evidence/linux-atlas/linux-tree.png",
+      "bytes": 272918,
+      "sha256": "ff83c64750b7574089f606eaf0c28a74bcbc06e6ea3e209a40ca960fd80055cb"
+    },
+    "linux-end_to_end.png": {
+      "path": "evidence/linux-atlas/linux-end_to_end.png",
+      "bytes": 221879,
+      "sha256": "4ff80776185f4b7e8e81ac421b7e9bc1aa0159d9a53f8d50190f6d18630e8f12"
+    },
+    "linux-sequence.png": {
+      "path": "evidence/linux-atlas/linux-sequence.png",
+      "bytes": 302713,
+      "sha256": "832ec03ee7fcfb41bab26fc1b19a55d73be11c9b185d1a15637a39898c872573"
+    },
+    "linux-file.png": {
+      "path": "evidence/linux-atlas/linux-file.png",
+      "bytes": 201834,
+      "sha256": "c13dd454edf70cbea726a51ab42a2968884cf282737d90554003bf7b9683febe"
+    },
+    "linux-main.png": {
+      "path": "evidence/linux-atlas/linux-main.png",
+      "bytes": 224705,
+      "sha256": "a3dd48049ad10bd61899abc9f5ec04af7f2ec249a1bb7db267231adf58ced654"
+    }
+  }
+}

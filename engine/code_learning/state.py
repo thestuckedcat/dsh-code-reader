@@ -76,6 +76,27 @@ def _require_abs_path(value: Any, label: str) -> str:
     return os.path.normpath(str(path))
 
 
+def _require_path_alias(value: Any, label: str) -> str:
+    """Validate a foreign absolute root path recorded by another machine.
+
+    Snapshots built on Linux (or inside a container) record the analyzed root
+    as an absolute POSIX path; the local plugin runs on Windows and never reads
+    that path.  Aliases only map an otherwise-unidentifiable manifest root back
+    to a trusted local candidate root, so they accept both POSIX and Windows
+    absolute spellings without touching the filesystem.
+    """
+    if not isinstance(value, str) or not value or len(value) > 1024:
+        fail("INVALID_ARGUMENT", f"bootstrap {label} must be a bounded non-empty string")
+    if "\x00" in value or any(ord(char) < 32 for char in value):
+        fail("INVALID_ARGUMENT", f"bootstrap {label} must not contain control characters")
+    normalized = value.replace("\\", "/").rstrip("/")
+    posix = normalized.startswith("/")
+    windows = len(normalized) >= 3 and normalized[0].isalpha() and normalized[1] == ":" and normalized[2] == "/"
+    if not (posix or windows):
+        fail("INVALID_ARGUMENT", f"bootstrap {label} must be an absolute path")
+    return value
+
+
 def validate_bootstrap(data: Any) -> Dict[str, Any]:
     """Validate BootstrapConfigV1 and return a normalized copy."""
     if not isinstance(data, dict):
@@ -113,7 +134,7 @@ def validate_bootstrap(data: Any) -> Dict[str, Any]:
     for index, root in enumerate(roots):
         if not isinstance(root, dict):
             fail("INVALID_ARGUMENT", f"candidate_roots[{index}] must be an object")
-        allowed_root = {"root_ref", "absolute_path", "read_grant_ref"}
+        allowed_root = {"root_ref", "absolute_path", "read_grant_ref", "path_aliases"}
         extra = sorted(set(root) - allowed_root)
         if extra:
             fail("INVALID_ARGUMENT", "candidate root contains unknown fields", details={"index": index, "fields": extra})
@@ -127,8 +148,27 @@ def validate_bootstrap(data: Any) -> Dict[str, Any]:
         if not isinstance(grant, str) or not grant:
             fail("INVALID_ARGUMENT", f"candidate_roots[{index}].read_grant_ref must be a string")
         absolute = _require_abs_path(root.get("absolute_path"), f"candidate_roots[{index}].absolute_path")
+        raw_aliases = root.get("path_aliases", [])
+        if raw_aliases is None:
+            raw_aliases = []
+        if not isinstance(raw_aliases, list) or len(raw_aliases) > 16:
+            fail("INVALID_ARGUMENT", f"candidate_roots[{index}].path_aliases must be a list (<=16)")
+        aliases = []
+        seen_aliases = set()
+        for alias_index, raw_alias in enumerate(raw_aliases):
+            alias = _require_path_alias(raw_alias, f"candidate_roots[{index}].path_aliases[{alias_index}]")
+            key = alias.replace("\\", "/").rstrip("/").lower()
+            if key in seen_aliases:
+                fail("INVALID_ARGUMENT", f"candidate_roots[{index}].path_aliases must be unique")
+            seen_aliases.add(key)
+            aliases.append(alias)
         normalized_roots.append(
-            {"root_ref": root_ref, "absolute_path": absolute, "read_grant_ref": grant}
+            {
+                "root_ref": root_ref,
+                "absolute_path": absolute,
+                "read_grant_ref": grant,
+                "path_aliases": aliases,
+            }
         )
     return {
         "schema_version": 1,
@@ -168,10 +208,12 @@ def init_bootstrap(
     profile_ref: str = "desktop",
     scope_ref: str = "local",
     scope_generation: int = 1,
+    root_aliases: Optional[Dict[str, list]] = None,
 ) -> Dict[str, Any]:
     """Create the trusted bootstrap file plus its directories and secret."""
     if not roots:
         fail("INVALID_ARGUMENT", "at least one candidate root is required")
+    aliases_by_root = root_aliases or {}
     normalized_roots = []
     for name, path in roots.items():
         path = Path(path).expanduser()
@@ -180,9 +222,10 @@ def init_bootstrap(
         path = Path(os.path.normpath(str(path)))
         if not path.exists() or not path.is_dir():
             fail("INVALID_ARGUMENT", "candidate root must be an existing directory")
-        normalized_roots.append(
-            {"root_ref": name, "absolute_path": str(path), "read_grant_ref": f"grant-{name}"}
-        )
+        root_entry = {"root_ref": name, "absolute_path": str(path), "read_grant_ref": f"grant-{name}"}
+        if aliases_by_root.get(name):
+            root_entry["path_aliases"] = list(aliases_by_root[name])
+        normalized_roots.append(root_entry)
     data = {
         "schema_version": 1,
         "profile_ref": profile_ref,
@@ -376,6 +419,13 @@ class State:
     # --- scope --------------------------------------------------------
     def candidate_roots(self) -> Dict[str, Path]:
         return {root["root_ref"]: Path(root["absolute_path"]) for root in self.bootstrap["candidate_roots"]}
+
+    def candidate_root_aliases(self) -> Dict[str, list]:
+        """Foreign analyzed-root spellings trusted for snapshot identity checks."""
+        return {
+            root["root_ref"]: list(root.get("path_aliases") or [])
+            for root in self.bootstrap["candidate_roots"]
+        }
 
     def resolve_root(self, root_ref: str) -> Path:
         roots = self.candidate_roots()

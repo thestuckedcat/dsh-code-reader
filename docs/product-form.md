@@ -15,11 +15,11 @@
 | CL-PF-05 | 普通提问直接解答；明确学习复盘时区分预测、实际观察和待验证，最多给一个具体下一步 | 用户行为守则；不替用户声称已理解/已验证 |
 | CL-PF-06 | 首版不要求专用Harness学习面板，不重写Atlas解析器，不把Kbuild迁为CMake | 面板后置已确认；复用与构建适配为设计决定 |
 
-`CL-PF-02/03` 局部补充（已实现）：单函数问答先定位它在业务总框架中的位置，再给出涉及文件和主要函数、关键结构体、软表与硬件资源的读写、边界入口与出口；业务图与局部图分开、通过入口/Selection 关联。落地为 skill 参考 [分层阅读与函数定位](../skills/learn-code-workspace/references/layered-reading.md) + 合同测试（`engine/tests/test_skill_contract.py`，323 Python tests），设计见[分层阅读与函数定位](software-design.md#81-驱动代码分层阅读与函数定位)。
+`CL-PF-02/03` 局部补充（已实现）：单函数问答先定位它在业务总框架中的位置，再给出涉及文件和主要函数、关键结构体、软表与硬件资源的读写、边界入口与出口；业务图与局部图分开、通过入口/Selection 关联。落地为 skill 参考 [分层阅读与函数定位](../skills/learn-code-workspace/references/layered-reading.md) + 合同测试（`engine/tests/test_skill_contract.py`，331 Python tests），设计见[分层阅读与函数定位](software-design.md#81-驱动代码分层阅读与函数定位)。
 
 `CL-PF-07`（2026-11-12 用户提出，已交付插件版）：以 C 源码为底座的[交互式代码视图](interactive-code-view.md)，支持受控模拟下的参数与注册状态执行、分支和数据流下钻、调用图节点折叠及展开；五视图与 DSH 插件接入见[详细设计 CL-VIEW-D2](interactive-code-view-software-design.md)，分阶段验收见 `evidence/final-acceptance/`。真实设备下发和图内源码写回仍待产品确认（当前 gap）。
 
-`CL-PF-08`（2026-11-15 用户指示，已交付插件版）：交互式代码视图**以 DSH 插件交付**，插件负责代码分析、图表、场景执行和权限；配套 skill 指导生成与验收 DSH 原生侧边栏入口、工作台左栏及其联动。已按 S1 只读切片 → S2a 五视图 → S2b 组折叠/接口库/子流程 → S3a 受控场景/打桩/台账/observed → S3b 回退/轨迹导入/多场景 → CW-09 AI 归纳 → A11 性能实测 → 异步/IRQ 边界交付，全部在隔离 dsh-web 逐阶段验收（8/8 阶段、320/320 检查），见 `evidence/final-acceptance/`。规划细节见[实施路线](implementation-route.md)与各阶段契约。
+`CL-PF-08`（2026-11-15 用户指示，已交付插件版）：交互式代码视图**以 DSH 插件交付**，插件负责代码分析、图表、场景执行和权限；配套 skill 指导生成与验收 DSH 原生侧边栏入口、工作台左栏及其联动。已按 S1 只读切片 → S2a 五视图 → S2b 组折叠/接口库/子流程 → S3a 受控场景/打桩/台账/observed → S3b 回退/轨迹导入/多场景 → CW-09 AI 归纳 → A11 性能实测 → 异步/IRQ 边界 → Linux/跨 OS 快照交付，全部在隔离 dsh-web 逐阶段验收（9/9 阶段、332/332 检查），见 `evidence/final-acceptance/`。规划细节见[实施路线](implementation-route.md)与各阶段契约。
 
 ## 一次完整使用
 
@@ -48,7 +48,7 @@ skill负责阅读顺序、讲解、提问和停止；固定Atlas CLI负责已有
 | CW-09 AI 归纳（Agent 经 `code_summary` 写入/签名/失效；函数/组/入口 subject 展示与入口归纳子块；插件不调用模型） | ✅ 已验证 56/56（`evidence/ai-summary/`） |
 | A11 性能实测（合成 500/800、2000/10k；首屏预算 500 ms） | ✅ 25/25，首屏 hot p95 382–387 ms 达标、coupling p95 3–4 ms（`evidence/perf/`）；合成夹具+本机限定 |
 | 异步/IRQ 事件边界（observed `async:true` + “异步”标记） | ✅ 已验证 34/34（`evidence/async-irq/`；真实 Wasm `bus_irq` 产生 IRQ、导入异步轨迹、static/rev1 无标记） |
-| S4 目标门禁：真实 Linux/Kbuild、生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证 | ⛔ **未验证/不可声明**：需要固定 Linux 目标（Python≥3.11、Linux 构建 Atlas 快照、内核源码/compdb、复核数据）；已做 Linux 可移植性探测（`evidence/s4-feasibility/`：Node 契约 164/164、真实 Wasm worker 8/8、引擎 CLI 可用；Python 3.8<3.11、Windows 快照 manifest 路径绑定被拒） |
+| S4 目标门禁：真实 Linux/Kbuild、生成头、native CFG/locks/aliases、复核 precision/recall、OS 出口认证 | ⛔ **仍未验证**：需要固定 Linux 目标（Python≥3.11、内核源码/compdb、生成头、复核数据）。**已补充验证**：引擎 331 tests 在 Linux（WSL + 本地 QEMU Ubuntu 24.04）通过；Atlas 0.8 Linux runtime 生成的快照经 `path_aliases` 导入 Windows 插件并在隔离 dsh-web 五视图通过（`evidence/linux-atlas/`；Demo C 用户态源码）。Kbuild/生成头/native CFG/locks/aliases/复核/OS 出口仍不可声明 |
 | 真实设备下发、图内源码写回 | 产品范围待确认/未授权（面板内以 gap 显示） |
 | 入口 subject 独立 AI 归纳 | ✅ 已交付（详情“入口归纳”子块；无记录静默；dsh-web 56/56 覆盖） |
 
