@@ -31,6 +31,9 @@
     "docs/scenario-s3b-contract.md",
     "docs/ai-summary-perf-contract.md",
     "docs/interactive-code-view-software-design.md",
+    "docs/ui-demo-alignment.md",
+    "docs/demo-rebuild-plan.md",
+    "docs/dsh-code-view-ui/",
     "USAGE.md",
     "README.md",
     "LICENSE",
@@ -55,13 +58,16 @@
       "inject": [
         "@deepseek-ai/dsh-client-connection",
         "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
         "@deepseek-ai/dsh-client-ui-renderer"
       ],
       "platform": "web"
     }
   },
   "scripts": {
+    "build:client": "node tools/build-workbench.mjs",
+    "check:client": "node tools/build-workbench.mjs --check",
     "test": "cd engine && python -m unittest discover -s tests -v",
-    "test:node": "node --test tests/node/bridge.test.mjs tests/node/plugin.test.mjs tests/node/view-rpc.test.mjs tests/node/client.test.mjs"
+    "test:node": "node --test tests/node/*.test.mjs"
   }
 }

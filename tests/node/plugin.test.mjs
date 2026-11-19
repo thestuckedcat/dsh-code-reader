@@ -318,12 +318,13 @@ test('display metadata and icon satisfy bundle packaging facts', () => {
     inject: [
       '@deepseek-ai/dsh-client-connection',
       '@deepseek-ai/dsh-client-ui-layout',
+      '@deepseek-ai/dsh-client-ui-sidebar-right',
       '@deepseek-ai/dsh-client-ui-renderer',
     ],
     platform: 'web',
   })
   assert.equal(typeof pkg.scripts.test, 'string')
-  assert.match(pkg.scripts['test:node'], /tests\/node\/view-rpc\.test\.mjs/)
+  assert.match(pkg.scripts['test:node'], /tests\/node\/\*\.test\.mjs/)
   for (const localeName of ['en', 'zh']) {
     const locale = JSON.parse(readFileSync(join(PACKAGE_ROOT, 'locale', `${localeName}.json`), 'utf8'))
     assert.equal(typeof locale.meta.title, 'string')

@@ -1,0 +1,40 @@
+// Reproducible CL-UI-R1 acceptance. All Host/browser state stays in scratch;
+// the user's desktop profile and running desktop host are never restarted.
+import {spawn} from 'node:child_process';
+import {mkdirSync,cpSync,copyFileSync,readFileSync,writeFileSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {randomUUID,createHash} from 'node:crypto';
+import {verifyHostBaseline} from './readonly-slice/host-baseline.mjs';
+import {prepareIsolatedHome,runEngineCli,BOOTSTRAP_PATH} from './readonly-slice/isolated-home.mjs';
+import {startWebServer} from './readonly-slice/web-host.mjs';
+const root=resolve('.'),dir=resolve('scratch/demo-rebuild'),evidence=resolve('evidence/demo-rebuild');
+mkdirSync(dir,{recursive:true});
+const baseline=verifyHostBaseline();if(!baseline.ok)throw Error('pinned rc.5 Host baseline mismatch');
+const prepared=prepareIsolatedHome({wipe:false,importData:false});
+const inbox=join(dir,'inbox');mkdirSync(inbox,{recursive:true});
+cpSync('evidence/code-view-slice/inbox',inbox,{recursive:true});
+for(const file of ['sim-profile.json','bus.wasm','trace-bus-send.json'])copyFileSync(join('evidence/scenario-sim/inbox',file),join(inbox,file));
+const bootstrap=JSON.parse(readFileSync(BOOTSTRAP_PATH,'utf8'));bootstrap.import_inbox_dir=inbox;writeFileSync(BOOTSTRAP_PATH,JSON.stringify(bootstrap,null,2));
+const cli=args=>{const r=runEngineCli({python:prepared.python,args});if(!r.ok||r.stdout_json?.error)throw Error(JSON.stringify(r.stdout_json||r.stderr_tail));return r.stdout_json;};
+const listing=cli(['view-snapshots']);
+const workspace=listing.workspaces?.find(w=>w.workspace_id==='code-view-bus-demo');
+if(!workspace)cli(['workspace-import','--manifest','workspace.json','--expected-revision','0','--operation-id',randomUUID()]);
+if(!workspace?.snapshots?.some(s=>s.snapshot_id==='ed326d554334432b907de21297207eb8'))cli(['snapshot-import','--workspace','code-view-bus-demo','--variant','semantic-x86_64','--repo','bus','--snapshot','snapshot-bus','--operation-id',randomUUID()]);
+cli(['sim-profile-import','--workspace','code-view-bus-demo','--variant','semantic-x86_64','--repo','bus','--profile','sim-profile.json','--operation-id',randomUUID()]);
+const server=await startWebServer({python:prepared.python,tag:'demo-rebuild-final'});
+try {
+ const child=spawn(process.execPath,['tools/run-demo-probe.mjs'],{cwd:root,env:{...process.env,WB_URL:server.url},windowsHide:true,stdio:'inherit'});
+ const code=await new Promise(r=>child.on('exit',r));
+ const report=JSON.parse(readFileSync(join(dir,'probe.json'),'utf8'));
+ report.host={version:'0.2.1-rc.5',isolated:true};
+ report.demo_sha256=/Canonical Demo SHA256: (\w+)/.exec(readFileSync('bundle/client.js','utf8'))?.[1];
+ report.bundle_sha256=createHash('sha256').update(readFileSync('bundle/client.js')).digest('hex');
+ const checks=new Map(report.checks.map(c=>[c.name,c.ok]));
+ const required=names=>names.every(name=>checks.get(name)===true);
+ report.layers={canonical_demo:required(['same-viewport-demo-geometry','sample-c-returns-zero-and-register','drag-node','blank-closes-source','sequence-multiple-calls','cross-view-selection']),snapshot:required(['real-snapshot-rendered','scalar-static-resources-included','snapshot-group-locate-and-frame','snapshot-host-send-and-ledger','snapshot-host-undo-tail','snapshot-import-observed-sequence','snapshot-ordered-interfaces-generate-observed-sequence']),native_host:required(['native-right-pane-mounted','right-pane-keeps-chat','narrow-tools-expand','reopen-restores-drag-zoom-groups','completed-host-run-restored-after-direct-close'])};
+ report.not_verified=['任意仓库完整 CFG/路径敏感锁与别名分析','大仓性能预算重测','用户桌面宿主热更新'];
+ mkdirSync(evidence,{recursive:true});
+ for(const file of ['host-before.png','reference-same-viewport.png','plugin-same-viewport.png','demo-coupling.png','demo-flow.png','snapshot-coupling.png','snapshot-flow.png'])copyFileSync(join(dir,file),join(evidence,file));
+ writeFileSync(join(evidence,'verification.json'),JSON.stringify(report,null,2));
+ process.exitCode=code===0&&report.ok?0:1;
+} finally {await server.stop();}

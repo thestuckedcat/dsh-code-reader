@@ -222,5 +222,29 @@
     "async_irq_events_s4prep": "2026-11-15: A08 async/IRQ event boundary: SimProfileV1 and imported traces may declare <=16 async_events that must belong to their event tables; view-sequence-observed marks matching event messages async:true, returns the declaration and leaves undeclared ledgers byte-identical to S3b; the client renders an async chip/marker/note only in observed mode and does not infer that an interrupt actually happened. Verified in the isolated rc.5 dsh web profile: evidence/async-irq/verification.json (ok=true, verified=true, 34/34 checks, in_scope_not_verified=[]); real Wasm bus_irq produced the IRQ event, imported async trace path also covered, invalid declarations rejected without ledger writes. Real hardware IRQ causality, cross-process async scheduling and real-device capture remain out of scope.",
     "layered_reading_cl007": "2026-11-15: CL-007-D1..D3 / CL-PF-02/03 layered-reading supplement delivered as a skill reference (four layers: business framework, files/functions and responsibilities, key data/state/soft tables/hardware resources, implementation evidence; single-function localization steps over the view/code tools; short output template; hard boundaries against upgrading may/unknown to exact or fabricating observations). SKILL.md workflow step 5 先定位再解释 links it; engine/tests/test_skill_contract.py adds test_20..24 (24 skill-contract tests, 331 Python tests total). This is skill-tunable guidance: it changes explanation order/depth but never evidence levels; real conversation adherence still needs an independent review.",
     "cross_os_linux_snapshot": "2026-11-17: Cross-OS snapshot import verified on a local Linux (WSL2 Ubuntu 20.04) build: Atlas 0.8.0 Linux runtime produced a Demo-C snapshot (snapshot_id 2ffddd4400b6400b8bdc55ffcd33bf76, graph_hash 67aa438f7be00ec5c76370b4795db4466f26ecd816dcb358cfe3f5bde0bae795, coverage parsed 2/failed 0); the Windows plugin imported it after the bootstrap candidate root declared an explicit candidate_roots[].path_aliases mapping (manifest workspace_roots /root/atlas-demo/repo -> slice-root), projected the five views (routes resource, 19 entries, source read sha256 b2ec2328...) and passed an isolated dsh-web Chromium five-view probe (residual failed steps 0; the frozen S2a gapsOriginal step is superseded by S2b/S3a/CW-09 capabilities). Graph counts and the 15-row field-access certainty set are identical between the Windows and Linux snapshots; unknown aliases are rejected and an alias on the wrong root_ref does not satisfy the target-repo check (engine/tests/test_cross_os_snapshot.py, 8 tests). Engine 331 tests pass on WSL and on a local QEMU Ubuntu 24.04.5 guest (Python 3.12.3, 2 Windows junction skips) with no compiler/network available in the guest. NOT claimed: Kbuild/kernel or driver target analysis, generated headers, native CFG/locks/aliases, review precision/recall, OS egress, real Samba remote build. Evidence: evidence/linux-atlas/."
+  },
+  "ui_rebuild_2026_11_19": {
+    "reference": {
+      "path": "demo/code-view/index.html",
+      "sha256": "4056872d3351f263ce44b704411ad12752bf8697378274e42053a056ee2dcc33",
+      "adoption": "direct reuse: HTML/CSS/canvas/five-view interactions; embedded at build",
+      "sha256_normalized_lf": "bd3a94e82f86dacb440db6735f969389afb0d827375cd4923360cc2b1d724aca",
+      "newline_policy": "Build normalizes CRLF to LF for portable bundle checks; visual/script content is unchanged."
+    },
+    "native_sidebar_reference": {
+      "project": "02-remote-environment",
+      "commit": "4322f1a",
+      "path": "client.js",
+      "adoption": "mechanism only: sidebarRightTabs + native pane body/title lifecycle"
+    },
+    "host": {
+      "version": "0.2.1-rc.5",
+      "verification": "tools/readonly-slice/host-baseline.mjs existing SHA gate"
+    },
+    "rpc": {
+      "path": "lib/http-rpc.mjs",
+      "adoption": "existing admitted /code-view; no new transport"
+    },
+    "scope": "UI rebuild; no claim of arbitrary native CFG/locks/aliases, new large-repo performance or desktop hot update"
   }
 }

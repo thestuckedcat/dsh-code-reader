@@ -1,0 +1,16 @@
+✔ interface registration selects the default route and observes the C write (2.809ms)
+✔ a stub route changes the write and resetting discards the previous state (0.6157ms)
+✔ unregistered keys, invalid input and long payloads return without a write (0.3502ms)
+✔ call graph and embedded code map to fixture source (0.1872ms)
+✔ 48 bytes take the direct branch and 49 bytes stage before encoding (0.945ms)
+✔ nested folding reconnects edges and merges duplicate boundary links (0.3053ms)
+✔ a shared implementation does not borrow observations from the other caller (0.0691ms)
+✔ platform return stubs propagate to the entry and release the transfer lock (0.4217ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 128.5394

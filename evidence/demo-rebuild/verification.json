@@ -1,0 +1,484 @@
+{
+  "ok": true,
+  "started_at_utc": "2026-11-19T16:09:59.542Z",
+  "checks": [
+    {
+      "name": "native-right-pane-mounted",
+      "ok": true
+    },
+    {
+      "name": "right-pane-keeps-chat",
+      "ok": true,
+      "detail": {
+        "left": 873.2000122070312,
+        "right": 1586.4000244140625,
+        "width": 713.2000122070312,
+        "bodyWidth": 1586
+      }
+    },
+    {
+      "name": "sample-boot",
+      "ok": true
+    },
+    {
+      "name": "narrow-tools-collapse",
+      "ok": true
+    },
+    {
+      "name": "narrow-tools-expand",
+      "ok": true
+    },
+    {
+      "name": "same-viewport-demo-geometry",
+      "ok": true,
+      "detail": {
+        "reference": {
+          "width": 1586,
+          "height": 918,
+          "nodes": 13
+        },
+        "plugin": {
+          "width": 1586,
+          "height": 918,
+          "nodes": 13
+        }
+      }
+    },
+    {
+      "name": "view-coupling",
+      "ok": true
+    },
+    {
+      "name": "view-text",
+      "ok": true
+    },
+    {
+      "name": "view-flow",
+      "ok": true
+    },
+    {
+      "name": "view-sequence",
+      "ok": true
+    },
+    {
+      "name": "view-files",
+      "ok": true
+    },
+    {
+      "name": "sample-c-returns-zero-and-register",
+      "ok": true
+    },
+    {
+      "name": "sample-c-length-error",
+      "ok": true
+    },
+    {
+      "name": "tail-undo-replays-state",
+      "ok": true
+    },
+    {
+      "name": "source-panel",
+      "ok": true
+    },
+    {
+      "name": "resource-tab",
+      "ok": true
+    },
+    {
+      "name": "summary-tab",
+      "ok": true
+    },
+    {
+      "name": "resource-definition-and-field-notes",
+      "ok": true
+    },
+    {
+      "name": "unique-resource-and-function-boxes",
+      "ok": true
+    },
+    {
+      "name": "basic-interface-blackbox",
+      "ok": true
+    },
+    {
+      "name": "remove-basic-interface",
+      "ok": true
+    },
+    {
+      "name": "subflow-and-breadcrumb",
+      "ok": true
+    },
+    {
+      "name": "collapsed-group-is-process",
+      "ok": true
+    },
+    {
+      "name": "drag-node",
+      "ok": true,
+      "detail": {
+        "point": {
+          "x": 929.6999893188477,
+          "y": 516.8000011444092
+        },
+        "frameRect": {
+          "x": 0.800000011920929,
+          "y": 81.5999984741211
+        },
+        "before": "[233,156]",
+        "after": "[321.6666666666667,200.33333333333334]"
+      }
+    },
+    {
+      "name": "drag-does-not-open-source",
+      "ok": true
+    },
+    {
+      "name": "native-tab-close",
+      "ok": true
+    },
+    {
+      "name": "reopen-restores-drag-zoom-groups",
+      "ok": true,
+      "detail": {
+        "before": {
+          "positions": {
+            "entry": [
+              24,
+              156
+            ],
+            "bus_send": [
+              321.6666666666667,
+              200.33333333333334
+            ],
+            "lookup_route": [
+              442,
+              156
+            ],
+            "check_length": [
+              651,
+              156
+            ],
+            "dispatch_transfer": [
+              860,
+              156
+            ],
+            "failed": [
+              442,
+              -24
+            ],
+            "routeGroup": [
+              442,
+              156
+            ],
+            "transferGroup": [
+              860,
+              156
+            ],
+            "stagingGroup": [
+              1069,
+              296
+            ],
+            "commitGroup": [
+              651,
+              424
+            ],
+            "submit_direct": [
+              860,
+              296
+            ],
+            "submit_buffered": [
+              1069,
+              296
+            ],
+            "stage_payload": [
+              1069,
+              424
+            ],
+            "commit_transfer": [
+              651,
+              530
+            ],
+            "encode_doorbell": [
+              442,
+              530
+            ],
+            "write_doorbell": [
+              233,
+              530
+            ],
+            "platform_write": [
+              24,
+              530
+            ],
+            "device": [
+              24,
+              650
+            ],
+            "done": [
+              233,
+              650
+            ]
+          },
+          "camera": {
+            "x": 271.86842105263156,
+            "y": 153.94736842105263,
+            "zoom": 0.7894736842105263
+          },
+          "expandedGroups": [
+            "transferGroup",
+            "routeGroup"
+          ]
+        },
+        "after": {
+          "camera": {
+            "x": 271.86842105263156,
+            "y": 153.94736842105263,
+            "zoom": 0.7894736842105263
+          },
+          "expandedGroups": [
+            "transferGroup",
+            "routeGroup"
+          ],
+          "positions": {
+            "bus_send": [
+              321.6666666666667,
+              200.33333333333334
+            ],
+            "check_length": [
+              651,
+              156
+            ],
+            "commitGroup": [
+              651,
+              424
+            ],
+            "commit_transfer": [
+              651,
+              530
+            ],
+            "device": [
+              24,
+              650
+            ],
+            "dispatch_transfer": [
+              860,
+              156
+            ],
+            "done": [
+              233,
+              650
+            ],
+            "encode_doorbell": [
+              442,
+              530
+            ],
+            "entry": [
+              24,
+              156
+            ],
+            "failed": [
+              442,
+              -24
+            ],
+            "lookup_route": [
+              442,
+              156
+            ],
+            "platform_write": [
+              24,
+              530
+            ],
+            "routeGroup": [
+              442,
+              156
+            ],
+            "stage_payload": [
+              1069,
+              424
+            ],
+            "stagingGroup": [
+              1069,
+              296
+            ],
+            "submit_buffered": [
+              1069,
+              296
+            ],
+            "submit_direct": [
+              860,
+              296
+            ],
+            "transferGroup": [
+              860,
+              156
+            ],
+            "write_doorbell": [
+              233,
+              530
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "arrange-restores-layout",
+      "ok": true
+    },
+    {
+      "name": "blank-closes-source",
+      "ok": true
+    },
+    {
+      "name": "cross-view-selection",
+      "ok": true
+    },
+    {
+      "name": "sequence-multiple-calls",
+      "ok": true
+    },
+    {
+      "name": "real-snapshot-listed",
+      "ok": true,
+      "detail": [
+        "demo",
+        "code-view-bus-demo/ed326d554334432b907de21297207eb8"
+      ]
+    },
+    {
+      "name": "real-snapshot-rendered",
+      "ok": true
+    },
+    {
+      "name": "snapshot-view-coupling",
+      "ok": true
+    },
+    {
+      "name": "snapshot-view-text",
+      "ok": true
+    },
+    {
+      "name": "snapshot-view-flow",
+      "ok": true
+    },
+    {
+      "name": "snapshot-view-sequence",
+      "ok": true
+    },
+    {
+      "name": "snapshot-view-files",
+      "ok": true
+    },
+    {
+      "name": "scalar-static-resources-included",
+      "ok": true,
+      "detail": {
+        "caption": "静态快照 · code-view-bus-demo · ed326d554334432b907de21297207eb8",
+        "functions": 24,
+        "gaps": [
+          "source_text 补充为源码词法证据，条件编译、宏展开与别名访问需要语义索引复核。",
+          "暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）",
+          "静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账",
+          "跨文件且无已解析出边的函数按分析域边界（设备/库）显示；这是读模型启发式，不是 Atlas 事实",
+          "分支条件仅来自带调用点的 callsite guard；无调用点的源码分支未建模（需 CFG，CW-T4）",
+          "非入口函数共 10 条 return 汇总到 process 节点 returns_count，未单独展开",
+          "静态调用和字段证据不证明运行时顺序；原生 CFG、锁保护和别名覆盖以快照能力为准。"
+        ],
+        "resources": 7
+      }
+    },
+    {
+      "name": "snapshot-tree-lazy-detail",
+      "ok": true
+    },
+    {
+      "name": "snapshot-group-locate-and-frame",
+      "ok": true
+    },
+    {
+      "name": "snapshot-host-profile",
+      "ok": true
+    },
+    {
+      "name": "snapshot-host-execution",
+      "ok": true,
+      "detail": "隔离模拟完成 · generation 6 · 1 条记录；非真实设备运行\n\n隔离运行配置\nDemo bus/platform Wasm 隔离模拟\n新建执行场景\n调用接口\nreset()\nbus_register()\nstub_route()\nbus_unregister()\nbus_send()\nbus_irq()\n边界打桩 · set_platform_stub()\nchannel\n执行接口\n回退条数\n回退末尾\n执行记录\n1. bus_register(1) → 0\n基础接口库\nHost 执行记录 / 观测导入"
+    },
+    {
+      "name": "snapshot-host-send-and-ledger",
+      "ok": true,
+      "detail": "隔离模拟完成 · generation 8 · 2 条记录；非真实设备运行\n\n隔离运行配置\nDemo bus/platform Wasm 隔离模拟\n新建执行场景\n调用接口\nreset()\nbus_register()\nstub_route()\nbus_unregister()\nbus_send()\nbus_irq()\n边界打桩 · set_platform_stub()\nchannel\nlength\n执行接口\n回退条数\n回退末尾\n执行记录\n2. bus_send(1, 48) → 0\n1. bus_register(1) → 0\n基础接口库\nHost 执行记录 / 观测导入"
+    },
+    {
+      "name": "completed-host-run-restored-after-direct-close",
+      "ok": true
+    },
+    {
+      "name": "snapshot-host-undo-tail",
+      "ok": true,
+      "detail": "已回退末尾 1 条；Host 已校验前缀重放状态\n\n隔离运行配置\nDemo bus/platform Wasm 隔离模拟\n新建执行场景\n调用接口\nreset()\nbus_register()\nstub_route()\nbus_unregister()\nbus_send()\nbus_irq()\n边界打桩 · set_platform_stub()\n执行接口\n回退条数\n回退末尾\n执行记录\n1. bus_register(1) → 0\n基础接口库\nHost 执行记录 / 观测导入"
+    },
+    {
+      "name": "snapshot-import-observed-sequence",
+      "ok": true,
+      "detail": "已导入观测；导入数据未经本机执行，不能回退重放。新建执行场景后可继续模拟。\n\n隔离运行配置\nDemo bus/platform Wasm 隔离模拟\n新建执行场景\n调用接口\nreset()\nbus_register()\nstub_route()\nbus_unregister()\nbus_send()\nbus_irq()\n边界打桩 · set_platform_stub()\n执行接口\n回退条数\n回退末尾\n执行记录\n3. bus_send(1, 48) → 0\n2. bus_register(1) → 0\n1. reset() → ok\n基础接口库\nHost 执行记录 / 观测导入"
+    },
+    {
+      "name": "snapshot-ordered-interfaces-generate-observed-sequence",
+      "ok": true,
+      "detail": "Host 台账观测 · scn_1cdba7b2f438 · 不证明真实设备行为"
+    },
+    {
+      "name": "no-renderer-errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console": [
+    {
+      "level": 2,
+      "message": "%cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security\n  Policy set or a policy with \"unsafe-eval\" enabled. This exposes users of\n  this app to unnecessary security risks.\n\nFor more information and help, consult\nhttps://electronjs.org/docs/tutorial/security.\nThis warning will not show up\nonce the app is packaged."
+    }
+  ],
+  "frames": [
+    {
+      "url": "http://127.0.0.1:13069/",
+      "name": ""
+    },
+    {
+      "url": "about:srcdoc",
+      "name": ""
+    }
+  ],
+  "model": {
+    "caption": "静态快照 · code-view-bus-demo · ed326d554334432b907de21297207eb8",
+    "functions": 24,
+    "gaps": [
+      "source_text 补充为源码词法证据，条件编译、宏展开与别名访问需要语义索引复核。",
+      "暂无 AI 归纳正文：Agent 可通过 code_summary 写入（插件不调用模型、不伪造正文）",
+      "静态预测视图无运行观测；执行/导入场景后可在 observed 模式查看台账",
+      "跨文件且无已解析出边的函数按分析域边界（设备/库）显示；这是读模型启发式，不是 Atlas 事实",
+      "分支条件仅来自带调用点的 callsite guard；无调用点的源码分支未建模（需 CFG，CW-T4）",
+      "非入口函数共 10 条 return 汇总到 process 节点 returns_count，未单独展开",
+      "静态调用和字段证据不证明运行时顺序；原生 CFG、锁保护和别名覆盖以快照能力为准。"
+    ],
+    "resources": 7
+  },
+  "finished_at_utc": "2026-11-19T16:10:18.952Z",
+  "duration_ms": 19410,
+  "host": {
+    "version": "0.2.1-rc.5",
+    "isolated": true
+  },
+  "demo_sha256": "bd3a94e82f86dacb440db6735f969389afb0d827375cd4923360cc2b1d724aca",
+  "bundle_sha256": "54fa0afeaf3bf4102efce10575697ecfe7ae4838c0ee04a4ef723b72f9176e1f",
+  "layers": {
+    "canonical_demo": true,
+    "snapshot": true,
+    "native_host": true
+  },
+  "not_verified": [
+    "任意仓库完整 CFG/路径敏感锁与别名分析",
+    "大仓性能预算重测",
+    "用户桌面宿主热更新"
+  ]
+}

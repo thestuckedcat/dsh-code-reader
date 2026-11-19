@@ -1,5 +1,7 @@
 # 04 只读代码工作台切片契约（CL-VIEW-T1）
 
+2026-11-19：客户端承载、DOM 钩子与会话恢复合同已由 [CL-UI-R1](ui-demo-alignment.md) 修订为原生右栏和 Demo 同源渲染。本文保留 T1 历史验收；RPC/CLI DTO、来源核验与 Host 准入继续适用。当前 GUI 验收使用 `tools/verify-demo-rebuild.mjs`，旧主页面探针不能作为新版通过证据。
+
 `CL-VIEW-T1-CONTRACT` · 2026-11-15 · 本文件是本轮只读切片的实现与验收契约。详细产品语义见
 [交互式代码工作台软件设计](interactive-code-view-software-design.md)（CL-VIEW-D2），本文件只固定
 **本轮**要交付的 DSH 插件入口、读模型、共享标识、DOM 验收钩子和分层证据口径。冲突时以详细设计为

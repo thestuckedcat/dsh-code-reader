@@ -1,5 +1,7 @@
 # 04 五视图契约（CL-VIEW-T2 / 阶段 S2a）
 
+2026-11-19：新版客户端按 [CL-UI-R1](ui-demo-alignment.md) 直接复用 Demo、停靠原生右栏。本文的静态 DTO/证据语义继续适用；旧主区域 DOM 与布局专属钩子属于历史客户端。当前 GUI 及模拟操作以 `tools/verify-demo-rebuild.mjs` 的同视口对照与实际操作为准。未覆盖的 CFG 不因换渲染器而提升为事实。
+
 `CL-VIEW-T2-CONTRACT` · 2026-11-15 · 本文件固定只读五视图（资源关系图、可折叠文字树、单入口端到端图、
 时序图、文件视图）的读模型 DTO、派生规则、DOM 验收钩子与逐阶段 dsh-web 验收方式。产品语义依据
 [交互式代码工作台软件设计](interactive-code-view-software-design.md)（CW-02..CW-10、§6 规范），

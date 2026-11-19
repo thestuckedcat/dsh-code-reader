@@ -183,56 +183,38 @@ find 返回示例（节选）：
 | `STATE_CONFLICT` | revision/generation/锁冲突；先 `status`/`resume` 取当前值再重试 |
 | 工具不存在 | 插件未激活：检查 `plugin_manager` 安装结果与 `inspect` 诊断 |
 
-## 7. 代码工作台（DSH 侧边栏，只读五视图 S2a + S2b）
+## 7. 代码工作台（原生右侧栏，CL-UI-R1）
 
-产品以 DSH 插件交付。安装/更新 bundle 并**重启宿主进程**后，侧边栏出现「代码工作台」；点击打开 keyed 主面板
-（与宿主聊天面板互斥，面板内「返回聊天」回到会话）。面板关闭/返回不丢失当前 workspace/snapshot/入口/视图/选择，
-再次打开会恢复并重新拉取数据。
+产品以 DSH plugin 交付。加载当前 bundle 后，点击宿主的「打开右侧边栏」→ 开始页「代码工作台」；已有页面时先点右栏的「新标签页」。工作台与聊天并排，右上角使用宿主的分栏、全屏和关闭。关闭再开保留当前会话的来源、视图、函数、拖动布局、缩放、展开组和最后已完成场景；刷新整个客户端后的持久化不在本轮范围内。用户桌面热更新尚未验证，本轮全部宿主操作使用隔离 profile。
 
-前置：已完成 §2.1 bootstrap 与 §3.1 workspace 登记，并用 `code_snapshot action=import` 导入过至少一个
-已核验 Atlas 0.1 快照（也可先在 Host 侧用工具完成）。工作台只读，不执行场景/打桩/回退、不写回源码。
+顶部「来源」默认是当前 Demo：直接执行打包的 C/Wasm 样例，不依赖 Python 首屏；可切换已登记并导入的真实 Atlas 静态快照。真实快照读取失败保留原有画面并显示原因，不把样例数据混入真实代码。
 
-### 7.1 看到什么
+| 视图或工具 | 操作 |
+|---|---|
+| 资源关系图 | 左右函数、中间共享资源；同一实体一个框，动作色线和字段注释表示关系。点资源看定义、用途、字段与引用。 |
+| 文字树 | 所有入口可折叠；真实快照逐次展开源码步骤与调用，避免一开始渲染整个深树。 |
+| 端到端流程图 | 选择一个入口；节点可拖，空白可平移、滚轮缩放、规整恢复。判断为菱形，折叠组为处理矩形。真实快照采用竖排正交线；缺少 CFG 的分支明确保留缺口。 |
+| 时序图 | 选择接口顺序和参数并生成；Demo 在浏览器执行 C/Wasm。真实快照若有匹配 profile，则通过 Host worker 生成台账观测；否则显示静态场景，不宣称实际执行。 |
+| 文件视图 | 仓库文件树与带行号源码；函数选择可定位相应文件区间。 |
+| 函数详情 | 源码／子流程／资源分析／AI 归纳；基础接口显示输入、输出、功能、实现与校验，可加入或移出。点击画布空白收起源码。 |
+| 全局资源 | 当前函数相关资源高亮置顶；初始化、修改、释放与 Read 分色。关联函数只在图中定位。source_text 是简单文件静态声明/访问的词法补充，不等于预处理后的语义事实。 |
+| 打桩模拟 | 真实快照选择匹配的隔离 profile，再选接口与入参。「执行接口」追加当前场景；「新建执行场景」清空执行草稿。Host 执行后保留不可变台账。 |
 
-| 区域 | 内容 | 证据口径 |
-|---|---|---|
-| 快照 | 已登记 workspace → variant → 快照；显示 `verified/invalid`、`freshness`、coverage（failed/pending/whole_program_complete）、`entry_count`、限制/错误 | 快照逐次重核 graph/manifest 哈希；损坏只标该条 invalid，不隐藏其他快照 |
-| 入口/源码 | 该快照内函数按「入口优先」排序；定义行起带行号源码 + 高亮区间；位置为仓库相对 `file:line` | Atlas 定义 evidence 的字节区间经签名读取；文本只证明该段存在 |
-| 资源关系图 | 三列（左 writers / 中 resources / 右 readers）；访问线区分 read/write/rmw/init/deinit/alloc/free/acquire/release，标字段名；点击资源高亮相关函数、点函数打开详情 | 来自快照 `objects`/`field_accesses`；`exact`=静态确定、`may`=候选（保留 `unresolved_or_multiple_base_objects` 等限制） |
-| 可折叠文字树 | 入口 → 逐层调用；节点显示调用点 `file:line`、guard 条件、返回表达式、局限徽标；点击联动文件视图 | 调用边 `call_targets`、`callsites.guards`、`flow_edges(relation=return)`；未知/外部为边界叶子 |
-| 端到端图 | 单入口竖排图：椭圆入口/出口、矩形处理、菱形判断（条件在线上）、外部边界虚线框；正常实线、异常红色实线；拖拽/平移/缩放/适应/搜索/一键规整 | 调用边 exact/may；判断来自带调用点的 guard；入口返回来自 `flow_edges(return)`（多为 may，不升级）；无调用点的分支未建模（gap `branch_conditions_partial`，需 CFG） |
-| 时序图 | S2a 只有**静态预测**模式：明确 warning + `observed=false`；参与者生命线、call/access/external 分色；点击消息定位源码 | 按源码调用顺序的 DFS 前序，不是运行观测；实际执行/轨迹在 CW-T3 |
-| 组折叠/展开（S2b） | 端到端图按「单入口私有子流程」结构自动分组（如 dispatch_transfer/commit_transfer 下游）；组框显示名称/描述/成员数，默认折叠；展开/一键折叠展开；跨组边接组端口并保留原边 id/certainty/标签；组名/描述可修订并标“已修订（结构归纳）”，修订仅存当前会话 | 组由结构规则产生（gap `group_semantics`），不是语义理解；原调用边不合并、可复查 |
-| 基础接口库（S2b） | 左栏可折叠接口库：规则候选（签名/入参/返回/调用者/理由/副作用/入参 guard），加入/移出；加入后在图与树中收作黑盒（显示接口摘要、折叠内部步骤），可展开恢复；外部边界单独只读展示 | 全部候选 `certainty=may`（`candidate_rule_based_not_semantic`）；加入/移出只是展示覆盖，不写快照/源码 |
-| 子流程与面包屑（S2b） | 详情面板 tabs：源码 / 子流程 / 资源；子流程为以选中函数为入口的小图（复用布局/正交线/红色异常边）；面包屑从根入口到当前函数，点根回主图（保留节点/边/分组），点中间项以其为根重投影 | 面包屑由已解析调用路径计算（≤20 跳），无路径显示 `breadcrumb_unavailable` 缺口 |
-| 文件视图 | 快照涉及文件的文件树（只列参与分析的文件）+ 完整只读源码与行号；与选择/树/资源联动定位 | 文件集合来自快照 evidence；读取核对文件 sha256 与 evidence hash |
-| 左栏 | 「全局资源」：名称/类型/用途/字段来源、相关置顶高亮、初始化/修改/释放/Read 浅色栏；「打桩模拟」S2a 占位（CW-T3） | 资源行来自 coupling 投影；打桩占位显示禁用按钮与原因 |
-| 缺口/图例/详情 | 组折叠、接口库、AI 归纳、运行观测、场景执行等未实现能力原样显示；右上角 `?` 图例说明颜色/形状/证据分级；详情面板含源码/资源分析/证据徽标 | gaps 的 `code/status/reason` 原样；AI 归纳正文只在有模型出口时生成，S2a 仅占位 |
-| 共享选择 | 面板底部 `Selection` JSON：workspace/variant/snapshot/repo/entry/symbol/callsite/resource/evidence/run/event + `focus_resource_id/focus_callsite_id` | 五视图共用；运行观测字段本轮为 null |
+窄栏可用「展开／收起工具区」把空间留给画布。基础接口、源码和跨视图选择沿用 Demo 交互。内置 Demo 的源码归纳与布局含已复核的样例配置；真实任意仓库不会因此自动获得完整业务语义。
 
-### 7.2 用 Demo 对照核对 `routes[channel].max_len`
+### 7.1 模拟、回退和导入
 
-真实快照夹具 `evidence/code-view-slice/`（Demo `bus.c`/`platform.c` 字节级复制 + Atlas 0.8.0 产物）：
+真实快照先按 §8.1 登记可信 profile。接口名、参数和范围来自 profile；边界打桩接口仍由该 profile 明确声明。每次运行先 preview，再由 Host 隔离执行并写台账；入参变化形成不同场景，同一场景使用 generation 防止覆盖。
 
-- 资源关系图（真实浏览器 dsh-web 已验）：`routes` 资源；`store_route` 的 write **exact** `routes[channel].max_len`
-  （`bus.c:46`）；`lookup_route`/`check_length` 的 read **may**（`bus.c:92/93/98`）。
-- 入口 `bus_register`：`store_route` 一跳内出现 write exact；入口 `bus_send`：源码 `bus.c:152–174`，
-  超限返回 `-90` 在 `bus.c:164–165`（源码事实，不是运行证明）；三条调用边均 exact（`bus.c:160/164/170`）。
-- 端到端图：`bus_send` 入口、3 个判断（错参/长度/直发-暂存）、`-22/-2/-90` 异常出口红色实线、`返回 status`
-  正常出口、`platform_write` 外部边界虚线；时序图为静态预测（38 条消息，含平台写边界）。
-- Demo `node --test demo/code-view/demo.test.cjs`（Wasm 模拟观测）8/8：登记后发送写 `0x20030`，超限返回
-  `-90`，非法 `-22`，未登记 `-2`；平台失败 `-5` 透传且锁 1→0。Demo 观测与 Atlas 静态事实分属不同证据类，
-  不得互相冒充。
+「回退末尾」只允许撤销最后 N 条；Host 重放前缀并核验状态摘要。执行记录的「Host 执行记录／观测导入」可查看同快照、同配置台账，并输入可信 inbox 内的轨迹文件名导入。导入数据不会在插件执行，也不能回退重放；要再次模拟先新建执行场景。
 
-### 7.3 权限与失败
+真实 Host 的事件显示在记录和 observed 时序中。没有可靠源码分支映射时，图会明确提示「尚未投影到源码分支」。异步标记只采用引擎返回的 observed async 标记，旧导入轨迹不会因当前 profile 声明变化而升级。
 
-- 浏览器只发 `workspace/snapshot/entry/repo/path` 等有界标识到 `POST /code-view/<endpoint>`；Host 重核长度/
-  字符集并经 `connection.admit` 准入；引擎不接受绝对路径/argv；RPC/UI 不输出绝对路径、bootstrap/state 路径。
-- Python 缺失、bootstrap 缺失、未登记、快照无效/过期、源码不可读等情况**不隐藏面板**，在缺口区显示原因；
-  引擎逻辑错误以 `value.error.code`（如 `NOT_FOUND`、`STALE_SNAPSHOT`）显示。
-- 尚未提供（以缺口显示）：AI 归纳正文、回退末尾 N 次/前缀重放/轨迹导入（S3b）、observed 异步/IRQ 因果、
-  真实设备下发、图内源码写回；真实 Linux/Kbuild/CFG/性能按 S4 继续。已交付阶段验收见 `evidence/`
-  下 `readonly-slice/`、`five-views/`、`s2b/`、`s3/`。
+### 7.2 验收与开发
+
+本轮隔离 rc.5 的 49 项操作见 [CL-UI-R1](docs/ui-demo-alignment.md)。同视口 Demo 节点位置、形状和颜色一致；真实指针拖动、关闭重开、登记→发送 0x20030、末尾回退、导入和所选接口时序均已实测。
+
+仓库根执行 `node tools/build-workbench.mjs` 构建，`node tools/build-workbench.mjs --check` 检查发布 bundle 与来源一致；`node tools/verify-demo-rebuild.mjs` 运行当前隔离验收。旧 S1/S2a 的主页面 DOM 探针保留历史用途。
 
 ## 8. 受控场景与打桩模拟（S3a）
 
@@ -253,7 +235,7 @@ python -m code_learning.cli --bootstrap <bootstrap.json> sim-profile-import \
 `event_resources`（只能引用该快照对象）后复制到 `state/sim/`。Demo 夹具见 `evidence/scenario-sim/`
 （bus.wasm 1547B，sha256 `69c8622d…321c`）。未登记 profile 时面板显示 gap，不伪造。
 
-### 8.2 一次打桩模拟
+### 8.2 S3 历史完整界面操作（当前入口按 §7.1）
 
 1. 左栏「打桩模拟」→ 选择 profile（显示绑定、模块 sha、接口数、limits）。
 2. 组合有序步骤：`reset` → `bus_register(1)` → `bus_send(1, 48)`；接口/参数由 profile 约束（min/max；
@@ -305,7 +287,7 @@ code_summary action=put workspace=<id> snapshot=<snapshot_id>
   （subject_type=entry；无记录时静默、不显示 gap）。未写入函数归纳时显示 gap，不伪造正文。RPC 只读端点
   `view.summary` 供面板使用。
 
-## 10. 性能实测（A11）
+## 10. 历史客户端性能实测（A11；新 UI 待重测）
 
 仓库提供可复现的实测工具（不属于产品运行路径）：
 

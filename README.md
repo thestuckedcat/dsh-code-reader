@@ -12,7 +12,15 @@ DeepSeek Harness（DSH）插件 + `learn-code-workspace` skill + 本地 Python �
 - [机制说明](docs/mechanisms.md)（交付时补全）
 - [使用说明](USAGE.md)
 
-## 状态（2026-11-15）
+## 当前界面（2026-11-19，CL-UI-R1）
+
+代码工作台已重写为 **DSH 原生右侧栏标签页**：右栏开始页 →「代码工作台」。客户端直接打包当前 Demo 的 HTML/CSS、五视图和画布交互，保留聊天区；支持组/黑盒/子流程、资源定义与字段、拖动/规整、窄栏工具收展、阅读状态恢复。顶部来源切换内置 C/Wasm Demo 与真实 Atlas 静态快照。真实快照的模拟仍走已准入的 Host worker、不可变台账、末尾回退和观测导入。
+
+本轮隔离 rc.5 操作 **49/49**、Node **108/108**、Python **331/331**；[实测截图与范围](docs/ui-demo-alignment.md)、[证据](evidence/demo-rebuild/verification.json)。任意仓库完整 CFG、路径敏感锁/别名、大仓性能重测与用户桌面热更新仍待验证。下面保留历史阶段状态，各旧 UI 专属断言/性能数字不自动适用于新客户端。
+
+开发构建：`node tools/build-workbench.mjs`；一致性检查：`node tools/build-workbench.mjs --check`；当前端到端验收：`node tools/verify-demo-rebuild.mjs`（项目根运行，仅操作 scratch 隔离 profile）。
+
+## 历史阶段状态（2026-11-15）
 
 - **已实现并自测**：workspace 登记/校验、源码只读查找与引用、Atlas 0.1 快照导入与完整性校验、路径/关系查询（含跨仓 `abi_bridge` 候选）、学习记录 CAS/导出/resume 失效、`learn-code-workspace` skill、6 个 DSH Host 工具、安装后注册验证。
 - **只读代码工作台 S2a 五视图（2026-11-15，CW-T2 首阶段）**：DSH 插件自带 client 半，侧边栏「代码工作台」keyed 主面板；**资源关系图**（三列 writers/resources/readers + 访问线 kind/certainty + 左栏全局资源 + 打桩占位）、**可折叠文字树**（调用点/guard/返回/局限）、**单入口端到端图**（竖排 H/V 正交折线、判断菱形、异常红色实线、外部边界虚线、拖拽/平移/缩放/适应/搜索/一键规整）、**时序图**（S2a 静态预测模式，明确 warning + observed=false）、**文件视图**（快照涉及文件 + 行号 + 联动高亮）；图例/详情/缺口/共享 Selection 跨视图联动。读模型 `view.status/listSnapshots/listEntries/getEntry` + `view.coupling/tree/endToEnd/fileTree/fileRead/sequence`（自有 `/code-view` RPC，连接准入 + 严格输入校验）。真实快照夹具与隔离 dsh-web 证据见 `evidence/code-view-slice/`、`evidence/readonly-slice/`、`evidence/five-views/`。

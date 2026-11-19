@@ -1,0 +1,15 @@
+import {spawn} from 'node:child_process';
+import {readFileSync,mkdirSync,writeFileSync,existsSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {RENDER_PROBE_ELECTRON} from './readonly-slice/host-baseline.mjs';
+const root=resolve('.');
+const env={...process.env,WB_ROOT:root,WB_OUT:resolve('scratch/demo-rebuild')};
+delete env.ELECTRON_RUN_AS_NODE;delete env.WB_INSPECT;
+const child=spawn(RENDER_PROBE_ELECTRON,[resolve('tools/demo-rebuild-probe.cjs'),'--no-sandbox',`--user-data-dir=${resolve('scratch/demo-rebuild-browser')}`],{env,cwd:root,windowsHide:true,stdio:['ignore','pipe','pipe']});
+let log='';child.stdout.on('data',b=>log+=b);child.stderr.on('data',b=>log+=b);
+const timer=setTimeout(()=>child.kill(),120000);
+const code=await new Promise(r=>child.on('exit',r));clearTimeout(timer);
+mkdirSync(env.WB_OUT,{recursive:true});writeFileSync(resolve(env.WB_OUT,'chromium.log'),log);
+const report=JSON.parse(readFileSync(resolve(env.WB_OUT,'probe.json'),'utf8'));
+console.log(JSON.stringify({ok:report.ok,exit_code:code,checks:report.checks.length,passed:report.checks.filter(c=>c.ok).length,failed:report.checks.filter(c=>!c.ok),error:report.error},null,2));
+process.exitCode=report.ok&&code===0?0:1;

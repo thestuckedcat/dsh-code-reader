@@ -6,6 +6,8 @@
 
 ## 1. 当前证据与交付范围
 
+2026-11-19 用户纠正的右侧承载及 Demo 对齐要求见 [CL-UI-R1](ui-demo-alignment.md)。原生右栏与 Demo 同源重构已实现，隔离宿主具体操作 49/49 通过；本文件以下 S1–S4-prep 记录保留历史范围。真实仓库完整 CFG、锁与别名覆盖仍受引擎能力限制，新客户端的大仓性能与桌面热更新未验证。
+
 04 已有 workspace 登记、范围内源码读取、Atlas 快照、关系查询、学习记录和 DSH 工具。当前 Demo 用固定的 `bus.c` / `platform.c`、Clang AST、显式 C 事件及 Wasm 演示五种视图。资源语义、分支归纳和布局含样例配置。业务仓库导入、完整 Kbuild/CFG 分析、真实设备行为及这个 GUI 的宿主接入各有独立验收。04 基线和过去的运行证据继续按原合同解释。[实施契约](implementation-contract.md) · [实施路线](implementation-route.md) · [Demo 源码目录](../demo/code-view/)
 
 建议依次交付只读工作台、按需深分析和受控场景执行。第一阶段先让用户从真实快照进入入口、资源和源码。场景功能先消费已有轨迹，再启用已登记且可重放的模拟。真实设备下发和图内源码写回是待定的高层产品选择。本文提供开发路线、待验证的相容方案和验收标准。
@@ -144,7 +146,7 @@ Host 合并同键只读计算，用户取消只撤销其订阅，无订阅者即
 
 **产品是 DSH 插件。** 插件负责 Client 界面、Host 分析、事件、状态、兼容与权限。配套 skill 只指导 DSH 生成和验收侧边栏。它覆盖独立面板入口、工作台左栏、「打桩模拟／全局资源」和联动。草案放在设计目录，便于实施时引用。[DSH 侧边栏生成 skill](dsh-code-view-ui/SKILL.md)
 
-- Client 采用宿主 runtime，独立 keyed main、侧边入口和 disposer。主题继承宿主。面板状态包含 workspace/repo/snapshot/variant、入口、视图及共享选中。画布、详情和场景状态分开。卸载撤销面板注册、监听与 worker。
+- Client 采用宿主 runtime，经已核验的右栏扩展机制挂载于对话右侧，提供工作台入口和 disposer。主题继承宿主。面板状态包含 workspace/repo/snapshot/variant、入口、视图及共享选中。画布、详情和场景状态分开。卸载撤销面板注册、监听与 worker。按 [CL-UI-R1](ui-demo-alignment.md) 验收。
 - Host 沿用 04 已有源码范围、构建身份及证据校验。拟接口 `view.listEntries/getPage/getEvidence/getRunTrace/cancel` 和 `scenario.preview/run/undoTail`；其他旧工具合同原样可用。前端提交 scope ref、锚点、预算、游标和预期 revision，Host 重核会话、权限、路径、版本与能力，返回 `{ok,value}` 或 `{ok,error}`。
 - 实作 rc.5 接缝时先核本机 renderer、slot、layout、loader 和 connection。08 记录直接 consumer `rpc.handle` 的注册失败，已验证独立前缀 `ctx.webServer.register`、`ctx.connection.admit(req)` 和 client `rpc.call`。验证失配标 `needs_verification`，回到原工具与本地报告。[08 兼容矩阵](../../08-workbench-ui/docs/compatibility-matrix.md)
 - 源码和轨迹按 Host 校验交付。前端把源文本、事件和生成标签按普通文本渲染，离线依赖带固定散列。布局 worker 只拿当前投影。执行由隔离 runner 与 scope 门禁负责，模型依赖只用已批准路径。新 UI 数据按 schema 迁移，旧记录保留，停用 GUI 后仍可用 04 工具和报告。各插件独立部署，联动经显式授权接口。[共同开发合同](../../docs/development-contract.md)
