@@ -5,6 +5,7 @@
 function createModel({entries={}, details=[], coupling={}, flows=[], files=[], interfaces={}}={}) {
   const model={caption:'静态快照 · 未执行', observed:false, functions:{}, variables:{}, files:{}, resources:{}, resourceLinks:{}, resourcePresentation:{}, roles:{}, contracts:{}, basic:[], summariesByFunction:{}, readingSteps:{}, groups:{}, phases:{}, expandedGroups:[], interfaceFields:{}, interfaceLabels:{}, entryPaths:{}, flows:{}, columns:[], resourceOrder:[], gaps:[]};
   const byId=new Map(), detailById=new Map(details.map(d=>[d.entry?.entry_id,d]));
+  model.resourceEffects={};
   const sourceByPath=new Map();
   const fileKey=(repo,path)=>`${repo || entries.snapshot?.repo_id || 'repo'}/${path || '(source unavailable)'}`;
   const resolveFile=(path,repo)=>{
@@ -82,8 +83,10 @@ function createModel({entries={}, details=[], coupling={}, flows=[], files=[], i
     model.variables[key]={name:r.name,file,first:r.line || 1,last:r.end_line || r.line || 1,record:{...r.record,fields:(r.fields || r.record?.fields?.map(field_name=>({field_name})) || []).map(f=>f.field_name)}};
     model.resourcePresentation[key]={name:r.name,colors:colors[i%colors.length],intro,fields:{}};
     const spec={field:(r.fields || []).map(f=>`${r.name}.${f.field_name}`).join(' / ') || r.name,writers:[],readers:[]};
+    model.resourceEffects[key]=[];
     for(const a of accesses) {
       const fn=byId.get(a.function_id) || (model.functions[a.function_id]?a.function_id:null); if(!fn) continue;
+      model.resourceEffects[key].push({function:fn,resource:key,access:a.access||'unknown',expression:a.expression||a.field_name||r.name,certainty:a.certainty||'unknown',source:{file:resolveFile(a.location?.file||r.file,r.repo_id),line:a.location?.line||null}});
       const label=`${a.expression || a.field_name || r.name} · ${a.certainty || 'unknown'} · ${a.location?.file || r.file}:${a.location?.line || '?'}`;
       const labels={read:'读取',write:'写入',rmw:'读改写',init:'初始化',deinit:'去初始化',alloc:'分配',free:'释放',acquire:'加锁',release:'解锁'};
       const verb=labels[a.access] || `未知访问 ${a.access || ''}`;

@@ -81,13 +81,16 @@ test('外部边界有独立身份，不能展示入口的源码',()=>{
 });
 
 test('跨仓同路径资源优先当前仓，保留锁和生命周期访问含义',()=>{
- const resources=[{resource_id:'r',name:'flag',file:'shared.c',storage:'STATIC',lifetime:'static',accesses:['acquire','release','alloc','free','init','deinit','rmw'].map((access,i)=>({access,function_id:'f',function_name:'run',certainty:'exact',location:{file:'shared.c',line:i+1}}))}];
+ const resources=[{resource_id:'r',name:'flag',file:'shared.c',storage:'STATIC',lifetime:'static',accesses:['acquire','release','alloc','free','init','deinit','rmw','unknown'].map((access,i)=>({access,function_id:'f',function_name:'run',certainty:'exact',location:{file:'shared.c',line:i+1}}))}];
  const model=createModel({entries:{snapshot:{repo_id:'primary'},entries:[{entry_id:'f',name:'run',file:'shared.c',line:2,is_entry:true}]},details:[],coupling:{resources},files:[{repo_id:'primary',path:'shared.c',total_lines:1,lines:[{n:1,text:'static unsigned flag;'}]},{repo_id:'other',path:'shared.c',total_lines:1,lines:[{n:1,text:'static unsigned other_flag;'}]}]});
  const flag=Object.values(model.variables).find(v=>v.name==='flag');
  assert.equal(flag.file,'primary/shared.c');
  assert.equal(Object.values(model.variables).filter(v=>v.name==='flag').length,1);
  const text=JSON.stringify(model.resourceLinks);
  for(const verb of ['加锁','解锁','分配','释放','初始化','去初始化','读改写'])assert.ok(text.includes(verb),verb);
+ const actions=Object.values(model.resourceEffects).flat();
+ for(const access of ['acquire','release','alloc','free','init','deinit','rmw','unknown'])assert.ok(actions.some(e=>e.access===access),access);
+ assert.ok(actions.every(e=>model.functions[e.function]&&e.source.file==='primary/shared.c'&&e.certainty==='exact'));
 });
 
 test('同名接口的其他快照/其他运行配置台账不得混入当前阅读',()=>{

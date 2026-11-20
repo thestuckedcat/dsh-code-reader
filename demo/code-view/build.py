@@ -101,9 +101,12 @@ def main():
     graph_model = (ROOT / "graph-model.cjs").read_text(encoding="utf-8")
     reading_model = (ROOT / "reading-model.js").read_text(encoding="utf-8")
     sequence_view = (ROOT / "sequence-view.js").read_text(encoding="utf-8")
+    resource_chain_model = (ROOT / "resource-chains-model.js").read_text(encoding="utf-8")
+    resource_chains = (ROOT / "resource-chains.js").read_text(encoding="utf-8")
     data = json.dumps(bundle, ensure_ascii=False).replace("<", "\\u003c")
     page = (template.replace("%%GRAPH_MODEL%%", graph_model).replace("%%READING_MODEL%%", reading_model)
-            .replace("%%SEQUENCE_VIEW%%", sequence_view).replace("%%BUNDLE%%", data))
+            .replace("%%SEQUENCE_VIEW%%", sequence_view).replace("%%BUNDLE%%", data)
+            .replace("%%RESOURCE_CHAIN_MODEL%%", resource_chain_model).replace("%%RESOURCE_CHAINS%%", resource_chains))
     (ROOT / "index.html").write_text(page, encoding="utf-8")
 
 
