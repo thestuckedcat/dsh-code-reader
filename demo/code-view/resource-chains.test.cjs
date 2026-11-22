@@ -6,6 +6,19 @@ const vm=require('node:vm');
 // The fixture is source-annotated presentation data, never runtime evidence.
 function api(){const box={module:{exports:{}}};vm.runInNewContext(readFileSync(`${__dirname}/resource-chains-model.js`,'utf8'),box);return box.module.exports;}
 
+test('恢复保留关注集、筛选与镜头，丢弃失效资源和非法坐标',()=>{
+ const {normalizeResourceState,lockExample}=api();
+ const restored=normalizeResourceState(lockExample(),{selected:['g_state','g_state','missing'],onlyChanges:true,camera:{x:40,y:-20,zoom:.8},positions:{a:[10,20],b:[NaN,2]},selectedInstance:'submit_job::update_state'});
+ assert.equal(JSON.stringify(restored.selected),'["g_state"]');assert.equal(restored.onlyChanges,true);
+ assert.equal(restored.camera.zoom,.8);assert.equal(restored.positions.a[0],10);assert.equal(restored.positions.b,undefined);
+ assert.equal(restored.selectedInstance,'submit_job::update_state');
+});
+
+test('空关注集可以恢复；坏镜头回到可用默认值',()=>{
+ const {normalizeResourceState,lockExample}=api();const restored=normalizeResourceState(lockExample(),{selected:[],camera:{x:Infinity,y:0,zoom:0}});
+ assert.equal(restored.selected.length,0);assert.equal(restored.camera.zoom,1);
+});
+
 test('共享实现保留两个入口上下文，持锁与未知分开',()=>{
  const {makeResourceSlice,lockExample}=api();const data=lockExample();const graph=makeResourceSlice(data,['g_state']);
  const nodes=graph.nodes.filter(n=>n.function==='update_state');

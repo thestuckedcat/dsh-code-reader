@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  const {makeResourceSlice,lockExample}=window.ResourceChainModel;
+  const {makeResourceSlice,lockExample,normalizeResourceState}=window.ResourceChainModel;
   const labels={read:'R · 读取',write:'W · 写入',rmw:'RMW · 读改写',init:'初始化',deinit:'去初始化',alloc:'申请',free:'释放',acquire:'获取锁',release:'释放锁'};
   const state={mode:window.__CODE_VIEW_MODEL__?'source':'example',selected:['g_state'],onlyChanges:false,camera:{x:14,y:14,zoom:1},positions:{}};
   let data,graph,surface,binding;
@@ -13,6 +13,10 @@
   const sourceOption=el('option','',window.__CODE_VIEW_MODEL__?'当前静态快照':'当前通信驱动 C');sourceOption.value='source';sourceSelect.append(sourceOption);sourceSelect.value=state.mode;sourceLabel.append(sourceSelect);head.append(heading,sourceLabel);
   const notice=el('p','rc-provenance');notice.id='resource-chain-provenance';
   const choices=el('div','rc-choices');choices.setAttribute('aria-label','关注资源多选');
+  const choiceToggle=el('button','rc-choice-toggle','');choiceToggle.type='button';choiceToggle.setAttribute('aria-controls','resource-chain-choices');choices.id='resource-chain-choices';
+  state.choicesCollapsed=matchMedia('(max-width:760px)').matches;state.selectedInstance='';
+  const current=el('p','rc-current');current.setAttribute('aria-live','polite');
+  choiceToggle.onclick=()=>{state.choicesCollapsed=!state.choicesCollapsed;renderChoices();window.dispatchEvent(new Event('code-workbench-state'));};
   const tools=el('div','rc-actions');
   const presets=el('div','side-actions');
   const focusState=el('button','','关注共享状态'),focusLocks=el('button','','关注锁 / 标志'),all=el('button','','全部资源'),clear=el('button','','清空');
@@ -22,7 +26,7 @@
   const coverage=el('span','sub');coverage.id='resource-chain-coverage';tools.append(presets,filterLabel,search,coverage);
   const hint=el('div','rc-legend');hint.append(el('span','rc-dot selected','关注资源 / 字段动作'),el('span','rc-dot context','灰色：调用背景'),el('span','rc-dot held','紫带：示例持锁 / 模拟区间'),el('span','rc-dot unknown','琥珀徽标：保护未知'));
   const canvas=el('div','');canvas.id='resource-chain-canvas';
-  panel.append(head,notice,choices,tools,hint,canvas);main.append(panel);document.querySelector('header').after(main);
+  panel.append(head,notice,choiceToggle,choices,tools,current,hint,canvas);main.append(panel);document.querySelector('header').after(main);
   const tab=el('button','','资源变更链');tab.type='button';tab.dataset.view='changes';tab.setAttribute('aria-pressed','false');tab.setAttribute('aria-controls','changes-workspace');document.querySelector('.view-switch').append(tab);
   const inspector=el('section','code-panel rc-inspector');inspector.id='resource-chain-detail';inspector.hidden=true;
   inspector.setAttribute('aria-label','资源链源码与上下文');const inspectorHead=el('div','code-head');const inspectorTitle=el('h2','');const close=el('button','','关闭');close.type='button';close.onclick=()=>inspector.hidden=true;inspectorHead.append(inspectorTitle,close);
@@ -55,10 +59,11 @@
   function loadMode(reset=true){
     data=state.mode==='example'?lockExample():sourceData();
     if(reset){state.selected=state.mode==='example'?['g_state']:[...Object.keys(data.resources).filter(k=>/routes|staged_lengths/.test(data.resources[k].name)).slice(0,1)];state.positions={};state.camera={x:14,y:14,zoom:1};}
-    state.selected=state.selected.filter(k=>data.resources[k]);sourceSelect.value=state.mode;notice.textContent=data.note;renderChoices();renderGraph();applyFocus();
+    state.selected=state.selected.filter(k=>data.resources[k]);sourceSelect.value=state.mode;notice.textContent=data.note;surface=undefined;renderChoices();renderGraph();applyFocus();
   }
   function changeSelection(keys){state.selected=[...new Set(keys)].filter(k=>data.resources[k]);state.positions={};renderChoices();renderGraph();applyFocus();window.dispatchEvent(new Event('code-workbench-state'));}
   function renderChoices(){
+    choices.hidden=state.choicesCollapsed;choiceToggle.setAttribute('aria-expanded',String(!state.choicesCollapsed));choiceToggle.textContent=(state.choicesCollapsed?'展开资源选择':'收起资源选择')+' · '+state.selected.length+' 个关注资源';
     choices.replaceChildren(...Object.entries(data.resources).map(([key,r])=>{
       const label=el('label','rc-choice'+(state.selected.includes(key)?' checked':''));label.style.setProperty('--rc-accent',r.colors[1]);
       const check=el('input','');check.type='checkbox';check.checked=state.selected.includes(key);check.dataset.resourceChoice=key;check.onchange=()=>changeSelection(check.checked?[...state.selected,key]:state.selected.filter(k=>k!==key));
@@ -70,6 +75,9 @@
     for(const [field,note]of r.fields||[])notes.append(el('dt','',field),el('dd','',note));inspectorBody.replaceChildren(el('p','',r.intro),definition,notes);inspector.hidden=false;
   }
   function inspectNode(n){
+    state.selectedInstance=n.id;
+    if(state.mode==='source'&&functions[n.function])locateResourceFunction(n.function,pathFromEntry(n.entry,n.function));
+    reflectFunction(false);window.dispatchEvent(new Event('code-workbench-state'));
     inspectorTitle.textContent=n.label+' · '+(data.functions[n.entry]?.label||n.entry);
     const info=n.lockStatus==='example-held'?'此调用实例处于示例标注的持锁范围；不是自动锁分析结果。':n.lockStatus==='simulated'?'此调用位于 transfer_lock 的模拟标志区间，不证明互斥。':'该调用上下文的锁保护未知；不据此判定无锁或竞态。';
     const rows=n.effects.map(e=>el('p','',`${labels[e.access]||e.access} ${data.resources[e.resource]?.name||e.resource} · ${e.expression}`));
@@ -80,7 +88,7 @@
   function renderGraph(){
     graph=makeResourceSlice(data,state.selected,{maxNodes:320,onlyChanges:state.onlyChanges});
     coverage.textContent=state.selected.length?`${state.selected.length} 个关注资源 · ${graph.entries.length} 个相关入口 · ${graph.nodes.length}/${graph.totalNodes} 个调用实例${graph.truncated?' · 已截断':''}`:'尚未选择资源';
-    const previous=state.camera;
+    const previous=surface?.readCamera?.()||state.camera;
     surface=graphSurface('resource-chain','资源变更链画布');surface.shell.classList.add('resource-focus-canvas');const {world,links,svg}=surface;
     const width=238,height=142,layout={},boxes={},decorations=[],connectors=[];
     const nodeById=new Map(graph.nodes.map(n=>[n.id,n]));
@@ -124,8 +132,10 @@
     if(!graph.entries.length){const empty=el('p','empty',state.selected.length?'当前范围没有匹配的已标注访问链。':'先在上方勾选一个或多个资源。');empty.style.cssText='position:absolute;left:24px;top:220px';world.append(empty);}
     const maxBottom=Math.max(500,...Object.values(layout).map(([,y])=>y+height+60)),maxRight=Math.max(1100,laneX,...Object.values(layout).map(([x])=>x+width+30));
     Object.assign(world.style,{width:maxRight+'px',height:maxBottom+'px'});links.setAttribute('width',maxRight);links.setAttribute('height',maxBottom);
+    const initialLayout=structuredClone(layout);
     for(const [id,position]of Object.entries(state.positions))if(layout[id])layout[id]=position;
     const camera={camera:previous||{x:14,y:14,zoom:1}};
+    surface.readCamera=()=>({...camera.camera});
     const redraw=()=>{
       for(const [id,card]of Object.entries(boxes)){const [x,y]=layout[id];card.style.left=x+'px';card.style.top=y+'px';}
       for(const d of decorations) {
@@ -135,7 +145,7 @@
       for(const c of connectors){const a=canvasPort(layout[c.from],'b',width,height),b=canvasPort(layout[c.to],'t',width,height);const y=(a.y+b.y)/2;c.path.setAttribute('d',a.y<b.y?`M${a.x} ${a.y}V${y}H${b.x}V${b.y}`:`M${a.x} ${a.y}H${a.x+width/2+24}V${b.y-15}H${b.x}V${b.y}`);}
     };
     binding=bindCanvas(surface,{state:camera,ids:Object.keys(layout),positionOf:id=>layout[id],nodeWidth:width,nodeHeight:height,move(id,next){layout[id]=next;state.positions[id]=next;},reset(){state.positions={};for(const [id,position]of Object.entries(initialLayout))layout[id]=position.slice();},redraw,onBlank:()=>inspector.hidden=true});
-    const initialLayout=structuredClone(layout);canvas.replaceChildren(surface.shell);
+    canvas.replaceChildren(surface.shell);reflectFunction(false);
     const mount=()=>{camera.size=surface.viewport.clientWidth+':'+surface.viewport.clientHeight;binding.mount();state.camera=camera.camera;};
     surface.viewport.addEventListener('pointerup',()=>{state.camera=camera.camera;});surface.viewport.addEventListener('wheel',()=>{state.camera=camera.camera;},{passive:true});surface.controls.addEventListener('click',()=>{state.camera=camera.camera;});
     if(!main.hidden)mount();surface.mountReadable=mount;
@@ -146,15 +156,27 @@
     for(const edge of byId('coupling-graph').querySelectorAll('.edge')){const related=state.selected.some(key=>(edge.dataset.edge||'').startsWith(key+'-'));edge.classList.toggle('rc-focus-muted-edge',Boolean(active&&!related));}
     for(const item of byId('resource-list').querySelectorAll('[data-resource]'))item.classList.toggle('rc-focus-selected',Boolean(active&&state.selected.includes(item.dataset.resource)));
   }
+  function reflectFunction(reveal){
+    if(!surface||!graph)return;
+    if(state.mode==='source'){
+      const symbol=focusPath.at(-1),entry=focusPath[0];
+      const n=graph.nodes.find(n=>n.function===symbol&&n.entry===entry)||graph.nodes.find(n=>n.function===symbol);
+      state.selectedInstance=n?.id||'';
+    }
+    const n=graph.nodes.find(n=>n.id===state.selectedInstance);
+    current.textContent=n?'当前调用：'+(data.functions[n.entry]?.label||n.entry)+' › '+n.label:state.mode==='source'&&focusPath.length?'当前函数：'+(functions[focusPath.at(-1)]?.name||focusPath.at(-1))+' · 未出现在当前资源关注链中':'点击调用卡查看实现与保护上下文';
+    for(const card of surface.world.querySelectorAll('[data-chain-function]'))card.setAttribute('aria-current',String(card.dataset.node===n?.id));
+    if(reveal&&n)surface.shell.dispatchEvent(new CustomEvent('center-node',{detail:n.id}));
+  }
   sourceSelect.onchange=()=>{state.mode=sourceSelect.value;inspector.hidden=true;loadMode();};filter.onchange=()=>{state.onlyChanges=filter.checked;state.positions={};renderGraph();};
   focusState.onclick=()=>changeSelection(Object.keys(data.resources).filter(k=>!/锁|标志/.test(data.resources[k].kind)).slice(0,1));focusLocks.onclick=()=>changeSelection(Object.keys(data.resources).filter(k=>/锁|标志/.test(data.resources[k].kind)));all.onclick=()=>changeSelection(Object.keys(data.resources));clear.onclick=()=>changeSelection([]);
   search.onkeydown=e=>{if(e.key!=='Enter')return;e.preventDefault();const query=search.value.trim().toLowerCase();const node=graph.nodes.find(n=>n.label.toLowerCase().includes(query)||n.effects.some(e=>e.expression.toLowerCase().includes(query)));if(!query||!node)return;for(const box of surface.world.querySelectorAll('.located'))box.classList.remove('located');const target=[...surface.world.querySelectorAll('[data-node]')].find(b=>b.dataset.node===node.id);target?.classList.add('located');surface.shell.dispatchEvent(new CustomEvent('center-node',{detail:node.id}));};
   for(const button of document.querySelectorAll('.view-switch button'))button.addEventListener('click',()=>{
     const open=button.dataset.view==='changes';main.hidden=!open;
-    if(open){for(const id of ['flow','coupling','text','sequence','file'])byId(id+'-workspace').hidden=true;byId('flow-caption').hidden=true;byId('legend').hidden=false;for(const other of document.querySelectorAll('.view-switch button'))other.setAttribute('aria-pressed',String(other===button));surface.mountReadable();}
+    if(open){for(const id of ['flow','coupling','text','sequence','file'])byId(id+'-workspace').hidden=true;byId('flow-caption').hidden=true;byId('legend').hidden=false;for(const other of document.querySelectorAll('.view-switch button'))other.setAttribute('aria-pressed',String(other===button));surface.mountReadable();reflectFunction(true);}
     else{tab.setAttribute('aria-pressed','false');inspector.hidden=true;}applyFocus();
   });
   document.addEventListener('click',event=>{const card=event.target.closest?.('[data-coupling-resource]');if(card){state.mode='source';data=sourceData();const key=card.dataset.couplingResource;changeSelection(event.ctrlKey||event.metaKey?[...state.selected.filter(k=>data.resources[k]),key]:[key]);sourceSelect.value='source';notice.textContent=data.note;}queueMicrotask(applyFocus);});
-  window.ResourceChainUI={save:()=>({mode:state.mode,selected:state.selected,onlyChanges:state.onlyChanges,camera:state.camera,positions:state.positions}),restore:s=>{if(!s)return;state.mode=window.__CODE_VIEW_MODEL__?'source':s.mode;state.selected=s.selected||[];state.onlyChanges=!!s.onlyChanges;state.camera=s.camera;state.positions=s.positions||{};filter.checked=state.onlyChanges;loadMode(false);},get graph(){return graph;},get state(){return state;}};
+  window.ResourceChainUI={save:()=>({mode:state.mode,selected:[...state.selected],onlyChanges:state.onlyChanges,camera:surface?.readCamera?.()||{...state.camera},positions:structuredClone(state.positions),selectedInstance:state.selectedInstance,choicesCollapsed:state.choicesCollapsed}),restore:s=>{if(!s)return;state.mode=window.__CODE_VIEW_MODEL__||s.mode==='source'?'source':'example';data=state.mode==='example'?lockExample():sourceData();Object.assign(state,normalizeResourceState(data,s));filter.checked=state.onlyChanges;loadMode(false);},get graph(){return graph;},get state(){return state;}};
   loadMode();if(location.hash==='#resource-changes')tab.click();
 })();

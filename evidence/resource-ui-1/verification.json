@@ -1,0 +1,23 @@
+{
+  "id": "CL-RES-UI-1",
+  "date": "2026-11-22",
+  "host": "isolated DSH 0.2.1-rc.5 web profile",
+  "method": "Manual browser automation via CUA; not the previous 49-step probe",
+  "observed": [
+    "Native right pane opens beside the chat and contains six views",
+    "Narrow-pane resource chooser collapses with selected-resource count",
+    "routes and transfer_lock multi-selection; store_route selection reflected as bus_register/store_route in text view",
+    "Close and reopen restores two resources, source mode, modification filter and selected function",
+    "Real Atlas snapshot enters resource chains with current snapshot only and unknown lock protection",
+    "Final iframe scripts contain live-camera saving and explicit camera restore fix",
+    "Search-centered camera transform is byte-identical after direct close and reopen: translate(-147.5px, -284px) scale(1)",
+    "Final isolated browser console has no captured errors"
+  ],
+  "automated_tests": {"pass":124,"fail":0,"log":"tests.txt"},
+  "screenshot": "native-sidebar.jpg",
+  "not_verified": [
+    "User desktop host hot update",
+    "Persistence across Host process restart",
+    "Path-sensitive real lock analysis and all repository callsite paths"
+  ]
+}

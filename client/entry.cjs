@@ -82,7 +82,7 @@ function createPlugin(React,documents,models,reference) {
   function apply(ctx) {
     const tabs=service(ctx,'sidebarRightTabs');
     if(!tabs?.register)throw Error('代码工作台需要宿主原生右栏 sidebarRightTabs 服务');
-    ctx.effect(()=>tabs.register({id:ID,kind:KIND,multiple:false,priority:'extension',patterns:[`sidebar://${KIND}`],title:()=> '代码工作台',guide:[{id:'open-code-workbench',order:30,title:()=> '代码工作台',description:()=> '五视图阅读 C 代码、资源关系与接口模拟'}]}),'code-workbench: native tab');
+    ctx.effect(()=>tabs.register({id:ID,kind:KIND,multiple:false,priority:'extension',patterns:[`sidebar://${KIND}`],title:()=> '代码工作台',guide:[{id:'open-code-workbench',order:30,title:()=> '代码工作台',description:()=> '六视图阅读 C 代码、共享资源变更与接口模拟'}]}),'code-workbench: native tab');
     ctx.effect(()=>ctx.slots.inject('sidebar.right.pane.tab',()=>ctx.slots.register({name:'sidebar.right.pane.tab',key:ID,inject:(sessionId,actions)=>({ctx,sessionId,actions})},Workbench)),'code-workbench: native body');
     ctx.effect(()=>ctx.slots.inject('sidebar.right.pane.tab.title',()=>ctx.slots.register({name:'sidebar.right.pane.tab.title',key:ID},()=>h('span',null,'代码工作台'))),'code-workbench: native title');
   }

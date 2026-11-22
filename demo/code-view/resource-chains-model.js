@@ -1,5 +1,13 @@
 (function(root){
   'use strict';
+  function normalizeResourceState(data,s={}) {
+    const validNumber=n=>typeof n==='number'&&Number.isFinite(n);
+    const camera=s.camera;
+    return {selected:[...new Set((Array.isArray(s.selected)?s.selected:[]).filter(k=>Object.hasOwn(data.resources,k)))],onlyChanges:!!s.onlyChanges,
+      camera:camera&&[camera.x,camera.y,camera.zoom].every(validNumber)&&camera.zoom>=.2&&camera.zoom<=3?{...camera}:{x:14,y:14,zoom:1},
+      positions:Object.fromEntries(Object.entries(s.positions||{}).filter(([,p])=>Array.isArray(p)&&p.length===2&&p.every(validNumber))),
+      selectedInstance:typeof s.selectedInstance==='string'?s.selectedInstance:'',choicesCollapsed:!!s.choicesCollapsed};
+  }
   function makeResourceSlice(data,selection,{maxNodes=320,onlyChanges=false}={}) {
     const selected=new Set(selection),functions=data.functions||{};
     const changes=new Set(['write','rmw','init','deinit','alloc','free','acquire','release']);
@@ -99,6 +107,6 @@ void reject_job(void)
       ]
     };
   }
-  const api={makeResourceSlice,lockExample};
+  const api={makeResourceSlice,lockExample,normalizeResourceState};
   if(typeof module!=='undefined')module.exports=api;else root.ResourceChainModel=api;
 })(typeof window!=='undefined'?window:globalThis);
