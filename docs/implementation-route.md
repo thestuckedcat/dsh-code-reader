@@ -1,5 +1,7 @@
 # 04 实施路线与来源（dsh-code-reader 首版）
 
+2026-11-23 `CL-READ-01 / CL-READ-AUDIT-01` 文档交付：按用户确认的计划，先写通用阅读角度与六视图元素/点击行为映射，再用本仓 `c73f52c` 源码核对现状、缺口和优先级。直接沿用本仓 CW-01..11、CL-RES-01、CL-GEN-01 及四层函数阅读指导；UBS Engine 固定 `0f8a279278433914c9bd1d4f3a2c3a40572cc40a` 仅调查对照共享账本、注册、异步和 RAII，不复用上游实现。首验为十四角度都有具体视图落点，并以 routes 的实际写点/读点和上下文限制核对；随后检查重复调用、条件写入、锁、注册、异步和失败清理。仅改文档与引用，不构建/执行被分析仓库、不变更 API、权限、运行台账或生成 bundle。交付见[通用框架](repository-understanding-framework.md)和[差距分析](repository-understanding-gap-analysis.md)，目标能力与当前实现分开记录。
+
 2026-11-22 `CL-UBSE-STUDY`：按用户要求搜索并下载灵衢开源控制面，官方 UBS Engine 原仓浅克隆到工作区独立 `research/lingqu/ubs-engine`，固定 `0f8a279278433914c9bd1d4f3a2c3a40572cc40a`。只调查对照架构、NUMA create 的 IPC/注册/异步链、对象账本、RAII 锁和构建变体，不复用上游源码、不运行上游构建/服务、不声明完成 Atlas 索引。分析与下一版验收建议见 [仓库阅读案例](case-studies/ubs-engine-reading-analysis.md)，来源/规模/源码锚点见 `evidence/ubs-engine-study/`；与 UBM/UBFM 的范围区别单列。
 
 2026-11-22 `CL-FILE-COLOR-1`：按用户要求给文件视图添加 VS Code 风格的 C 词法配色。沿用当前文件树/行号/定位与同源构建，独立轻量词法器自行实现，不引入编辑器依赖。先验证跨行注释、字符串转义与源码完整性，再接入文本节点着色和浏览器验证；不将词法配色称为语义分析。

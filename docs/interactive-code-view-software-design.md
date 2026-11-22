@@ -1,5 +1,7 @@
 # 04 交互式代码工作台软件设计
 
+2026-11-23 补充：[CL-READ-01 仓库理解框架](repository-understanding-framework.md)将十四个分析角度落实为六视图的元素、点击行为与证据要求；[CL-READ-AUDIT-01 差距分析](repository-understanding-gap-analysis.md)按 `c73f52c` 检查现状与优先级。两文档是本轮分析/设计交付，不表示目标交互、真实锁分析或跨仓自动分析已经实现。
+
 `CL-VIEW-D2` · 2026-11-15 · 开发设计，已按 S1→S4-prep 分阶段实现并在隔离 dsh-web 验收。适用于 Linux 驱动、用户态库及跨仓 C/C++ 阅读、证据导航和本地模拟。**状态（2026-11-15，最终）**：S1 只读切片、S2a 五视图、S2b 组折叠/接口库/子流程、S3a 受控场景/打桩/台账/observed、S3b 回退/轨迹导入/多场景、CW-09 AI 归纳、A11 性能实测（首屏预算达标）、A08 异步/IRQ 边界均已交付并验收，汇总见 [evidence/final-acceptance/README.md](../evidence/final-acceptance/README.md)；**S4 目标门禁**（真实 Linux/Kbuild、CFG/locks/aliases、复核、OS 出口）因 Linux 环境前置不具备而未验证，真实设备下发/图内源码写回待产品确认。
 
 [产品基线与待确认范围](product-form.md) · [04 基线软件设计](software-design.md) · [Demo 历次修订](interactive-code-view-draft.md) · [可运行 Demo](../demo/code-view/index.html) · [DSH 侧边栏指导 skill 草案](dsh-code-view-ui/SKILL.md)
