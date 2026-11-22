@@ -105,6 +105,9 @@
   .rc-more{position:absolute;bottom:10px;right:9px;font-size:10px;color:#b9cce0;background:#202731;padding:1px 3px;border-radius:3px}
   .rc-call .rc-effects{min-height:0;overflow:hidden}.rc-call .rc-protection{flex-shrink:0}.rc-call .rc-function-head,.rc-call .rc-location{flex-shrink:0}
   .rc-choice-toggle{padding:7px 10px;color:var(--text);border:1px solid #536579;background:#202a37;border-radius:6px;margin-bottom:10px}.rc-current{font-size:12px;color:#ffe079;margin:10px 0;overflow-wrap:anywhere}.rc-call[aria-current=true]{outline:3px solid #ffe079;outline-offset:3px}.rc-choices[hidden]{display:none}
+  /* VS Code-like dark palette; selection backgrounds remain independent. */
+  #file-code{color:#d4d4d4;background:#1e1e1e;font-family:Consolas,"Cascadia Code",Menlo,monospace;font-variant-ligatures:none}
+  #file-code .syntax-keyword,#file-code .syntax-type{color:#569cd6}#file-code .syntax-control{color:#c586c0}#file-code .syntax-function{color:#dcdcaa}#file-code .syntax-identifier{color:#9cdcfe}#file-code .syntax-string{color:#ce9178}#file-code .syntax-number{color:#b5cea8}#file-code .syntax-comment{color:#80a968}#file-code .syntax-preprocessor{color:#c586c0}#file-code .syntax-constant{color:#4fc1ff}#file-code .syntax-operator{color:#d4d4d4}
 </style>
 <header class="top">
   <div class="top-inner">
@@ -199,6 +202,7 @@
 <script type="application/json" id="bundle">%%BUNDLE%%</script>
 <script>%%GRAPH_MODEL%%</script>
 <script>%%READING_MODEL%%</script>
+<script>%%C_HIGHLIGHT%%</script>
 <script>
   'use strict';
   const byId = (id) => document.getElementById(id);
@@ -410,11 +414,14 @@
   function showFile(folder, filename) {
     filePath.textContent = `${folder} / ${filename}`;
     const code = document.createDocumentFragment();
-    for (const [index, line] of files[filename].entries()) {
+    const highlighted = window.CHighlight.highlightC(files[filename].join('\n'));
+    for (const [index, tokens] of highlighted.entries()) {
       const row = el('span', 'line');
       const number = el('span', 'line-no', index + 1);
       number.setAttribute('aria-hidden', 'true');
-      row.append(number, el('span', 'file-line-text', line), '\n');
+      const text = el('span', 'file-line-text');
+      for (const token of tokens) text.append(el('span', 'syntax-' + token.kind, token.text));
+      row.append(number, text, '\n');
       code.append(row);
     }
     fileCode.replaceChildren(code);

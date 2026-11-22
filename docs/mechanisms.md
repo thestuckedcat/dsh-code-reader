@@ -766,3 +766,6 @@ node tools/verify-linux-snapshot.mjs                     # Linux 构建快照跨
 动作/输出：ResourceChainUI.save 经 client/document.cjs 的私有 channel 会话消息交给 client/entry.cjs 的 session store；恢复先建立当前来源数据，再校验和重画。函数选择通过既有 focusPath/入口路径联动，合成示意 C 不写入真实函数选择。状态只在当前宿主会话保留，来源切换重置，不宣称跨进程持久化。
 
 证据：tests/node/resource-session.test.mjs 执行生成文档中的真实 remember 函数并核对载荷；resource-chains.test.cjs 覆盖空关注、失效资源与非法镜头；隔离宿主浏览器操作说明见 docs/resource-chains-demo.md。失败恢复：非法恢复值回落默认镜头，未知资源丢弃，函数未关联关注资源时保留提示。UI skill 可调整默认折叠和布局，不能将模拟标志升级为真实锁证明，也不能改变 Host 消息来源校验。
+# CL-FILE-COLOR-1 文件语法配色（2026-11-22）
+
+打开文件时，`showFile` 将当前已加载源码送入 `c-highlight.js` 的纯词法器；先识别注释、字符串/字符及头文件，再识别控制词、类型、函数形态、数字、宏形态与标识符。跨行状态按整份文件处理，再切成原行；分类只作展示，不宣称符号语义解析。颜色由文件视图 CSS 决定，源码用文本节点写入，保持 `.line`、`.line-no`、`.file-line-text` 及定位行背景。Demo 与插件共用构建后的脚本，无外部编辑器依赖。测试覆盖转义、跨行及原文重建；隔离宿主验证与截图见 `evidence/file-syntax/`。

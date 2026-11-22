@@ -1,0 +1,10 @@
+{
+  "id":"CL-FILE-COLOR-1",
+  "date":"2026-11-22",
+  "scope":"C file view, canonical Demo and plugin bundle",
+  "browser":"isolated rc.5 native right pane, CUA",
+  "observed":["VS Code-like token colours rendered in bus.c","23 located bus_send lines retain row highlight","line 152 preserves exact function signature","no captured console errors"],
+  "tests":{"passed":127,"failed":0},
+  "screenshot":"native-sidebar.jpg",
+  "limits":"Lexical styling, not VS Code semantic token resolution; user desktop hot update not verified."
+}

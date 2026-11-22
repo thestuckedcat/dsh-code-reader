@@ -103,10 +103,12 @@ def main():
     sequence_view = (ROOT / "sequence-view.js").read_text(encoding="utf-8")
     resource_chain_model = (ROOT / "resource-chains-model.js").read_text(encoding="utf-8")
     resource_chains = (ROOT / "resource-chains.js").read_text(encoding="utf-8")
+    c_highlight = (ROOT / "c-highlight.js").read_text(encoding="utf-8")
     data = json.dumps(bundle, ensure_ascii=False).replace("<", "\\u003c")
     page = (template.replace("%%GRAPH_MODEL%%", graph_model).replace("%%READING_MODEL%%", reading_model)
             .replace("%%SEQUENCE_VIEW%%", sequence_view).replace("%%BUNDLE%%", data)
-            .replace("%%RESOURCE_CHAIN_MODEL%%", resource_chain_model).replace("%%RESOURCE_CHAINS%%", resource_chains))
+            .replace("%%RESOURCE_CHAIN_MODEL%%", resource_chain_model).replace("%%RESOURCE_CHAINS%%", resource_chains)
+            .replace("%%C_HIGHLIGHT%%", c_highlight))
     (ROOT / "index.html").write_text(page, encoding="utf-8")
 
 
