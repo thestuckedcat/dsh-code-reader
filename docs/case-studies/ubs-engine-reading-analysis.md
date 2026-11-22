@@ -2,6 +2,8 @@
 
 2026-11-22。目标是帮助“懂代码、不熟悉该业务”的开发者建立主线、追踪状态变化和判断修改影响。结论：当前插件应优先完善仓库导航、协议/注册关系、执行上下文和资源实例，再扩展模拟执行；现有六视图可继续作为阅读界面。
 
+用户随后明确跨仓库通用性要求：本报告的 NUMA create、账本、模块码和 RAII 类均是验收样本。实施必须遵守 [CL-GEN-01](../interactive-code-view-software-design.md#12-跨仓库通用性约束cl-gen-01)，从中提炼通用关系、上下文和结果合同；不得给核心查询/渲染增加 UBSE 分支。首个真实仓库切片须与另一种仓库结构交叉验收，第二个真实仓库尚待选定，不能以本报告代替通用性通过。
+
 ## 1. 仓库来源与本轮范围
 
 - 官方原仓：<https://atomgit.com/openeuler/ubs-engine>；openEuler 项目页将 UBS Engine 定位为 UB 计算系统的控制面核心参考实现：<https://www.openeuler.org/en/projects/ub-service-core/>。
