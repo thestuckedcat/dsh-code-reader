@@ -1,0 +1,154 @@
+{
+  "tracked_files": 2449,
+  "code_extensions_counted": [
+    ".c",
+    ".cc",
+    ".cpp",
+    ".cxx",
+    ".go",
+    ".h",
+    ".hh",
+    ".hpp",
+    ".hxx",
+    ".py"
+  ],
+  "code_by_area": {
+    "example/c": {
+      "files": 8,
+      "physical_lines": 1284
+    },
+    "example/go": {
+      "files": 1,
+      "physical_lines": 219
+    },
+    "example/python": {
+      "files": 3,
+      "physical_lines": 118
+    },
+    "scripts/build": {
+      "files": 1,
+      "physical_lines": 98
+    },
+    "setup.py": {
+      "files": 1,
+      "physical_lines": 37
+    },
+    "src/adapter_plugins": {
+      "files": 114,
+      "physical_lines": 20930
+    },
+    "src/addons": {
+      "files": 391,
+      "physical_lines": 92122
+    },
+    "src/api_server": {
+      "files": 3,
+      "physical_lines": 239
+    },
+    "src/cli": {
+      "files": 35,
+      "physical_lines": 6797
+    },
+    "src/controllers": {
+      "files": 271,
+      "physical_lines": 72740
+    },
+    "src/framework": {
+      "files": 173,
+      "physical_lines": 32984
+    },
+    "src/include": {
+      "files": 45,
+      "physical_lines": 6011
+    },
+    "src/message": {
+      "files": 1,
+      "physical_lines": 62
+    },
+    "src/ras": {
+      "files": 8,
+      "physical_lines": 1934
+    },
+    "src/sdk": {
+      "files": 49,
+      "physical_lines": 11652
+    },
+    "src/ubse_main.cpp": {
+      "files": 1,
+      "physical_lines": 87
+    },
+    "test/Fuzz": {
+      "files": 6,
+      "physical_lines": 1745
+    },
+    "test/IT": {
+      "files": 129,
+      "physical_lines": 30123
+    },
+    "test/PT": {
+      "files": 6,
+      "physical_lines": 921
+    },
+    "test/UT": {
+      "files": 741,
+      "physical_lines": 188740
+    },
+    "test/tools": {
+      "files": 1,
+      "physical_lines": 545
+    }
+  },
+  "src_by_extension": {
+    ".c": 7,
+    ".h": 550,
+    ".cpp": 448,
+    ".py": 67,
+    ".go": 17,
+    ".hpp": 2
+  },
+  "src_files": 1091,
+  "src_physical_lines": 245558,
+  "largest_code_files": [
+    {
+      "path": "test/UT/mem_controller/api/test_ubse_mem_controller_migrate_api.cpp",
+      "physical_lines": 5091
+    },
+    {
+      "path": "test/IT/tests/mem_borrow/mem_borrow_cases.cpp",
+      "physical_lines": 4750
+    },
+    {
+      "path": "src/addons/process_mem/process_mem_pid_decision.cpp",
+      "physical_lines": 4360
+    },
+    {
+      "path": "test/UT/exclusive_executable/rmrs/internode_strategy/test_mempool_borrow_module.cpp",
+      "physical_lines": 3311
+    },
+    {
+      "path": "test/IT/tests/mem_borrow/mem_borrow_fault_log_cases.cpp",
+      "physical_lines": 3162
+    },
+    {
+      "path": "src/addons/rmrs/mem_fragment/manager/mem_manager.cpp",
+      "physical_lines": 3149
+    },
+    {
+      "path": "test/UT/exclusive_executable/rmrs/fault_management/test_fault_node_module.cpp",
+      "physical_lines": 3149
+    },
+    {
+      "path": "test/UT/mem_controller/test_ubse_mem_rpc.cpp",
+      "physical_lines": 3114
+    },
+    {
+      "path": "test/UT/controllers/npu/test_ubse_npu_resource_collection.cpp",
+      "physical_lines": 2967
+    },
+    {
+      "path": "src/controllers/mem/mem_controller/ubse_mem_controller_ledger.cpp",
+      "physical_lines": 2915
+    }
+  ],
+  "measurement": "tracked files; physical lines include comments and blanks; not AST/function counts"
+}

@@ -1,0 +1,170 @@
+[
+  {
+    "id": "sdk_positive_error",
+    "path": "src/sdk/c/include/ubs_error.h",
+    "line": 54,
+    "needle": "UBS_ERR_OPERATION_FAILED = 42",
+    "file_sha256": "8cdfe74352ccfb4c61858cc9147903ad26eb13f88677495bd7926a19ded64b52",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "user_service",
+    "path": "scripts/rpm/ubse.service",
+    "line": 9,
+    "needle": "User=ubse",
+    "file_sha256": "eceed35260dd7e2cbb1341d8adbf8ae4ee34d62c32c6b4afc342b52e28d765f8",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "sdk_numa",
+    "path": "src/sdk/c/ubs_engine_mem.cpp",
+    "line": 343,
+    "needle": "int32_t ubs_mem_numa_create(",
+    "file_sha256": "f39a0ae96ac6adda03790dc13dc10469d441e79b6476c47150c1048d9b8eaf84",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "ipc_opcode",
+    "path": "src/framework/ipc/include/ubse_ipc_common.h",
+    "line": 48,
+    "needle": "UBSE_MEM_NUMA_CREATE = 0x0010",
+    "file_sha256": "eb37e6f061b1e07ab8f2fec291a91f35e6180f61cc746b82e17f42a394233665",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "server_opcode",
+    "path": "src/include/ubse_com_op_code.h",
+    "line": 69,
+    "needle": "UBSE_MEM_NUMA_CREATE = 0x0010",
+    "file_sha256": "10c80daaffbacb415fae3fe4c781005f0a47a5b58ba56e47cb1f069764f50ca8",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "register_numa",
+    "path": "src/controllers/mem/mem_controller/ubse_mem_controller_dispatcher.cpp",
+    "line": 194,
+    "needle": "UbseResult UbseMemControllerDispatcher::RegisterNumaSdkDispatcherCreate()",
+    "file_sha256": "e542a2723bcd1ceb73f546c78dd94a599fd9092c408c75d19c607d8cefd0f635",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "dispatch",
+    "path": "src/framework/ipc/server/ubse_ipc_server.cpp",
+    "line": 71,
+    "needle": "void UbseIpcServer::HandleRequest(",
+    "file_sha256": "e0ff7ad8166689839dcba26d10d7bce49c5fae4f841c97888c35da6d9701debc",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "numa_handler",
+    "path": "src/controllers/mem/mem_controller/ubse_mem_controller_dispatcher.cpp",
+    "line": 1946,
+    "needle": "UbseResult UbseMemControllerDispatcher::UbseMemNumaCreateHandler(",
+    "file_sha256": "e542a2723bcd1ceb73f546c78dd94a599fd9092c408c75d19c607d8cefd0f635",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "master_branch",
+    "path": "src/controllers/mem/mem_controller/ubse_mem_controller_dispatcher.cpp",
+    "line": 1863,
+    "needle": "uint32_t MemNumaBorrowRpc(",
+    "file_sha256": "e542a2723bcd1ceb73f546c78dd94a599fd9092c408c75d19c607d8cefd0f635",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "async_local",
+    "path": "src/controllers/mem/mem_controller/ubse_mem_async_processor.cpp",
+    "line": 149,
+    "needle": "UbseResult DoNumaBorrowAsync(",
+    "file_sha256": "521a7f7ed631ffd27e5b9434e57ab7ba211926b146673099c48703a3e91afa95",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "rpc_receiver",
+    "path": "src/controllers/mem/mem_controller/ubse_mem_rpc_processor.cpp",
+    "line": 81,
+    "needle": "UbseResult UbseMemNumaBorrowMessageHandler::Handle(",
+    "file_sha256": "d91ac62ffa4b88e8eda3c4abe085492b13eaa6a3bd2004e804a022dd1424b2e5",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "borrow",
+    "path": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+    "line": 319,
+    "needle": "uint32_t UbseMemNumaBorrow(",
+    "file_sha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "share_borrow",
+    "path": "src/controllers/mem/mem_controller/api/ubse_mem_controller_share_api.cpp",
+    "line": 339,
+    "needle": "uint32_t UbseMemShareBorrow(",
+    "file_sha256": "138d4cab279eabc6c0f1923631358cefd6fa34211bd641458226365e11e6cd8f",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "ledger",
+    "path": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+    "line": 132,
+    "needle": "class UbseMemNodeDebtMap",
+    "file_sha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "ledger_update",
+    "path": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+    "line": 218,
+    "needle": "bool Update(const std::string& resId",
+    "file_sha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "raii_lock",
+    "path": "src/controllers/mem/mem_controller/logging_lock_guard.cpp",
+    "line": 49,
+    "needle": "LoggingLockGuard::LoggingLockGuard(",
+    "file_sha256": "6a600adfcee347fc07e10e114ee01f9f7755e29688fe0386b70de549b6908404",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "raii_unlock",
+    "path": "src/controllers/mem/mem_controller/logging_lock_guard.cpp",
+    "line": 63,
+    "needle": "LoggingLockGuard::~LoggingLockGuard()",
+    "file_sha256": "6a600adfcee347fc07e10e114ee01f9f7755e29688fe0386b70de549b6908404",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "module_registration",
+    "path": "src/framework/context/ubse_context.h",
+    "line": 27,
+    "needle": "#define DYNAMIC_CREATE(",
+    "file_sha256": "a9a1f624fb1a496a69087456cc756d533fcb93c04cba54870d5684ed173b590a",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "conditional_module",
+    "path": "src/controllers/mem/mem_controller/ubse_mem_controller_module.cpp",
+    "line": 39,
+    "needle": "CONDITION_DYNAMIC_CREATE(",
+    "file_sha256": "10eea6bb433c4035afe394d6bb88c252c5609598a1ab2097bc4b8d212a7ce960",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "external_obmm",
+    "path": "src/adapter_plugins/mmi/ubse_obmm_executor.cpp",
+    "line": 128,
+    "needle": "DlOpenFunName(obmmExportFunc, \"obmm_export\")",
+    "file_sha256": "6008a9e7d73135e24595f324a4cbfe0788eb74e4218c30756e9fecfed037e048",
+    "evidence": "source_text_reviewed"
+  },
+  {
+    "id": "numa_tests",
+    "path": "test/UT/mem_controller/api/test_ubse_mem_controller_numa_api.cpp",
+    "line": 94,
+    "needle": "TEST_F(TestUbseMemControllerNumaApi, ConstructNumaObjs)",
+    "file_sha256": "e684f098efc7077a6342137a01b205569554fa60b9167630482a324211943c12",
+    "evidence": "source_text_reviewed"
+  }
+]

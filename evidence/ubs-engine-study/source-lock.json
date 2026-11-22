@@ -1,0 +1,26 @@
+{
+  "study_date": "2026-11-22",
+  "repo_path": "E:\\dsh\\plugin\\research\\lingqu\\ubs-engine",
+  "official_origin": "https://atomgit.com/openeuler/ubs-engine.git",
+  "branch": "master",
+  "commit": "0f8a279278433914c9bd1d4f3a2c3a40572cc40a",
+  "commit_time": "2026-11-20T15:55:06+08:00",
+  "shallow": true,
+  "dirty": false,
+  "license": "MulanPSL-2.0",
+  "license_sha256": "46b86c5a29eaa94cdcb1dc518fd2758858498fc6ec7d2eece68974e27226ba2b",
+  "official_project": "https://www.openeuler.org/en/projects/ub-service-core/",
+  "operations": [
+    "git clone --depth 1 --no-tags",
+    "local static reads",
+    "file metrics",
+    "anchor/hash validation"
+  ],
+  "not_performed": [
+    "upstream builds/tests/scripts",
+    "dependency installation",
+    "service startup",
+    "Atlas indexing",
+    "hardware execution"
+  ]
+}
