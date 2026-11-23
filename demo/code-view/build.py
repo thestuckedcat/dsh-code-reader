@@ -108,6 +108,10 @@ def main():
     page = (template.replace("%%GRAPH_MODEL%%", graph_model).replace("%%READING_MODEL%%", reading_model)
             .replace("%%SEQUENCE_VIEW%%", sequence_view).replace("%%BUNDLE%%", data)
             .replace("%%RESOURCE_CHAIN_MODEL%%", resource_chain_model).replace("%%RESOURCE_CHAINS%%", resource_chains)
+            .replace("%%RESOURCE_CONTEXT_MODEL%%", (ROOT / "resource-context-model.js").read_text(encoding="utf-8"))
+            .replace("%%RESOURCE_CONTEXT_VIEW%%", (ROOT / "resource-context-view.js").read_text(encoding="utf-8"))
+            .replace("%%RESOURCE_CONTEXT_CSS%%", (ROOT / "resource-context.css").read_text(encoding="utf-8"))
+            .replace("%%CONTROL_PLANE_CASE%%", json.dumps(json.loads((ROOT / "control-plane-case.json").read_text(encoding="utf-8")), ensure_ascii=False).replace("<", "\\u003c"))
             .replace("%%C_HIGHLIGHT%%", c_highlight))
     (ROOT / "index.html").write_text(page, encoding="utf-8")
 

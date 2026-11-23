@@ -108,6 +108,7 @@
   /* VS Code-like dark palette; selection backgrounds remain independent. */
   #file-code{color:#d4d4d4;background:#1e1e1e;font-family:Consolas,"Cascadia Code",Menlo,monospace;font-variant-ligatures:none}
   #file-code .syntax-keyword,#file-code .syntax-type{color:#569cd6}#file-code .syntax-control{color:#c586c0}#file-code .syntax-function{color:#dcdcaa}#file-code .syntax-identifier{color:#9cdcfe}#file-code .syntax-string{color:#ce9178}#file-code .syntax-number{color:#b5cea8}#file-code .syntax-comment{color:#80a968}#file-code .syntax-preprocessor{color:#c586c0}#file-code .syntax-constant{color:#4fc1ff}#file-code .syntax-operator{color:#d4d4d4}
+  %%RESOURCE_CONTEXT_CSS%%
 </style>
 <header class="top">
   <div class="top-inner">
@@ -1630,5 +1631,8 @@
 </script>
 <script>%%SEQUENCE_VIEW%%</script>
 <script>%%RESOURCE_CHAIN_MODEL%%</script>
+<script type="application/json" id="resource-context-case">%%CONTROL_PLANE_CASE%%</script>
+<script>%%RESOURCE_CONTEXT_MODEL%%</script>
+<script>%%RESOURCE_CONTEXT_VIEW%%</script>
 <script>%%RESOURCE_CHAINS%%</script>
 </html>

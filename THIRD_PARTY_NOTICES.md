@@ -4,6 +4,19 @@
 DSH Host plugin (Node built-ins only). It does not redistribute third-party
 runtime packages, parsers or databases.
 
+## Redistributed source excerpts (presentation only)
+
+- **UBS Engine**, commit `0f8a279278433914c9bd1d4f3a2c3a40572cc40a`,
+  from `https://atomgit.com/openeuler/ubs-engine` — **MulanPSL-2.0**.
+  `demo/code-view/control-plane-case.json` contains unmodified, line-numbered
+  excerpts of NUMA ledger APIs, ledger templates and LoggingLockGuard for the
+  reviewed source example. Original copyright headers, full upstream license,
+  file hashes and provenance accompany the data and are embedded in the Demo
+  and generated client bundle. The license is accessible under the example's
+  “来源、范围与许可”. These excerpts are not built or executed. The rendering,
+  summaries and relationship annotations are this project's presentation code;
+  they are not upstream runtime or compiler analysis outputs.
+
 ## Referenced (not redistributed)
 
 - **SDK Code Atlas 0.8.0 / schema 0.1** — MIT. Read only as a design/format

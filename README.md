@@ -7,6 +7,7 @@ DeepSeek Harness（DSH）插件 + `learn-code-workspace` skill + 本地 Python �
 - [产品形态](docs/product-form.md)
 - [陌生仓库理解框架：十四个角度与六视图映射](docs/repository-understanding-framework.md)
 - [当前工作台差距分析与改进优先级（2026-11-23）](docs/repository-understanding-gap-analysis.md)
+- [管控面源码案例 Demo：资源效果、调用差异与锁证据](docs/control-plane-demo.md)
 - [软件设计](docs/software-design.md)及[分层阅读设计 CL-DESIGN-2.1（待实现）](docs/software-design.md#81-驱动代码分层阅读与函数定位)
 - [交互式代码工作台插件设计 CL-VIEW-D2](docs/interactive-code-view-software-design.md)、[只读工作台实施/验收契约](docs/readonly-workbench-contract.md)及 [DSH 侧边栏指导 skill 草案](docs/dsh-code-view-ui/SKILL.md)
 - [实施路线与来源](docs/implementation-route.md)

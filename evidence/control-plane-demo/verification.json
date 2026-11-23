@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-23",
+  "scope": "CL-READ-DEMO-01; reviewed source presentation, not automatic whole-repository analysis",
+  "upstream_commit": "0f8a279278433914c9bd1d4f3a2c3a40572cc40a",
+  "source_excerpts": 15,
+  "source_executed": false,
+  "canonical_demo_sha256": "5f081245d7ba6d52954a8370df08a71da7599ff6207bcaa07a9351c009b06241",
+  "checks": {
+    "node_and_demo": {
+      "command": "node --test tests/node/*.test.mjs demo/code-view/*.test.cjs",
+      "passed": 134,
+      "failed": 0
+    },
+    "engine_host": {
+      "command": "python -m unittest discover -s tests -v",
+      "passed": 331,
+      "failed": 0
+    },
+    "engine_sandbox_note": "Initial sandbox run failed two mklink /J permission checks; complete host rerun passed 331 tests.",
+    "builds": [
+      "node tools/build-demo-ui.mjs --check",
+      "node tools/build-workbench.mjs --check"
+    ],
+    "independent_review": "Source annotations, 15 excerpt hashes/line ranges/license, isolation and generic model checked; read-edge direction corrected and re-reviewed."
+  },
+  "browser": {
+    "method": "cua_repl; actual localhost browser interactions",
+    "url": "http://127.0.0.1:8876/index.html#control-plane",
+    "observed": [
+      "case opened from direct link",
+      "write and update relation details",
+      "two contexts of shared PutResource implementation",
+      "business lock unknown distinct from internal locks",
+      "conditions and source evidence with original line 408",
+      "resource definition and field notes",
+      "locate selected call path",
+      "read relation and resource-to-reader path",
+      "switch to communication source and back",
+      "drag borrow node from left 16/top 40 to left 59.8436/top 67.2133, then arrange back to 16/40"
+    ],
+    "console_errors": 0,
+    "screenshots": [
+      "effect-contexts.jpg",
+      "read-path.jpg"
+    ]
+  },
+  "not_verified": [
+    "native DSH host installation/lifecycle for this new case",
+    "narrow native sidebar and device viewport matrix",
+    "automatic C++ locks/aliases/CFG extraction",
+    "all repository paths and runtime behavior"
+  ]
+}

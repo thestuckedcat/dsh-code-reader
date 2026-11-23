@@ -1,0 +1,524 @@
+{
+  "schemaVersion": 1,
+  "id": "ubs-engine-numa-ledger",
+  "title": "UBS Engine 管控面 · NUMA 账本",
+  "intro": "理解“发布/更新共享状态”怎样经过不同的业务锁上下文与容器内部锁。",
+  "scope": "人工核对的 5 条资源关系 / 5 个访问上下文；不是完整仓库或自动 CodeGraph。",
+  "commit": "0f8a279278433914c9bd1d4f3a2c3a40572cc40a",
+  "sourceUrl": "https://atomgit.com/openeuler/ubs-engine",
+  "provenance": "source_reviewed",
+  "observed": false,
+  "defaultResources": [
+    "export"
+  ],
+  "limitations": [
+    "未构建、未运行管控面；不证明真实线程顺序、设备结果或全路径锁覆盖",
+    "所有键与参数保留符号表达；源码注解不升级为编译器 exact",
+    "回调后续修改、通信和完整生命周期未在该切片展开"
+  ],
+  "license": "MulanPSL-2.0",
+  "licenseText": "木兰宽松许可证，第2版\n\n木兰宽松许可证，第2版\n\n2020年1月 http://license.coscl.org.cn/MulanPSL2\n\n您对“软件”的复制、使用、修改及分发受木兰宽松许可证，第2版（“本许可证”）的如下条款的约束：\n\n0. 定义\n\n“软件” 是指由“贡献”构成的许可在“本许可证”下的程序和相关文档的集合。\n\n“贡献” 是指由任一“贡献者”许可在“本许可证”下的受版权法保护的作品。\n\n“贡献者” 是指将受版权法保护的作品许可在“本许可证”下的自然人或“法人实体”。\n\n“法人实体” 是指提交贡献的机构及其“关联实体”。\n\n“关联实体” 是指，对“本许可证”下的行为方而言，控制、受控制或与其共同受控制的机构，此处的控制是指有受控方或共同受控方至少50%直接或间\n接的投票权、资金或其他有价证券。\n\n1. 授予版权许可\n\n每个“贡献者”根据“本许可证”授予您永久性的、全球性的、免费的、非独占的、不可撤销的版权许可，您可以复制、使用、修改、分发其“贡献”，不\n论修改与否。\n\n2. 授予专利许可\n\n每个“贡献者”根据“本许可证”授予您永久性的、全球性的、免费的、非独占的、不可撤销的（根据本条规定撤销除外）专利许可，供您制造、委托制\n造、使用、许诺销售、销售、进口其“贡献”或以其他方式转移其“贡献”。前述专利许可仅限于“贡献者”现在或将来拥有或控制的其“贡献”本身或其\n“贡献”与许可“贡献”时的“软件”结合而将必然会侵犯的专利权利要求，不包括对“贡献”的修改或包含“贡献”的其他结合。如果您或您的“关联实体”直\n接或间接地，就“软件”或其中的“贡献”对任何人发起专利侵权诉讼（包括反诉或交叉诉讼）或其他专利维权行动，指控其侵犯专利权，则“本许可证”\n授予您对“软件”的专利许可自您提起诉讼或发起维权行动之日终止。\n\n3. 无商标许可\n\n“本许可证”不提供对“贡献者”的商品名称、商标、服务标志或产品名称的商标许可，但您为满足第4条规定的声明义务而必须使用除外。\n\n4. 分发限制\n\n您可以在任何媒介中将“软件”以源程序形式或可执行形式重新分发，不论修改与否，但您必须向接收者提供“本许可证”的副本，并保留“软件”中的版\n权、商标、专利及免责声明。\n\n5. 免责声明与责任限制\n\n“软件”及其中的“贡献”在提供时不带任何明示或默示的担保。在任何情况下，“贡献者”或版权所有者不对任何人因使用“软件”或其中的“贡献”而引发\n的任何直接或间接损失承担责任，不论因何种原因导致或者基于何种法律理论,即使其曾被建议有此种损失的可能性。\n\n6. 语言\n\n“本许可证”以中英文双语表述，中英文版本具有同等法律效力。如果中英文版本存在任何冲突不一致，以中文版为准。\n\n条款结束\n\n如何将木兰宽松许可证，第2版，应用到您的软件\n\n如果您希望将木兰宽松许可证，第2版，应用到您的新软件，为了方便接收者查阅，建议您完成如下三步：\n\n1， 请您补充如下声明中的空白，包括软件名、软件的首次发表年份以及您作为版权人的名字；\n\n2， 请您在软件包的一级目录下创建以“LICENSE”为名的文件，将整个许可证文本放入该文件中；\n\n3， 请将如下声明文本放入每个源文件的头部注释中。\n\nCopyright (c) [Year] [name of copyright holder]\n[Software Name] is licensed under Mulan PSL v2.\nYou can use this software according to the terms and conditions of the Mulan PSL v2.\nYou may obtain a copy of Mulan PSL v2 at:\n         http://license.coscl.org.cn/MulanPSL2\nTHIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\nEITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\nMERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\nSee the Mulan PSL v2 for more details.\n\n######################################################################################################################\n\nMulan Permissive Software License, Version 2\n\nMulan Permissive Software License, Version 2 (Mulan PSL v2)\n\nJanuary 2020 http://license.coscl.org.cn/MulanPSL2\n\nYour reproduction, use, modification and distribution of the Software shall be subject to Mulan PSL v2 (this License)\nwith the following terms and conditions:\n\n0. Definition\n\nSoftware means the program and related documents which are licensed under this License and comprise all Contribution(s).\n\nContribution means the copyrightable work licensed by a particular Contributor under this License.\n\nContributor means the Individual or Legal Entity who licenses its copyrightable work under this License.\n\nLegal Entity means the entity making a Contribution and all its Affiliates.\n\nAffiliates means entities that control, are controlled by, or are under common control with the acting entity under\nthis License, ‘control’ means direct or indirect ownership of at least fifty percent (50%) of the voting power, capital\nor other securities of controlled or commonly controlled entity.\n\n1. Grant of Copyright License\n\nSubject to the terms and conditions of this License, each Contributor hereby grants to you a perpetual, worldwide,\nroyalty-free, non-exclusive, irrevocable copyright license to reproduce, use, modify, or distribute its Contribution,\nwith modification or not.\n\n2. Grant of Patent License\n\nSubject to the terms and conditions of this License, each Contributor hereby grants to you a perpetual, worldwide,\nroyalty-free, non-exclusive, irrevocable (except for revocation under this Section) patent license to make, have made,\nuse, offer for sale, sell, import or otherwise transfer its Contribution, where such patent license is only limited to\nthe patent claims owned or controlled by such Contributor now or in future which will be necessarily infringed by its\nContribution alone, or by combination of the Contribution with the Software to which the Contribution was contributed.\nThe patent license shall not apply to any modification of the Contribution, and any other combination which includes\nthe Contribution. If you or your Affiliates directly or indirectly institute patent litigation (including a cross claim\nor counterclaim in a litigation) or other patent enforcement activities against any individual or entity by alleging\nthat the Software or any Contribution in it infringes patents, then any patent license granted to you under this License\nfor the Software shall terminate as of the date such litigation or activity is filed or taken.\n\n3. No Trademark License\n\nNo trademark license is granted to use the trade names, trademarks, service marks, or product names of Contributor,\nexcept as required to fulfill notice requirements in section 4.\n\n4. Distribution Restriction\n\nYou may distribute the Software in any medium with or without modification, whether in source or executable forms,\nprovided that you provide recipients with a copy of this License and retain copyright, patent, trademark and disclaimer\nstatements in the Software.\n\n5. Disclaimer of Warranty and Limitation of Liability\n\nTHE SOFTWARE AND CONTRIBUTION IN IT ARE PROVIDED WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. IN NO EVENT\nSHALL ANY CONTRIBUTOR OR COPYRIGHT HOLDER BE LIABLE TO YOU FOR ANY DAMAGES, INCLUDING, BUT NOT LIMITED TO ANY DIRECT,\nOR INDIRECT, SPECIAL OR CONSEQUENTIAL DAMAGES ARISING FROM YOUR USE OR INABILITY TO USE THE SOFTWARE OR THE CONTRIBUTION\nIN IT, NO MATTER HOW IT’S CAUSED OR BASED ON WHICH LEGAL THEORY, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.\n\n6. Language\n\nTHIS LICENSE IS WRITTEN IN BOTH CHINESE AND ENGLISH, AND THE CHINESE VERSION AND ENGLISH VERSION SHALL HAVE THE SAME\nLEGAL EFFECT. IN THE CASE OF DIVERGENCE BETWEEN THE CHINESE AND ENGLISH VERSIONS, THE CHINESE VERSION SHALL PREVAIL.\n\nEND OF THE TERMS AND CONDITIONS\n\nHow to Apply the Mulan Permissive Software License，Version 2 (Mulan PSL v2) to Your Software\n\nTo apply the Mulan PSL v2 to your work, for easy identification by recipients, you are suggested to complete following\nthree steps:\n\nFill in the blanks in following statement, including insert your software name, the year of the first publication of\nyour software, and your name identified as the copyright owner;\n\nCreate a file named \"LICENSE\" which contains the whole context of this License in the first directory of your software\npackage;\n\nAttach the statement to the appropriate annotated syntax at the beginning of each source file.\n\nCopyright (c) [Year] [name of copyright holder]\n[Software Name] is licensed under Mulan PSL v2.\nYou can use this software according to the terms and conditions of the Mulan PSL v2.\nYou may obtain a copy of Mulan PSL v2 at:\n         http://license.coscl.org.cn/MulanPSL2\nTHIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\nEITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\nMERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\nSee the Mulan PSL v2 for more details.",
+  "copyrightHeaders": {
+    "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n * http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
+    "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
+    "src/controllers/mem/mem_controller/logging_lock_guard.cpp": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
+    "src/controllers/mem/mem_controller/logging_lock_guard.h": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */"
+  },
+  "resources": {
+    "export": {
+      "name": "NUMA 借出账本",
+      "symbol": "ledger<ExportObj>[exportNodeId][exportKey]",
+      "kind": "共享容器",
+      "intro": "按借出节点和复合资源键保存借出对象；发布对象副本并维护资源键到节点的索引。",
+      "keys": "exportKey = GenerateExportObjKey(name, importNodeId)",
+      "color": "#8ce7c3",
+      "definition": "singleton",
+      "fields": [
+        [
+          "status.state",
+          "当前借出状态；对象构造/状态更新后发布到共享账本。"
+        ],
+        [
+          "status.expectState",
+          "期望完成状态；构造时设为 EXPORT_SUCCESS。"
+        ],
+        [
+          "req",
+          "请求元数据，含 name 和 importNodeId；参与资源身份。"
+        ],
+        [
+          "algoResult",
+          "调度结果，含借出节点；不等于硬件已完成。"
+        ]
+      ]
+    },
+    "import": {
+      "name": "NUMA 借入账本",
+      "symbol": "ledger<ImportObj>[importNodeId][name]",
+      "kind": "共享容器",
+      "intro": "按借入节点和请求名称保存借入对象；与借出账本是不同模板类型和实例范围。",
+      "keys": "nodeId = req.importNodeId; resId = req.name",
+      "color": "#9dcaff",
+      "definition": "singleton",
+      "fields": [
+        [
+          "status.state",
+          "借入对象状态；与借出对象状态分别维护。"
+        ],
+        [
+          "status.expectState",
+          "借入侧期望状态。"
+        ],
+        [
+          "req.importNodeId",
+          "借入节点身份。"
+        ]
+      ]
+    }
+  },
+  "functions": {
+    "borrow": {
+      "label": "UbseMemNumaBorrow",
+      "role": "业务起点 · 借用 NUMA 内存",
+      "source": "borrow",
+      "domain": "user"
+    },
+    "publish": {
+      "label": "UpdateNumaMemDebtInfoMap",
+      "role": "公共业务函数 · 发布两类对象",
+      "source": "publish",
+      "domain": "user"
+    },
+    "update": {
+      "label": "NumaExportUpdateState",
+      "role": "内部接口 · 更新并发布借出状态",
+      "source": "update",
+      "domain": "user"
+    },
+    "erase": {
+      "label": "EraseNumaExport",
+      "role": "内部接口 · 移除借出登记",
+      "source": "erase",
+      "domain": "user"
+    },
+    "callback": {
+      "label": "NumaExportRunningCallback",
+      "role": "回调片段 · 查询当前借出状态",
+      "source": "callback",
+      "domain": "user"
+    },
+    "put-export": {
+      "label": "PutResource<ExportObj>(const T&)",
+      "role": "共用实现 · 借出对象引用重载",
+      "source": "put-resource",
+      "domain": "user"
+    },
+    "put-import": {
+      "label": "PutResource<ImportObj>(const T&)",
+      "role": "同一模板的不同类型实例",
+      "source": "put-resource",
+      "domain": "user"
+    },
+    "remove-export": {
+      "label": "RemoveResource<ExportObj>",
+      "role": "移除账本登记及索引，不等于释放物理内存",
+      "source": "remove-resource",
+      "domain": "user"
+    },
+    "get-export": {
+      "label": "GetResource<ExportObj>",
+      "role": "读取对象快照；底层 Get 使用读锁",
+      "source": "get-resource",
+      "domain": "user"
+    }
+  },
+  "relations": [
+    {
+      "id": "borrow-write",
+      "function": "borrow",
+      "resource": "export",
+      "action": "write",
+      "label": "发布 · state / expectState",
+      "summary": "分配和构造成功后，将借出对象发布到共享账本。",
+      "contextIds": [
+        "borrow-export"
+      ]
+    },
+    {
+      "id": "update-write",
+      "function": "update",
+      "resource": "export",
+      "action": "write",
+      "label": "更新 · state ← 入参",
+      "summary": "更新传入对象状态；存在借出节点时发布到账本。",
+      "contextIds": [
+        "update-export"
+      ]
+    },
+    {
+      "id": "erase-remove",
+      "function": "erase",
+      "resource": "export",
+      "action": "remove",
+      "label": "移除 · 登记 / 索引",
+      "summary": "移除账本登记，不能据此宣称设备资源已经释放。",
+      "contextIds": [
+        "erase-export"
+      ]
+    },
+    {
+      "id": "callback-read",
+      "function": "callback",
+      "resource": "export",
+      "action": "read",
+      "label": "读取 · status.state",
+      "summary": "回调先查询账本状态，已成功时提前返回。",
+      "contextIds": [
+        "callback-read"
+      ]
+    },
+    {
+      "id": "borrow-import",
+      "function": "borrow",
+      "resource": "import",
+      "action": "write",
+      "label": "发布 · 借入对象副本",
+      "summary": "同时发布到另一类型实例的借入账本。",
+      "contextIds": [
+        "borrow-import"
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "id": "borrow-export",
+      "entry": "borrow",
+      "function": "put-export",
+      "resource": "export",
+      "path": [
+        "borrow",
+        "publish",
+        "put-export"
+      ],
+      "callsite": "publish",
+      "callLine": 165,
+      "effect": "发布 exportObj 的副本；status.state ← EXPORT_RUNNING，expectState ← EXPORT_SUCCESS",
+      "conditions": [
+        "维护门禁、请求及资源检查通过",
+        "NumaAllocate 成功且 exportNumaInfos 非空",
+        "ConstructNumaObjs 成功；发布先于 SendNumaExportObj"
+      ],
+      "protection": {
+        "business": {
+          "status": "source-scoped",
+          "label": "业务键锁：GenerateExportObjKey(req.name, req.importNodeId)",
+          "detail": "UbseMemNumaBorrow 创建 WRITE 模式 LoggingLockGuard；作用域析构解锁。锁身份由复合键决定；此处是人工源码核对，非自动锁分析。",
+          "evidence": [
+            "borrow",
+            "lock-contract",
+            "lock"
+          ]
+        },
+        "internal": {
+          "status": "source-scoped",
+          "label": "容器内部锁：类型账本 mutex_ → 节点 map mutex_",
+          "detail": "Export 类型分支获取类型账本写锁，调用 nodePtr->Put；Put 内部获取另一节点账本写锁后替换 map_[resId]。这与业务键锁是不同对象和范围。",
+          "evidence": [
+            "put-resource",
+            "node-put"
+          ]
+        }
+      },
+      "evidence": [
+        "borrow",
+        "construct",
+        "publish",
+        "put-resource",
+        "node-put"
+      ]
+    },
+    {
+      "id": "update-export",
+      "entry": "update",
+      "function": "put-export",
+      "resource": "export",
+      "path": [
+        "update",
+        "put-export"
+      ],
+      "callsite": "update",
+      "callLine": 408,
+      "effect": "exportObj.status.state ← 入参 state；随后发布对象副本，旧共享状态未知",
+      "conditions": [
+        "exportNumaInfos 非空；为空则已改局部/传入对象状态但不发布到账本",
+        "调用者提供的 state 值与外层保护需继续追踪"
+      ],
+      "protection": {
+        "business": {
+          "status": "unknown",
+          "label": "外层业务保护未知",
+          "detail": "该内部接口片段未见局部 LoggingLockGuard；其所有调用者及外层锁尚未核全，不能判定无锁或竞态。",
+          "evidence": []
+        },
+        "internal": {
+          "status": "source-scoped",
+          "label": "容器内部锁：类型账本 mutex_ → 节点 map mutex_",
+          "detail": "Export 类型分支获取类型账本写锁，调用 nodePtr->Put；Put 内部获取另一节点账本写锁后替换 map_[resId]。这与业务键锁是不同对象和范围。",
+          "evidence": [
+            "put-resource",
+            "node-put"
+          ]
+        }
+      },
+      "evidence": [
+        "update",
+        "put-resource",
+        "node-put"
+      ]
+    },
+    {
+      "id": "erase-export",
+      "entry": "erase",
+      "function": "remove-export",
+      "resource": "export",
+      "path": [
+        "erase",
+        "remove-export"
+      ],
+      "callsite": "erase",
+      "callLine": 421,
+      "effect": "移除指定节点/资源键的账本登记，并清理相应索引；不证明物理内存释放",
+      "conditions": [
+        "exportNumaInfos 非空",
+        "节点/登记存在才执行删除"
+      ],
+      "protection": {
+        "business": {
+          "status": "unknown",
+          "label": "外层业务保护未知",
+          "detail": "该内部接口片段未见局部 LoggingLockGuard；其所有调用者及外层锁尚未核全，不能判定无锁或竞态。",
+          "evidence": []
+        },
+        "internal": {
+          "status": "source-scoped",
+          "label": "类型账本与节点 map 的内部写锁",
+          "detail": "两层容器分别持写锁移除登记。",
+          "evidence": [
+            "remove-resource",
+            "node-remove"
+          ]
+        }
+      },
+      "evidence": [
+        "erase",
+        "remove-resource",
+        "node-remove"
+      ]
+    },
+    {
+      "id": "borrow-import",
+      "entry": "borrow",
+      "function": "put-import",
+      "resource": "import",
+      "path": [
+        "borrow",
+        "publish",
+        "put-import"
+      ],
+      "callsite": "publish",
+      "callLine": 167,
+      "effect": "按 importNodeId / name 发布 importObj 副本；与借出账本分开",
+      "conditions": [
+        "借用前置检查、分配及对象构造成功"
+      ],
+      "protection": {
+        "business": {
+          "status": "source-scoped",
+          "label": "业务键锁：GenerateExportObjKey(req.name, req.importNodeId)",
+          "detail": "UbseMemNumaBorrow 创建 WRITE 模式 LoggingLockGuard；作用域析构解锁。锁身份由复合键决定；此处是人工源码核对，非自动锁分析。",
+          "evidence": [
+            "borrow",
+            "lock-contract",
+            "lock"
+          ]
+        },
+        "internal": {
+          "status": "source-scoped",
+          "label": "节点 map 内部写锁；节点查建细节未展开",
+          "detail": "Import 分支经 GetOrCreateNodeMap 后调用 Put；本切片确认 Put 的写锁，不把 Export 分支的类型锁套到 Import。",
+          "evidence": [
+            "put-resource",
+            "node-put"
+          ]
+        }
+      },
+      "evidence": [
+        "borrow",
+        "construct",
+        "publish",
+        "put-resource",
+        "node-put"
+      ]
+    },
+    {
+      "id": "callback-read",
+      "entry": "callback",
+      "function": "get-export",
+      "resource": "export",
+      "path": [
+        "callback",
+        "get-export"
+      ],
+      "callsite": "callback",
+      "callLine": 458,
+      "effect": "读取 existingObjPtr->status.state；已为 EXPORT_SUCCESS 时提前返回",
+      "conditions": [
+        "回调调用上下文尚未核全",
+        "本关系只摘录查询；回调后续更新和执行器行为不在此关系覆盖内"
+      ],
+      "protection": {
+        "business": {
+          "status": "unknown",
+          "label": "外层业务保护未知",
+          "detail": "该内部接口片段未见局部 LoggingLockGuard；其所有调用者及外层锁尚未核全，不能判定无锁或竞态。",
+          "evidence": []
+        },
+        "internal": {
+          "status": "source-scoped",
+          "label": "节点 Get 的内部 shared_lock",
+          "detail": "底层 Get 持读锁查表；对象快照读取不等于业务流程全程互斥。",
+          "evidence": [
+            "node-get"
+          ]
+        }
+      },
+      "evidence": [
+        "callback",
+        "get-resource",
+        "node-get"
+      ]
+    }
+  ],
+  "evidence": {
+    "borrow": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 319,
+      "last": 396,
+      "text": "uint32_t UbseMemNumaBorrow(const UbseMemNumaBorrowReq& req, UbseMemOperationResp& resp)\n{\n    UBSE_LOG_INFO << \"Numa borrow begins, name=\" << req.name << \", requestNodeId=\" << req.requestNodeId\n                  << \", requestId=\" << req.requestId;\n    auto exportKey = GenerateExportObjKey(req.name, req.importNodeId);\n    auto lock = LoggingLockGuard(exportKey);\n    auto requestNodeId = req.requestNodeId;\n    auto importNodeId = req.importNodeId;\n    auto name = req.name;\n    resp.requestId = req.requestId;\n    if (!IsMemBorrowFeatureSupported()) {\n        BorrowFailedAdvice(\n            {MemFault::BORROW_CHIP_NOT_SUPPORTED, name, MemType::NUMA, req.size, \"\", importNodeId, requestNodeId});\n        BuildMemFeatureNotSupportedResp(resp, name, requestNodeId, MemOperationType::NUMA_BORROW);\n        return UBSE_ERR_NOT_SUPPORTED;\n    }\n    if (auto ret = CheckReqValid(req, resp); ret != UBSE_OK) {\n        return ret;\n    }\n    if (WaitInitLedgerSuccess(importNodeId) != UBSE_OK) {\n        BorrowFailedAdvice(\n            {MemFault::BORROW_IMPORT_IN_MAINTENANCE, name, MemType::NUMA, req.size, \"\", importNodeId, requestNodeId});\n        BuildOperationRespWhenFail(resp, name, requestNodeId, \"importNode is not working.\",\n                                   UBSE_ENGINE_ERR_IMPORT_LEDGERING, MemOperationType::NUMA_BORROW);\n        return UBSE_ENGINE_ERR_IMPORT_LEDGERING;\n    }\n    auto errCode = CheckNumaResourceState(name, importNodeId);\n    if (errCode != UBSE_ERR_NOT_EXIST) {\n        BorrowFailedAdvice(\n            {MemFault::BORROW_NAME_EXIST, name, MemType::NUMA, req.size, \"\", importNodeId, requestNodeId});\n        BuildOperationRespWhenFail(resp, name, requestNodeId, \"Resource Exist.\", errCode,\n                                   MemOperationType::NUMA_BORROW);\n        return errCode;\n    }\n\n    UbseMemNumaBorrowImportObj importObj{};\n    importObj.req = req;\n    importObj.req.trustRingData.ClearReqSignedDataMemory();\n    importObj.status.state = UBSE_MEM_SCHEDULING;\n\n    // 调用算法\n    auto ret = NumaAllocate(req, importObj);\n    if (ret != UBSE_OK || importObj.algoResult.exportNumaInfos.empty()) {\n        UBSE_LOG_ERROR << \"[MMC] Failed to allocate, name=\" << importObj.req.name\n                       << \", requestNodeId=\" << importObj.req.requestNodeId << \", \" << FormatRetCode(ret)\n                       << \", requestId=\" << req.requestId;\n        BorrowFailedAdvice(\n            {MemFault::BORROW_SCHEDULE_FAILED, name, MemType::NUMA, req.size, \"\", importNodeId, requestNodeId});\n        // 调度\"size 超出所有可借节点容量\"(803)透传, 供 process_mem 拆分 fallback 区分;\n        // 其余调度失败(801 策略剔光/802 对账重试耗尽/内部错误)维持 1013 掩码, 拆小无益\n        uint32_t failCode = (ret == UBSE_SCHEDULER_ERROR_SIZE_EXCEED_LEND) ? ret : UBSE_ERR_ALLOCATE;\n        BuildOperationRespWhenFail(resp, name, requestNodeId, \"Failed to allocate\", failCode,\n                                   ubse::adapter_plugins::mmi::MemOperationType::NUMA_BORROW);\n        return failCode;\n    }\n    // 填充importNumaInfos的portId和chipId\n    FillImportNumaPortAndChipId(importObj.algoResult.exportNumaInfos[0].nodeId,\n                                importObj.algoResult.exportNumaInfos[0].socketId, req.importNodeId,\n                                importObj.algoResult.importNumaInfos, static_cast<uint32_t>(req.linkInfo.lenderPort));\n    // 更改状态 存储并下发\n    UbseMemNumaBorrowExportObj exportObj{};\n    if (const auto res = ConstructNumaObjs(importObj, exportObj, req); res != UBSE_OK) {\n        BorrowFailedAdvice(\n            {MemFault::BORROW_FAULT_INTERNAL, name, MemType::NUMA, req.size, \"\", importNodeId, requestNodeId});\n        BuildOperationRespWhenFail(resp, name, requestNodeId, \"Failed to Construct numa objs\", UBSE_ERR_INTERNAL,\n                                   ubse::adapter_plugins::mmi::MemOperationType::NUMA_BORROW);\n        return UBSE_ERR_INTERNAL;\n    }\n    // 下发exportObj\n    UpdateNumaMemDebtInfoMap(importObj, exportObj, name);\n    if (const auto res = SendNumaExportObj(exportObj, true, exportObj.algoResult.exportNumaInfos[0].nodeId);\n        res != UBSE_OK) {\n        BorrowFailedAdvice({MemFault::BORROW_MASTER_TO_EX_SEND_FAILED, name, MemType::NUMA, req.size,\n                            importObj.algoResult.exportNumaInfos[0].nodeId, importNodeId, requestNodeId});\n        return HandleSendNumaExportError(resp, req, importObj, exportObj);\n    }\n    return UBSE_OK;\n}",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+      "certainty": "source_reviewed"
+    },
+    "construct": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 148,
+      "last": 158,
+      "text": "uint32_t ConstructNumaObjs(UbseMemNumaBorrowImportObj& importObj, UbseMemNumaBorrowExportObj& exportObj,\n                           const UbseMemNumaBorrowReq& req)\n{\n    exportObj.algoResult = importObj.algoResult;\n    exportObj.req = req;\n    exportObj.status.state = UBSE_MEM_EXPORT_RUNNING;\n    exportObj.status.expectState = UBSE_MEM_EXPORT_SUCCESS;\n    importObj.status.state = UBSE_MEM_EXPORT_RUNNING;\n    importObj.status.expectState = UBSE_MEM_EXPORT_SUCCESS;\n    return UBSE_OK;\n}",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+      "certainty": "source_reviewed"
+    },
+    "publish": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 160,
+      "last": 170,
+      "text": "void UpdateNumaMemDebtInfoMap(const UbseMemNumaBorrowImportObj& importObj, const UbseMemNumaBorrowExportObj& exportObj,\n                              const std::string& name)\n{\n    auto exportKey = GenerateExportObjKey(name, importObj.req.importNodeId);\n    auto exportNodeId = exportObj.algoResult.exportNumaInfos[0].nodeId;\n    UbseMemDebtLedger::GetInstance().GetDebtMap<UbseMemNumaBorrowExportObj>().PutResource(exportNodeId, exportKey,\n                                                                                          exportObj);\n    UbseMemDebtLedger::GetInstance().GetDebtMap<UbseMemNumaBorrowImportObj>().PutResource(importObj.req.importNodeId,\n                                                                                          name, importObj);\n}\n",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+      "certainty": "source_reviewed"
+    },
+    "update": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 398,
+      "last": 410,
+      "text": "void NumaExportUpdateState(UbseMemNumaBorrowExportObj& exportObj, const UbseMemState& state)\n{\n    exportObj.status.state = state;\n    if (exportObj.algoResult.exportNumaInfos.empty()) {\n        return;\n    }\n    auto exportNodeId = exportObj.algoResult.exportNumaInfos[0].nodeId;\n    auto name = exportObj.req.name;\n    auto importNodeId = exportObj.req.importNodeId;\n    auto exportKey = GenerateExportObjKey(name, importNodeId);\n    UbseMemDebtLedger::GetInstance().GetDebtMap<UbseMemNumaBorrowExportObj>().PutResource(exportNodeId, exportKey,\n                                                                                          exportObj);\n}",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+      "certainty": "source_reviewed"
+    },
+    "erase": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 412,
+      "last": 422,
+      "text": "void EraseNumaExport(const UbseMemNumaBorrowExportObj& exportObj)\n{\n    auto name = exportObj.req.name;\n    if (exportObj.algoResult.exportNumaInfos.empty()) {\n        return;\n    }\n    auto exportNodeId = exportObj.algoResult.exportNumaInfos[0].nodeId;\n    auto importNodeId = exportObj.req.importNodeId;\n    auto exportKey = GenerateExportObjKey(name, importNodeId);\n    UbseMemDebtLedger::GetInstance().GetDebtMap<UbseMemNumaBorrowExportObj>().RemoveResource(exportNodeId, exportKey);\n}",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+      "certainty": "source_reviewed"
+    },
+    "callback": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 451,
+      "last": 470,
+      "text": "uint32_t NumaExportRunningCallback(UbseMemOperationResp& resp, UbseMemNumaBorrowExportObj& exportObj,\n                                   const std::string& name, const std::string& exportNodeId,\n                                   const std::string& requestNodeId)\n{\n    UBSE_LOG_INFO << \"Numa export running callback. name=\" << name << \", requestId=\" << exportObj.req.requestId;\n    auto exportKey = GenerateExportObjKey(exportObj.req.name, exportObj.req.importNodeId);\n    auto existingObjPtr =\n        UbseMemDebtLedger::GetInstance().GetDebtMap<UbseMemNumaBorrowExportObj>().GetResource(exportNodeId, exportKey);\n    if (existingObjPtr != nullptr &&\n        existingObjPtr->status.state == ubse::adapter_plugins::mmi::UBSE_MEM_EXPORT_SUCCESS) {\n        return UBSE_OK;\n    }\n    NumaExportUpdateState(exportObj, UBSE_MEM_EXPORT_RUNNING);\n    if (auto ret = UbseMmiInterface::GetInstance().NumaExportExecutor(exportObj); ret != UBSE_OK) {\n        UBSE_LOG_ERROR << \"Failed to export, name=\" << name << \", requestNodeId=\" << requestNodeId\n                       << \", requestId=\" << exportObj.req.requestId;\n        BorrowFailedAdvice({MemFault::BORROW_OBMM_EXPORT_FAILED, name, MemType::NUMA, exportObj.req.size, exportNodeId,\n                            exportObj.req.importNodeId, exportObj.req.importNodeId});\n        exportObj.errorCode = ret;\n        // 导出失败，从节点不做存储操作，返回通知主节点。",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+      "certainty": "source_reviewed"
+    },
+    "put-resource": {
+      "file": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+      "line": 449,
+      "last": 462,
+      "text": "    void PutResource(const std::string& nodeId, const std::string& resId, const T& obj)\n    {\n        if constexpr (IsExportObjTypeV<T>) {\n            std::unique_lock<std::shared_mutex> lock(mutex_);\n            auto& nodePtr = nodeMap_[nodeId];\n            if (!nodePtr) {\n                nodePtr = std::make_shared<UbseMemNodeDebtMap<T>>();\n            }\n            nodePtr->Put(resId, std::make_shared<T>(obj));\n            exportResIdToNodeId_[resId] = nodeId;\n        } else {\n            auto nodePtr = GetOrCreateNodeMap(nodeId);\n            nodePtr->Put(resId, std::make_shared<T>(obj));\n        }",
+      "fileSha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+      "certainty": "source_reviewed"
+    },
+    "node-put": {
+      "file": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+      "line": 143,
+      "last": 151,
+      "text": "    void Put(const std::string& resId, std::shared_ptr<T> obj)\n    {\n        if (!obj) {\n            return;\n        }\n        std::unique_lock<std::shared_mutex> lock(mutex_);\n        map_[resId] = obj;\n    }\n",
+      "fileSha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+      "certainty": "source_reviewed"
+    },
+    "node-get": {
+      "file": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+      "line": 159,
+      "last": 164,
+      "text": "    {\n        std::shared_lock<std::shared_mutex> lock(mutex_);\n        auto it = map_.find(resId);\n        return it != map_.end() ? it->second : nullptr;\n    }\n",
+      "fileSha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+      "certainty": "source_reviewed"
+    },
+    "get-resource": {
+      "file": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+      "line": 380,
+      "last": 388,
+      "text": "    std::shared_ptr<const T> GetResource(const std::string& nodeId, const std::string& resId)\n    {\n        if (auto nodePtr = FindNodeMap(nodeId)) {\n            return nodePtr->Get(resId);\n        }\n        return nullptr;\n    }\n\n    /**",
+      "fileSha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+      "certainty": "source_reviewed"
+    },
+    "remove-resource": {
+      "file": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+      "line": 493,
+      "last": 510,
+      "text": "        if constexpr (IsExportObjTypeV<T>) {\n            std::unique_lock<std::shared_mutex> lock(mutex_);\n            auto it = nodeMap_.find(nodeId);\n            if (it != nodeMap_.end() && it->second && it->second->Remove(resId)) {\n                RemoveExportIndexIfOwned(nodeId, resId);\n                return true;\n            }\n            return false;\n        } else {\n            auto nodePtr = FindNodeMap(nodeId);\n            if (nodePtr && nodePtr->Remove(resId)) {\n                return true;\n            }\n            return false;\n        }\n    }\n\n    /**",
+      "fileSha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+      "certainty": "source_reviewed"
+    },
+    "node-remove": {
+      "file": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+      "line": 172,
+      "last": 177,
+      "text": "    {\n        std::unique_lock<std::shared_mutex> lock(mutex_);\n        return map_.erase(resId) > 0;\n    }\n\n    /**",
+      "fileSha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+      "certainty": "source_reviewed"
+    },
+    "singleton": {
+      "file": "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h",
+      "line": 575,
+      "last": 591,
+      "text": "    static UbseMemDebtLedger& GetInstance()\n    {\n        static UbseMemDebtLedger instance;\n        return instance;\n    }\n\n    /**\n     * @brief 获取某个类型的节点账本（非const版本）\n     * @tparam T 资源对象类型\n     * @return 对应类型账本的引用\n     * @note 通过std::get从tuple中获取对应类型的账本\n     */\n    template <typename T>\n    auto& GetDebtMap()\n    {\n        return std::get<UbseMemTypeDebtMap<T>>(debtMaps_);\n    }",
+      "fileSha256": "d9b64109b5aa06867ef146efa0f4b4c14cfb279250992fefb877534dfbdeabbf",
+      "certainty": "source_reviewed"
+    },
+    "lock": {
+      "file": "src/controllers/mem/mem_controller/logging_lock_guard.cpp",
+      "line": 30,
+      "last": 74,
+      "text": "std::shared_ptr<std::shared_mutex> LoggingLockGuard::GetObjMutex(const std::string& objId)\n{\n    std::unique_lock<std::mutex> lock(mapMutex);\n    if (mutexMap.find(objId) == mutexMap.end()) {\n        mutexMap.emplace(objId, std::make_shared<std::shared_mutex>());\n    }\n    return mutexMap[objId];\n}\n\nvoid LoggingLockGuard::RemoveObjMutex(const std::string& objId)\n{\n    std::unique_lock<std::mutex> lock(mapMutex);\n    if (mutexMap.find(objId) != mutexMap.end()) {\n        if (mutexMap[objId].use_count() == USE_COUNT_WHEN_ONLY_ONE_USER) {\n            mutexMap.erase(objId);\n        }\n    }\n}\n\nLoggingLockGuard::LoggingLockGuard(const std::string& name, LockType type)\n    : mutex_(GetObjMutex(name)),\n      name_(name),\n      lockType_(type)\n{\n    if (lockType_ == LockType::READ) {\n        (*mutex_).lock_shared();\n        UBSE_LOG_INFO << \"ReadLocked name=\" << name;\n    } else {\n        (*mutex_).lock();\n        UBSE_LOG_INFO << \"WriteLocked name=\" << name;\n    }\n}\n\nLoggingLockGuard::~LoggingLockGuard()\n{\n    if (lockType_ == LockType::READ) {\n        (*mutex_).unlock_shared();\n        UBSE_LOG_INFO << \"ReadUnLocked name=\" << name_;\n    } else {\n        (*mutex_).unlock();\n        UBSE_LOG_INFO << \"WriteUnLocked name=\" << name_;\n    }\n    RemoveObjMutex(name_);\n}\n",
+      "fileSha256": "6a600adfcee347fc07e10e114ee01f9f7755e29688fe0386b70de549b6908404",
+      "certainty": "source_reviewed"
+    },
+    "lock-contract": {
+      "file": "src/controllers/mem/mem_controller/logging_lock_guard.h",
+      "line": 23,
+      "last": 33,
+      "text": "public:\n    enum class LockType\n    {\n        READ,\n        WRITE\n    };\n\n    explicit LoggingLockGuard(const std::string& name, LockType type = LockType::WRITE);\n\n    ~LoggingLockGuard();\n",
+      "fileSha256": "046e4e4c16cc995c1f91cba55158fc799417d483a84d048a5ab2fbe7f09dfb83",
+      "certainty": "source_reviewed"
+    }
+  }
+}
