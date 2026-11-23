@@ -1,14 +1,15 @@
 (function(root){
   'use strict';
-  function create(host,data,{el,graphSurface,bindCanvas,canvasPort}){
-    const {buildContextGraph,relationDetail,contextAccessEdge}=root.ResourceContextModel;
+  function create(host,data,{el,graphSurface,bindCanvas,canvasPort,onViewChange=()=>{}}){
+    const {buildContextGraph,relationDetail,contextAccessEdge,businessOutline}=root.ResourceContextModel;
     const initial=data.relations.find(r=>data.defaultResources.includes(r.resource))||data.relations[0];
-    const state={view:'relations',resources:[...data.defaultResources],relation:initial?.id,context:initial?.contextIds[0],detail:'effect',positions:{},camera:null};
+    const outline=businessOutline(data);
+    const state={view:outline.steps.length?'outline':'relations',resources:[...data.defaultResources],relation:initial?.id,context:initial?.contextIds[0],detail:'effect',positions:{},camera:null};
     const pane=el('section','rcx');pane.hidden=true;
     const intro=el('div','rcx-intro');intro.append(el('span','rcx-eyebrow','源码案例 · 非运行观测'),el('h2','',data.title),el('p','',data.intro));
     const stamp=el('p','sub',data.scope+' · '+data.commit.slice(0,12));intro.append(stamp);
     const bar=el('div','rcx-bar'),views=el('div','rcx-views'),choices=el('div','rcx-choices');
-    for(const [view,label]of [['relations','资源关系总览'],['path','当前调用路径']]){const b=el('button','',label);b.type='button';b.dataset.contextView=view;b.onclick=()=>{state.view=view;state.camera=null;draw();};views.append(b);}
+    for(const [view,label]of [...(outline.steps.length?[['outline','业务骨架']]:[]),['relations','资源关系'],['path','调用路径']]){const b=el('button','',label);b.type='button';b.dataset.contextView=view;b.onclick=()=>{state.view=view;state.camera=null;draw();};views.append(b);}
     for(const [key,r]of Object.entries(data.resources)){const label=el('label',''),check=el('input','');check.type='checkbox';check.checked=state.resources.includes(key);check.dataset.contextResource=key;check.onchange=()=>{state.resources=check.checked?[...state.resources,key]:state.resources.filter(k=>k!==key);draw();};label.append(check,r.name);choices.append(label);}
     bar.append(views,choices);
     const legend=el('p','rcx-legend','实线＋注释：发布/更新、读取、移除登记 · 绿色：关注资源 · 灰淡：背景 · 紫色：业务锁源码可见 · 琥珀：保护未知');
@@ -85,15 +86,32 @@
       const content=el('div','rcx-content');for(const [name,note]of r.fields){const section=el('div','rcx-field');section.append(el('code','',name),el('p','',note));content.append(section);}
       content.append(evidence(r.definition),el('p','sub','上方为共享账本单例/容器入口；字段解释由当前访问切片归纳，未宣称完整结构体分析。'));inspector.append(content);
     }
+    function inspectOutline(step){
+      inspector.hidden=false;inspector.replaceChildren();
+      const header=el('div','rcx-detail-head');closeButton(header);header.append(el('h3','',step.title),el('p','',step.description));
+      const content=el('div','rcx-content rcx-outline-detail');content.append(el('p','sub','从这里进入实现'));
+      for(const id of step.functions){const fn=data.functions[id];if(!fn)continue;content.append(button(fn.label+' ↗',()=>{content.replaceChildren(button('返回关键函数',()=>inspectOutline(step)),evidence(fn.source,data.evidence[fn.source]?.line));},'rcx-source-link'));}
+      if(step.resources?.length)content.append(button('查看相关资源',()=>{state.resources=[...step.resources];state.view='relations';state.camera=null;for(const check of choices.querySelectorAll('input'))check.checked=state.resources.includes(check.dataset.contextResource);draw();inspector.hidden=true;},'rcx-secondary-link'));
+      inspector.append(header,content);
+      for(const node of pane.querySelectorAll('[data-business-step]'))node.setAttribute('aria-current',String(node.dataset.businessStep===step.id));
+    }
     function draw(){
       const savedCamera=surface?.readCamera?.();if(savedCamera&&state.camera)state.camera=savedCamera;
+      const isOutline=state.view==='outline';onViewChange(state.view);body.classList.toggle('rcx-outline-body',isOutline);pane.classList.toggle('rcx-outline',isOutline);stamp.hidden=isOutline;legend.hidden=isOutline;choices.hidden=isOutline;intro.firstChild.textContent=isOutline?'业务主线':'源码案例 · 非运行观测';
       for(const b of views.children)b.setAttribute('aria-pressed',String(b.dataset.contextView===state.view));
       const graph=buildContextGraph(data,state.resources),detail=relationDetail(data,state.relation),context=detail?.contexts.find(c=>c.id===state.context)||detail?.contexts[0];
       surface=graphSurface('resource-context','管控面资源与调用画布',[['write','#8ce7c3'],['read','#9dcaff'],['remove','#f0b589']]);
+      if(isOutline)surface.shell.querySelector('.canvas-tools .sub').textContent='业务阶段顺序 · 虚线为异步接续';
       surface.shell.classList.add('rcx-surface');surface.links.removeAttribute('aria-hidden');const {world,links,svg}=surface;
-      layout={};const cards={},labels=[],edges=[];const width=240,height=150;
+      layout={};const cards={},labels=[],edges=[];const width=isOutline?340:240,height=isOutline?90:150;
       function add(id,card,x,y){card.dataset.node=id;card.classList.add('node','rcx-node');layout[id]=[x,y];cards[id]=card;world.append(card);}
-      if(state.view==='relations'){
+      if(isOutline){
+        for(const [i,step]of outline.steps.entries()){
+          const card=button('',()=>inspectOutline(step),'rcx-business-step');card.dataset.businessStep=step.id;
+          const number=el('span','rcx-step-number',String(i+1)),text=el('span','rcx-step-text');text.append(el('strong','',step.title),el('span','',step.description));card.append(number,text);add('step:'+step.id,card,180,28+i*126);
+        }
+        for(const edge of outline.edges){const path=svg('path',{class:'rcx-edge'+(edge.async?' rcx-async-edge':''),stroke:'#80c9b2','marker-end':surface.marker('write')});links.append(path);edges.push({from:'step:'+edge.from,to:'step:'+edge.to,start:'b',end:'t',vertical:true,path});}
+      }else if(state.view==='relations'){
         const counts={left:0,right:0,resource:0};
         for(const n of graph.nodes){
           const resource=n.type==='resource',side=resource?'resource':n.side;
@@ -118,16 +136,16 @@
       const camera={camera:state.camera};surface.readCamera=()=>camera.camera&&({...camera.camera});
       const redraw=()=>{
         for(const [id,card]of Object.entries(cards)){card.style.left=layout[id][0]+'px';card.style.top=layout[id][1]+'px';}
-        for(const edge of edges){const vertical=state.view==='path'&&edge.from.startsWith('call:')&&edge.to.startsWith('call:');const a=canvasPort(layout[edge.from],edge.start||(vertical?'b':'r'),width,height),b=canvasPort(layout[edge.to],edge.end||(vertical?'t':'l'),width,height);const mid=(a.x+b.x)/2;edge.path.setAttribute('d',vertical?`M${a.x} ${a.y}V${(a.y+b.y)/2}H${b.x}V${b.y}`:`M${a.x} ${a.y}H${mid}V${b.y}H${b.x}`);}
+        for(const edge of edges){const vertical=edge.vertical||(state.view==='path'&&edge.from.startsWith('call:')&&edge.to.startsWith('call:'));const a=canvasPort(layout[edge.from],edge.start||(vertical?'b':'r'),width,height),b=canvasPort(layout[edge.to],edge.end||(vertical?'t':'l'),width,height);const mid=(a.x+b.x)/2;edge.path.setAttribute('d',vertical?`M${a.x} ${a.y}V${(a.y+b.y)/2}H${b.x}V${b.y}`:`M${a.x} ${a.y}H${mid}V${b.y}H${b.x}`);}
         for(const {edge,label}of labels){const a=layout[edge.from],b=layout[edge.to];label.style.left=((a[0]+b[0]+width)/2-88)+'px';label.style.top=((a[1]+b[1]+height)/2-22)+'px';}
       };
       const maxX=Math.max(700,...Object.values(layout).map(p=>p[0]+width+30)),maxY=Math.max(680,...Object.values(layout).map(p=>p[1]+height+30));world.style.width=maxX+'px';world.style.height=maxY+'px';links.setAttribute('width',maxX);links.setAttribute('height',maxY);
       binding=bindCanvas(surface,{state:camera,ids:Object.keys(layout),positionOf:id=>layout[id],nodeWidth:width,nodeHeight:height,move(id,p){layout[id]=p;(state.positions[state.view]||={})[id]=p;},reset(){state.positions[state.view]={};for(const [id,p]of Object.entries(defaults))layout[id]=p.slice();},redraw,onBlank(){inspector.hidden=true;}});
-      canvas.replaceChildren(surface.shell);surface.mountReadable=()=>{binding.mount();state.camera=camera.camera;};if(!pane.hidden)surface.mountReadable();inspector.hidden=false;inspect();mark();
+      canvas.replaceChildren(surface.shell);surface.mountReadable=()=>{binding.mount();state.camera=camera.camera;};if(!pane.hidden)surface.mountReadable();if(isOutline)inspector.hidden=true;else{inspector.hidden=false;inspect();}mark();
     }
     function mark(){for(const button of pane.querySelectorAll('[data-relation]'))button.setAttribute('aria-current',String(button.dataset.relation===state.relation));}
     function selectFunction(key){const relation=data.relations.find(r=>r.function===key&&state.resources.includes(r.resource))||data.relations.find(r=>r.function===key);if(relation){state.relation=relation.id;state.context=relation.contextIds[0];state.detail='effect';inspector.hidden=false;inspect();mark();}}
-    function restore(value){if(!value||typeof value!=='object')return;state.resources=Array.isArray(value.resources)?value.resources.filter(r=>data.resources[r]):[...data.defaultResources];if(['relations','path'].includes(value.view))state.view=value.view;if(data.relations.some(r=>r.id===value.relation))state.relation=value.relation;if(data.contexts.some(c=>c.id===value.context))state.context=value.context;state.camera=null;for(const c of choices.querySelectorAll('input'))c.checked=state.resources.includes(c.dataset.contextResource);draw();}
+    function restore(value){if(!value||typeof value!=='object')return;state.resources=Array.isArray(value.resources)?value.resources.filter(r=>data.resources[r]):[...data.defaultResources];if(['relations','path',...(outline.steps.length?['outline']:[])].includes(value.view))state.view=value.view;if(data.relations.some(r=>r.id===value.relation))state.relation=value.relation;if(data.contexts.some(c=>c.id===value.context))state.context=value.context;state.camera=null;for(const c of choices.querySelectorAll('input'))c.checked=state.resources.includes(c.dataset.contextResource);draw();}
     return {show(){pane.hidden=false;draw();},hide(){pane.hidden=true;},mount(){surface?.mountReadable();},save(){return {view:state.view,resources:[...state.resources],relation:state.relation,context:state.context};},restore,get state(){return state;}};
   }
   root.ResourceContextView={create};

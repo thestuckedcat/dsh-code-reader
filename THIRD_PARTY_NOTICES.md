@@ -9,7 +9,7 @@ runtime packages, parsers or databases.
 - **UBS Engine**, commit `0f8a279278433914c9bd1d4f3a2c3a40572cc40a`,
   from `https://atomgit.com/openeuler/ubs-engine` — **MulanPSL-2.0**.
   `demo/code-view/control-plane-case.json` contains unmodified, line-numbered
-  excerpts of NUMA ledger APIs, ledger templates and LoggingLockGuard for the
+  excerpts of NUMA SDK/dispatch, ledger APIs, ledger templates and LoggingLockGuard for the
   reviewed source example. Original copyright headers, full upstream license,
   file hashes and provenance accompany the data and are embedded in the Demo
   and generated client bundle. The license is accessible under the example's

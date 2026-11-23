@@ -60,3 +60,11 @@ test('读取路径的末端边从资源指向调用，写入路径方向相反',
  assert.equal(read.from,'res:table');assert.equal(read.to,'call:1');assert.equal(read.marker,'read');
  assert.equal(write.from,'call:1');assert.equal(write.to,'res:table');assert.equal(write.marker,'write');
 });
+test('业务骨架只保留主阶段和关键实现，支撑细节不进入主图',()=>{
+ assert.equal(typeof api.businessOutline,'function','business outline is required');
+ const data={outline:{goal:'complete a request',steps:[{id:'receive',title:'接收',role:'business',functions:['a']},{id:'guard',title:'校验',role:'support',functions:['check']},{id:'publish',title:'登记',role:'business',functions:['b']}]}};
+ const outline=api.businessOutline(data);assert.equal(outline.goal,'complete a request');
+ assert.equal(JSON.stringify(outline.steps.map(s=>s.id)),'["receive","publish"]');
+ assert.equal(outline.edges.length,1);assert.equal(outline.edges[0].kind,'business_sequence');
+ assert.equal(JSON.stringify(outline.steps[0].functions),'["a"]');
+});

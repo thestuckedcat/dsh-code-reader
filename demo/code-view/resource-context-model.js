@@ -22,5 +22,9 @@
     const node='call:'+(context.path.length-1),resource='res:'+context.resource,read=action==='read';
     return {from:read?resource:node,to:read?node:resource,start:read?'l':'r',end:read?'r':'l',marker:read?'read':action==='remove'?'remove':'write'};
   }
-  const api={relationDetail,buildContextGraph,contextAccessEdge};if(typeof module!=='undefined')module.exports=api;else root.ResourceContextModel=api;
+  function businessOutline(data){
+    const steps=(data.outline?.steps||[]).filter(step=>step.role==='business').map(step=>({...step,functions:[...(step.functions||[])]}));
+    return {goal:data.outline?.goal||'',steps,edges:steps.slice(1).map((step,i)=>({from:steps[i].id,to:step.id,kind:'business_sequence',async:!!step.asyncEntry}))};
+  }
+  const api={relationDetail,buildContextGraph,contextAccessEdge,businessOutline};if(typeof module!=='undefined')module.exports=api;else root.ResourceContextModel=api;
 })(typeof window!=='undefined'?window:globalThis);

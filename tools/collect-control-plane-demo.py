@@ -11,6 +11,8 @@ API = 'src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp'
 LEDGER = 'src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h'
 LOCK = 'src/controllers/mem/mem_controller/logging_lock_guard.cpp'
 LOCK_H = 'src/controllers/mem/mem_controller/logging_lock_guard.h'
+SDK = 'src/sdk/c/ubs_engine_mem.cpp'
+DISPATCH = 'src/controllers/mem/mem_controller/ubse_mem_controller_dispatcher.cpp'
 
 
 def main():
@@ -45,9 +47,13 @@ def main():
     excerpt('singleton', LEDGER, 575, 591, 'static UbseMemDebtLedger instance')
     excerpt('lock', LOCK, 30, 74, 'lock_shared()')
     excerpt('lock-contract', LOCK_H, 23, 33, 'LockType::WRITE')
+    excerpt('create', SDK, 343, 377, 'ubse_invoke_call(UBSE_MEM, UBSE_MEM_NUMA_CREATE')
+    excerpt('route', DISPATCH, 1862, 1899, 'localNodeId != masterNodeId')
+    excerpt('allocate', API, 70, 87, 'NumaAllocate')
+    excerpt('send', API, 201, 247, 'RpcSend')
     license_text = (SAMPLE / 'LICENSE').read_text(encoding='utf-8')
     headers = {path: (SAMPLE / path).read_text(encoding='utf-8').split('*/', 1)[0] + '*/'
-               for path in [API, LEDGER, LOCK, LOCK_H]}
+               for path in [API, LEDGER, LOCK, LOCK_H, SDK, DISPATCH]}
     resources = {
         'export': {'name': 'NUMA 借出账本', 'symbol': 'ledger<ExportObj>[exportNodeId][exportKey]',
                    'kind': '共享容器', 'intro': '按借出节点和复合资源键保存借出对象；发布对象副本并维护资源键到节点的索引。',
@@ -66,7 +72,11 @@ def main():
         'put-export': {'label': 'PutResource<ExportObj>(const T&)', 'role': '共用实现 · 借出对象引用重载', 'source': 'put-resource'},
         'put-import': {'label': 'PutResource<ImportObj>(const T&)', 'role': '同一模板的不同类型实例', 'source': 'put-resource'},
         'remove-export': {'label': 'RemoveResource<ExportObj>', 'role': '移除账本登记及索引，不等于释放物理内存', 'source': 'remove-resource'},
-        'get-export': {'label': 'GetResource<ExportObj>', 'role': '读取对象快照；底层 Get 使用读锁', 'source': 'get-resource'}}
+        'get-export': {'label': 'GetResource<ExportObj>', 'role': '读取对象快照；底层 Get 使用读锁', 'source': 'get-resource'},
+        'create': {'label': 'ubs_mem_numa_create', 'role': '接收内存借用请求', 'source': 'create'},
+        'route': {'label': 'MemNumaBorrowRpc', 'role': '本地处理或转发到主节点', 'source': 'route'},
+        'allocate': {'label': 'NumaAllocate', 'role': '生成资源分配方案', 'source': 'allocate'},
+        'send': {'label': 'SendNumaExportObj', 'role': '向资源节点下发操作', 'source': 'send'}}
     for fn in functions.values():
         fn['domain'] = 'user'
     known = {'status': 'source-scoped', 'label': '业务键锁：GenerateExportObjKey(req.name, req.importNodeId)',
@@ -114,8 +124,17 @@ def main():
         {'id': 'callback-read', 'function': 'callback', 'resource': 'export', 'action': 'read', 'label': '读取 · status.state', 'summary': '回调先查询账本状态，已成功时提前返回。', 'contextIds': ['callback-read']},
         {'id': 'borrow-import', 'function': 'borrow', 'resource': 'import', 'action': 'write', 'label': '发布 · 借入对象副本', 'summary': '同时发布到另一类型实例的借入账本。', 'contextIds': ['borrow-import']}
     ]
-    case = {'schemaVersion': 1, 'id': 'ubs-engine-numa-ledger', 'title': 'UBS Engine 管控面 · NUMA 账本',
-            'intro': '理解“发布/更新共享状态”怎样经过不同的业务锁上下文与容器内部锁。',
+    outline = {'goal': '把一次内存借用请求，变成资源方案、账本记录和节点操作。',
+               'objects': ['借用请求', '借入账本', '借出账本'],
+               'steps': [
+                   {'id': 'accept', 'title': '接收并分派请求', 'description': '把请求交给负责处理的节点。', 'role': 'business', 'functions': ['create', 'route'], 'resources': []},
+                   {'id': 'allocate', 'title': '调度借出资源', 'description': '决定从哪里借，形成分配方案。', 'role': 'business', 'functions': ['borrow', 'allocate'], 'resources': []},
+                   {'id': 'record', 'title': '登记借入 / 借出状态', 'description': '保存这次借用的两端记录。', 'role': 'business', 'functions': ['publish'], 'resources': ['export', 'import']},
+                   {'id': 'execute', 'title': '下发资源方案', 'description': '将操作请求发送到资源节点。', 'role': 'business', 'functions': ['send'], 'resources': ['export']},
+                   {'id': 'track', 'title': '执行并更新进度', 'description': '资源节点处理请求，推进状态。', 'role': 'business', 'functions': ['callback', 'update'], 'resources': ['export'], 'asyncEntry': True}
+               ]}
+    case = {'schemaVersion': 1, 'id': 'ubs-engine-numa-ledger', 'title': 'UBS Engine 管控面 · NUMA 内存借用',
+            'intro': outline['goal'], 'outline': outline,
             'scope': '人工核对的 5 条资源关系 / 5 个访问上下文；不是完整仓库或自动 CodeGraph。',
             'commit': COMMIT, 'sourceUrl': 'https://atomgit.com/openeuler/ubs-engine',
             'provenance': 'source_reviewed', 'observed': False, 'defaultResources': ['export'],

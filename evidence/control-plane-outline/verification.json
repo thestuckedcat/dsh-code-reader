@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-24",
+  "scope": "CL-READ-OUTLINE-01; business outline first, details on demand",
+  "canonical_demo_sha256": "0086366e74ca3684b908f5244058069d2322d20fb4bdf5cf5f705def8c11f7b0",
+  "upstream_commit": "0f8a279278433914c9bd1d4f3a2c3a40572cc40a",
+  "business_stages": 5,
+  "source_excerpts": 19,
+  "tests": {
+    "node_demo_passed": 135,
+    "node_demo_failed": 0,
+    "skill_contract_passed": 24
+  },
+  "checks": [
+    "Demo and client build --check",
+    "Independent source review: 19 excerpts/hashes, key functions, default closed details, generic model",
+    "Business semantics corrected: dispatch request then node execution/state progress; outline toolbar distinguishes stage order and asynchronous continuation"
+  ],
+  "browser": {
+    "observed": "Initial outline revision showed five business blocks and no open inspector in the existing browser; screenshot emitted by CUA.",
+    "observed_demo_sha256": "625e031cd115bcbd6d624b07c5133e4374e7272e79712985e2537d53a09f4b06",
+    "final_revision": "After CUA transport closed, browser interactions could not be completed. Final 55vh layout, last two stage labels and stage-to-source clicking remain not_verified in browser."
+  },
+  "not_verified": [
+    "final browser layout/click-through after CUA transport closed",
+    "native DSH host lifecycle for this revision",
+    "automatic repository outline extraction or author historical intent",
+    "all upstream paths or runtime behavior"
+  ]
+}

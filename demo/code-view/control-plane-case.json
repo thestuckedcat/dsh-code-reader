@@ -1,8 +1,79 @@
 {
   "schemaVersion": 1,
   "id": "ubs-engine-numa-ledger",
-  "title": "UBS Engine 管控面 · NUMA 账本",
-  "intro": "理解“发布/更新共享状态”怎样经过不同的业务锁上下文与容器内部锁。",
+  "title": "UBS Engine 管控面 · NUMA 内存借用",
+  "intro": "把一次内存借用请求，变成资源方案、账本记录和节点操作。",
+  "outline": {
+    "goal": "把一次内存借用请求，变成资源方案、账本记录和节点操作。",
+    "objects": [
+      "借用请求",
+      "借入账本",
+      "借出账本"
+    ],
+    "steps": [
+      {
+        "id": "accept",
+        "title": "接收并分派请求",
+        "description": "把请求交给负责处理的节点。",
+        "role": "business",
+        "functions": [
+          "create",
+          "route"
+        ],
+        "resources": []
+      },
+      {
+        "id": "allocate",
+        "title": "调度借出资源",
+        "description": "决定从哪里借，形成分配方案。",
+        "role": "business",
+        "functions": [
+          "borrow",
+          "allocate"
+        ],
+        "resources": []
+      },
+      {
+        "id": "record",
+        "title": "登记借入 / 借出状态",
+        "description": "保存这次借用的两端记录。",
+        "role": "business",
+        "functions": [
+          "publish"
+        ],
+        "resources": [
+          "export",
+          "import"
+        ]
+      },
+      {
+        "id": "execute",
+        "title": "下发资源方案",
+        "description": "将操作请求发送到资源节点。",
+        "role": "business",
+        "functions": [
+          "send"
+        ],
+        "resources": [
+          "export"
+        ]
+      },
+      {
+        "id": "track",
+        "title": "执行并更新进度",
+        "description": "资源节点处理请求，推进状态。",
+        "role": "business",
+        "functions": [
+          "callback",
+          "update"
+        ],
+        "resources": [
+          "export"
+        ],
+        "asyncEntry": true
+      }
+    ]
+  },
   "scope": "人工核对的 5 条资源关系 / 5 个访问上下文；不是完整仓库或自动 CodeGraph。",
   "commit": "0f8a279278433914c9bd1d4f3a2c3a40572cc40a",
   "sourceUrl": "https://atomgit.com/openeuler/ubs-engine",
@@ -22,7 +93,9 @@
     "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n * http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
     "src/controllers/mem/mem_controller/debt/ubse_mem_debt_ledger.h": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
     "src/controllers/mem/mem_controller/logging_lock_guard.cpp": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
-    "src/controllers/mem/mem_controller/logging_lock_guard.h": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */"
+    "src/controllers/mem/mem_controller/logging_lock_guard.h": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
+    "src/sdk/c/ubs_engine_mem.cpp": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */",
+    "src/controllers/mem/mem_controller/ubse_mem_controller_dispatcher.cpp": "/*\n * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.\n * ubs-engine is licensed under Mulan PSL v2.\n * You can use this software according to the terms and conditions of the Mulan PSL v2.\n * You may obtain a copy of Mulan PSL v2 at:\n *          http://license.coscl.org.cn/MulanPSL2\n * THIS SOFTWARE IS PROVIDED ON AN \"AS IS\" BASIS, WITHOUT WARRANTIES OF ANY KIND,\n * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,\n * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.\n * See the Mulan PSL v2 for more details.\n */"
   },
   "resources": {
     "export": {
@@ -129,6 +202,30 @@
       "label": "GetResource<ExportObj>",
       "role": "读取对象快照；底层 Get 使用读锁",
       "source": "get-resource",
+      "domain": "user"
+    },
+    "create": {
+      "label": "ubs_mem_numa_create",
+      "role": "接收内存借用请求",
+      "source": "create",
+      "domain": "user"
+    },
+    "route": {
+      "label": "MemNumaBorrowRpc",
+      "role": "本地处理或转发到主节点",
+      "source": "route",
+      "domain": "user"
+    },
+    "allocate": {
+      "label": "NumaAllocate",
+      "role": "生成资源分配方案",
+      "source": "allocate",
+      "domain": "user"
+    },
+    "send": {
+      "label": "SendNumaExportObj",
+      "role": "向资源节点下发操作",
+      "source": "send",
       "domain": "user"
     }
   },
@@ -518,6 +615,38 @@
       "last": 33,
       "text": "public:\n    enum class LockType\n    {\n        READ,\n        WRITE\n    };\n\n    explicit LoggingLockGuard(const std::string& name, LockType type = LockType::WRITE);\n\n    ~LoggingLockGuard();\n",
       "fileSha256": "046e4e4c16cc995c1f91cba55158fc799417d483a84d048a5ab2fbe7f09dfb83",
+      "certainty": "source_reviewed"
+    },
+    "create": {
+      "file": "src/sdk/c/ubs_engine_mem.cpp",
+      "line": 343,
+      "last": 377,
+      "text": "int32_t ubs_mem_numa_create(const char* name, uint64_t size, ubs_mem_distance_t distance,\n                            ubs_mem_numa_desc_t* numa_desc)\n{\n    // 参数校验\n    auto ret = ubse_mem_create_req_is_valid(name, size);\n    if (ret != UBS_SUCCESS) {\n        return static_cast<int32_t>(ret);\n    }\n    if (numa_desc == nullptr) {\n        IPC_LOG_ERROR << \"Invalid parameters: numa_desc is nullptr\";\n        return UBS_ERR_NULL_POINTER;\n    }\n    // 申请内存\n    const size_t total_len = ubse_mem_numa_create_req_calc_size(name);\n    ubse_api_buffer_t request_buffer;\n    request_buffer.buffer = static_cast<uint8_t*>(malloc(total_len));\n    if (!request_buffer.buffer) {\n        ubse_api_buffer_free(&request_buffer);\n        return UBS_ERR_OUT_OF_MEMORY;\n    }\n    request_buffer.length = total_len;\n    // 打包\n    ret = ubse_mem_numa_create_req_pack(name, size, distance, request_buffer.buffer);\n    if (ret != UBS_SUCCESS) {\n        IPC_LOG_ERROR << \"Failed to pack numa create request, error\" << ret;\n        ubse_api_buffer_free(&request_buffer);\n        return static_cast<int32_t>(ret);\n    }\n    // 调用接口\n    ubse_api_buffer_t response_buffer = {.buffer = nullptr, .length = 0};\n    ret = static_cast<ubs_error_t>(ubse_invoke_call(UBSE_MEM, UBSE_MEM_NUMA_CREATE, &request_buffer, &response_buffer));\n    ubse_api_buffer_free(&request_buffer);\n    if (ret != UBS_SUCCESS) {\n        IPC_LOG_ERROR << \"ubse_invoke_call failed with error code: \" << ret;\n        ubse_api_buffer_free(&response_buffer);",
+      "fileSha256": "f39a0ae96ac6adda03790dc13dc10469d441e79b6476c47150c1048d9b8eaf84",
+      "certainty": "source_reviewed"
+    },
+    "route": {
+      "file": "src/controllers/mem/mem_controller/ubse_mem_controller_dispatcher.cpp",
+      "line": 1862,
+      "last": 1899,
+      "text": "\nuint32_t MemNumaBorrowRpc(const std::string& masterNodeId, const std::string& localNodeId,\n                          const UbseMemNumaBorrowReq& req)\n{\n    // 不是master调用RPC异步发送\n    if (localNodeId != masterNodeId) {\n        UbseMemNumaBorrowReqSimpoPtr ubseRequestPtr = new (std::nothrow) UbseMemNumaBorrowReqSimpo();\n        if (ubseRequestPtr == nullptr) {\n            UBSE_LOG_ERROR << \"Failed to new ptr\";\n            return UBSE_ERROR_NULLPTR;\n        }\n        ubseRequestPtr->SetUbseMesgInfo(req);\n        UbseBaseMessagePtr ubseResponsePtr = new (std::nothrow) UbseMemCallbackMessage();\n        if (ubseResponsePtr == nullptr) {\n            UBSE_LOG_ERROR << \"Failed to new ptr\";\n            return UBSE_ERROR_NULLPTR;\n        }\n        SendParam sendParam{masterNodeId, static_cast<uint16_t>(UbseModuleCode::UBSE_MEM_BORROW),\n                            static_cast<uint16_t>(UbseMemBorrowCallbackOpCode::UBSE_MEM_NUMA_BORROW)};\n\n        auto comModule = ubse::context::UbseContext::GetInstance().GetModule<ubse::com::UbseComModule>();\n        if (comModule == nullptr) {\n            UBSE_LOG_ERROR << \"Getting ComModule failed.\";\n            return UBSE_ERROR_NULLPTR;\n        }\n        const auto ret = comModule->RpcSend(sendParam, ubseRequestPtr, ubseResponsePtr);\n        if (ret != UBSE_OK) {\n            BorrowFailedAdvice({MemFault::BORROW_REQ_SEND_FAILED, req.name, MemType::NUMA, req.size, \"\",\n                                req.importNodeId, req.requestNodeId});\n            UBSE_LOG_ERROR << \"Failed to Send to numa borrow req to master, \" << FormatRetCode(ret);\n            return ret;\n        }\n        UBSE_LOG_INFO << \"Success to Send to numa borrow req to master, requestId=\" << req.requestId;\n        return ret;\n    }\n    // 是master，切换线程，提交给新线程\n    return DoNumaBorrowAsync(req);\n}",
+      "fileSha256": "e542a2723bcd1ceb73f546c78dd94a599fd9092c408c75d19c607d8cefd0f635",
+      "certainty": "source_reviewed"
+    },
+    "allocate": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 70,
+      "last": 87,
+      "text": "static UbseResult NumaAllocate(const UbseMemNumaBorrowReq& req, UbseMemNumaBorrowImportObj& importObj)\n{\n    uint8_t retryTimes = ALLOCATE_RETRY_TIME;\n    auto ret = UBSE_OK;\n    while (retryTimes--) {\n        UbseNodeControllerLockMgr::ReadLock(req.importNodeId);\n        ret = SchedulerImpl::GetInstance().MemoryObjChangeHandler(importObj);\n        UbseNodeControllerLockMgr::ReadUnLock(req.importNodeId);\n        if (ret == UBSE_SCHEDULER_ERROR_NODE_RECONCILE) {\n            std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));\n            UBSE_LOG_WARN << \"retry time is \" << ALLOCATE_RETRY_TIME - retryTimes << \", no node can be lend\";\n            continue;\n        }\n        break;\n    }\n    return ret;\n}\n",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
+      "certainty": "source_reviewed"
+    },
+    "send": {
+      "file": "src/controllers/mem/mem_controller/api/ubse_mem_controller_numa_api.cpp",
+      "line": 201,
+      "last": 247,
+      "text": "UbseResult SendNumaExportObj(const UbseMemNumaBorrowExportObj& exportObj, const bool isMaster,\n                             const std::string& nodeId = \"\")\n{\n    auto comModule = UbseContext::GetInstance().GetModule<UbseComModule>();\n    if (comModule == nullptr) {\n        UBSE_LOG_ERROR << \"Failed to get comModule.\"\n                       << \", requestId=\" << exportObj.req.requestId;\n        return UBSE_ERROR_NULLPTR;\n    }\n    SendParam sendParam(nodeId, static_cast<uint16_t>(UbseModuleCode::UBSE_MEM_BORROW),\n                        static_cast<uint16_t>(UbseMemBorrowCallbackOpCode::UBSE_MEM_NUMA_BORROW_EXPORT_OBJ_CALLBACK));\n    UbseMemNumaBorrowExportobjSimpoPtr ptr = new (std::nothrow) UbseMemNumaBorrowExportobjSimpo();\n    if (ptr == nullptr) {\n        UBSE_LOG_ERROR << \"Failed to new ptr, requestId=\" << exportObj.req.requestId;\n        return UBSE_ERROR_NULLPTR;\n    }\n    ptr->SetUbseMesgInfo(exportObj);\n    UbseBaseMessagePtr ubseResponsePtr = new (std::nothrow) UbseMemCallbackMessage();\n    if (ubseResponsePtr == nullptr) {\n        UBSE_LOG_ERROR << \"Failed to new ptr, requestId=\" << exportObj.req.requestId;\n        return UBSE_ERROR_NULLPTR;\n    }\n    // 主节点向从履行侧发送\n    UbseResult ret = UBSE_OK;\n    if (isMaster) {\n        for (int i = 0; i < SEND_RETRY_TIMES; i++) {\n            ret = comModule->RpcSend(sendParam, ptr, ubseResponsePtr);\n            if (ret == UBSE_OK) {\n                UBSE_LOG_INFO << \"Success to send exportObj, name=\" << exportObj.req.name\n                              << \", requestNodeId=\" << exportObj.req.requestNodeId\n                              << \", requestId=\" << exportObj.req.requestId;\n                return UBSE_OK;\n            }\n            UBSE_LOG_ERROR << \"Failed to Send to exportObj, name=\" << exportObj.req.name\n                           << \", requestNodeId=\" << exportObj.req.requestNodeId << \", wait to retry\"\n                           << \", requestId=\" << exportObj.req.requestId;\n            sleep(SEND_RETRY_DURATION);\n        }\n        UBSE_LOG_ERROR << \"Failed to Send to exportObj, name=\" << exportObj.req.name\n                       << \", requestNodeId=\" << exportObj.req.requestNodeId\n                       << \", requestId=\" << exportObj.req.requestId;\n        return ret;\n    }\n\n    // 履行侧发回\n    return AgentSendNumaExportObj(comModule, sendParam, ptr, ubseResponsePtr, exportObj);\n}",
+      "fileSha256": "70290c9cb0a31e27f9a9c7e748b59675c3ea4c991439e9053c9ed36d9b2a779b",
       "certainty": "source_reviewed"
     }
   }

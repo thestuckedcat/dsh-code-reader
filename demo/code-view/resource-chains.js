@@ -29,10 +29,10 @@
   const hint=el('div','rc-legend');hint.append(el('span','rc-dot selected','关注资源 / 字段动作'),el('span','rc-dot context','灰色：调用背景'),el('span','rc-dot held','紫带：示例持锁 / 模拟区间'),el('span','rc-dot unknown','琥珀徽标：保护未知'));
   const canvas=el('div','');canvas.id='resource-chain-canvas';
   panel.append(head,notice,choiceToggle,choices,tools,current,hint,canvas);main.append(panel);document.querySelector('header').after(main);
-  const caseView=window.ResourceContextView.create(panel,caseData,{el,graphSurface,bindCanvas,canvasPort});
+  const caseView=window.ResourceContextView.create(panel,caseData,{el,graphSurface,bindCanvas,canvasPort,onViewChange(view){notice.hidden=view==='outline';heading.firstChild.textContent=view==='outline'?'管控面代码导览':'资源变更链';heading.lastChild.textContent=view==='outline'?'先看业务骨架，点阶段进入实现。':'选资源看状态变化；调用过程作为背景。';}});
   function showReviewed(open){
     for(const node of [choiceToggle,choices,tools,current,hint,canvas])node.hidden=open||(node===choices&&state.choicesCollapsed);
-    if(open){notice.textContent='固定源码 '+caseData.commit.slice(0,12)+' · 人工核对 · 未构建、未运行；与真实快照来源隔离';caseView.show();}else caseView.hide();
+    if(open){notice.textContent='固定源码 '+caseData.commit.slice(0,12)+' · 人工核对 · 未构建、未运行；与真实快照来源隔离';caseView.show();}else{caseView.hide();notice.hidden=false;heading.firstChild.textContent='资源变更链';heading.lastChild.textContent='选资源看状态变化；调用过程作为背景，按入口区分上下文。';}
   }
   const tab=el('button','','资源变更链');tab.type='button';tab.dataset.view='changes';tab.setAttribute('aria-pressed','false');tab.setAttribute('aria-controls','changes-workspace');document.querySelector('.view-switch').append(tab);
   const inspector=el('section','code-panel rc-inspector');inspector.id='resource-chain-detail';inspector.hidden=true;
